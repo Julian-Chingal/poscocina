@@ -1,0 +1,249 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+  TRIAL
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  INVITED
+}
+
+enum SubscriptionPlan {
+  TRIAL
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+enum SystemRole {
+  TENANT_ADMIN
+  BRANCH_MANAGER
+  CASHIER
+  WAITER
+  KITCHEN
+  DELIVERY
+  ACCOUNTANT
+}
+
+// ─────────────────────────────────────────────
+// TENANT
+// ─────────────────────────────────────────────
+
+model Tenant {
+  id          String           @id @default(cuid())
+  name        String
+  slug        String           @unique
+  email       String           @unique
+  phone       String?
+  logoUrl     String?
+  status      TenantStatus     @default(TRIAL)
+  plan        SubscriptionPlan @default(TRIAL)
+  trialEndsAt DateTime?
+  settings    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  users         UserTenant[]
+  branches      Branch[]
+  roles         Role[]
+  subscriptions Subscription[]
+
+  @@map("tenants")
+}
+
+// ─────────────────────────────────────────────
+// USER
+// ─────────────────────────────────────────────
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  phone        String?    @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  avatarUrl    String?
+  status       UserStatus @default(INVITED)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  tenants       UserTenant[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// USER-TENANT (pivote User <-> Tenant)
+// ─────────────────────────────────────────────
+
+model UserTenant {
+  id        String    @id @default(cuid())
+  userId    String
+  tenantId  String
+  roleId    String
+  isOwner   Boolean   @default(false)
+  invitedAt DateTime  @default(now())
+  joinedAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  role         Role           @relation(fields: [roleId], references: [id])
+  branchAccess BranchAccess[]
+
+  @@unique([userId, tenantId])
+  @@map("user_tenants")
+}
+
+// ─────────────────────────────────────────────
+// BRANCH (Sede / Local)
+// ─────────────────────────────────────────────
+
+model Branch {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  address   String?
+  phone     String?
+  isActive  Boolean  @default(true)
+  settings  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  access BranchAccess[]
+
+  @@map("branches")
+}
+
+// ─────────────────────────────────────────────
+// BRANCH ACCESS (Usuario <-> Sede)
+// ─────────────────────────────────────────────
+
+model BranchAccess {
+  id           String   @id @default(cuid())
+  userTenantId String
+  branchId     String
+  createdAt    DateTime @default(now())
+
+  userTenant UserTenant @relation(fields: [userTenantId], references: [id], onDelete: Cascade)
+  branch     Branch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([userTenantId, branchId])
+  @@map("branch_access")
+}
+
+// ─────────────────────────────────────────────
+// ROLE
+// ─────────────────────────────────────────────
+
+model Role {
+  id          String      @id @default(cuid())
+  tenantId    String
+  name        String
+  systemRole  SystemRole?
+  isCustom    Boolean     @default(false)
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  permissions RolePermission[]
+  users       UserTenant[]
+
+  @@unique([tenantId, name])
+  @@map("roles")
+}
+
+// ─────────────────────────────────────────────
+// PERMISSION
+// ─────────────────────────────────────────────
+
+model Permission {
+  id          String   @id @default(cuid())
+  resource    String
+  action      String
+  description String?
+  createdAt   DateTime @default(now())
+
+  roles RolePermission[]
+
+  @@unique([resource, action])
+  @@map("permissions")
+}
+
+// ─────────────────────────────────────────────
+// ROLE-PERMISSION (pivote Role <-> Permission)
+// ─────────────────────────────────────────────
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// ─────────────────────────────────────────────
+// REFRESH TOKEN
+// ─────────────────────────────────────────────
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  tenantId  String
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+// ─────────────────────────────────────────────
+// SUBSCRIPTION
+// ─────────────────────────────────────────────
+
+model Subscription {
+  id                   String           @id @default(cuid())
+  tenantId             String
+  plan                 SubscriptionPlan
+  stripeCustomerId     String?          @unique
+  stripeSubscriptionId String?          @unique
+  status               String
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean          @default(false)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
