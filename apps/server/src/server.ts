@@ -7,6 +7,7 @@ import { authRoutes } from './routes/auth.routes.js';
 import { tablesRoutes } from './routes/tables.routes.js';
 import { productsRoutes } from './routes/products.routes.js';
 import { ordersRoutes } from './routes/orders.routes.js';
+import { venuesRoutes } from './routes/venues.routes.js';
 
 export async function buildServer() {
   const server = Fastify({
@@ -30,6 +31,7 @@ export async function buildServer() {
   // Register Routes
   await server.register(healthRoutes);
   await server.register(authRoutes);
+  await server.register(venuesRoutes);
   await server.register(tablesRoutes);
   await server.register(productsRoutes);
   await server.register(ordersRoutes);
