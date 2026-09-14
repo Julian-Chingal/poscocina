@@ -6,6 +6,7 @@ import jwt from '@fastify/jwt';
 import { env } from './config/env.js';
 import { authPlugin } from './plugins/auth.plugin.js';
 import { socketPlugin } from './plugins/socket.plugin.js';
+import { errorHandlerPlugin } from './plugins/error-handler.plugin.js';
 import { healthRoutes } from './routes/health.routes.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { auditRoutes } from './routes/audit.routes.js';
@@ -22,6 +23,9 @@ export async function buildServer() {
   const server = Fastify({
     logger: env.NODE_ENV === 'development',
   });
+
+  // 0. Centralized Error Handling
+  await server.register(errorHandlerPlugin);
 
   // 1. Security Headers (Helmet)
   await server.register(helmet, {
