@@ -3,13 +3,19 @@ import bcrypt from 'bcryptjs';
 import { eq, and } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import * as schema from '../db/schema.js';
-import { PinLoginSchema, ManagerPinOverrideSchema } from '@poscocina/shared';
+import { PinLoginSchema, PasswordLoginSchema, ManagerPinOverrideSchema } from '@poscocina/shared';
 import { auditService } from '../services/audit.service.js';
 
 export async function authRoutes(fastify: FastifyInstance) {
   // 1. Get users list for a venue (for quick PIN login grid)
   fastify.get('/api/auth/venue/:venueId/users', async (request, reply) => {
     const { venueId } = request.params as { venueId: string };
+
+    let targetVenueId = venueId;
+    if (targetVenueId === 'default') {
+      const [first] = await db.select({ id: schema.venues.id }).from(schema.venues).limit(1);
+      if (first) targetVenueId = first.id;
+    }
 
     const venueUsers = await db
       .select({
@@ -21,7 +27,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       })
       .from(schema.users)
       .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
-      .where(and(eq(schema.users.venueId, venueId), eq(schema.users.isActive, true)));
+      .where(and(eq(schema.users.venueId, targetVenueId), eq(schema.users.isActive, true)));
 
     return reply.send(venueUsers);
   });
@@ -32,12 +38,12 @@ export async function authRoutes(fastify: FastifyInstance) {
     {
       config: {
         rateLimit: {
-          max: 5,
+          max: 10,
           timeWindow: '1 minute',
           errorResponseBuilder: () => ({
             statusCode: 429,
             error: 'Too Many Requests',
-            message: 'Demasiados intentos fallidos de autenticación. Espere 1 minuto.',
+            message: 'Demasiados intentos de autenticación. Espere 1 minuto.',
           }),
         },
       },
@@ -48,7 +54,11 @@ export async function authRoutes(fastify: FastifyInstance) {
         return reply.status(400).send({ error: 'Datos inválidos', details: parse.error.issues });
       }
 
-      const { venueId, userId, pin } = parse.data;
+      let { venueId: targetVenueId, userId, pin } = parse.data;
+      if (targetVenueId === 'default') {
+        const [first] = await db.select({ id: schema.venues.id }).from(schema.venues).limit(1);
+        if (first) targetVenueId = first.id;
+      }
 
       const [userWithRole] = await db
         .select({
@@ -61,12 +71,12 @@ export async function authRoutes(fastify: FastifyInstance) {
         })
         .from(schema.users)
         .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
-        .where(and(eq(schema.users.id, userId), eq(schema.users.venueId, venueId), eq(schema.users.isActive, true)))
+        .where(and(eq(schema.users.id, userId), eq(schema.users.venueId, targetVenueId), eq(schema.users.isActive, true)))
         .limit(1);
 
       if (!userWithRole || !userWithRole.pinHash) {
         await auditService.log({
-          venueId,
+          venueId: targetVenueId,
           userId,
           action: 'PIN_LOGIN_FAILED_USER_NOT_FOUND',
           ipAddress: request.ip,
@@ -78,7 +88,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       const isValid = await bcrypt.compare(pin, userWithRole.pinHash);
       if (!isValid) {
         await auditService.log({
-          venueId,
+          venueId: targetVenueId,
           userId,
           action: 'PIN_LOGIN_FAILED_WRONG_PIN',
           ipAddress: request.ip,
@@ -89,7 +99,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 
       // Successful login audit
       await auditService.log({
-        venueId,
+        venueId: targetVenueId,
         userId: userWithRole.id,
         action: 'PIN_LOGIN_SUCCESS',
         ipAddress: request.ip,
@@ -164,4 +174,95 @@ export async function authRoutes(fastify: FastifyInstance) {
 
     return reply.status(403).send({ error: 'PIN de gerente no válido o no autorizado' });
   });
+
+  // 4. Administrator / Manager Login (Email + Password)
+  fastify.post(
+    '/api/auth/login',
+    {
+      config: {
+        rateLimit: {
+          max: 5,
+          timeWindow: '1 minute',
+          errorResponseBuilder: () => ({
+            statusCode: 429,
+            error: 'Too Many Requests',
+            message: 'Demasiados intentos de acceso fallidos. Espere 1 minuto.',
+          }),
+        },
+      },
+    },
+    async (request, reply) => {
+      const parse = PasswordLoginSchema.safeParse(request.body);
+      if (!parse.success) {
+        return reply.status(400).send({ error: 'Credenciales inválidas', details: parse.error.issues });
+      }
+
+      const { email, password } = parse.data;
+
+      const [userWithRole] = await db
+        .select({
+          id: schema.users.id,
+          venueId: schema.users.venueId,
+          name: schema.users.name,
+          email: schema.users.email,
+          passwordHash: schema.users.passwordHash,
+          roleName: schema.roles.name,
+          roleHierarchy: schema.roles.hierarchy,
+        })
+        .from(schema.users)
+        .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
+        .where(and(eq(schema.users.email, email.toLowerCase().trim()), eq(schema.users.isActive, true)))
+        .limit(1);
+
+      if (!userWithRole || !userWithRole.passwordHash) {
+        await auditService.log({
+          action: 'PASSWORD_LOGIN_FAILED_NOT_FOUND',
+          ipAddress: request.ip,
+          userAgent: request.headers['user-agent'],
+          payload: { email },
+        });
+        return reply.status(401).send({ error: 'Credenciales incorrectas' });
+      }
+
+      const isValid = await bcrypt.compare(password, userWithRole.passwordHash);
+      if (!isValid) {
+        await auditService.log({
+          venueId: userWithRole.venueId,
+          userId: userWithRole.id,
+          action: 'PASSWORD_LOGIN_FAILED_WRONG_PASSWORD',
+          ipAddress: request.ip,
+          userAgent: request.headers['user-agent'],
+        });
+        return reply.status(401).send({ error: 'Credenciales incorrectas' });
+      }
+
+      await auditService.log({
+        venueId: userWithRole.venueId,
+        userId: userWithRole.id,
+        action: 'PASSWORD_LOGIN_SUCCESS',
+        ipAddress: request.ip,
+        userAgent: request.headers['user-agent'],
+      });
+
+      const token = fastify.jwt.sign({
+        sub: userWithRole.id,
+        venueId: userWithRole.venueId,
+        name: userWithRole.name,
+        role: userWithRole.roleName,
+        hierarchy: userWithRole.roleHierarchy,
+      });
+
+      return reply.send({
+        token,
+        user: {
+          id: userWithRole.id,
+          name: userWithRole.name,
+          email: userWithRole.email,
+          role: userWithRole.roleName,
+          hierarchy: userWithRole.roleHierarchy,
+        },
+      });
+    }
+  );
 }
+

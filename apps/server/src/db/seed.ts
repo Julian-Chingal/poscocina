@@ -62,6 +62,7 @@ async function seed() {
       venueId: venue.id,
       name: 'Carlos Gerente',
       email: 'gerente@poscocina.com',
+      passwordHash: pwdAdmin,
       pinHash: pin1234,
       roleId: roleMap[ROLES.MANAGER],
     },

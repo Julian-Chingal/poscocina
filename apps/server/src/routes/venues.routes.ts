@@ -4,6 +4,12 @@ import { db } from '../db/index.js';
 import * as schema from '../db/schema.js';
 
 export async function venuesRoutes(fastify: FastifyInstance) {
+  // List all venues
+  fastify.get('/api/venues', async (request, reply) => {
+    const allVenues = await db.select().from(schema.venues);
+    return reply.send(allVenues);
+  });
+
   // 1. Get venue details including branding & settings
   fastify.get('/api/venues/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
