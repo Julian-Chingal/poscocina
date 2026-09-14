@@ -9,7 +9,7 @@ import {
 import { useAuthStore } from '../stores/auth.store';
 import { useBrandingStore } from '../stores/branding.store';
 
-interface OdooTopBarProps {
+interface TopBarProps {
   currentView: string;
   onNavigate: (view: string) => void;
   searchQuery: string;
@@ -28,7 +28,7 @@ const VIEW_TITLES: Record<string, string> = {
   settings: 'Ajustes y Personalización de Empresa',
 };
 
-export const OdooTopBar: React.FC<OdooTopBarProps> = ({
+export const TopBar: React.FC<TopBarProps> = ({
   currentView,
   onNavigate,
   searchQuery,
@@ -41,9 +41,9 @@ export const OdooTopBar: React.FC<OdooTopBarProps> = ({
 
   return (
     <header className="h-12 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 text-slate-200 select-none shadow-sm z-30 sticky top-0">
-      {/* Left section: App Switcher 3x3 + Company Branding + Breadcrumbs */}
+      {/* Left section: App Switcher + Company Branding + Breadcrumbs */}
       <div className="flex items-center space-x-3">
-        {/* Odoo 3x3 Grid Switcher */}
+        {/* App Launcher Switcher */}
         <button
           onClick={() => onNavigate(isHome ? 'salon' : 'home')}
           title={isHome ? 'Abrir última app' : 'Menú de Aplicaciones (Inicio)'}

@@ -116,7 +116,7 @@ export const AppLauncherView: React.FC<AppLauncherViewProps> = ({ onSelectApp, s
 
   return (
     <div className="min-h-[calc(100vh-48px)] flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Decorative background gradients like Odoo aesthetic */}
+      {/* Decorative ambient lighting */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -146,7 +146,7 @@ export const AppLauncherView: React.FC<AppLauncherViewProps> = ({ onSelectApp, s
         </p>
       </div>
 
-      {/* Grid of Odoo-style App tiles */}
+      {/* Grid of Modular App tiles */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-4xl w-full z-10">
         {filteredApps.map((app) => {
           const Icon = app.icon;
@@ -167,7 +167,7 @@ export const AppLauncherView: React.FC<AppLauncherViewProps> = ({ onSelectApp, s
                 </span>
               )}
 
-              {/* Icon Container with glossy Odoo look */}
+              {/* Icon Container */}
               <div
                 className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${app.gradient} flex items-center justify-center text-white shadow-lg group-hover:scale-105 group-hover:shadow-xl transition-all mb-3.5`}
               >

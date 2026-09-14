@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { OdooTopBar } from './components/OdooTopBar';
+import { TopBar } from './components/TopBar';
 import { AppLauncherView } from './views/AppLauncherView';
 import { SalonView } from './views/SalonView';
 import { PosView } from './views/PosView';
@@ -64,8 +64,8 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-orange-500">
-      {/* Global Odoo Top Bar */}
-      <OdooTopBar
+      {/* Global Top Bar */}
+      <TopBar
         currentView={currentView}
         onNavigate={setCurrentView}
         searchQuery={searchQuery}
