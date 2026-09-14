@@ -26,6 +26,7 @@ const VIEW_TITLES: Record<string, string> = {
   inventory: 'Inventario y Recetas',
   shifts: 'Caja y Turnos',
   reports: 'Reportes y Métricas',
+  users: 'Gestión de Empleados & Roles',
   settings: 'Ajustes y Personalización de Empresa',
 };
 

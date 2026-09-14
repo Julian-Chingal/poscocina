@@ -9,6 +9,7 @@ import {
   BarChart3,
   Settings,
   Search,
+  Users,
 } from 'lucide-react';
 import { useBrandingStore } from '../stores/branding.store';
 
@@ -88,6 +89,14 @@ const APPS: AppItem[] = [
     gradient: 'from-fuchsia-400 to-pink-600',
     badge: 'BI En vivo',
     badgeColor: 'bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/30',
+    category: 'gestion',
+  },
+  {
+    id: 'users',
+    name: 'Empleados & Roles',
+    subtitle: 'Gestión de personal y PINs',
+    icon: Users,
+    gradient: 'from-amber-500 to-rose-600',
     category: 'gestion',
   },
   {
