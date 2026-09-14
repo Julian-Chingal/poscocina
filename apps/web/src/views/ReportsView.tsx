@@ -13,6 +13,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useBrandingStore } from '../stores/branding.store';
+import { api } from '../services/api';
 
 interface OverviewMetrics {
   totalSales: number;
@@ -65,7 +66,7 @@ interface ReportsViewProps {
   venueId?: string | null;
 }
 
-export const ReportsView: React.FC<ReportsViewProps> = ({ venueId }) => {
+export const ReportsView: React.FC<ReportsViewProps> = ({ venueId: _venueId }) => {
   const { settings, name: venueName } = useBrandingStore();
   const [period, setPeriod] = useState<'today' | '7d' | 'month' | 'all'>('today');
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -102,19 +103,13 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ venueId }) => {
     setIsLoading(true);
     try {
       const { from, to } = getDateRange();
-      const params = new URLSearchParams();
-      if (venueId) params.append('venueId', venueId);
-      if (from) params.append('from', from);
-      if (to) params.append('to', to);
-
-      const qs = params.toString() ? `?${params.toString()}` : '';
 
       const [resOverview, resHourly, resTop, resKds, resCogs] = await Promise.all([
-        fetch(`http://localhost:3000/api/analytics/overview${qs}`).then((r) => r.json()),
-        fetch(`http://localhost:3000/api/analytics/hourly-sales${qs}`).then((r) => r.json()),
-        fetch(`http://localhost:3000/api/analytics/top-products${qs}`).then((r) => r.json()),
-        fetch(`http://localhost:3000/api/analytics/kds-metrics${venueId ? `?venueId=${venueId}` : ''}`).then((r) => r.json()),
-        fetch(`http://localhost:3000/api/analytics/cogs-profitability${venueId ? `?venueId=${venueId}` : ''}`).then((r) => r.json()),
+        api.get<OverviewMetrics>('/api/analytics/overview', { params: { from, to } }),
+        api.get<HourlySale[]>('/api/analytics/hourly-sales', { params: { from, to } }),
+        api.get<TopProduct[]>('/api/analytics/top-products'),
+        api.get<KdsMetrics>('/api/analytics/kds-metrics'),
+        api.get<CogsMetrics>('/api/analytics/cogs-profitability'),
       ]);
 
       setOverview(resOverview);
@@ -127,7 +122,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ venueId }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [venueId, getDateRange]);
+  }, [getDateRange]);
 
   useEffect(() => {
     loadData();

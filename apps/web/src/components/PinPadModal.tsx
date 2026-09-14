@@ -188,12 +188,6 @@ export const PinPadModal: React.FC<PinPadModalProps> = ({
             <Delete className="w-5 h-5" />
           </button>
         </div>
-
-        {/* Demo Hint */}
-        <div className="p-2.5 rounded-xl bg-slate-800/40 border border-slate-700/40 text-[11px] text-slate-400 text-center">
-          <span className="text-amber-400 font-medium">PINs de prueba: </span>
-          Gerente: <code className="text-slate-200">1234</code> | Cajera: <code className="text-slate-200">1111</code> | Mesero: <code className="text-slate-200">2222</code>
-        </div>
       </div>
     </div>
   );
