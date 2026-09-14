@@ -30,4 +30,25 @@ export const auditService = {
       // No lanzamos excepción para no romper la transacción principal
     }
   },
+
+  async getAuditLogs(venueId: string, limit = 50) {
+    const { eq, desc } = await import('drizzle-orm');
+    return await db
+      .select({
+        id: schema.auditLogs.id,
+        action: schema.auditLogs.action,
+        entityType: schema.auditLogs.entityType,
+        entityId: schema.auditLogs.entityId,
+        payload: schema.auditLogs.payload,
+        ipAddress: schema.auditLogs.ipAddress,
+        userAgent: schema.auditLogs.userAgent,
+        createdAt: schema.auditLogs.createdAt,
+        userName: schema.users.name,
+      })
+      .from(schema.auditLogs)
+      .leftJoin(schema.users, eq(schema.auditLogs.userId, schema.users.id))
+      .where(eq(schema.auditLogs.venueId, venueId))
+      .orderBy(desc(schema.auditLogs.createdAt))
+      .limit(limit);
+  },
 };
