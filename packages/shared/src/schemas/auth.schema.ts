@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const PinLoginSchema = z.object({
-  venueId: z.string().uuid(),
-  userId: z.string().uuid(),
+  venueId: z.string().min(1),
+  userId: z.string().min(1),
   pin: z.string().min(4).max(6).regex(/^\d+$/, 'PIN must be 4 to 6 digits'),
   deviceId: z.string().optional(),
 });
