@@ -15,6 +15,13 @@
       "when": 1789362219302,
       "tag": "0001_mean_cerise",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789366868800,
+      "tag": "0002_tearful_justin_hammer",
+      "breakpoints": true
     }
   ]
 }

@@ -325,3 +325,18 @@ export const orderItemsRelations = relations(orderItems, ({ one, many }) => ({
   product: one(products, { fields: [orderItems.productId], references: [products.id] }),
   modifiers: many(orderItemModifiers),
 }));
+
+// 11. Security & Audit Trail
+export const auditLogs = pgTable('audit_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  venueId: uuid('venue_id').references(() => venues.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  action: varchar('action', { length: 50 }).notNull(),
+  entityType: varchar('entity_type', { length: 50 }),
+  entityId: varchar('entity_id', { length: 100 }),
+  payload: jsonb('payload').default({}),
+  ipAddress: varchar('ip_address', { length: 50 }),
+  userAgent: text('user_agent'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
