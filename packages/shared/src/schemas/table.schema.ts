@@ -27,3 +27,20 @@ export const UpdateTableSchema = z.object({
 export type CreateFloorPlanInput = z.infer<typeof CreateFloorPlanSchema>;
 export type CreateTableInput = z.infer<typeof CreateTableSchema>;
 export type UpdateTableInput = z.infer<typeof UpdateTableSchema>;
+
+export const TableTransferSchema = z.object({
+  venueId: z.string().uuid().optional(),
+  sourceTableId: z.string().uuid('ID de mesa origen no válido'),
+  targetTableId: z.string().uuid('ID de mesa destino no válido'),
+});
+
+export type TableTransferInput = z.infer<typeof TableTransferSchema>;
+
+export const TableMergeSchema = z.object({
+  venueId: z.string().uuid().optional(),
+  sourceTableId: z.string().uuid('ID de mesa origen no válido'),
+  targetTableId: z.string().uuid('ID de mesa destino no válido'),
+});
+
+export type TableMergeInput = z.infer<typeof TableMergeSchema>;
+

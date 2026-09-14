@@ -34,3 +34,25 @@ export const UpdateItemStatusSchema = z.object({
 });
 
 export type UpdateItemStatusInput = z.infer<typeof UpdateItemStatusSchema>;
+
+export const AppendOrderItemsSchema = z.object({
+  items: z.array(CreateOrderItemSchema).min(1, 'Debe incluir al menos un producto para anexar a la comanda'),
+});
+
+export type AppendOrderItemsInput = z.infer<typeof AppendOrderItemsSchema>;
+
+export const UpdateOrderStatusSchema = z.object({
+  status: z.enum([
+    'open',
+    'sent_to_kitchen',
+    'partially_ready',
+    'ready',
+    'check_requested',
+    'paid',
+    'cancelled',
+    'voided',
+  ]),
+});
+
+export type UpdateOrderStatusInput = z.infer<typeof UpdateOrderStatusSchema>;
+
