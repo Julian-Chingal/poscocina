@@ -252,7 +252,38 @@ export const receiptPayments = pgTable('receipt_payments', {
   tipAmount: numeric('tip_amount', { precision: 12, scale: 2 }).notNull().default('0.00'),
 });
 
-// 9. Relations
+// 9. Inventory & Recipes
+export const inventoryItems = pgTable('inventory_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  venueId: uuid('venue_id').notNull().references(() => venues.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 100 }).notNull(),
+  unit: varchar('unit', { length: 20 }).notNull().default('g'), // 'g', 'ml', 'unit', 'kg'
+  currentStock: numeric('current_stock', { precision: 12, scale: 4 }).notNull().default('0.0000'),
+  alertThreshold: numeric('alert_threshold', { precision: 12, scale: 4 }).notNull().default('10.0000'),
+  costPerUnit: numeric('cost_per_unit', { precision: 10, scale: 4 }).default('0.0000'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const productRecipes = pgTable('product_recipes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  productId: uuid('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+  inventoryItemId: uuid('inventory_item_id').notNull().references(() => inventoryItems.id, { onDelete: 'cascade' }),
+  quantity: numeric('quantity', { precision: 12, scale: 4 }).notNull(), // consumo por unidad vendida
+  isWaste: boolean('is_waste').notNull().default(false),
+});
+
+export const inventoryMovements = pgTable('inventory_movements', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  inventoryItemId: uuid('inventory_item_id').notNull().references(() => inventoryItems.id, { onDelete: 'cascade' }),
+  movementType: varchar('movement_type', { length: 30 }).notNull(), // 'sale', 'purchase', 'adjustment', 'waste'
+  quantity: numeric('quantity', { precision: 12, scale: 4 }).notNull(),
+  referenceId: uuid('reference_id'),
+  notes: text('notes'),
+  createdBy: uuid('created_by').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// 10. Relations
 export const venuesRelations = relations(venues, ({ many }) => ({
   users: many(users),
   floorPlans: many(floorPlans),

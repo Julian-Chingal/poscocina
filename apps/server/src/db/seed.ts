@@ -133,8 +133,9 @@ async function seed() {
     .onConflictDoNothing()
     .returning();
 
+  let burger: any = null;
   if (catFuertes) {
-    const [burger] = await db
+    const [createdBurger] = await db
       .insert(schema.products)
       .values({
         categoryId: catFuertes.id,
@@ -144,6 +145,7 @@ async function seed() {
         printerStation: 'kitchen',
       })
       .returning();
+    burger = createdBurger;
 
     // Modifier Group: Punto de cocción
     const [modGroupCoccion] = await db
@@ -168,14 +170,53 @@ async function seed() {
     });
   }
 
-  if (catBebidas) {
-    await db.insert(schema.products).values([
-      { categoryId: catBebidas.id, name: 'Cerveza Artesanal 330ml', price: '12000.00', printerStation: 'bar' },
-      { categoryId: catBebidas.id, name: 'Limonada Natural', price: '8000.00', printerStation: 'bar' },
-    ]);
-  }
+    // 6. Demo Inventory Items & Recipes
+    const [insumoCarne] = await db
+      .insert(schema.inventoryItems)
+      .values({
+        venueId: venue.id,
+        name: 'Carne Molida de Res 80/20',
+        unit: 'g',
+        currentStock: '15000.0000', // 15 kg
+        alertThreshold: '2000.0000', // Alerta en 2 kg
+        costPerUnit: '0.0350', // $35 por gramo
+      })
+      .returning();
 
-  console.log('✅ Seed completed successfully!');
+    const [insumoPan] = await db
+      .insert(schema.inventoryItems)
+      .values({
+        venueId: venue.id,
+        name: 'Pan Brioche Artesanal',
+        unit: 'unit',
+        currentStock: '80.0000', // 80 panes
+        alertThreshold: '15.0000',
+        costPerUnit: '1200.0000',
+      })
+      .returning();
+
+    const [insumoQueso] = await db
+      .insert(schema.inventoryItems)
+      .values({
+        venueId: venue.id,
+        name: 'Queso Cheddar Tajado',
+        unit: 'g',
+        currentStock: '4000.0000', // 4 kg
+        alertThreshold: '500.0000',
+        costPerUnit: '0.0400',
+      })
+      .returning();
+
+    // Hamburguesa Clásica Recipe
+    if (burger && insumoCarne && insumoPan && insumoQueso) {
+      await db.insert(schema.productRecipes).values([
+        { productId: burger.id, inventoryItemId: insumoCarne.id, quantity: '180.0000' }, // 180g carne
+        { productId: burger.id, inventoryItemId: insumoPan.id, quantity: '1.0000' },      // 1 pan
+        { productId: burger.id, inventoryItemId: insumoQueso.id, quantity: '30.0000' },   // 30g queso
+      ]);
+    }
+
+    console.log('✅ Seed completed successfully!');
   await queryClient.end();
 }
 

@@ -6,6 +6,8 @@ import { PosView } from './views/PosView';
 import { KdsView } from './views/KdsView';
 import { CatalogView } from './views/CatalogView';
 import { SettingsView } from './views/SettingsView';
+import { InventoryView } from './views/InventoryView';
+import { CashShiftsView } from './views/CashShiftsView';
 import { ModulePlaceholderView } from './views/ModulePlaceholderView';
 import { useAuthStore } from './stores/auth.store';
 import { useBrandingStore } from './stores/branding.store';
@@ -96,7 +98,15 @@ export const App: React.FC = () => {
           <SettingsView />
         )}
 
-        {['inventory', 'shifts', 'reports'].includes(currentView) && (
+        {currentView === 'inventory' && (
+          <InventoryView venueId={venueId} />
+        )}
+
+        {currentView === 'shifts' && (
+          <CashShiftsView venueId={venueId} />
+        )}
+
+        {['reports'].includes(currentView) && (
           <ModulePlaceholderView
             moduleId={currentView}
             onBack={() => setCurrentView('home')}
