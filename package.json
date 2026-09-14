@@ -1,0 +1,21 @@
+{
+  "name": "poscocina",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sistema POS modular para gastronomía",
+  "packageManager": "pnpm@12.4.1",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "db:generate": "pnpm --filter @poscocina/server db:generate",
+    "db:migrate": "pnpm --filter @poscocina/server db:migrate",
+    "db:seed": "pnpm --filter @poscocina/server db:seed",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.4",
+    "typescript": "^5.8.2"
+  }
+}
