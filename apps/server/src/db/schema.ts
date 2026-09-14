@@ -88,6 +88,7 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 150 }).unique(),
   passwordHash: varchar('password_hash', { length: 72 }),
   roleId: uuid('role_id').notNull().references(() => roles.id),
+  avatarUrl: text('avatar_url'),
   tokenVersion: smallint('token_version').notNull().default(1),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
