@@ -35,7 +35,10 @@ async function seed() {
         timezone: 'America/Bogota',
         settings: {
           currency: 'COP',
-          tax_rate: 0.19,
+          tax_rate: 0.08,
+          defaultTaxType: 'INC',
+          defaultTaxRate: 0.08,
+          defaultTipPct: 0,
           cashier_max_discount_pct: 10,
         },
       })

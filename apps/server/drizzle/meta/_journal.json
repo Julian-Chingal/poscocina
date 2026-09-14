@@ -22,6 +22,13 @@
       "when": 1789366868800,
       "tag": "0002_tearful_justin_hammer",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789371061070,
+      "tag": "0003_regular_zeigeist",
+      "breakpoints": true
     }
   ]
 }

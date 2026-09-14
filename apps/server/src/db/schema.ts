@@ -88,6 +88,7 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 150 }).unique(),
   passwordHash: varchar('password_hash', { length: 72 }),
   roleId: uuid('role_id').notNull().references(() => roles.id),
+  tokenVersion: smallint('token_version').notNull().default(1),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
@@ -132,7 +133,7 @@ export const products = pgTable('products', {
   name: varchar('name', { length: 150 }).notNull(),
   description: text('description'),
   price: numeric('price', { precision: 10, scale: 2 }).notNull(),
-  taxRate: numeric('tax_rate', { precision: 5, scale: 4 }).notNull().default('0.19'),
+  taxRate: numeric('tax_rate', { precision: 5, scale: 4 }).notNull().default('0.08'),
   imageUrl: text('image_url'),
   isAvailable: boolean('is_available').notNull().default(true),
   trackInventory: boolean('track_inventory').notNull().default(false),
@@ -324,6 +325,17 @@ export const orderItemsRelations = relations(orderItems, ({ one, many }) => ({
   order: one(orders, { fields: [orderItems.orderId], references: [orders.id] }),
   product: one(products, { fields: [orderItems.productId], references: [products.id] }),
   modifiers: many(orderItemModifiers),
+}));
+
+export const orderItemModifiersRelations = relations(orderItemModifiers, ({ one }) => ({
+  orderItem: one(orderItems, {
+    fields: [orderItemModifiers.orderItemId],
+    references: [orderItems.id],
+  }),
+  modifier: one(modifiers, {
+    fields: [orderItemModifiers.modifierId],
+    references: [modifiers.id],
+  }),
 }));
 
 // 11. Security & Audit Trail
