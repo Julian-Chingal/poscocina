@@ -8,7 +8,9 @@ import { CatalogView } from './views/CatalogView';
 import { SettingsView } from './views/SettingsView';
 import { InventoryView } from './views/InventoryView';
 import { CashShiftsView } from './views/CashShiftsView';
+import { ReportsView } from './views/ReportsView';
 import { ModulePlaceholderView } from './views/ModulePlaceholderView';
+import { PinPadModal } from './components/PinPadModal';
 import { useAuthStore } from './stores/auth.store';
 import { useBrandingStore } from './stores/branding.store';
 
@@ -19,7 +21,7 @@ export const App: React.FC = () => {
   const [selectedTable, setSelectedTable] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const { venueId, setVenueId } = useAuthStore();
+  const { venueId, setVenueId, isLocked } = useAuthStore();
   const { loadBranding, settings } = useBrandingStore();
 
   useEffect(() => {
@@ -79,19 +81,19 @@ export const App: React.FC = () => {
         )}
 
         {currentView === 'salon' && (
-          <SalonView venueId={venueId} onSelectTable={handleSelectTable} />
+          <SalonView venueId={venueId || ''} onSelectTable={handleSelectTable} />
         )}
 
         {currentView === 'pos' && (
-          <PosView venueId={venueId} selectedTable={selectedTable} />
+          <PosView venueId={venueId || ''} selectedTable={selectedTable} />
         )}
 
         {currentView === 'kds' && (
-          <KdsView venueId={venueId} />
+          <KdsView venueId={venueId || ''} />
         )}
 
         {currentView === 'catalog' && (
-          <CatalogView venueId={venueId} />
+          <CatalogView venueId={venueId || ''} />
         )}
 
         {currentView === 'settings' && (
@@ -99,20 +101,32 @@ export const App: React.FC = () => {
         )}
 
         {currentView === 'inventory' && (
-          <InventoryView venueId={venueId} />
+          <InventoryView venueId={venueId || ''} />
         )}
 
         {currentView === 'shifts' && (
-          <CashShiftsView venueId={venueId} />
+          <CashShiftsView venueId={venueId || ''} />
         )}
 
-        {['reports'].includes(currentView) && (
+        {currentView === 'reports' && (
+          <ReportsView venueId={venueId || ''} />
+        )}
+
+        {!['home', 'salon', 'pos', 'kds', 'catalog', 'settings', 'inventory', 'shifts', 'reports'].includes(currentView) && (
           <ModulePlaceholderView
             moduleId={currentView}
             onBack={() => setCurrentView('home')}
           />
         )}
       </main>
+
+      {/* Mandatory Terminal Lock Overlay */}
+      {isLocked && (
+        <PinPadModal
+          isOpen={isLocked}
+          isMandatoryLock={true}
+        />
+      )}
     </div>
   );
 };

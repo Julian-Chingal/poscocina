@@ -86,8 +86,8 @@ const APPS: AppItem[] = [
     subtitle: 'Ventas, mermas y tiempos',
     icon: BarChart3,
     gradient: 'from-fuchsia-400 to-pink-600',
-    badge: 'Fase 3',
-    badgeColor: 'bg-pink-500/20 text-pink-300 border-pink-500/30',
+    badge: 'BI En vivo',
+    badgeColor: 'bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/30',
     category: 'gestion',
   },
   {
