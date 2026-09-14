@@ -49,7 +49,7 @@ interface PosViewProps {
 }
 
 export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
-  const { user } = useAuthStore();
+  const { currentUser } = useAuthStore();
   const { settings } = useBrandingStore();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -140,7 +140,7 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
         venueId,
         tableId: currentTable?.id || null,
         orderType: currentTable ? 'dine_in' : 'takeout',
-        waiterId: user?.id || null,
+        waiterId: currentUser?.id || null,
         guestCount: 1,
         items: cart.map((item) => ({
           productId: item.product.id,
@@ -163,6 +163,13 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
         setOrderSentSuccess(true);
         setTimeout(() => setOrderSentSuccess(false), 3000);
         fetchTables();
+
+        // Disparo ESC/POS de comanda a impresora de cocina
+        fetch('/api/hardware/print-kitchen', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: data.order.id }),
+        }).catch(() => {});
       }
     } catch (err) {
       console.error('Error creating order:', err);
@@ -180,7 +187,7 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
           venueId,
           tableId: currentTable?.id || null,
           orderType: currentTable ? 'dine_in' : 'takeout',
-          waiterId: user?.id || null,
+          waiterId: currentUser?.id || null,
           guestCount: 1,
           items: cart.map((item) => ({
             productId: item.product.id,
@@ -241,6 +248,22 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
         setCart([]);
         setActiveOrderId(null);
         fetchTables();
+
+        // Disparo ESC/POS de ticket de venta al cliente
+        fetch('/api/hardware/print-receipt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ receiptId: data.receipt.id }),
+        }).catch(() => {});
+
+        // Si fue pago en efectivo, abrir automáticamente la gaveta de dinero
+        if (paymentMethod === 'cash') {
+          fetch('/api/hardware/open-drawer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ venueId }),
+          }).catch(() => {});
+        }
       }
     } catch (err) {
       console.error('Error issuing receipt:', err);
