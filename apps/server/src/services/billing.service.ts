@@ -17,6 +17,32 @@ export interface IssueReceiptInput {
 }
 
 export class BillingService {
+  async getPendingBills(venueId: string) {
+    return await db.query.orders.findMany({
+      where: (orders, { and, eq, inArray }) =>
+        and(
+          eq(orders.venueId, venueId),
+          inArray(orders.status, ['sent_to_kitchen', 'partially_ready', 'ready', 'check_requested'])
+        ),
+      with: {
+        table: true,
+        waiter: {
+          columns: {
+            id: true,
+            name: true,
+          },
+        },
+        items: {
+          with: {
+            product: true,
+            modifiers: true,
+          },
+        },
+      },
+      orderBy: (orders, { asc }) => [asc(orders.openedAt)],
+    });
+  }
+
   async getCurrentCashShift(venueId: string) {
     const [activeShift] = await db
       .select()

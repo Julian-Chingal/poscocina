@@ -1,7 +1,7 @@
 import { eq, and } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import * as schema from '../db/schema.js';
-import { NotFoundError } from '../errors/app-error.js';
+import { NotFoundError, BadRequestError } from '../errors/app-error.js';
 
 export class TablesService {
   async getFloorPlans(venueId: string) {
@@ -122,6 +122,151 @@ export class TablesService {
 
     return updated;
   }
+
+  async transferTable(sourceTableId: string, targetTableId: string) {
+    if (sourceTableId === targetTableId) {
+      throw new BadRequestError('La mesa origen y destino no pueden ser la misma.');
+    }
+
+    const [sourceTable] = await db.select().from(schema.tables).where(eq(schema.tables.id, sourceTableId)).limit(1);
+    const [targetTable] = await db.select().from(schema.tables).where(eq(schema.tables.id, targetTableId)).limit(1);
+
+    if (!sourceTable) throw new NotFoundError('Mesa origen no encontrada');
+    if (!targetTable) throw new NotFoundError('Mesa destino no encontrada');
+
+    if (!sourceTable.currentOrderId) {
+      throw new BadRequestError(`La mesa ${sourceTable.label} no tiene ninguna comanda activa para transferir.`);
+    }
+
+    if (targetTable.currentOrderId && targetTable.status !== 'free') {
+      throw new BadRequestError(`La mesa ${targetTable.label} ya está ocupada. Utilice la función 'Unir Mesas' si desea fusionarlas.`);
+    }
+
+    const orderId = sourceTable.currentOrderId;
+
+    await db.transaction(async (tx) => {
+      // 1. Move order to target table
+      await tx
+        .update(schema.orders)
+        .set({ tableId: targetTableId })
+        .where(eq(schema.orders.id, orderId));
+
+      // 2. Free source table
+      await tx
+        .update(schema.tables)
+        .set({ status: 'free', currentOrderId: null, updatedAt: new Date() })
+        .where(eq(schema.tables.id, sourceTableId));
+
+      // 3. Occupy target table
+      await tx
+        .update(schema.tables)
+        .set({ status: sourceTable.status, currentOrderId: orderId, updatedAt: new Date() })
+        .where(eq(schema.tables.id, targetTableId));
+    });
+
+    return {
+      success: true,
+      orderId,
+      sourceTable: { id: sourceTable.id, label: sourceTable.label },
+      targetTable: { id: targetTable.id, label: targetTable.label },
+    };
+  }
+
+  async mergeTables(sourceTableId: string, targetTableId: string) {
+    if (sourceTableId === targetTableId) {
+      throw new BadRequestError('No se puede unir una mesa consigo misma.');
+    }
+
+    const [sourceTable] = await db.select().from(schema.tables).where(eq(schema.tables.id, sourceTableId)).limit(1);
+    const [targetTable] = await db.select().from(schema.tables).where(eq(schema.tables.id, targetTableId)).limit(1);
+
+    if (!sourceTable) throw new NotFoundError('Mesa origen no encontrada');
+    if (!targetTable) throw new NotFoundError('Mesa destino no encontrada');
+
+    if (!sourceTable.currentOrderId) {
+      throw new BadRequestError(`La mesa origen ${sourceTable.label} no tiene ninguna comanda activa.`);
+    }
+
+    if (!targetTable.currentOrderId) {
+      return await this.transferTable(sourceTableId, targetTableId);
+    }
+
+    const sourceOrderId = sourceTable.currentOrderId;
+    const targetOrderId = targetTable.currentOrderId;
+
+    await db.transaction(async (tx) => {
+      // 1. Reassign all order items from source to target order
+      await tx
+        .update(schema.orderItems)
+        .set({ orderId: targetOrderId })
+        .where(eq(schema.orderItems.orderId, sourceOrderId));
+
+      // 2. Recalculate target order totals
+      const allItems = await tx
+        .select({
+          unitPrice: schema.orderItems.unitPrice,
+          quantity: schema.orderItems.quantity,
+        })
+        .from(schema.orderItems)
+        .where(eq(schema.orderItems.orderId, targetOrderId));
+
+      let newSubtotal = 0;
+      for (const item of allItems) {
+        newSubtotal += parseFloat(item.unitPrice) * item.quantity;
+      }
+
+      const [targetOrder] = await tx.select().from(schema.orders).where(eq(schema.orders.id, targetOrderId)).limit(1);
+      const [venueRecord] = await tx
+        .select({ settings: schema.venues.settings })
+        .from(schema.venues)
+        .where(eq(schema.venues.id, targetOrder.venueId))
+        .limit(1);
+
+      const venueSettings = (venueRecord?.settings as Record<string, any>) || {};
+      const taxRate =
+        typeof venueSettings.defaultTaxRate === 'number'
+          ? venueSettings.defaultTaxRate
+          : typeof venueSettings.tax_rate === 'number'
+          ? venueSettings.tax_rate
+          : 0.08;
+
+      const newTaxTotal = newSubtotal * taxRate;
+      const newTotal = newSubtotal + newTaxTotal;
+
+      await tx
+        .update(schema.orders)
+        .set({
+          subtotal: newSubtotal.toFixed(2),
+          taxTotal: newTaxTotal.toFixed(2),
+          total: newTotal.toFixed(2),
+        })
+        .where(eq(schema.orders.id, targetOrderId));
+
+      // 3. Mark source order as voided/merged
+      await tx
+        .update(schema.orders)
+        .set({
+          status: 'voided',
+          notes: `Orden fusionada con comanda de ${targetTable.label}`,
+          closedAt: new Date(),
+        })
+        .where(eq(schema.orders.id, sourceOrderId));
+
+      // 4. Free source table
+      await tx
+        .update(schema.tables)
+        .set({ status: 'free', currentOrderId: null, updatedAt: new Date() })
+        .where(eq(schema.tables.id, sourceTableId));
+    });
+
+    return {
+      success: true,
+      consolidatedOrderId: targetOrderId,
+      sourceTable: { id: sourceTable.id, label: sourceTable.label },
+      targetTable: { id: targetTable.id, label: targetTable.label },
+    };
+  }
 }
 
 export const tablesService = new TablesService();
+

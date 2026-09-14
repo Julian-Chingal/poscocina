@@ -4,6 +4,14 @@ import { resolveVenueId } from '../utils/tenant.util.js';
 import { BadRequestError } from '../errors/app-error.js';
 
 export class BillingController {
+  async getPendingBills(request: FastifyRequest, reply: FastifyReply) {
+    const { venueId } = request.params as { venueId: string };
+    const targetVenueId = await resolveVenueId(request, venueId);
+
+    const pendingOrders = await billingService.getPendingBills(targetVenueId);
+    return reply.send(pendingOrders);
+  }
+
   async getCurrentCashShift(request: FastifyRequest, reply: FastifyReply) {
     const { venueId } = request.params as { venueId: string };
     const targetVenueId = await resolveVenueId(request, venueId);

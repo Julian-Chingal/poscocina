@@ -47,4 +47,19 @@ export async function tablesRoutes(fastify: FastifyInstance) {
     staffGuard,
     (request, reply) => tablesController.updateTableStatus(request, reply)
   );
+
+  // 5. Transfer table order (Staff)
+  fastify.post(
+    '/api/tables/transfer',
+    staffGuard,
+    (request, reply) => tablesController.transferTable(request, reply)
+  );
+
+  // 6. Merge tables (Staff)
+  fastify.post(
+    '/api/tables/merge',
+    staffGuard,
+    (request, reply) => tablesController.mergeTables(request, reply)
+  );
 }
+

@@ -10,7 +10,12 @@ export async function billingRoutes(fastify: FastifyInstance) {
     ],
   };
 
-  // 1. Get currently open cash shift for a venue
+  // 1. Get pending bills waiting for payment
+  fastify.get('/api/venues/:venueId/pending-bills', cashierGuard, (request, reply) =>
+    billingController.getPendingBills(request, reply)
+  );
+
+  // 2. Get currently open cash shift for a venue
   fastify.get('/api/cash-shifts/current/:venueId', cashierGuard, (request, reply) =>
     billingController.getCurrentCashShift(request, reply)
   );

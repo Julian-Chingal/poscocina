@@ -3,7 +3,13 @@ import { tablesService } from '../services/tables.service.js';
 import { resolveVenueId } from '../utils/tenant.util.js';
 import { validate } from '../utils/validation.util.js';
 import { BadRequestError } from '../errors/app-error.js';
-import { CreateFloorPlanSchema, CreateTableSchema, UpdateTableSchema } from '@poscocina/shared';
+import {
+  CreateFloorPlanSchema,
+  CreateTableSchema,
+  UpdateTableSchema,
+  TableTransferSchema,
+  TableMergeSchema,
+} from '@poscocina/shared';
 
 export class TablesController {
   async getFloorPlans(request: FastifyRequest, reply: FastifyReply) {
@@ -71,6 +77,36 @@ export class TablesController {
 
     return reply.send(updated);
   }
+
+  async transferTable(request: FastifyRequest, reply: FastifyReply) {
+    const data = validate(TableTransferSchema, request.body);
+    const result = await tablesService.transferTable(data.sourceTableId, data.targetTableId);
+
+    // Broadcast table updates
+    request.server.io?.emit('table:transferred', result);
+    request.server.io?.emit('table:updated', { id: data.sourceTableId, status: 'free', currentOrderId: null });
+    request.server.io?.emit('table:updated', { id: data.targetTableId, status: 'occupied', currentOrderId: result.orderId });
+
+    return reply.send(result);
+  }
+
+  async mergeTables(request: FastifyRequest, reply: FastifyReply) {
+    const data = validate(TableMergeSchema, request.body);
+    const result = await tablesService.mergeTables(data.sourceTableId, data.targetTableId);
+
+    const targetOrderId = 'consolidatedOrderId' in result ? result.consolidatedOrderId : result.orderId;
+
+    request.server.io?.emit('table:merged', result);
+    request.server.io?.emit('table:updated', { id: data.sourceTableId, status: 'free', currentOrderId: null });
+    request.server.io?.emit('table:updated', {
+      id: data.targetTableId,
+      status: 'occupied',
+      currentOrderId: targetOrderId,
+    });
+
+    return reply.send(result);
+  }
 }
 
 export const tablesController = new TablesController();
+
