@@ -8,6 +8,7 @@ export interface AuthenticatedUser {
   name: string;
   role: string;
   hierarchy: number;
+  tokenVersion: number;
 }
 
 declare module '@fastify/jwt' {
@@ -39,6 +40,18 @@ export const authPlugin = fp(async (fastify: FastifyInstance) => {
 
       const token = authHeader.substring(7);
       const decoded = await fastify.jwt.verify<AuthenticatedUser>(token);
+
+      // Verify token version in database/cache for immediate session revocation
+      const { authService } = await import('../services/auth.service.js');
+      const isVersionValid = await authService.verifyUserTokenVersion(decoded.sub, decoded.tokenVersion || 1);
+      if (!isVersionValid) {
+        return reply.status(401).send({
+          statusCode: 401,
+          error: 'Unauthorized',
+          message: 'Sesión expirada o invalidada. Inicie sesión nuevamente.',
+        });
+      }
+
       request.user = decoded;
     } catch (err) {
       // Audit failed attempt

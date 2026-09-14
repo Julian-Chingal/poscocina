@@ -21,13 +21,19 @@ export class AuthController {
       userAgent: request.headers['user-agent'],
     });
 
-    const token = request.server.jwt.sign({
-      sub: user.id,
-      venueId: user.venueId,
-      name: user.name,
-      role: user.role,
-      hierarchy: user.hierarchy,
-    });
+    const expiresIn = user.hierarchy <= 40 ? '8h' : user.hierarchy <= 60 ? '10h' : '12h';
+
+    const token = request.server.jwt.sign(
+      {
+        sub: user.id,
+        venueId: user.venueId,
+        name: user.name,
+        role: user.role,
+        hierarchy: user.hierarchy,
+        tokenVersion: user.tokenVersion,
+      },
+      { expiresIn }
+    );
 
     return reply.send({ token, user });
   }
@@ -40,15 +46,28 @@ export class AuthController {
       userAgent: request.headers['user-agent'],
     });
 
-    const token = request.server.jwt.sign({
-      sub: user.id,
-      venueId: user.venueId,
-      name: user.name,
-      role: user.role,
-      hierarchy: user.hierarchy,
-    });
+    const expiresIn = user.hierarchy <= 40 ? '8h' : user.hierarchy <= 60 ? '10h' : '12h';
+
+    const token = request.server.jwt.sign(
+      {
+        sub: user.id,
+        venueId: user.venueId,
+        name: user.name,
+        role: user.role,
+        hierarchy: user.hierarchy,
+        tokenVersion: user.tokenVersion,
+      },
+      { expiresIn }
+    );
 
     return reply.send({ token, user });
+  }
+
+  async logout(request: FastifyRequest, reply: FastifyReply) {
+    if (request.user?.sub) {
+      await authService.invalidateUserSession(request.user.sub, request.user.venueId);
+    }
+    return reply.send({ success: true, message: 'Sesión finalizada exitosamente' });
   }
 
   async managerPinOverride(request: FastifyRequest, reply: FastifyReply) {
