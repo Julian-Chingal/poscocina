@@ -45,7 +45,21 @@ export class OrdersService {
         subtotal += itemTotal;
       }
 
-      const taxTotal = subtotal * 0.19; // Standard 19% IVA
+      // Fetch venue settings to get configured tax rate (defaults to Colombian 8% INC)
+      const [venueRecord] = await tx
+        .select({ settings: schema.venues.settings })
+        .from(schema.venues)
+        .where(eq(schema.venues.id, venueId))
+        .limit(1);
+
+      const venueSettings = (venueRecord?.settings as Record<string, any>) || {};
+      const taxRate = typeof venueSettings.defaultTaxRate === 'number'
+        ? venueSettings.defaultTaxRate
+        : typeof venueSettings.tax_rate === 'number'
+        ? venueSettings.tax_rate
+        : 0.08;
+
+      const taxTotal = subtotal * taxRate;
       const total = subtotal + taxTotal;
 
       // 2. Insert master order

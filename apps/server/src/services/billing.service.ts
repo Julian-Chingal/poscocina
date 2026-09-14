@@ -157,8 +157,30 @@ export class BillingService {
     // Atomic transaction for receipt, payments, table release, and escandallo deduction
     return await db.transaction(async (tx) => {
       const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
-      const subtotal = totalPaid / 1.19; // Standard base calculation
-      const taxTotal = totalPaid - subtotal;
+      
+      let subtotal: number;
+      let taxTotal: number;
+
+      if (!isSplit && Math.abs(totalPaid - parseFloat(order.total)) < 0.01) {
+        subtotal = parseFloat(order.subtotal);
+        taxTotal = parseFloat(order.taxTotal);
+      } else {
+        const [venueRecord] = await tx
+          .select({ settings: schema.venues.settings })
+          .from(schema.venues)
+          .where(eq(schema.venues.id, order.venueId))
+          .limit(1);
+
+        const venueSettings = (venueRecord?.settings as Record<string, any>) || {};
+        const taxRate = typeof venueSettings.defaultTaxRate === 'number'
+          ? venueSettings.defaultTaxRate
+          : typeof venueSettings.tax_rate === 'number'
+          ? venueSettings.tax_rate
+          : 0.08;
+
+        subtotal = totalPaid / (1 + taxRate);
+        taxTotal = totalPaid - subtotal;
+      }
 
       // 1. Insert Receipt
       const [newReceipt] = await tx

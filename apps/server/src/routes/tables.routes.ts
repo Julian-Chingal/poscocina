@@ -8,7 +8,9 @@ export async function tablesRoutes(fastify: FastifyInstance) {
   );
 
   // 2. Update table status
-  fastify.patch('/api/tables/:id/status', (request, reply) =>
-    tablesController.updateTableStatus(request, reply)
+  fastify.patch(
+    '/api/tables/:id/status',
+    { preHandler: [fastify.authenticate] },
+    (request, reply) => tablesController.updateTableStatus(request, reply)
   );
 }

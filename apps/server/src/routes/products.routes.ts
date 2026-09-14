@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import { ROLES } from '@poscocina/shared';
 import { catalogController } from '../controllers/catalog.controller.js';
 
 export async function productsRoutes(fastify: FastifyInstance) {
@@ -8,7 +9,20 @@ export async function productsRoutes(fastify: FastifyInstance) {
   );
 
   // 2. Toggle 86'd (product out of stock / availability)
-  fastify.patch('/api/products/:id/toggle-availability', (request, reply) =>
-    catalogController.toggleProductAvailability(request, reply)
+  fastify.patch(
+    '/api/products/:id/toggle-availability',
+    {
+      preHandler: [
+        fastify.authenticate,
+        fastify.requireRole([
+          ROLES.WAITER,
+          ROLES.CASHIER,
+          ROLES.KITCHEN,
+          ROLES.MANAGER,
+          ROLES.SUPER_ADMIN,
+        ]),
+      ],
+    },
+    (request, reply) => catalogController.toggleProductAvailability(request, reply)
   );
 }
