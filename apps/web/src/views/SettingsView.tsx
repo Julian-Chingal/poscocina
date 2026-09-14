@@ -31,7 +31,7 @@ export const SettingsView: React.FC = () => {
   const [taxId, setTaxId] = useState(settings.taxId || '900.123.456-7');
   const [phone, setPhone] = useState(settings.phone || '+57 300 123 4567');
   const [currency, setCurrency] = useState(settings.currency || 'COP');
-  const [taxRate, setTaxRate] = useState(settings.taxRate ? (settings.taxRate * 100).toString() : '19');
+  const [taxRate, setTaxRate] = useState(settings.taxRate !== undefined ? (settings.taxRate * 100).toString() : '8');
   const [receiptHeader, setReceiptHeader] = useState(
     settings.receiptHeader || 'Sabor tradicional & Alta cocina'
   );
@@ -307,7 +307,7 @@ export const SettingsView: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Tasa de Impuesto / IVA (%)
+                  Tasa de Impuesto / INC o IVA (%) (Colombia Restaurantes: 8% INC)
                 </label>
                 <input
                   type="number"
@@ -410,8 +410,8 @@ export const SettingsView: React.FC = () => {
                 <span>$36.974</span>
               </div>
               <div className="flex justify-between text-slate-600">
-                <span>IVA ({taxRate}%):</span>
-                <span>$7.026</span>
+                <span>Impuesto ({taxRate}%):</span>
+                <span>$3.259</span>
               </div>
               <div className="flex justify-between font-black text-sm pt-1 border-t border-slate-400">
                 <span>TOTAL:</span>

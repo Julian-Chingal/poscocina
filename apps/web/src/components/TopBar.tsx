@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 import { useBrandingStore } from '../stores/branding.store';
-import { PinPadModal } from './PinPadModal';
 
 interface TopBarProps {
   currentView: string;
@@ -38,7 +37,6 @@ export const TopBar: React.FC<TopBarProps> = ({
 }) => {
   const { currentUser, lockScreen } = useAuthStore();
   const { name: companyName, settings } = useBrandingStore();
-  const [showPinModal, setShowPinModal] = React.useState(false);
 
   const isHome = currentView === 'home';
 
@@ -139,9 +137,9 @@ export const TopBar: React.FC<TopBarProps> = ({
           {currentUser ? (
             <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
               <button
-                onClick={() => setShowPinModal(true)}
+                onClick={() => lockScreen()}
                 title="Cambiar usuario o verificar PIN"
-                className="flex items-center space-x-2 p-1 rounded-lg hover:bg-slate-800 transition text-left"
+                className="flex items-center space-x-2 p-1 rounded-lg hover:bg-slate-800 transition text-left cursor-pointer"
               >
                 <div className="w-6 h-6 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center text-xs font-bold uppercase">
                   {currentUser.name.charAt(0)}
@@ -155,27 +153,21 @@ export const TopBar: React.FC<TopBarProps> = ({
               <button
                 onClick={() => lockScreen()}
                 title="Bloquear pantalla"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition cursor-pointer"
               >
                 <Lock className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
             <button
-              onClick={() => setShowPinModal(true)}
-              className="text-xs text-amber-400 hover:text-amber-300 font-medium px-2 py-1 rounded bg-amber-500/10 border border-amber-500/20"
+              onClick={() => lockScreen()}
+              className="text-xs text-amber-400 hover:text-amber-300 font-medium px-2 py-1 rounded bg-amber-500/10 border border-amber-500/20 cursor-pointer"
             >
               Identificarse
             </button>
           )}
         </div>
       </header>
-
-      {/* Touch PIN Pad Modal */}
-      <PinPadModal
-        isOpen={showPinModal}
-        onClose={() => setShowPinModal(false)}
-      />
     </>
   );
 };

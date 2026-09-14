@@ -151,7 +151,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ venueId: _venueId }) =
       ['RESUMEN GENERAL'],
       ['Ventas Brutas', overview.totalSales],
       ['Subtotal', overview.subtotalSales],
-      ['IVA', overview.taxTotal],
+      ['Impuestos (INC/IVA)', overview.taxTotal],
       ['Descuentos', overview.discountTotal],
       ['Total Tickets', overview.ticketCount],
       ['Ticket Promedio', overview.avgTicket],
@@ -283,7 +283,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ venueId: _venueId }) =
           <div className="flex items-center gap-2 mt-2 text-[11px] text-slate-400">
             <span>Subtotal: {formatCurrency(overview?.subtotalSales || 0)}</span>
             <span>•</span>
-            <span>IVA: {formatCurrency(overview?.taxTotal || 0)}</span>
+            <span>Impuestos: {formatCurrency(overview?.taxTotal || 0)}</span>
           </div>
         </div>
 

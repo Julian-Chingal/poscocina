@@ -70,7 +70,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ currentUser: user, user });
   },
 
-  logout: () => {
+  logout: async () => {
+    const token = get().token;
+    if (token) {
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      } catch (err) {
+        console.warn('Could not revoke session on server:', err);
+      }
+    }
     if (typeof window !== 'undefined') {
       localStorage.removeItem('poscocina_token');
       localStorage.removeItem('poscocina_user');

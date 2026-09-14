@@ -73,7 +73,8 @@ export const PinPadModal: React.FC<PinPadModalProps> = ({
       if (onClose) onClose();
     } else {
       setPin('');
-      setLocalError('PIN incorrecto. Intente nuevamente.');
+      const serverErr = useAuthStore.getState().error;
+      setLocalError(serverErr || 'PIN incorrecto. Intente nuevamente.');
     }
   };
 
@@ -91,17 +92,25 @@ export const PinPadModal: React.FC<PinPadModalProps> = ({
       setLocalError(null);
       if (onClose) onClose();
     } else {
-      setLocalError('Credenciales incorrectas o usuario inactivo');
+      const serverErr = useAuthStore.getState().error;
+      setLocalError(serverErr || 'Credenciales incorrectas o usuario inactivo');
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
       <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative text-white">
-        {!isMandatoryLock && onClose && (
+        {(onClose || currentUser) && (
           <button
-            onClick={onClose}
-            className="absolute top-6 right-6 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-800 transition"
+            onClick={() => {
+              if (onClose) {
+                onClose();
+              } else if (currentUser) {
+                useAuthStore.setState({ isLocked: false });
+              }
+            }}
+            title="Cerrar modal"
+            className="absolute top-6 right-6 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -299,6 +308,23 @@ export const PinPadModal: React.FC<PinPadModalProps> = ({
               <span>{isLoading ? 'Autenticando...' : 'Iniciar Sesión'}</span>
             </button>
           </form>
+        )}
+
+        {currentUser && (
+          <div className="mt-5 pt-4 border-t border-slate-800 flex justify-between items-center text-xs">
+            <span className="text-slate-400">
+              Sesión activa: <strong className="text-slate-200">{currentUser.name}</strong>
+            </span>
+            <button
+              onClick={() => {
+                useAuthStore.getState().logout();
+                if (onClose) onClose();
+              }}
+              className="text-rose-400 hover:text-rose-300 font-semibold cursor-pointer transition hover:underline"
+            >
+              Cerrar Sesión
+            </button>
+          </div>
         )}
       </div>
     </div>

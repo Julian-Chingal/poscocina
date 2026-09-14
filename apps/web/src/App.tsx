@@ -10,6 +10,7 @@ import { InventoryView } from './views/InventoryView';
 import { CashShiftsView } from './views/CashShiftsView';
 import { ReportsView } from './views/ReportsView';
 import { ModulePlaceholderView } from './views/ModulePlaceholderView';
+import { OfflineView } from './views/OfflineView';
 import { PinPadModal } from './components/PinPadModal';
 import { useAuthStore } from './stores/auth.store';
 import { useBrandingStore } from './stores/branding.store';
@@ -20,22 +21,46 @@ export const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<string>('home');
   const [selectedTable, setSelectedTable] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isApiOnline, setIsApiOnline] = useState<boolean>(true);
 
-  const { venueId, setVenueId, isLocked } = useAuthStore();
+  const { venueId, setVenueId, isLocked, currentUser } = useAuthStore();
   const { loadBranding, settings } = useBrandingStore();
 
-  useEffect(() => {
-    // 1. Resolve default venue
-    fetch('/api/venues/first')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
+  const checkHealthAndBootstrap = async () => {
+    try {
+      const healthRes = await fetch('/health');
+      if (!healthRes.ok) {
+        setIsApiOnline(false);
+        return;
+      }
+      setIsApiOnline(true);
+
+      const vRes = await fetch('/api/venues/first');
+      if (vRes.ok) {
+        const data = await vRes.json();
         if (data?.id) {
           setVenueId(data.id);
           loadBranding(data.id);
         }
-      })
-      .catch((err) => console.error('Error bootstrapping venue:', err));
-  }, [setVenueId, loadBranding]);
+      }
+    } catch (err) {
+      console.warn('API health check failed:', err);
+      setIsApiOnline(false);
+    }
+  };
+
+  useEffect(() => {
+    checkHealthAndBootstrap();
+
+    // Heartbeat every 30 seconds
+    const timer = setInterval(() => {
+      fetch('/health')
+        .then((res) => setIsApiOnline(res.ok))
+        .catch(() => setIsApiOnline(false));
+    }, 30000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const socket = io();
@@ -63,6 +88,10 @@ export const App: React.FC = () => {
     setSearchQuery('');
     setCurrentView(appId);
   };
+
+  if (!isApiOnline) {
+    return <OfflineView onRetry={checkHealthAndBootstrap} />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-orange-500">
@@ -120,11 +149,16 @@ export const App: React.FC = () => {
         )}
       </main>
 
-      {/* Mandatory Terminal Lock Overlay */}
+      {/* Terminal Lock / Auth Overlay */}
       {isLocked && (
         <PinPadModal
           isOpen={isLocked}
-          isMandatoryLock={true}
+          isMandatoryLock={!currentUser}
+          onClose={() => {
+            if (currentUser) {
+              useAuthStore.setState({ isLocked: false });
+            }
+          }}
         />
       )}
     </div>

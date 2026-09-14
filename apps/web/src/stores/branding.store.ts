@@ -35,7 +35,7 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
     logoUrl: '',
     primaryColor: '#f97316', // Orange default
     currency: 'COP',
-    taxRate: 0.19,
+    taxRate: 0.08,
     taxId: '900.123.456-7',
     phone: '+57 300 123 4567',
     receiptHeader: 'Deliciosos momentos a tu mesa',
@@ -50,6 +50,15 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
       const res = await fetch(`/api/venues/${venueId}`);
       if (res.ok) {
         const data = await res.json();
+        const serverSettings = data.settings || {};
+        const resolvedTaxRate = typeof serverSettings.defaultTaxRate === 'number'
+          ? serverSettings.defaultTaxRate
+          : typeof serverSettings.tax_rate === 'number'
+          ? serverSettings.tax_rate
+          : typeof serverSettings.taxRate === 'number'
+          ? serverSettings.taxRate
+          : 0.08;
+
         set({
           name: data.name || 'poscocina Restaurante',
           address: data.address || '',
@@ -58,12 +67,12 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
             logoUrl: '',
             primaryColor: '#f97316',
             currency: 'COP',
-            taxRate: 0.19,
             taxId: '900.123.456-7',
             phone: '+57 300 123 4567',
             receiptHeader: 'Deliciosos momentos a tu mesa',
             receiptFooter: '¡Gracias por su visita! Vuelva pronto.',
-            ...(data.settings || {}),
+            ...serverSettings,
+            taxRate: resolvedTaxRate,
           },
         });
       }

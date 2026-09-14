@@ -66,7 +66,7 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card_credit' | 'transfer'>('cash');
   const [cashTendered, setCashTendered] = useState<string>('');
   const [cardReference, setCardReference] = useState<string>('');
-  const [tipPct, setTipPct] = useState<number>(10);
+  const [tipPct, setTipPct] = useState<number>(0);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [receiptSuccess, setReceiptSuccess] = useState<any>(null);
 
@@ -122,8 +122,10 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
     );
   };
 
+  const taxRate = typeof settings.taxRate === 'number' ? settings.taxRate : 0.08;
+  const taxLabel = `${settings.taxRate === 0.19 ? 'IVA' : 'INC'} (${Math.round(taxRate * 100)}%):`;
   const subtotal = cart.reduce((sum, item) => sum + parseFloat(item.product.price) * item.quantity, 0);
-  const tax = subtotal * 0.19;
+  const tax = subtotal * taxRate;
   const tipAmount = (subtotal * tipPct) / 100;
   const total = subtotal + tax + tipAmount;
 
@@ -414,7 +416,7 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
               <span>${subtotal.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
-              <span>IVA (19%):</span>
+              <span>{taxLabel}</span>
               <span>${tax.toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-base font-extrabold text-white pt-2 border-t border-slate-800">
@@ -484,7 +486,7 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
                 <span className="font-mono text-slate-200">${subtotal.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-slate-400">
-                <span>IVA (19%):</span>
+                <span>{taxLabel}</span>
                 <span className="font-mono text-slate-200">${tax.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-slate-400 items-center pt-1 border-t border-slate-700/60">
