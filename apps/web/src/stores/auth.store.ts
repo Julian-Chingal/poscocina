@@ -23,6 +23,7 @@ interface AuthState {
   logout: () => void;
   fetchVenueUsers: (venueId?: string) => Promise<void>;
   loginWithPin: (userId: string, pin: string, venueId?: string) => Promise<boolean>;
+  loginWithPassword: (email: string, password: string) => Promise<boolean>;
   lockScreen: () => void;
   unlockWithPin: (userId: string, pin: string, venueId?: string) => Promise<boolean>;
 }
@@ -77,15 +78,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ currentUser: null, user: null, token: null, isLocked: true });
   },
 
-  fetchVenueUsers: async (venueId = 'default') => {
+  fetchVenueUsers: async (venueId) => {
     try {
-      let vId = venueId;
-      if (vId === 'default') {
-        const vRes = await fetch('http://localhost:3000/api/venues');
-        const [v] = await vRes.json();
-        if (v) vId = v.id;
+      let vId = venueId && venueId !== 'default' ? venueId : get().venueId;
+      if (!vId || vId === 'default') {
+        const vRes = await fetch('/api/venues/first');
+        if (vRes.ok) {
+          const v = await vRes.json();
+          if (v?.id) {
+            vId = v.id;
+            set({ venueId: v.id });
+          }
+        }
       }
-      const res = await fetch(`http://localhost:3000/api/auth/venue/${vId}/users`);
+      const res = await fetch(`/api/auth/venue/${vId || 'default'}/users`);
       if (res.ok) {
         const users = await res.json();
         set({ venueUsers: users });
@@ -95,25 +101,82 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  loginWithPin: async (userId: string, pin: string, venueId = 'default') => {
+  loginWithPin: async (userId: string, pin: string, venueId) => {
     set({ isLoading: true, error: null });
     try {
-      let vId = venueId;
-      if (vId === 'default') {
-        const vRes = await fetch('http://localhost:3000/api/venues');
-        const [v] = await vRes.json();
-        if (v) vId = v.id;
+      let vId = venueId && venueId !== 'default' ? venueId : get().venueId;
+      if (!vId || vId === 'default') {
+        const vRes = await fetch('/api/venues/first');
+        if (vRes.ok) {
+          const v = await vRes.json();
+          if (v?.id) {
+            vId = v.id;
+            set({ venueId: v.id });
+          }
+        }
       }
 
-      const res = await fetch('http://localhost:3000/api/auth/pin-login', {
+      const res = await fetch('/api/auth/pin-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ venueId: vId, userId, pin }),
+        body: JSON.stringify({ venueId: vId || 'default', userId, pin }),
       });
 
       if (!res.ok) {
         const data = await res.json();
         set({ error: data.error || data.message || 'PIN incorrecto', isLoading: false });
+        return false;
+      }
+
+      const data = await res.json();
+      const userData: UserInfo = {
+        id: data.user.id,
+        name: data.user.name,
+        roleName: data.user.role,
+        roleLabel:
+          data.user.role === 'manager'
+            ? 'Gerente'
+            : data.user.role === 'cashier'
+            ? 'Cajero'
+            : data.user.role === 'waiter'
+            ? 'Mesero'
+            : 'Administrador',
+        role: data.user.role,
+        hierarchy: data.user.hierarchy,
+      };
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('poscocina_token', data.token);
+        localStorage.setItem('poscocina_user', JSON.stringify(userData));
+      }
+
+      set({
+        currentUser: userData,
+        user: userData,
+        token: data.token,
+        isLocked: false,
+        isLoading: false,
+        error: null,
+      });
+      return true;
+    } catch (err) {
+      set({ error: 'Error de conexión con el servidor', isLoading: false });
+      return false;
+    }
+  },
+
+  loginWithPassword: async (email: string, password: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        set({ error: data.error || data.message || 'Credenciales incorrectas', isLoading: false });
         return false;
       }
 
