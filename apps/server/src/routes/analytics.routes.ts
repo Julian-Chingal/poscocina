@@ -2,26 +2,21 @@ import { FastifyInstance } from 'fastify';
 import { eq, and, gte, lte, sql, desc } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import * as schema from '../db/schema.js';
+import { ROLES } from '@poscocina/shared';
 
 export async function analyticsRoutes(fastify: FastifyInstance) {
+  const managerGuard = {
+    preHandler: [fastify.authenticate, fastify.requireRole([ROLES.MANAGER, ROLES.SUPER_ADMIN])],
+  };
+
   // 1. Overview KPIs & Payment Breakdown
-  fastify.get('/api/analytics/overview', async (request, reply) => {
-    const { venueId, from, to } = request.query as {
-      venueId?: string;
+  fastify.get('/api/analytics/overview', managerGuard, async (request, reply) => {
+    const { from, to } = request.query as {
       from?: string;
       to?: string;
     };
 
-    // Find default venue if not supplied
-    let targetVenueId = venueId;
-    if (!targetVenueId) {
-      const [firstVenue] = await db.select({ id: schema.venues.id }).from(schema.venues).limit(1);
-      targetVenueId = firstVenue?.id;
-    }
-
-    if (!targetVenueId) {
-      return reply.status(404).send({ error: 'Venue no encontrado' });
-    }
+    const targetVenueId = request.user!.venueId;
 
     // Build date condition
     const conditions = [];
@@ -84,22 +79,13 @@ export async function analyticsRoutes(fastify: FastifyInstance) {
   });
 
   // 2. Hourly Sales Aggregation (00:00 to 23:00)
-  fastify.get('/api/analytics/hourly-sales', async (request, reply) => {
-    const { venueId, from, to } = request.query as {
-      venueId?: string;
+  fastify.get('/api/analytics/hourly-sales', managerGuard, async (request, reply) => {
+    const { from, to } = request.query as {
       from?: string;
       to?: string;
     };
 
-    let targetVenueId = venueId;
-    if (!targetVenueId) {
-      const [firstVenue] = await db.select({ id: schema.venues.id }).from(schema.venues).limit(1);
-      targetVenueId = firstVenue?.id;
-    }
-
-    if (!targetVenueId) {
-      return reply.status(404).send({ error: 'Venue no encontrado' });
-    }
+    const targetVenueId = request.user!.venueId;
 
     const conditions = [];
     if (from) {
@@ -138,21 +124,12 @@ export async function analyticsRoutes(fastify: FastifyInstance) {
   });
 
   // 3. Top Selling Products
-  fastify.get('/api/analytics/top-products', async (request, reply) => {
-    const { venueId, limit = '10' } = request.query as {
-      venueId?: string;
+  fastify.get('/api/analytics/top-products', managerGuard, async (request, reply) => {
+    const { limit = '10' } = request.query as {
       limit?: string;
     };
 
-    let targetVenueId = venueId;
-    if (!targetVenueId) {
-      const [firstVenue] = await db.select({ id: schema.venues.id }).from(schema.venues).limit(1);
-      targetVenueId = firstVenue?.id;
-    }
-
-    if (!targetVenueId) {
-      return reply.status(404).send({ error: 'Venue no encontrado' });
-    }
+    const targetVenueId = request.user!.venueId;
 
     const topProducts = await db
       .select({
@@ -185,18 +162,8 @@ export async function analyticsRoutes(fastify: FastifyInstance) {
   });
 
   // 4. KDS Velocity & Kitchen Metrics
-  fastify.get('/api/analytics/kds-metrics', async (request, reply) => {
-    const { venueId } = request.query as { venueId?: string };
-
-    let targetVenueId = venueId;
-    if (!targetVenueId) {
-      const [firstVenue] = await db.select({ id: schema.venues.id }).from(schema.venues).limit(1);
-      targetVenueId = firstVenue?.id;
-    }
-
-    if (!targetVenueId) {
-      return reply.status(404).send({ error: 'Venue no encontrado' });
-    }
+  fastify.get('/api/analytics/kds-metrics', managerGuard, async (request, reply) => {
+    const targetVenueId = request.user!.venueId;
 
     // Average duration in minutes between sentAt and readyAt
     const [speedStats] = await db
@@ -219,18 +186,8 @@ export async function analyticsRoutes(fastify: FastifyInstance) {
   });
 
   // 5. COGS & Gross Profit Margins (Escandallos / Recipe Costing)
-  fastify.get('/api/analytics/cogs-profitability', async (request, reply) => {
-    const { venueId } = request.query as { venueId?: string };
-
-    let targetVenueId = venueId;
-    if (!targetVenueId) {
-      const [firstVenue] = await db.select({ id: schema.venues.id }).from(schema.venues).limit(1);
-      targetVenueId = firstVenue?.id;
-    }
-
-    if (!targetVenueId) {
-      return reply.status(404).send({ error: 'Venue no encontrado' });
-    }
+  fastify.get('/api/analytics/cogs-profitability', managerGuard, async (request, reply) => {
+    const targetVenueId = request.user!.venueId;
 
     // Calculate total product sales revenue
     const [revenueRes] = await db

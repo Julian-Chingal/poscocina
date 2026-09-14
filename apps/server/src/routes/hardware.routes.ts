@@ -19,10 +19,20 @@ const CMD = {
   DRAWER_PULSE: `${ESC}p\x00\x19\xFA`, // Standard kick pulse pin 2 (25ms pulse)
 };
 
+import { auditService } from '../services/audit.service.js';
+
 export async function hardwareRoutes(fastify: FastifyInstance) {
-  // 1. Kick Cash Drawer
+  // 1. Kick Cash Drawer (Audited event)
   fastify.post('/api/hardware/open-drawer', async (request, reply) => {
-    const { venueId } = request.body as { venueId?: string };
+    const { venueId } = (request.body as { venueId?: string }) || {};
+
+    // Audit drawer kick
+    await auditService.log({
+      venueId: venueId || null,
+      action: 'DRAWER_KICK',
+      ipAddress: request.ip,
+      userAgent: request.headers['user-agent'],
+    });
 
     // Emit real-time event to POS clients
     fastify.io?.to(`venue:${venueId || 'default'}`).emit('hardware:drawer_opened', {
