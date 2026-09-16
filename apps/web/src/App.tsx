@@ -36,6 +36,19 @@ export const App: React.FC = () => {
       }
       setIsApiOnline(true);
 
+      const savedVenueId = localStorage.getItem('poscocina_venue_id');
+      if (savedVenueId) {
+        const vRes = await fetch(`/api/venues/${savedVenueId}`);
+        if (vRes.ok) {
+          const data = await vRes.json();
+          if (data?.id) {
+            setVenueId(data.id);
+            loadBranding(data.id);
+            return;
+          }
+        }
+      }
+
       const vRes = await fetch('/api/venues/first');
       if (vRes.ok) {
         const data = await vRes.json();
@@ -61,6 +74,43 @@ export const App: React.FC = () => {
     }, 30000);
 
     return () => clearInterval(timer);
+  }, []);
+
+  // Global POS Kiosk Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      const isInput =
+        activeEl &&
+        (activeEl.tagName === 'INPUT' ||
+          activeEl.tagName === 'TEXTAREA' ||
+          (activeEl as HTMLElement).isContentEditable);
+
+      if (e.key === 'F1') {
+        e.preventDefault();
+        setCurrentView('salon');
+      } else if (e.key === 'F2') {
+        e.preventDefault();
+        setCurrentView('pos');
+      } else if (e.key === 'F3') {
+        e.preventDefault();
+        setCurrentView('kds');
+      } else if (e.key === 'F4') {
+        e.preventDefault();
+        setCurrentView('shifts');
+      } else if (e.key === 'Escape') {
+        if (!isInput) {
+          e.preventDefault();
+          setCurrentView('home');
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        useAuthStore.getState().lockScreen();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   useEffect(() => {

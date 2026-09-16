@@ -1,13 +1,27 @@
 import { create } from 'zustand';
 
+export interface VenueItem {
+  id: string;
+  name: string;
+  slug: string;
+  address?: string | null;
+  phone?: string | null;
+  isActive: boolean;
+  createdAt?: string;
+}
+
 export interface VenueSettings {
   companyName?: string;
   logoUrl?: string;
   primaryColor?: string;
   currency?: string;
+  taxType?: 'INC_8' | 'IVA_19' | 'EXENTO';
   taxRate?: number;
   taxId?: string;
+  defaultTipPct?: number;
   phone?: string;
+  paperWidth?: 58 | 80;
+  autoPrintReceipt?: boolean;
   receiptHeader?: string;
   receiptFooter?: string;
 }
@@ -17,7 +31,10 @@ interface BrandingState {
   name: string;
   address: string;
   settings: VenueSettings;
+  venues: VenueItem[];
   isLoading: boolean;
+  loadAllVenues: () => Promise<VenueItem[]>;
+  switchVenue: (venueId: string) => Promise<void>;
   loadBranding: (venueId: string) => Promise<void>;
   updateBranding: (updates: {
     name?: string;
@@ -30,18 +47,45 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
   venueId: '',
   name: 'poscocina Restaurante',
   address: 'Calle Principal # 123',
+  venues: [],
   settings: {
     companyName: 'poscocina Gourmet',
     logoUrl: '',
     primaryColor: '#f97316', // Orange default
     currency: 'COP',
+    taxType: 'INC_8',
     taxRate: 0.08,
     taxId: '900.123.456-7',
+    defaultTipPct: 10,
     phone: '+57 300 123 4567',
+    paperWidth: 80,
+    autoPrintReceipt: true,
     receiptHeader: 'Deliciosos momentos a tu mesa',
     receiptFooter: '¡Gracias por su visita! Vuelva pronto.',
   },
   isLoading: false,
+
+  loadAllVenues: async () => {
+    try {
+      const res = await fetch('/api/venues');
+      if (res.ok) {
+        const data = await res.json();
+        const venuesList = Array.isArray(data) ? data : data.venues || [];
+        set({ venues: venuesList });
+        return venuesList;
+      }
+      return [];
+    } catch (err) {
+      console.error('Error loading venues list:', err);
+      return [];
+    }
+  },
+
+  switchVenue: async (newVenueId: string) => {
+    if (!newVenueId || newVenueId === get().venueId) return;
+    localStorage.setItem('poscocina_venue_id', newVenueId);
+    await get().loadBranding(newVenueId);
+  },
 
   loadBranding: async (venueId: string) => {
     if (!venueId) return;
@@ -59,6 +103,8 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
           ? serverSettings.taxRate
           : 0.08;
 
+        const resolvedTaxType = serverSettings.taxType || (resolvedTaxRate === 0.19 ? 'IVA_19' : resolvedTaxRate === 0 ? 'EXENTO' : 'INC_8');
+
         set({
           name: data.name || 'poscocina Restaurante',
           address: data.address || '',
@@ -67,14 +113,23 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
             logoUrl: '',
             primaryColor: '#f97316',
             currency: 'COP',
+            taxType: resolvedTaxType,
             taxId: '900.123.456-7',
+            defaultTipPct: 10,
             phone: '+57 300 123 4567',
+            paperWidth: 80,
+            autoPrintReceipt: true,
             receiptHeader: 'Deliciosos momentos a tu mesa',
             receiptFooter: '¡Gracias por su visita! Vuelva pronto.',
             ...serverSettings,
             taxRate: resolvedTaxRate,
           },
         });
+
+        // Apply dynamic brand color CSS variable
+        if (serverSettings.primaryColor) {
+          document.documentElement.style.setProperty('--primary-brand', serverSettings.primaryColor);
+        }
       }
     } catch (err) {
       console.error('Error loading venue branding:', err);
@@ -105,14 +160,20 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
 
       if (res.ok) {
         const updated = await res.json();
+        const newSettings = {
+          ...currentSettings,
+          ...(updated.settings || {}),
+        };
         set({
           name: updated.name,
           address: updated.address,
-          settings: {
-            ...currentSettings,
-            ...(updated.settings || {}),
-          },
+          settings: newSettings,
         });
+
+        if (newSettings.primaryColor) {
+          document.documentElement.style.setProperty('--primary-brand', newSettings.primaryColor);
+        }
+
         return true;
       }
       return false;
