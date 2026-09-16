@@ -5,4 +5,5 @@ export * from './schemas/order.schema.js';
 export * from './schemas/user.schema.js';
 export * from './schemas/catalog.schema.js';
 export * from './schemas/table.schema.js';
+export * from './schemas/venue.schema.js';
 
