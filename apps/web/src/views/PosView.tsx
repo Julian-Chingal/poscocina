@@ -11,6 +11,9 @@ import {
   Printer,
   Sparkles,
   X,
+  Clock,
+  FileText,
+  CheckCircle2,
 } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 import { useBrandingStore } from '../stores/branding.store';
@@ -60,6 +63,9 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
   const [orderSentSuccess, setOrderSentSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  // Existing active order on table
+  const [activeOrder, setActiveOrder] = useState<any | null>(null);
+
   // Billing modal states
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
@@ -69,12 +75,51 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
   const [tipPct, setTipPct] = useState<number>(0);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [receiptSuccess, setReceiptSuccess] = useState<any>(null);
+  const [checkRequestedSuccess, setCheckRequestedSuccess] = useState(false);
+
+  const isCashierOrManager =
+    currentUser?.roleName === 'cashier' ||
+    currentUser?.roleName === 'manager' ||
+    currentUser?.roleName === 'super_admin' ||
+    (currentUser?.hierarchy && currentUser.hierarchy >= 60);
 
   const fetchTables = () => {
     fetch(`/api/venues/${venueId}/tables`)
       .then((res) => res.json())
-      .then((data) => setAllTables(data || []));
+      .then((data) => {
+        setAllTables(data || []);
+        if (currentTable) {
+          const updatedCurrent = data?.find((t: any) => t.id === currentTable.id);
+          if (updatedCurrent) setCurrentTable(updatedCurrent);
+        }
+      });
   };
+
+  const fetchActiveOrder = async (orderId: string) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setActiveOrder(data);
+        setActiveOrderId(data.id);
+      } else {
+        setActiveOrder(null);
+        setActiveOrderId(null);
+      }
+    } catch (err) {
+      console.error('Error fetching active order:', err);
+      setActiveOrder(null);
+    }
+  };
+
+  useEffect(() => {
+    if (currentTable?.currentOrderId) {
+      fetchActiveOrder(currentTable.currentOrderId);
+    } else {
+      setActiveOrder(null);
+      setActiveOrderId(null);
+    }
+  }, [currentTable?.id, currentTable?.currentOrderId]);
 
   useEffect(() => {
     if (!venueId) return;
@@ -124,8 +169,16 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
 
   const taxRate = typeof settings.taxRate === 'number' ? settings.taxRate : 0.08;
   const taxLabel = `${settings.taxRate === 0.19 ? 'IVA' : 'INC'} (${Math.round(taxRate * 100)}%):`;
-  const subtotal = cart.reduce((sum, item) => sum + parseFloat(item.product.price) * item.quantity, 0);
-  const tax = subtotal * taxRate;
+
+  // Calculated totals (existing items + new cart items)
+  const existingSubtotal = activeOrder ? parseFloat(activeOrder.subtotal || '0') : 0;
+  const existingTax = activeOrder ? parseFloat(activeOrder.taxTotal || '0') : 0;
+
+  const newSubtotal = cart.reduce((sum, item) => sum + parseFloat(item.product.price) * item.quantity, 0);
+  const newTax = newSubtotal * taxRate;
+
+  const subtotal = existingSubtotal + newSubtotal;
+  const tax = existingTax + newTax;
   const tipAmount = (subtotal * tipPct) / 100;
   const total = subtotal + tax + tipAmount;
 
@@ -133,50 +186,108 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
   const tenderedNum = parseFloat(cashTendered) || 0;
   const changeDue = Math.max(0, tenderedNum - total);
 
-  const handleSendOrder = async () => {
+  const handleSendOrAppendOrder = async () => {
     if (cart.length === 0) return;
     setSubmitting(true);
 
     try {
-      const payload = {
-        venueId,
-        tableId: currentTable?.id || null,
-        orderType: currentTable ? 'dine_in' : 'takeout',
-        waiterId: currentUser?.id || null,
-        guestCount: 1,
-        items: cart.map((item) => ({
-          productId: item.product.id,
-          quantity: item.quantity,
-          unitPrice: parseFloat(item.product.price),
-          notes: item.notes || undefined,
-          modifiers: item.modifiers,
-        })),
-      };
+      if (activeOrder) {
+        // APPEND new items to existing order
+        const appendPayload = {
+          items: cart.map((item) => ({
+            productId: item.product.id,
+            quantity: item.quantity,
+            unitPrice: parseFloat(item.product.price),
+            notes: item.notes || undefined,
+            modifiers: item.modifiers,
+          })),
+        };
 
-      const res = await fetch('/api/orders', {
-        method: 'POST',
+        const res = await fetch(`/api/orders/${activeOrder.id}/items`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(appendPayload),
+        });
+
+        if (res.ok) {
+          setCart([]);
+          setOrderSentSuccess(true);
+          setTimeout(() => setOrderSentSuccess(false), 3000);
+          fetchActiveOrder(activeOrder.id);
+          fetchTables();
+
+          // KDS print dispatch
+          fetch('/api/hardware/print-kitchen', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: activeOrder.id }),
+          }).catch(() => {});
+        }
+      } else {
+        // CREATE new order
+        const payload = {
+          venueId,
+          tableId: currentTable?.id || null,
+          orderType: currentTable ? 'dine_in' : 'takeout',
+          waiterId: currentUser?.id || null,
+          guestCount: 1,
+          items: cart.map((item) => ({
+            productId: item.product.id,
+            quantity: item.quantity,
+            unitPrice: parseFloat(item.product.price),
+            notes: item.notes || undefined,
+            modifiers: item.modifiers,
+          })),
+        };
+
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setCart([]);
+          setActiveOrderId(data.order.id);
+          setActiveOrder(data.order);
+          setOrderSentSuccess(true);
+          setTimeout(() => setOrderSentSuccess(false), 3000);
+          fetchTables();
+
+          // KDS print dispatch
+          fetch('/api/hardware/print-kitchen', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: data.order.id }),
+          }).catch(() => {});
+        }
+      }
+    } catch (err) {
+      console.error('Error sending order:', err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRequestCheck = async () => {
+    if (!activeOrderId && !activeOrder?.id) return;
+    const targetId = activeOrder?.id || activeOrderId;
+    try {
+      const res = await fetch(`/api/orders/${targetId}/status`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ status: 'check_requested' }),
       });
 
       if (res.ok) {
-        const data = await res.json();
-        setActiveOrderId(data.order.id);
-        setOrderSentSuccess(true);
-        setTimeout(() => setOrderSentSuccess(false), 3000);
+        setCheckRequestedSuccess(true);
+        setTimeout(() => setCheckRequestedSuccess(false), 4000);
         fetchTables();
-
-        // Disparo ESC/POS de comanda a impresora de cocina
-        fetch('/api/hardware/print-kitchen', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId: data.order.id }),
-        }).catch(() => {});
+        if (targetId) fetchActiveOrder(targetId);
       }
     } catch (err) {
-      console.error('Error creating order:', err);
-    } finally {
-      setSubmitting(false);
+      console.error('Error requesting check:', err);
     }
   };
 
@@ -249,6 +360,7 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
         setReceiptSuccess(data.receipt);
         setCart([]);
         setActiveOrderId(null);
+        setActiveOrder(null);
         fetchTables();
 
         // Disparo ESC/POS de ticket de venta al cliente
@@ -327,134 +439,252 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
       {/* Right Column: Order Cart */}
       <div className="w-96 bg-slate-950 flex flex-col justify-between border-l border-slate-800">
         {/* Cart Header */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <ShoppingCart className="w-5 h-5 text-orange-500" />
-            <span className="font-bold text-white">Comanda Actual</span>
+        <div className="p-4 border-b border-slate-800 flex flex-col space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <ShoppingCart className="w-5 h-5 text-orange-500" />
+              <span className="font-bold text-white">Comanda</span>
+            </div>
+
+            <select
+              value={currentTable?.id || ''}
+              onChange={(e) => {
+                const selected = allTables.find((t) => t.id === e.target.value);
+                setCurrentTable(selected || null);
+              }}
+              className="bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-500"
+            >
+              <option value="">Para Llevar</option>
+              {allTables.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label} ({t.status === 'free' ? 'Libre' : t.status === 'check_requested' ? 'Cuenta Pedida' : 'Ocupada'})
+                </option>
+              ))}
+            </select>
           </div>
 
-          <select
-            value={currentTable?.id || ''}
-            onChange={(e) => {
-              const selected = allTables.find((t) => t.id === e.target.value);
-              setCurrentTable(selected || null);
-            }}
-            className="bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-500"
-          >
-            <option value="">Para Llevar</option>
-            {allTables.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.label} ({t.status === 'free' ? 'Libre' : 'Ocupada'})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Cart Items */}
-        <div className="p-4 flex-1 overflow-y-auto space-y-3">
-          {cart.length === 0 ? (
-            <div className="text-center py-20 text-slate-500 text-sm">
-              Selecciona productos para iniciar la comanda
+          {/* Active order info pill */}
+          {activeOrder && (
+            <div className="flex items-center justify-between text-[11px] bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
+              <span className="text-slate-300 font-medium">
+                Orden <strong className="text-white">#{activeOrder.orderNumber || activeOrder.id?.slice(0, 6)}</strong>
+              </span>
+              <span className={`px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-[10px] ${
+                activeOrder.status === 'check_requested'
+                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                  : activeOrder.status === 'ready'
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+              }`}>
+                {activeOrder.status === 'check_requested' ? 'Cuenta pedida' : activeOrder.status}
+              </span>
             </div>
-          ) : (
-            cart.map((item) => (
-              <div
-                key={item.product.id}
-                className="p-3 bg-slate-900 rounded-xl border border-slate-800 flex flex-col space-y-2"
-              >
-                <div className="flex items-start justify-between">
-                  <span className="font-semibold text-sm text-slate-200">{item.product.name}</span>
-                  <span className="text-sm font-bold text-orange-400">
-                    ${(parseFloat(item.product.price) * item.quantity).toLocaleString()}
-                  </span>
-                </div>
+          )}
 
-                <div className="flex items-center justify-between pt-1">
-                  <input
-                    type="text"
-                    placeholder="Nota especial (ej. sin cebolla)"
-                    value={item.notes}
-                    onChange={(e) => {
-                      const note = e.target.value;
-                      setCart((prev) =>
-                        prev.map((i) =>
-                          i.product.id === item.product.id ? { ...i, notes: note } : i
-                        )
-                      );
-                    }}
-                    className="text-xs bg-slate-950 border border-slate-800 rounded px-2 py-1 text-slate-300 w-44 focus:outline-none focus:border-slate-700"
-                  />
-
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => updateQuantity(item.product.id, -1)}
-                      className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300"
-                    >
-                      <Minus className="w-3.5 h-3.5" />
-                    </button>
-                    <span className="text-xs font-bold text-white w-4 text-center">
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={() => updateQuantity(item.product.id, 1)}
-                      className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))
+          {checkRequestedSuccess && (
+            <div className="bg-amber-500/20 text-amber-300 text-xs px-3 py-1.5 rounded-lg border border-amber-500/40 flex items-center space-x-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>Cuenta solicitada a Caja con éxito</span>
+            </div>
           )}
         </div>
 
+        {/* Cart Items List */}
+        <div className="p-4 flex-1 overflow-y-auto space-y-4">
+          {/* Section 1: Active Order Items (En Cocina / Comandados) */}
+          {activeOrder && activeOrder.items && activeOrder.items.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
+                <span className="flex items-center space-x-1.5">
+                  <Clock className="w-3 h-3 text-sky-400" />
+                  <span>En Cocina ({activeOrder.items.length})</span>
+                </span>
+                <span className="text-slate-300 font-mono font-bold">${existingSubtotal.toLocaleString()}</span>
+              </div>
+
+              <div className="space-y-1.5">
+                {activeOrder.items.map((item: any) => (
+                  <div
+                    key={item.id}
+                    className="p-2.5 bg-slate-900/90 rounded-xl border border-slate-800/80 flex items-center justify-between text-xs"
+                  >
+                    <div className="flex-1 min-w-0 pr-2">
+                      <div className="flex items-center space-x-1.5">
+                        <span className="font-extrabold text-orange-400">{item.quantity}x</span>
+                        <span className="text-slate-200 font-medium truncate">{item.productName || item.product?.name || 'Producto'}</span>
+                      </div>
+                      {item.notes && (
+                        <p className="text-[10px] text-slate-400 italic truncate mt-0.5">{item.notes}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2 flex-shrink-0">
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                        item.status === 'ready'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                          : item.status === 'in_preparation'
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                          : 'bg-slate-800 text-slate-400'
+                      }`}>
+                        {item.status === 'ready' ? 'Listo' : item.status === 'in_preparation' ? 'En prep.' : 'Enviado'}
+                      </span>
+                      <span className="font-mono text-slate-300">
+                        ${(parseFloat(item.unitPrice || '0') * item.quantity).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Section 2: New items to add / append */}
+          <div className="space-y-2">
+            {activeOrder && (
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider px-1 pt-2 border-t border-slate-800">
+                <span className="flex items-center space-x-1.5">
+                  <Plus className="w-3 h-3 text-orange-400" />
+                  <span>Nuevos Ítems ({cart.length})</span>
+                </span>
+                {cart.length > 0 && (
+                  <span className="text-orange-400 font-mono font-bold">${newSubtotal.toLocaleString()}</span>
+                )}
+              </div>
+            )}
+
+            {cart.length === 0 ? (
+              !activeOrder && (
+                <div className="text-center py-16 text-slate-500 text-xs">
+                  Selecciona productos del menú para iniciar la comanda
+                </div>
+              )
+            ) : (
+              cart.map((item) => (
+                <div
+                  key={item.product.id}
+                  className="p-3 bg-slate-900 rounded-xl border border-slate-800 flex flex-col space-y-2"
+                >
+                  <div className="flex items-start justify-between">
+                    <span className="font-semibold text-xs text-slate-200">{item.product.name}</span>
+                    <span className="text-xs font-bold text-orange-400 font-mono">
+                      ${(parseFloat(item.product.price) * item.quantity).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <input
+                      type="text"
+                      placeholder="Nota (ej. sin cebolla)"
+                      value={item.notes}
+                      onChange={(e) => {
+                        const note = e.target.value;
+                        setCart((prev) =>
+                          prev.map((i) =>
+                            i.product.id === item.product.id ? { ...i, notes: note } : i
+                          )
+                        );
+                      }}
+                      className="text-[11px] bg-slate-950 border border-slate-800 rounded px-2 py-1 text-slate-300 w-40 focus:outline-none focus:border-slate-700"
+                    />
+
+                    <div className="flex items-center space-x-1.5">
+                      <button
+                        onClick={() => updateQuantity(item.product.id, -1)}
+                        className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <span className="text-xs font-bold text-white w-4 text-center">
+                        {item.quantity}
+                      </span>
+                      <button
+                        onClick={() => updateQuantity(item.product.id, 1)}
+                        className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
         {/* Cart Summary & Actions */}
-        <div className="p-5 border-t border-slate-800 bg-slate-900/60 space-y-3">
+        <div className="p-4 border-t border-slate-800 bg-slate-900/80 space-y-3">
           <div className="space-y-1 text-xs text-slate-400">
             <div className="flex justify-between">
               <span>Subtotal:</span>
-              <span>${subtotal.toLocaleString()}</span>
+              <span className="font-mono text-slate-300">${subtotal.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
               <span>{taxLabel}</span>
-              <span>${tax.toLocaleString()}</span>
+              <span className="font-mono text-slate-300">${tax.toLocaleString()}</span>
             </div>
-            <div className="flex justify-between text-base font-extrabold text-white pt-2 border-t border-slate-800">
+            <div className="flex justify-between text-sm font-extrabold text-white pt-1.5 border-t border-slate-800">
               <span>Total:</span>
-              <span className="text-orange-400">${total.toLocaleString()}</span>
+              <span className="text-orange-400 font-mono text-base">${total.toLocaleString()}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            {/* Action 1: Enviar a Cocina */}
+          <div className="space-y-2 pt-1">
+            {/* Primary Kitchen Action: Enviar o Anexar */}
             <button
               disabled={cart.length === 0 || submitting}
-              onClick={handleSendOrder}
-              className={`py-2.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all ${
+              onClick={handleSendOrAppendOrder}
+              className={`w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all ${
                 orderSentSuccess
                   ? 'bg-emerald-600 text-white'
                   : cart.length > 0
-                  ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer border border-slate-700'
+                  ? 'bg-orange-600 hover:bg-orange-500 text-white cursor-pointer shadow-lg shadow-orange-600/20'
                   : 'bg-slate-900 text-slate-600 cursor-not-allowed border border-slate-800'
               }`}
             >
               <Send className="w-3.5 h-3.5" />
-              <span>A Cocina</span>
+              <span>
+                {submitting
+                  ? 'Enviando...'
+                  : orderSentSuccess
+                  ? '¡Enviado a Cocina!'
+                  : activeOrder
+                  ? `Anexar ${cart.length} Ítem(s) a Cocina`
+                  : 'Enviar a Cocina'}
+              </span>
             </button>
 
-            {/* Action 2: Cobrar y Facturar */}
-            <button
-              disabled={cart.length === 0 || submitting}
-              onClick={handleOpenCheckout}
-              className={`py-2.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all ${
-                cart.length > 0
-                  ? 'bg-orange-600 hover:bg-orange-500 text-white cursor-pointer shadow-lg shadow-orange-600/20'
-                  : 'bg-slate-800 text-slate-600 cursor-not-allowed'
-              }`}
-            >
-              <Receipt className="w-3.5 h-3.5" />
-              <span>Cobrar Orden</span>
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+              {/* Secondary Action: Pedir Cuenta (Waiters & Everyone when order exists) */}
+              {activeOrder && (
+                <button
+                  type="button"
+                  onClick={handleRequestCheck}
+                  className="py-2.5 px-2 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 cursor-pointer transition-colors"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Pedir Cuenta</span>
+                </button>
+              )}
+
+              {/* Tertiary Action: Cobrar Orden (Cashier / Manager / Admin) */}
+              {isCashierOrManager ? (
+                <button
+                  disabled={(cart.length === 0 && !activeOrder) || submitting}
+                  onClick={handleOpenCheckout}
+                  className={`${activeOrder ? '' : 'col-span-2'} py-2.5 px-2 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all ${
+                    cart.length > 0 || activeOrder
+                      ? 'bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 cursor-pointer'
+                      : 'bg-slate-900 text-slate-600 cursor-not-allowed border border-slate-800'
+                  }`}
+                >
+                  <Receipt className="w-3.5 h-3.5" />
+                  <span>Cobrar Orden</span>
+                </button>
+              ) : (
+                <div className="py-2 px-1 text-[11px] text-slate-500 flex items-center justify-center text-center">
+                  Cobro en Caja
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
