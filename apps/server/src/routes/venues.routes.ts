@@ -11,7 +11,28 @@ export async function venuesRoutes(fastify: FastifyInstance) {
   // 3. Get venue by id
   fastify.get('/api/venues/:id', (request, reply) => venuesController.getVenueById(request, reply));
 
-  // 4. Update venue settings / branding (Manager / Admin only)
+  // 4. Create new venue (Super Admin only)
+  fastify.post(
+    '/api/venues',
+    {
+      preHandler: [
+        fastify.authenticate,
+        fastify.requireRole(['super_admin']),
+      ],
+    },
+    (request, reply) => venuesController.createVenue(request, reply)
+  );
+
+  // 5. Get venue summary metrics (Tables, Orders, Shift, Staff)
+  fastify.get(
+    '/api/venues/:id/summary',
+    {
+      preHandler: [fastify.authenticate],
+    },
+    (request, reply) => venuesController.getVenueSummary(request, reply)
+  );
+
+  // 6. Update venue settings / branding (Manager / Admin only)
   fastify.patch(
     '/api/venues/:id/settings',
     {
