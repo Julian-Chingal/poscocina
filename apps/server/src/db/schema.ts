@@ -321,6 +321,46 @@ export const inventoryMovements = pgTable('inventory_movements', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+// 9.5 Suppliers & Purchases (Insumos)
+export const suppliers = pgTable('suppliers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  venueId: uuid('venue_id').notNull().references(() => venues.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 150 }).notNull(),
+  documentType: varchar('document_type', { length: 20 }).notNull().default('NIT'),
+  documentNumber: varchar('document_number', { length: 50 }).notNull(),
+  contactName: varchar('contact_name', { length: 100 }),
+  phone: varchar('phone', { length: 50 }),
+  email: varchar('email', { length: 150 }),
+  address: text('address'),
+  notes: text('notes'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const purchases = pgTable('purchases', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  venueId: uuid('venue_id').notNull().references(() => venues.id, { onDelete: 'cascade' }),
+  supplierId: uuid('supplier_id').notNull().references(() => suppliers.id, { onDelete: 'restrict' }),
+  invoiceNumber: varchar('invoice_number', { length: 80 }).notNull(),
+  purchaseDate: timestamp('purchase_date', { withTimezone: true }).notNull().defaultNow(),
+  totalAmount: numeric('total_amount', { precision: 12, scale: 2 }).notNull().default('0.00'),
+  status: varchar('status', { length: 30 }).notNull().default('received'), // 'draft', 'received', 'cancelled'
+  notes: text('notes'),
+  receivedBy: uuid('received_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const purchaseItems = pgTable('purchase_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  purchaseId: uuid('purchase_id').notNull().references(() => purchases.id, { onDelete: 'cascade' }),
+  inventoryItemId: uuid('inventory_item_id').notNull().references(() => inventoryItems.id, { onDelete: 'restrict' }),
+  quantity: numeric('quantity', { precision: 12, scale: 4 }).notNull(),
+  unitCost: numeric('unit_cost', { precision: 12, scale: 4 }).notNull(),
+  totalCost: numeric('total_cost', { precision: 12, scale: 2 }).notNull(),
+});
+
 // 10. Relations
 export const venuesRelations = relations(venues, ({ many }) => ({
   users: many(users),
@@ -394,6 +434,23 @@ export const orderItemModifiersRelations = relations(orderItemModifiers, ({ one 
     fields: [orderItemModifiers.modifierId],
     references: [modifiers.id],
   }),
+}));
+
+export const suppliersRelations = relations(suppliers, ({ one, many }) => ({
+  venue: one(venues, { fields: [suppliers.venueId], references: [venues.id] }),
+  purchases: many(purchases),
+}));
+
+export const purchasesRelations = relations(purchases, ({ one, many }) => ({
+  venue: one(venues, { fields: [purchases.venueId], references: [venues.id] }),
+  supplier: one(suppliers, { fields: [purchases.supplierId], references: [suppliers.id] }),
+  receiver: one(users, { fields: [purchases.receivedBy], references: [users.id] }),
+  items: many(purchaseItems),
+}));
+
+export const purchaseItemsRelations = relations(purchaseItems, ({ one }) => ({
+  purchase: one(purchases, { fields: [purchaseItems.purchaseId], references: [purchases.id] }),
+  inventoryItem: one(inventoryItems, { fields: [purchaseItems.inventoryItemId], references: [inventoryItems.id] }),
 }));
 
 // 11. Security & Audit Trail
