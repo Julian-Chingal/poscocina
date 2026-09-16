@@ -10,6 +10,7 @@ import {
   Settings,
   Search,
   Users,
+  CalendarDays,
 } from 'lucide-react';
 import { useBrandingStore } from '../stores/branding.store';
 
@@ -33,6 +34,16 @@ const APPS: AppItem[] = [
     gradient: 'from-emerald-400 to-teal-600',
     badge: 'En vivo',
     badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    category: 'operacion',
+  },
+  {
+    id: 'reservations',
+    name: 'Reservas de Mesas',
+    subtitle: 'Agenda, confirmación y asignación',
+    icon: CalendarDays,
+    gradient: 'from-pink-500 to-rose-600',
+    badge: 'Fase 6',
+    badgeColor: 'bg-pink-500/20 text-pink-300 border-pink-500/30',
     category: 'operacion',
   },
   {

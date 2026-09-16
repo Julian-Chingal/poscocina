@@ -115,6 +115,11 @@ export const InventoryView: React.FC<{ venueId: string }> = ({ venueId }) => {
       fetchMovements();
     });
 
+    socket.on('inventory:low_stock', () => {
+      fetchItems();
+      fetchMovements();
+    });
+
     return () => {
       socket.disconnect();
     };
@@ -238,6 +243,31 @@ export const InventoryView: React.FC<{ venueId: string }> = ({ venueId }) => {
           </button>
         </div>
       </div>
+
+      {/* Critical Stock Alert Banner */}
+      {criticalItems.length > 0 && (
+        <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-start space-x-3 text-rose-300">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0 text-rose-400 mt-0.5" />
+          <div className="flex-1 text-xs">
+            <h4 className="font-bold text-rose-200 text-sm">
+              ¡Alerta de Inventario Crítico ({criticalItems.length} insumo{criticalItems.length > 1 ? 's' : ''})!
+            </h4>
+            <p className="text-slate-300 mt-0.5">
+              Los siguientes insumos han caído por debajo de su umbral mínimo de seguridad y requieren reabastecimiento urgente:
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {criticalItems.map((item) => (
+                <span
+                  key={item.id}
+                  className="px-2.5 py-1 rounded-lg bg-rose-950/60 border border-rose-800/60 text-rose-200 font-mono text-[11px]"
+                >
+                  {item.name}: {parseFloat(item.currentStock).toLocaleString()} {item.unit} (Mín: {parseFloat(item.alertThreshold).toLocaleString()})
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">

@@ -27,6 +27,7 @@ interface TopBarProps {
 const VIEW_TITLES: Record<string, string> = {
   home: 'Aplicaciones',
   salon: 'Salón y Mesas (F1)',
+  reservations: 'Reservas de Mesas',
   pos: 'Punto de Venta (F2)',
   kds: 'Cocina KDS (F3)',
   catalog: 'Menú y Catálogo',

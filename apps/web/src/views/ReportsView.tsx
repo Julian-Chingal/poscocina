@@ -11,9 +11,27 @@ import {
   ChefHat,
   Percent,
   Wallet,
+  ShieldAlert,
 } from 'lucide-react';
 import { useBrandingStore } from '../stores/branding.store';
 import { api } from '../services/api';
+
+interface AuditLogItem {
+  id: string;
+  venueId: string;
+  userId?: string;
+  action: string;
+  entityType?: string;
+  entityId?: string;
+  payload?: any;
+  ipAddress?: string;
+  createdAt: string;
+  user?: {
+    id: string;
+    name: string;
+    roleId?: string;
+  };
+}
 
 interface OverviewMetrics {
   totalSales: number;
@@ -76,6 +94,37 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ venueId }) => {
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [kdsMetrics, setKdsMetrics] = useState<KdsMetrics | null>(null);
   const [cogsMetrics, setCogsMetrics] = useState<CogsMetrics | null>(null);
+
+  // Phase 6: Security Audit Trail Tab
+  const [activeTab, setActiveTab] = useState<'metrics' | 'audit'>('metrics');
+  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
+  const [auditFilterAction, setAuditFilterAction] = useState<string>('all');
+  const [auditLoading, setAuditLoading] = useState<boolean>(false);
+
+  const loadAuditLogs = useCallback(async () => {
+    if (!venueId) return;
+    setAuditLoading(true);
+    try {
+      const url = auditFilterAction !== 'all'
+        ? `/api/audit?venueId=${venueId}&action=${auditFilterAction}`
+        : `/api/audit?venueId=${venueId}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setAuditLogs(data);
+      }
+    } catch (err) {
+      console.error('Error fetching audit logs:', err);
+    } finally {
+      setAuditLoading(false);
+    }
+  }, [venueId, auditFilterAction]);
+
+  useEffect(() => {
+    if (activeTab === 'audit') {
+      loadAuditLogs();
+    }
+  }, [activeTab, loadAuditLogs]);
 
   const getDateRange = useCallback(() => {
     const now = new Date();
@@ -268,6 +317,35 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ venueId }) => {
         </div>
       </div>
 
+      {/* Sub-tab Switcher: Métricas vs Auditoría */}
+      <div className="flex items-center gap-2 border-b border-slate-800 pb-3 print:hidden">
+        <button
+          onClick={() => setActiveTab('metrics')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+            activeTab === 'metrics'
+              ? 'bg-orange-600 text-white shadow-lg'
+              : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+          }`}
+        >
+          <PieChart className="w-4 h-4" />
+          <span>Métricas & Rentabilidad</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('audit')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+            activeTab === 'audit'
+              ? 'bg-rose-600 text-white shadow-lg'
+              : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+          }`}
+        >
+          <ShieldAlert className="w-4 h-4" />
+          <span>Auditoría de Seguridad (Audit Trail)</span>
+        </button>
+      </div>
+
+      {activeTab === 'metrics' && (
+        <>
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Ventas Totales */}
@@ -556,6 +634,136 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ venueId }) => {
           </div>
         </div>
       </div>
+        </>
+      )}
+
+      {/* AUDIT TRAIL TAB */}
+      {activeTab === 'audit' && (
+        <div className="space-y-4">
+          {/* Filter by action */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-slate-400 font-medium">Filtrar por evento:</span>
+              <div className="flex bg-slate-950 border border-slate-800 rounded-xl p-1 text-xs">
+                {[
+                  { id: 'all', label: 'Todos' },
+                  { id: 'billing:discount_applied', label: 'Descuentos' },
+                  { id: 'order:item_cancelled', label: 'Platos Cancelados' },
+                  { id: 'cash_drawer:manual_open', label: 'Apertura Gaveta' },
+                  { id: 'cash_shift:discrepancy', label: 'Diferencia Caja' },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setAuditFilterAction(item.id)}
+                    className={`px-3 py-1 rounded-lg font-medium transition cursor-pointer ${
+                      auditFilterAction === item.id
+                        ? 'bg-rose-600 text-white shadow'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={loadAuditLogs}
+              title="Recargar eventos"
+              className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white transition cursor-pointer"
+            >
+              <RefreshCw className={`w-4 h-4 ${auditLoading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+
+          {/* Audit Logs Table */}
+          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-950/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
+                  <tr>
+                    <th className="py-3 px-4">Fecha / Hora</th>
+                    <th className="py-3 px-4">Evento de Seguridad</th>
+                    <th className="py-3 px-4">Usuario</th>
+                    <th className="py-3 px-4">IP / Origen</th>
+                    <th className="py-3 px-4">Detalles / Causa</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                  {auditLoading ? (
+                    <tr>
+                      <td colSpan={5} className="py-10 text-center text-slate-500">
+                        Cargando registro de auditoría...
+                      </td>
+                    </tr>
+                  ) : auditLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-10 text-center text-slate-500">
+                        No se registran eventos de seguridad para este local.
+                      </td>
+                    </tr>
+                  ) : (
+                    auditLogs.map((log) => {
+                      const dt = new Date(log.createdAt).toLocaleString('es-CO');
+                      return (
+                        <tr key={log.id} className="hover:bg-slate-800/40 transition">
+                          <td className="py-3 px-4 font-mono text-[11px] text-slate-400 whitespace-nowrap">
+                            {dt}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {log.action === 'billing:discount_applied' && (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                🏷️ Descuento Aplicado
+                              </span>
+                            )}
+                            {log.action === 'order:item_cancelled' && (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                                ❌ Plato Cancelado
+                              </span>
+                            )}
+                            {log.action === 'cash_drawer:manual_open' && (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                🔓 Gaveta Manual
+                              </span>
+                            )}
+                            {log.action === 'cash_shift:discrepancy' && (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
+                                ⚠️ Diferencia en Arqueo
+                              </span>
+                            )}
+                            {!['billing:discount_applied', 'order:item_cancelled', 'cash_drawer:manual_open', 'cash_shift:discrepancy'].includes(log.action) && (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
+                                {log.action}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="font-semibold text-white">
+                              {log.user?.name || (log.userId ? log.userId.slice(0, 8) : 'Sistema / POS')}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 font-mono text-[11px] text-slate-400 whitespace-nowrap">
+                            {log.ipAddress || '127.0.0.1'}
+                          </td>
+                          <td className="py-3 px-4 text-xs font-mono text-slate-300">
+                            {log.payload ? (
+                              <pre className="max-w-md truncate whitespace-pre-wrap font-sans text-[11px] text-slate-400">
+                                {JSON.stringify(log.payload, null, 1).replace(/[\{\}"]/g, '')}
+                              </pre>
+                            ) : (
+                              '--'
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -10,6 +10,7 @@ import { InventoryView } from './views/InventoryView';
 import { CashShiftsView } from './views/CashShiftsView';
 import { ReportsView } from './views/ReportsView';
 import { UsersView } from './views/UsersView';
+import { ReservationsView } from './views/ReservationsView';
 import { ModulePlaceholderView } from './views/ModulePlaceholderView';
 import { OfflineView } from './views/OfflineView';
 import { PinPadModal } from './components/PinPadModal';
@@ -196,7 +197,17 @@ export const App: React.FC = () => {
           <UsersView venueId={venueId || ''} />
         )}
 
-        {!['home', 'salon', 'pos', 'kds', 'catalog', 'settings', 'inventory', 'shifts', 'reports', 'users'].includes(currentView) && (
+        {currentView === 'reservations' && (
+          <ReservationsView
+            venueId={venueId || ''}
+            onNavigateToTable={(table) => {
+              setSelectedTable(table);
+              setCurrentView('pos');
+            }}
+          />
+        )}
+
+        {!['home', 'salon', 'reservations', 'pos', 'kds', 'catalog', 'settings', 'inventory', 'shifts', 'reports', 'users'].includes(currentView) && (
           <ModulePlaceholderView
             moduleId={currentView}
             onBack={() => setCurrentView('home')}
