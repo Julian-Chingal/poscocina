@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
+  Wifi,
+  Trash2,
+  Edit2,
+  Play,
+  AlertTriangle,
   Building2,
   Receipt,
   Image as ImageIcon,
@@ -80,6 +85,150 @@ export const SettingsView: React.FC = () => {
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
 
+
+  // Hardware Printers State
+  const [printers, setPrinters] = useState<any[]>([]);
+  const [showPrinterModal, setShowPrinterModal] = useState(false);
+  const [editingPrinterId, setEditingPrinterId] = useState<string | null>(null);
+  const [testingPrinterId, setTestingPrinterId] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<{ id: string; success: boolean; msg: string } | null>(null);
+
+  // Form State for Printer
+  const [pName, setPName] = useState('');
+  const [pStation, setPStation] = useState<'cashier' | 'kitchen' | 'bar' | 'dessert' | 'expediter'>('kitchen');
+  const [pConn, setPConn] = useState<'network_tcp' | 'browser_raw' | 'disabled'>('network_tcp');
+  const [pIp, setPIp] = useState('');
+  const [pPort, setPPort] = useState(9100);
+  const [pWidth, setPWidth] = useState<'58' | '80'>('80');
+  const [pAutoOrder, setPAutoOrder] = useState(true);
+  const [pAutoPayment, setPAutoPayment] = useState(false);
+  const [pOpenDrawer, setPOpenDrawer] = useState(false);
+
+  const fetchPrinters = async () => {
+    if (!venueId) return;
+    try {
+      const res = await fetch(`/api/hardware/printers?venueId=${venueId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPrinters(data);
+      }
+    } catch (e) {
+      console.error('Error fetching printers:', e);
+    }
+  };
+
+  const handleOpenNewPrinterModal = () => {
+    setEditingPrinterId(null);
+    setPName('');
+    setPStation('kitchen');
+    setPConn('network_tcp');
+    setPIp('');
+    setPPort(9100);
+    setPWidth('80');
+    setPAutoOrder(true);
+    setPAutoPayment(false);
+    setPOpenDrawer(false);
+    setShowPrinterModal(true);
+  };
+
+  const handleEditPrinter = (printer: any) => {
+    setEditingPrinterId(printer.id);
+    setPName(printer.name);
+    setPStation(printer.station);
+    setPConn(printer.connectionType);
+    setPIp(printer.ipAddress || '');
+    setPPort(printer.port || 9100);
+    setPWidth(printer.paperWidth || '80');
+    setPAutoOrder(printer.autoPrintOnOrder ?? true);
+    setPAutoPayment(printer.autoPrintOnPayment ?? false);
+    setPOpenDrawer(printer.openDrawerOnPrint ?? false);
+    setShowPrinterModal(true);
+  };
+
+  const handleSavePrinter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pName.trim()) return;
+
+    try {
+      const url = editingPrinterId
+        ? `/api/hardware/printers/${editingPrinterId}`
+        : '/api/hardware/printers';
+      const method = editingPrinterId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          venueId,
+          name: pName,
+          station: pStation,
+          connectionType: pConn,
+          ipAddress: pIp.trim() || undefined,
+          port: Number(pPort) || 9100,
+          paperWidth: pWidth,
+          autoPrintOnOrder: pAutoOrder,
+          autoPrintOnPayment: pAutoPayment,
+          openDrawerOnPrint: pOpenDrawer,
+        }),
+      });
+
+      if (res.ok) {
+        setShowPrinterModal(false);
+        fetchPrinters();
+      } else {
+        const err = await res.json();
+        alert(err.message || 'Error al guardar impresora');
+      }
+    } catch (err) {
+      console.error('Error saving printer:', err);
+    }
+  };
+
+  const handleDeletePrinter = async (id: string) => {
+    if (!window.confirm('¿Seguro que deseas eliminar esta impresora?')) return;
+    try {
+      const res = await fetch(`/api/hardware/printers/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchPrinters();
+      }
+    } catch (err) {
+      console.error('Error deleting printer:', err);
+    }
+  };
+
+  const handleTestPrint = async (printer: any) => {
+    setTestingPrinterId(printer.id);
+    setTestResult(null);
+    try {
+      const res = await fetch(`/api/hardware/test-print?venueId=${venueId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ printerId: printer.id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTestResult({
+          id: printer.id,
+          success: true,
+          msg: data.networkSent
+            ? `¡Ticket enviado con éxito por red TCP a ${printer.ipAddress}!`
+            : 'Ticket generado exitosamente (Modo navegador/emulado)',
+        });
+      } else {
+        setTestResult({
+          id: printer.id,
+          success: false,
+          msg: data.networkError || data.message || 'Error en prueba de impresión',
+        });
+      }
+    } catch (err: any) {
+      setTestResult({ id: printer.id, success: false, msg: err.message });
+    } finally {
+      setTestingPrinterId(null);
+      setTimeout(() => setTestResult(null), 5000);
+    }
+  };
+
   // Multi-venue summaries & modal state
   const [summaries, setSummaries] = useState<Record<string, VenueSummaryData>>({});
   const [isNewVenueModalOpen, setIsNewVenueModalOpen] = useState(false);
@@ -111,7 +260,8 @@ export const SettingsView: React.FC = () => {
   // Load venues & summaries
   useEffect(() => {
     loadAllVenues();
-  }, [loadAllVenues]);
+    fetchPrinters();
+  }, [loadAllVenues, venueId]);
 
   useEffect(() => {
     const fetchSummaries = async () => {
@@ -655,7 +805,155 @@ export const SettingsView: React.FC = () => {
 
       {/* Tab 3: Impresión Térmica ESC/POS */}
       {activeTab === 'printer' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="space-y-8">
+          {/* HARDWARE PRINTERS MANAGEMENT */}
+          <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-700/60 gap-4 mb-5">
+              <div>
+                <div className="flex items-center space-x-2">
+                  <Printer className="w-5 h-5 text-orange-400" />
+                  <h3 className="font-bold text-white text-base">
+                    Dispositivos e Impresoras Térmicas de la Sede
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  Ruteo directo por red TCP (puerto 9100) para comandas en cocina/barra y recibos en caja.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleOpenNewPrinterModal}
+                className="flex items-center space-x-2 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg shadow-orange-600/20 self-start sm:self-auto"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Nueva Impresora</span>
+              </button>
+            </div>
+
+            {/* Printers Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {printers.map((printer) => {
+                const isTesting = testingPrinterId === printer.id;
+                const result = testResult?.id === printer.id ? testResult : null;
+
+                const stationLabel =
+                  printer.station === 'cashier'
+                    ? 'Caja Principal'
+                    : printer.station === 'kitchen'
+                    ? 'Cocina Caliente'
+                    : printer.station === 'bar'
+                    ? 'Barra / Bebidas'
+                    : printer.station === 'dessert'
+                    ? 'Postres / Café'
+                    : 'Expedición';
+
+                return (
+                  <div
+                    key={printer.id}
+                    className="bg-slate-900/80 border border-slate-700/80 rounded-2xl p-4 flex flex-col justify-between space-y-3 relative group"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-bold text-white text-sm">{printer.name}</h4>
+                          <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 mt-1 rounded-md bg-orange-950/60 border border-orange-800/60 text-orange-300">
+                            {stationLabel}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-mono bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">
+                          {printer.paperWidth}mm
+                        </span>
+                      </div>
+
+                      <div className="mt-3 space-y-1.5 text-xs text-slate-300 font-mono">
+                        <div className="flex items-center space-x-1.5">
+                          <Wifi className="w-3.5 h-3.5 text-slate-500" />
+                          <span>
+                            {printer.connectionType === 'network_tcp'
+                              ? `TCP: ${printer.ipAddress || 'Sin IP'}:${printer.port}`
+                              : 'Navegador Web / USB'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-1 text-[10px]">
+                        {printer.autoPrintOnOrder && (
+                          <span className="bg-emerald-950/60 border border-emerald-800/40 text-emerald-300 px-1.5 py-0.5 rounded">
+                            Comandas Auto
+                          </span>
+                        )}
+                        {printer.autoPrintOnPayment && (
+                          <span className="bg-blue-950/60 border border-blue-800/40 text-blue-300 px-1.5 py-0.5 rounded">
+                            Facturas Auto
+                          </span>
+                        )}
+                        {printer.openDrawerOnPrint && (
+                          <span className="bg-purple-950/60 border border-purple-800/40 text-purple-300 px-1.5 py-0.5 rounded">
+                            Pulso Gaveta
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {result && (
+                      <div
+                        className={`p-2 rounded-xl text-[11px] flex items-center space-x-1.5 ${
+                          result.success
+                            ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
+                            : 'bg-rose-500/10 text-rose-300 border border-rose-500/30'
+                        }`}
+                      >
+                        {result.success ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 text-emerald-400" />
+                        ) : (
+                          <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 text-rose-400" />
+                        )}
+                        <span className="truncate">{result.msg}</span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+                      <button
+                        type="button"
+                        disabled={isTesting}
+                        onClick={() => handleTestPrint(printer)}
+                        className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center space-x-1 transition cursor-pointer border border-slate-700"
+                      >
+                        <Play className="w-3 h-3 text-emerald-400" />
+                        <span>{isTesting ? 'Enviando...' : 'Test Impresión'}</span>
+                      </button>
+
+                      <div className="flex items-center space-x-1">
+                        <button
+                          type="button"
+                          onClick={() => handleEditPrinter(printer)}
+                          className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePrinter(printer.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {printers.length === 0 && (
+                <div className="col-span-full p-8 text-center text-slate-500 text-xs border border-dashed border-slate-700 rounded-2xl">
+                  No hay impresoras térmicas configuradas para esta sede. Haz clic en "Nueva Impresora" para agregar una impresora de caja o cocina.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-sm space-y-5">
               <div className="flex items-center space-x-2.5 pb-4 border-b border-slate-700/60">
@@ -835,7 +1133,175 @@ export const SettingsView: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+
+        {/* MODAL: Nueva / Editar Impresora */}
+        {showPrinterModal && (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+                <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                  <Printer className="w-5 h-5 text-orange-400" />
+                  <span>{editingPrinterId ? 'Editar Impresora Térmica' : 'Configurar Nueva Impresora'}</span>
+                </h3>
+                <button
+                  onClick={() => setShowPrinterModal(false)}
+                  className="text-slate-400 hover:text-white cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleSavePrinter} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Nombre o Etiqueta: *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Epson TM-T20 Cocina o Xprinter Barra"
+                    value={pName}
+                    onChange={(e) => setPName(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Estación Asignada: *
+                    </label>
+                    <select
+                      value={pStation}
+                      onChange={(e: any) => setPStation(e.target.value)}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    >
+                      <option value="kitchen">Cocina Caliente</option>
+                      <option value="bar">Barra / Bebidas</option>
+                      <option value="dessert">Postres / Café</option>
+                      <option value="cashier">Caja Principal (Recibos)</option>
+                      <option value="expediter">Expedición / Despacho</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Ancho del Papel: *
+                    </label>
+                    <select
+                      value={pWidth}
+                      onChange={(e: any) => setPWidth(e.target.value)}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    >
+                      <option value="80">80 mm (Estándar POS)</option>
+                      <option value="58">58 mm (Compacto)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Modo de Conexión: *
+                    </label>
+                    <select
+                      value={pConn}
+                      onChange={(e: any) => setPConn(e.target.value)}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    >
+                      <option value="network_tcp">Red LAN TCP (Socket Directo)</option>
+                      <option value="browser_raw">Navegador Web / USB</option>
+                      <option value="disabled">Deshabilitada</option>
+                    </select>
+                  </div>
+
+                  {pConn === 'network_tcp' ? (
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1">
+                        Dirección IP en Red:
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="192.168.1.100"
+                        value={pIp}
+                        onChange={(e) => setPIp(e.target.value)}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-orange-500"
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1">
+                        Puerto RAW:
+                      </label>
+                      <input
+                        type="number"
+                        value={pPort}
+                        onChange={(e) => setPPort(Number(e.target.value))}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2 pt-2 border-t border-slate-800 text-xs">
+                  <label className="flex items-center space-x-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pAutoOrder}
+                      onChange={(e) => setPAutoOrder(e.target.checked)}
+                      className="w-4 h-4 rounded border-slate-700 text-orange-600 focus:ring-orange-500"
+                    />
+                    <span className="text-slate-300 font-medium">
+                      Imprimir automáticamente al marchar comanda a esta estación
+                    </span>
+                  </label>
+
+                  <label className="flex items-center space-x-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pAutoPayment}
+                      onChange={(e) => setPAutoPayment(e.target.checked)}
+                      className="w-4 h-4 rounded border-slate-700 text-orange-600 focus:ring-orange-500"
+                    />
+                    <span className="text-slate-300 font-medium">
+                      Imprimir automáticamente factura final al registrar pago
+                    </span>
+                  </label>
+
+                  <label className="flex items-center space-x-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pOpenDrawer}
+                      onChange={(e) => setPOpenDrawer(e.target.checked)}
+                      className="w-4 h-4 rounded border-slate-700 text-orange-600 focus:ring-orange-500"
+                    />
+                    <span className="text-slate-300 font-medium">
+                      Disparar pulso eléctrico de apertura de gaveta de dinero
+                    </span>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setShowPrinterModal(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-lg shadow-orange-600/20"
+                  >
+                    {editingPrinterId ? 'Guardar Cambios' : 'Registrar Impresora'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    )}
 
       {/* Tab 4: Gestión de Sedes (Multi-Sucursal) */}
       {activeTab === 'venues' && (

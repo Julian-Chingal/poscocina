@@ -360,11 +360,39 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
               </div>
             </div>
 
-            <div className="text-right">
-              <span className="text-xs text-slate-400 block">Fondo Inicial de Caja:</span>
-              <span className="text-xl font-black text-white font-mono">
-                ${parseFloat(shiftData.shift.openingAmount).toLocaleString()}
-              </span>
+            <div className="flex items-center space-x-3">
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!shiftData?.shift?.id) return;
+                  try {
+                    const res = await fetch('/api/hardware/print-shift-summary', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ shiftId: shiftData.shift.id }),
+                    });
+                    if (res.ok) {
+                      alert('Resumen térmico de turno enviado a la impresora');
+                    } else {
+                      const err = await res.json();
+                      alert(err.message || 'Error al imprimir resumen');
+                    }
+                  } catch (e) {
+                    console.error(e);
+                  }
+                }}
+                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold flex items-center space-x-1.5 cursor-pointer transition-colors shadow-sm"
+              >
+                <Printer className="w-3.5 h-3.5 text-orange-400" />
+                <span>Imprimir Resumen Z</span>
+              </button>
+
+              <div className="text-right">
+                <span className="text-xs text-slate-400 block">Fondo Inicial de Caja:</span>
+                <span className="text-xl font-black text-white font-mono">
+                  ${parseFloat(shiftData.shift.openingAmount).toLocaleString()}
+                </span>
+              </div>
             </div>
           </div>
 

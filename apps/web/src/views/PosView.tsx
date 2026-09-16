@@ -438,9 +438,33 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
         setTimeout(() => setCheckRequestedSuccess(false), 4000);
         fetchTables();
         if (targetId) fetchActiveOrder(targetId);
+
+        // Disparar impresión térmica de Pre-cuenta
+        fetch('/api/hardware/print-precheck', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: targetId }),
+        }).catch(() => {});
       }
     } catch (err) {
       console.error('Error requesting check:', err);
+    }
+  };
+
+  const handleReprintKitchen = async () => {
+    if (!activeOrderId && !activeOrder?.id) return;
+    const targetId = activeOrder?.id || activeOrderId;
+    try {
+      const res = await fetch('/api/hardware/print-kitchen', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: targetId }),
+      });
+      if (res.ok) {
+        alert('Comanda reenviada exitosamente a las impresoras de cocina y barra');
+      }
+    } catch (err) {
+      console.error('Error reprinting kitchen ticket:', err);
     }
   };
 
@@ -1013,6 +1037,28 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
                   : 'Enviar a Cocina'}
               </span>
             </button>
+
+            {activeOrder && (
+              <div className="flex items-center justify-between py-1.5 px-3 mb-2 bg-slate-900/80 rounded-xl border border-slate-800 text-[11px]">
+                <button
+                  type="button"
+                  onClick={handleReprintKitchen}
+                  className="text-slate-400 hover:text-white flex items-center space-x-1 cursor-pointer transition-colors"
+                >
+                  <Printer className="w-3.5 h-3.5 text-orange-400" />
+                  <span>Reimprimir Cocina</span>
+                </button>
+                <span className="text-slate-700">•</span>
+                <button
+                  type="button"
+                  onClick={handleRequestCheck}
+                  className="text-slate-400 hover:text-amber-300 flex items-center space-x-1 cursor-pointer transition-colors"
+                >
+                  <FileText className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Imprimir Pre-Cuenta</span>
+                </button>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-2">
               {/* Secondary Action: Pedir Cuenta (Waiters & Everyone when order exists) */}

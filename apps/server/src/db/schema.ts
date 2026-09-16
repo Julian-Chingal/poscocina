@@ -419,6 +419,10 @@ export const receiptsRelations = relations(receipts, ({ one, many }) => ({
   payments: many(receiptPayments),
 }));
 
+export const receiptPaymentsRelations = relations(receiptPayments, ({ one }) => ({
+  receipt: one(receipts, { fields: [receiptPayments.receiptId], references: [receipts.id] }),
+}));
+
 export const orderItemsRelations = relations(orderItems, ({ one, many }) => ({
   order: one(orders, { fields: [orderItems.orderId], references: [orders.id] }),
   product: one(products, { fields: [orderItems.productId], references: [products.id] }),
@@ -470,5 +474,27 @@ export const auditLogs = pgTable('audit_logs', {
 export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
   venue: one(venues, { fields: [auditLogs.venueId], references: [venues.id] }),
   user: one(users, { fields: [auditLogs.userId], references: [users.id] }),
+}));
+
+// 12. Hardware & Thermal Printers
+export const printers = pgTable('printers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  venueId: uuid('venue_id').notNull().references(() => venues.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 100 }).notNull(),
+  station: varchar('station', { length: 30 }).notNull().default('kitchen'), // 'cashier', 'kitchen', 'bar', 'dessert', 'expediter'
+  connectionType: varchar('connection_type', { length: 30 }).notNull().default('network_tcp'), // 'network_tcp', 'browser_raw', 'disabled'
+  ipAddress: varchar('ip_address', { length: 100 }),
+  port: integer('port').notNull().default(9100),
+  paperWidth: varchar('paper_width', { length: 10 }).notNull().default('80'), // '80', '58'
+  autoPrintOnOrder: boolean('auto_print_on_order').notNull().default(true),
+  autoPrintOnPayment: boolean('auto_print_on_payment').notNull().default(true),
+  openDrawerOnPrint: boolean('open_drawer_on_print').notNull().default(false),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const printersRelations = relations(printers, ({ one }) => ({
+  venue: one(venues, { fields: [printers.venueId], references: [venues.id] }),
 }));
 
