@@ -5,6 +5,7 @@ import {
   text,
   boolean,
   smallint,
+  integer,
   numeric,
   timestamp,
   jsonb,
@@ -177,11 +178,29 @@ export const productModifierGroups = pgTable(
   (t) => [primaryKey({ columns: [t.productId, t.groupId] })]
 );
 
+// 6.5 Customers & CRM
+export const customers = pgTable('customers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  venueId: uuid('venue_id').notNull().references(() => venues.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 150 }).notNull(),
+  documentType: varchar('document_type', { length: 20 }).notNull().default('CC'),
+  documentNumber: varchar('document_number', { length: 50 }).notNull(),
+  phone: varchar('phone', { length: 30 }),
+  email: varchar('email', { length: 150 }),
+  address: text('address'),
+  notes: text('notes'),
+  loyaltyPoints: integer('loyalty_points').notNull().default(0),
+  totalSpent: numeric('total_spent', { precision: 14, scale: 2 }).notNull().default('0.00'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 // 7. Orders & Items
 export const orders = pgTable('orders', {
   id: uuid('id').primaryKey().defaultRandom(),
   venueId: uuid('venue_id').notNull().references(() => venues.id, { onDelete: 'cascade' }),
   tableId: uuid('table_id').references(() => tables.id, { onDelete: 'set null' }),
+  customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
   orderType: varchar('order_type', { length: 20 }).notNull().default('dine_in'),
   status: orderStatusEnum('status').notNull().default('open'),
   waiterId: uuid('waiter_id').references(() => users.id, { onDelete: 'set null' }),
@@ -242,6 +261,7 @@ export const receipts = pgTable('receipts', {
   total: numeric('total', { precision: 12, scale: 2 }).notNull(),
   issuedAt: timestamp('issued_at', { withTimezone: true }).notNull().defaultNow(),
   fiscalNumber: varchar('fiscal_number', { length: 50 }),
+  customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
   isSplit: boolean('is_split').notNull().default(false),
 });
 
@@ -252,6 +272,22 @@ export const receiptPayments = pgTable('receipt_payments', {
   amount: numeric('amount', { precision: 12, scale: 2 }).notNull(),
   reference: varchar('reference', { length: 100 }),
   tipAmount: numeric('tip_amount', { precision: 12, scale: 2 }).notNull().default('0.00'),
+});
+
+// 8.5 Table Reservations Engine
+export const reservations = pgTable('reservations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  venueId: uuid('venue_id').notNull().references(() => venues.id, { onDelete: 'cascade' }),
+  tableId: uuid('table_id').references(() => tables.id, { onDelete: 'set null' }),
+  customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
+  customerName: varchar('customer_name', { length: 150 }).notNull(),
+  customerPhone: varchar('customer_phone', { length: 50 }).notNull(),
+  guestCount: smallint('guest_count').notNull().default(2),
+  reservationTime: timestamp('reservation_time', { withTimezone: true }).notNull(),
+  status: varchar('status', { length: 30 }).notNull().default('pending'), // 'pending', 'confirmed', 'seated', 'cancelled', 'no_show'
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
 // 9. Inventory & Recipes
@@ -318,8 +354,29 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
   venue: one(venues, { fields: [orders.venueId], references: [venues.id] }),
   table: one(tables, { fields: [orders.tableId], references: [tables.id] }),
   waiter: one(users, { fields: [orders.waiterId], references: [users.id] }),
+  customer: one(customers, { fields: [orders.customerId], references: [customers.id] }),
   items: many(orderItems),
   receipts: many(receipts),
+}));
+
+export const customersRelations = relations(customers, ({ one, many }) => ({
+  venue: one(venues, { fields: [customers.venueId], references: [venues.id] }),
+  orders: many(orders),
+  receipts: many(receipts),
+  reservations: many(reservations),
+}));
+
+export const reservationsRelations = relations(reservations, ({ one }) => ({
+  venue: one(venues, { fields: [reservations.venueId], references: [venues.id] }),
+  table: one(tables, { fields: [reservations.tableId], references: [tables.id] }),
+  customer: one(customers, { fields: [reservations.customerId], references: [customers.id] }),
+}));
+
+export const receiptsRelations = relations(receipts, ({ one, many }) => ({
+  order: one(orders, { fields: [receipts.orderId], references: [orders.id] }),
+  cashShift: one(cashShifts, { fields: [receipts.cashShiftId], references: [cashShifts.id] }),
+  customer: one(customers, { fields: [receipts.customerId], references: [customers.id] }),
+  payments: many(receiptPayments),
 }));
 
 export const orderItemsRelations = relations(orderItems, ({ one, many }) => ({
@@ -352,4 +409,9 @@ export const auditLogs = pgTable('audit_logs', {
   userAgent: text('user_agent'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  venue: one(venues, { fields: [auditLogs.venueId], references: [venues.id] }),
+  user: one(users, { fields: [auditLogs.userId], references: [users.id] }),
+}));
 

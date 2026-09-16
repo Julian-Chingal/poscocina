@@ -1,9 +1,10 @@
+import { eq, and, desc } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import * as schema from '../db/schema.js';
 
-export interface AuditLogEntry {
-  venueId?: string | null;
-  userId?: string | null;
+export interface LogAuditInput {
+  venueId?: string;
+  userId?: string;
   action: string;
   entityType?: string;
   entityId?: string;
@@ -12,43 +13,51 @@ export interface AuditLogEntry {
   userAgent?: string;
 }
 
-export const auditService = {
-  async log(entry: AuditLogEntry): Promise<void> {
+export class AuditService {
+  async log(input: LogAuditInput) {
     try {
-      await db.insert(schema.auditLogs).values({
-        venueId: entry.venueId || null,
-        userId: entry.userId || null,
-        action: entry.action,
-        entityType: entry.entityType || null,
-        entityId: entry.entityId || null,
-        payload: entry.payload || {},
-        ipAddress: entry.ipAddress || null,
-        userAgent: entry.userAgent || null,
-      });
-    } catch (err) {
-      console.error('⚠️ Error al registrar log de auditoría:', err);
-      // No lanzamos excepción para no romper la transacción principal
-    }
-  },
+      const [newLog] = await db
+        .insert(schema.auditLogs)
+        .values({
+          venueId: input.venueId || null,
+          userId: input.userId || null,
+          action: input.action,
+          entityType: input.entityType || null,
+          entityId: input.entityId || null,
+          payload: input.payload || {},
+          ipAddress: input.ipAddress || null,
+          userAgent: input.userAgent || null,
+        })
+        .returning();
 
-  async getAuditLogs(venueId: string, limit = 50) {
-    const { eq, desc } = await import('drizzle-orm');
-    return await db
-      .select({
-        id: schema.auditLogs.id,
-        action: schema.auditLogs.action,
-        entityType: schema.auditLogs.entityType,
-        entityId: schema.auditLogs.entityId,
-        payload: schema.auditLogs.payload,
-        ipAddress: schema.auditLogs.ipAddress,
-        userAgent: schema.auditLogs.userAgent,
-        createdAt: schema.auditLogs.createdAt,
-        userName: schema.users.name,
-      })
-      .from(schema.auditLogs)
-      .leftJoin(schema.users, eq(schema.auditLogs.userId, schema.users.id))
-      .where(eq(schema.auditLogs.venueId, venueId))
-      .orderBy(desc(schema.auditLogs.createdAt))
-      .limit(limit);
-  },
-};
+      return newLog;
+    } catch (err) {
+      console.error('⚠️ Error logging audit event:', err);
+      return null;
+    }
+  }
+
+  async getAuditLogs(venueId: string, options?: { action?: string; limit?: number }) {
+    const limit = options?.limit || 50;
+
+    return await db.query.auditLogs.findMany({
+      where: (logs, { and, eq }) =>
+        options?.action
+          ? and(eq(logs.venueId, venueId), eq(logs.action, options.action))
+          : eq(logs.venueId, venueId),
+      with: {
+        user: {
+          columns: {
+            id: true,
+            name: true,
+            roleId: true,
+          },
+        },
+      },
+      orderBy: (logs, { desc }) => [desc(logs.createdAt)],
+      limit,
+    });
+  }
+}
+
+export const auditService = new AuditService();

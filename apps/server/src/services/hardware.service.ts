@@ -26,7 +26,7 @@ export class HardwareService {
     clientInfo?: { ip?: string; userAgent?: string; userId?: string }
   ) {
     await auditService.log({
-      venueId: venueId || null,
+      venueId: venueId || undefined,
       userId: clientInfo?.userId,
       action: 'DRAWER_KICK',
       ipAddress: clientInfo?.ip,

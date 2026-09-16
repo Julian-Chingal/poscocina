@@ -47,7 +47,22 @@ export class InventoryController {
 
     const result = await inventoryService.registerMovement(body);
     request.server.io?.emit('inventory:stock_updated', result.item);
+    if (result.isLowStock) {
+      request.server.io?.emit('inventory:low_stock', {
+        item: result.item,
+        currentStock: result.item.currentStock,
+        alertThreshold: result.item.alertThreshold,
+      });
+    }
     return reply.status(201).send(result);
+  }
+
+  async getLowStockItems(request: FastifyRequest, reply: FastifyReply) {
+    const { venueId } = request.params as { venueId: string };
+    const targetVenueId = await resolveVenueId(request, venueId);
+
+    const items = await inventoryService.getLowStockItems(targetVenueId);
+    return reply.send(items);
   }
 
   async getProductRecipe(request: FastifyRequest, reply: FastifyReply) {

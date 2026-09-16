@@ -2,10 +2,12 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import * as schema from '../db/schema.js';
 import { NotFoundError, BadRequestError } from '../errors/app-error.js';
+import { auditService } from './audit.service.js';
 
 export interface CreateOrderPayload {
   venueId: string;
   tableId?: string | null;
+  customerId?: string | null;
   orderType?: 'dine_in' | 'takeout' | 'delivery';
   waiterId?: string | null;
   guestCount?: number;
@@ -23,7 +25,7 @@ export interface CreateOrderPayload {
 
 export class OrdersService {
   async createOrder(data: CreateOrderPayload) {
-    const { venueId, tableId, waiterId, notes, items } = data;
+    const { venueId, tableId, customerId, waiterId, notes, items } = data;
     const orderType = data.orderType || 'dine_in';
     const guestCount = data.guestCount || 1;
 
@@ -68,6 +70,7 @@ export class OrdersService {
         .values({
           venueId,
           tableId: tableId || null,
+          customerId: customerId || null,
           orderType,
           waiterId: waiterId || null,
           guestCount: guestCount || 1,
@@ -128,6 +131,7 @@ export class OrdersService {
       where: (orders, { eq }) => eq(orders.id, id),
       with: {
         table: true,
+        customer: true,
         waiter: {
           columns: {
             id: true,
@@ -370,6 +374,41 @@ export class OrdersService {
 
     if (!updated) {
       throw new NotFoundError('Ítem de comanda no encontrado');
+    }
+
+    if (status === 'cancelled') {
+      try {
+        const [itemDetails] = await db
+          .select({
+            venueId: schema.orders.venueId,
+            orderId: schema.orderItems.orderId,
+            productName: schema.products.name,
+            quantity: schema.orderItems.quantity,
+            unitPrice: schema.orderItems.unitPrice,
+          })
+          .from(schema.orderItems)
+          .innerJoin(schema.orders, eq(schema.orderItems.orderId, schema.orders.id))
+          .innerJoin(schema.products, eq(schema.orderItems.productId, schema.products.id))
+          .where(eq(schema.orderItems.id, id))
+          .limit(1);
+
+        if (itemDetails) {
+          await auditService.log({
+            venueId: itemDetails.venueId,
+            action: 'order:item_cancelled',
+            entityType: 'order_item',
+            entityId: id,
+            payload: {
+              orderId: itemDetails.orderId,
+              productName: itemDetails.productName,
+              quantity: itemDetails.quantity,
+              unitPrice: itemDetails.unitPrice,
+            },
+          });
+        }
+      } catch (err) {
+        console.error('Failed to log order item cancellation audit:', err);
+      }
     }
 
     return updated;

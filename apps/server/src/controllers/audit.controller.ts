@@ -3,11 +3,15 @@ import { auditService } from '../services/audit.service.js';
 import { resolveVenueId } from '../utils/tenant.util.js';
 
 export class AuditController {
-  async getAuditLogs(request: FastifyRequest, reply: FastifyReply) {
-    const { limit = '50' } = request.query as { limit?: string; action?: string };
+  async getLogs(request: FastifyRequest, reply: FastifyReply) {
     const venueId = await resolveVenueId(request);
+    const { action, limit } = request.query as { action?: string; limit?: string };
 
-    const logs = await auditService.getAuditLogs(venueId, Number(limit) || 50);
+    const logs = await auditService.getAuditLogs(venueId, {
+      action,
+      limit: limit ? parseInt(limit, 10) : 50,
+    });
+
     return reply.send(logs);
   }
 }

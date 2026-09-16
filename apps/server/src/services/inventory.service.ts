@@ -88,8 +88,20 @@ export class InventoryService {
         .where(eq(schema.inventoryItems.id, inventoryItemId))
         .returning();
 
-      return { movement, item: updatedItem };
+      const isLowStock = newStock <= parseFloat(item.alertThreshold);
+
+      return { movement, item: updatedItem, isLowStock };
     });
+  }
+
+  async getLowStockItems(venueId: string) {
+    const items = await db
+      .select()
+      .from(schema.inventoryItems)
+      .where(eq(schema.inventoryItems.venueId, venueId))
+      .orderBy(schema.inventoryItems.name);
+
+    return items.filter((item) => parseFloat(item.currentStock) <= parseFloat(item.alertThreshold));
   }
 
   async getProductRecipe(productId: string) {

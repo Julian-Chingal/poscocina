@@ -34,4 +34,14 @@ export async function billingRoutes(fastify: FastifyInstance) {
   fastify.post('/api/receipts', cashierGuard, (request, reply) =>
     billingController.issueReceipt(request, reply)
   );
+
+  // 5. Split Billing: Equal Parts
+  fastify.post('/api/billing/split-equal', cashierGuard, (request, reply) =>
+    billingController.splitBillingEqual(request, reply)
+  );
+
+  // 6. Split Billing: Selected Items
+  fastify.post('/api/billing/split-items', cashierGuard, (request, reply) =>
+    billingController.splitBillingByItems(request, reply)
+  );
 }

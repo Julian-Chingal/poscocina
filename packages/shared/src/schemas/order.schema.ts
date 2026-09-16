@@ -19,6 +19,7 @@ export const CreateOrderItemSchema = z.object({
 export const CreateOrderSchema = z.object({
   venueId: z.string().uuid(),
   tableId: z.string().uuid().optional().nullable(),
+  customerId: z.string().uuid().optional().nullable(),
   orderType: z.enum([ORDER_TYPE.DINE_IN, ORDER_TYPE.TAKEOUT, ORDER_TYPE.DELIVERY]).default(ORDER_TYPE.DINE_IN),
   waiterId: z.string().uuid().optional().nullable(),
   guestCount: z.number().int().positive().default(1),

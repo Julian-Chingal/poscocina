@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { hardwareService } from '../services/hardware.service.js';
+import { auditService } from '../services/audit.service.js';
 import { resolveVenueId } from '../utils/tenant.util.js';
 import { BadRequestError } from '../errors/app-error.js';
 
@@ -20,6 +21,17 @@ export class HardwareController {
       timestamp: new Date().toISOString(),
       action: 'drawer_kick',
     });
+
+    auditService.log({
+      venueId: targetVenueId,
+      userId: user?.id,
+      action: 'cash_drawer:manual_open',
+      entityType: 'hardware',
+      entityId: 'cash_drawer',
+      ipAddress: request.ip,
+      userAgent: request.headers['user-agent'] as string,
+      payload: { reason: 'manual_kick' },
+    }).catch(() => {});
 
     return reply.send(result);
   }

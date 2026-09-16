@@ -43,4 +43,9 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
   fastify.get('/api/venues/:venueId/inventory/movements', managerGuard, (request, reply) =>
     inventoryController.getRecentMovements(request, reply)
   );
+
+  // 7. Get critical low-stock items
+  fastify.get('/api/venues/:venueId/inventory/low-stock', staffGuard, (request, reply) =>
+    inventoryController.getLowStockItems(request, reply)
+  );
 }

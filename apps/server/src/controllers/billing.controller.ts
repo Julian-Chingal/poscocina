@@ -1,7 +1,18 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { billingService, PaymentInput } from '../services/billing.service.js';
+import {
+  billingService,
+  PaymentInput,
+  IssueReceiptInput,
+  SplitEqualInput,
+  SplitItemsInput,
+} from '../services/billing.service.js';
 import { resolveVenueId } from '../utils/tenant.util.js';
 import { BadRequestError } from '../errors/app-error.js';
+import {
+  IssueReceiptSchema,
+  SplitEqualPaymentSchema,
+  SplitItemsPaymentSchema,
+} from '@poscocina/shared';
 
 export class BillingController {
   async getPendingBills(request: FastifyRequest, reply: FastifyReply) {
@@ -58,17 +69,12 @@ export class BillingController {
   }
 
   async issueReceipt(request: FastifyRequest, reply: FastifyReply) {
-    const body = request.body as {
-      orderId: string;
-      payments: PaymentInput[];
-      isSplit?: boolean;
-    };
-
-    if (!body?.orderId) {
-      throw new BadRequestError('orderId es requerido para facturar.');
+    const parsed = IssueReceiptSchema.safeParse(request.body);
+    if (!parsed.success) {
+      throw new BadRequestError(parsed.error.errors.map((e) => e.message).join(', '));
     }
 
-    const result = await billingService.issueReceipt(body);
+    const result = await billingService.issueReceipt(parsed.data as IssueReceiptInput);
 
     request.server.io?.emit('receipt:issued', result.receipt);
     if (result.tableId) {
@@ -77,6 +83,54 @@ export class BillingController {
         status: 'free',
         currentOrderId: null,
       });
+    }
+    for (const inv of result.updatedInventory) {
+      request.server.io?.emit('inventory:stock_updated', inv);
+    }
+
+    return reply.status(201).send(result);
+  }
+
+  async splitBillingEqual(request: FastifyRequest, reply: FastifyReply) {
+    const parsed = SplitEqualPaymentSchema.safeParse(request.body);
+    if (!parsed.success) {
+      throw new BadRequestError(parsed.error.errors.map((e) => e.message).join(', '));
+    }
+
+    const result = await billingService.splitBillingEqual(parsed.data as SplitEqualInput);
+
+    request.server.io?.emit('receipt:issued', result.receipt);
+    if (result.isCompleted && result.tableId) {
+      request.server.io?.emit('table:status_changed', {
+        tableId: result.tableId,
+        status: 'free',
+        currentOrderId: null,
+      });
+    }
+    for (const inv of result.updatedInventory) {
+      request.server.io?.emit('inventory:stock_updated', inv);
+    }
+
+    return reply.status(201).send(result);
+  }
+
+  async splitBillingByItems(request: FastifyRequest, reply: FastifyReply) {
+    const parsed = SplitItemsPaymentSchema.safeParse(request.body);
+    if (!parsed.success) {
+      throw new BadRequestError(parsed.error.errors.map((e) => e.message).join(', '));
+    }
+
+    const result = await billingService.splitBillingByItems(parsed.data as SplitItemsInput);
+
+    request.server.io?.emit('receipt:issued', result.receipt);
+    if (result.isCompleted && result.tableId) {
+      request.server.io?.emit('table:status_changed', {
+        tableId: result.tableId,
+        status: 'free',
+        currentOrderId: null,
+      });
+    } else {
+      request.server.io?.emit('order:items_updated', { orderId: parsed.data.orderId });
     }
     for (const inv of result.updatedInventory) {
       request.server.io?.emit('inventory:stock_updated', inv);
