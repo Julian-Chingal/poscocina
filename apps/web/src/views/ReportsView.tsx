@@ -66,7 +66,7 @@ interface ReportsViewProps {
   venueId?: string | null;
 }
 
-export const ReportsView: React.FC<ReportsViewProps> = ({ venueId: _venueId }) => {
+export const ReportsView: React.FC<ReportsViewProps> = ({ venueId }) => {
   const { settings, name: venueName } = useBrandingStore();
   const [period, setPeriod] = useState<'today' | '7d' | 'month' | 'all'>('today');
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -103,13 +103,14 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ venueId: _venueId }) =
     setIsLoading(true);
     try {
       const { from, to } = getDateRange();
+      const params = { from, to, venueId: venueId || undefined };
 
       const [resOverview, resHourly, resTop, resKds, resCogs] = await Promise.all([
-        api.get<OverviewMetrics>('/api/analytics/overview', { params: { from, to } }),
-        api.get<HourlySale[]>('/api/analytics/hourly-sales', { params: { from, to } }),
-        api.get<TopProduct[]>('/api/analytics/top-products'),
-        api.get<KdsMetrics>('/api/analytics/kds-metrics'),
-        api.get<CogsMetrics>('/api/analytics/cogs-profitability'),
+        api.get<OverviewMetrics>('/api/analytics/overview', { params }),
+        api.get<HourlySale[]>('/api/analytics/hourly-sales', { params }),
+        api.get<TopProduct[]>('/api/analytics/top-products', { params }),
+        api.get<KdsMetrics>('/api/analytics/kds-metrics', { params }),
+        api.get<CogsMetrics>('/api/analytics/cogs-profitability', { params }),
       ]);
 
       setOverview(resOverview);
@@ -122,7 +123,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ venueId: _venueId }) =
     } finally {
       setIsLoading(false);
     }
-  }, [getDateRange]);
+  }, [getDateRange, venueId]);
 
   useEffect(() => {
     loadData();

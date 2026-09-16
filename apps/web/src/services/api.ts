@@ -37,6 +37,7 @@ async function request<T = any>(endpoint: string, options: RequestOptions = {}):
   }
 
   const token = useAuthStore.getState().token;
+  const venueId = useAuthStore.getState().venueId;
 
   const authHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -44,6 +45,9 @@ async function request<T = any>(endpoint: string, options: RequestOptions = {}):
 
   if (token) {
     authHeaders['Authorization'] = `Bearer ${token}`;
+  }
+  if (venueId) {
+    authHeaders['x-venue-id'] = venueId;
   }
 
   const config: RequestInit = {
