@@ -176,12 +176,13 @@ export const SettingsView: React.FC = () => {
       if (res.ok) {
         setShowPrinterModal(false);
         fetchPrinters();
+        toast.success(editingPrinterId ? 'Impresora actualizada' : 'Impresora guardada');
       } else {
         const err = await res.json();
-        alert(err.message || 'Error al guardar impresora');
+        toast.error(err.message || 'Error al guardar impresora');
       }
-    } catch (err) {
-      console.error('Error saving printer:', err);
+    } catch (err: any) {
+      toast.error(err.message || 'Error de conexión al guardar impresora');
     }
   };
 
@@ -191,9 +192,10 @@ export const SettingsView: React.FC = () => {
       const res = await fetch(`/api/hardware/printers/${id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchPrinters();
+        toast.success('Impresora eliminada');
       }
-    } catch (err) {
-      console.error('Error deleting printer:', err);
+    } catch (err: any) {
+      toast.error(err.message || 'Error al eliminar impresora');
     }
   };
 

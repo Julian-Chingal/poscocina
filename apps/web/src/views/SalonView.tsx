@@ -20,6 +20,8 @@ import { io } from 'socket.io-client';
 import { useAuthStore } from '../stores/auth.store';
 import { api } from '../services/api';
 import { toast } from '../components/ui/sonner';
+import { TableStatusBadge } from '../components/ui/status-badge';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../components/ui/dialog';
 
 interface FloorPlanItem {
   id: string;
@@ -312,23 +314,6 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
     }
   };
 
-  const getStatusLabel = (status: TableItem['status']) => {
-    switch (status) {
-      case 'free':
-        return 'Libre';
-      case 'occupied':
-        return 'Ocupada';
-      case 'check_requested':
-        return 'Pidiendo Cuenta';
-      case 'reserved':
-        return 'Reservada';
-      case 'blocked':
-        return 'Bloqueada';
-      default:
-        return status;
-    }
-  };
-
   const filteredTables = tables.filter((t) => {
     if (activeFloorPlanId === 'all') return true;
     return t.floorPlanId === activeFloorPlanId;
@@ -519,9 +504,7 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
                       </button>
                     </div>
                   ) : (
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-900/80 border border-current">
-                      {getStatusLabel(table.status)}
-                    </span>
+                    <TableStatusBadge status={table.status} />
                   )}
                 </div>
 
@@ -810,24 +793,23 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
       )}
 
       {/* Transfer Table Modal */}
-      {transferSourceTable && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-md p-6 shadow-2xl relative">
-            <button
-              onClick={() => setTransferSourceTable(null)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white p-1 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
+      <Dialog
+        open={Boolean(transferSourceTable)}
+        onOpenChange={(open) => !open && setTransferSourceTable(null)}
+      >
+        {transferSourceTable && (
+          <DialogContent
+            maxWidth="md"
+            onClose={() => setTransferSourceTable(null)}
+          >
             <div className="flex items-center space-x-2 text-cyan-400 text-xs font-bold uppercase mb-1">
               <ArrowRightLeft className="w-4 h-4" />
               <span>Operación de Sala</span>
             </div>
-            <h3 className="text-xl font-black text-white">Cambiar de Mesa</h3>
-            <p className="text-xs text-slate-400 mb-5">
+            <DialogTitle>Cambiar de Mesa</DialogTitle>
+            <DialogDescription className="mb-5">
               Trasladar la orden activa de <strong className="text-white">{transferSourceTable.label}</strong> hacia una mesa disponible.
-            </p>
+            </DialogDescription>
 
             {actionError && (
               <div className="p-3 bg-rose-950/50 border border-rose-800 text-rose-300 text-xs rounded-xl mb-4">
@@ -915,9 +897,9 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
                 </div>
               );
             })()}
-          </div>
-        </div>
-      )}
+          </DialogContent>
+        )}
+      </Dialog>
 
       {/* Merge Tables Modal */}
       {mergeSourceTable && (

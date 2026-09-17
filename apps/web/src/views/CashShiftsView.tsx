@@ -337,19 +337,12 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
                 onClick={async () => {
                   if (!shiftData?.shift?.id) return;
                   try {
-                    const res = await fetch('/api/hardware/print-shift-summary', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ shiftId: shiftData.shift.id }),
+                    await api.post('/hardware/print-shift-summary', {
+                      shiftId: shiftData.shift.id,
                     });
-                    if (res.ok) {
-                      alert('Resumen térmico de turno enviado a la impresora');
-                    } else {
-                      const err = await res.json();
-                      alert(err.message || 'Error al imprimir resumen');
-                    }
-                  } catch (e) {
-                    console.error(e);
+                    toast.success('Resumen térmico de turno enviado a la impresora');
+                  } catch (err: any) {
+                    toast.error(err.message || 'Error al imprimir resumen');
                   }
                 }}
                 className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold flex items-center space-x-1.5 cursor-pointer transition-colors shadow-sm"

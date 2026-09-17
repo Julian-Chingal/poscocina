@@ -3,7 +3,6 @@ import {
   Utensils,
   CheckCircle,
   XCircle,
-  Search,
   Plus,
   Edit2,
   Trash2,
@@ -19,6 +18,9 @@ import { io } from 'socket.io-client';
 import { useAuthStore } from '../stores/auth.store';
 import { usePermissions } from '../hooks/usePermissions';
 import { api } from '../services/api';
+import { toast } from '../components/ui/sonner';
+import { SearchInput } from '../components/ui/search-input';
+import { EmptyState } from '../components/ui/empty-state';
 
 interface Product {
   id: string;
@@ -337,8 +339,9 @@ export const CatalogView: React.FC<{ venueId: string }> = ({ venueId }) => {
         setActiveCategory('all');
       }
       fetchCatalog();
+      toast.success('Elemento eliminado correctamente');
     } catch (err: any) {
-      alert(`No se pudo eliminar: ${err.message}`);
+      toast.error(`No se pudo eliminar: ${err.message}`);
     } finally {
       setSubmitting(false);
     }
@@ -368,16 +371,12 @@ export const CatalogView: React.FC<{ venueId: string }> = ({ venueId }) => {
         </div>
 
         <div className="flex items-center space-x-3 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar plato..."
-              className="w-full bg-slate-800/90 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
-            />
-          </div>
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Buscar plato o bebida..."
+            className="flex-1 sm:w-64"
+          />
 
           {isManager && (
             <button
@@ -463,10 +462,14 @@ export const CatalogView: React.FC<{ venueId: string }> = ({ venueId }) => {
           <div className="text-slate-400 animate-spin text-2xl">⏳</div>
         </div>
       ) : filteredProducts.length === 0 ? (
-        <div className="text-center py-16 bg-slate-900/40 rounded-2xl border border-slate-800 text-slate-500">
-          <Utensils className="w-10 h-10 mx-auto mb-2 opacity-40" />
-          <p className="text-sm font-medium">No se encontraron productos en este catálogo.</p>
-        </div>
+        <EmptyState
+          icon={Utensils}
+          title="No se encontraron productos"
+          description="No hay productos registrados en esta categoría o con este término de búsqueda."
+          actionLabel={isManager ? 'Crear Primer Producto' : undefined}
+          onAction={isManager ? openCreateProduct : undefined}
+          className="my-6"
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredProducts.map((product) => {

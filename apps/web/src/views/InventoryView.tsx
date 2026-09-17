@@ -18,6 +18,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { io } from 'socket.io-client';
+import { toast } from '../components/ui/sonner';
 
 interface InventoryItem {
   id: string;
@@ -304,24 +305,25 @@ export const InventoryView: React.FC<{ venueId: string }> = ({ venueId }) => {
         setSupplierAddress('');
         setSupplierNotes('');
         fetchSuppliers();
+        toast.success('Proveedor registrado correctamente');
       } else {
         const err = await res.json();
-        alert(err.message || 'Error al registrar proveedor');
+        toast.error(err.message || 'Error al registrar proveedor');
       }
-    } catch (err) {
-      console.error('Error creating supplier:', err);
+    } catch (err: any) {
+      toast.error(err.message || 'Error de conexión al registrar proveedor');
     }
   };
 
   const handleCreatePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!purchaseSupplierId) {
-      alert('Por favor selecciona un proveedor');
+      toast.warning('Por favor selecciona un proveedor');
       return;
     }
     const validLines = purchaseLines.filter((l) => l.inventoryItemId && parseFloat(l.quantity) > 0);
     if (validLines.length === 0) {
-      alert('Debes agregar al menos un insumo con cantidad válida');
+      toast.warning('Debes agregar al menos un insumo con cantidad válida');
       return;
     }
 
@@ -351,12 +353,13 @@ export const InventoryView: React.FC<{ venueId: string }> = ({ venueId }) => {
         fetchPurchases();
         fetchItems();
         fetchMovements();
+        toast.success('Orden de compra registrada');
       } else {
         const err = await res.json();
-        alert(err.message || 'Error al crear compra');
+        toast.error(err.message || 'Error al crear compra');
       }
-    } catch (err) {
-      console.error('Error creating purchase:', err);
+    } catch (err: any) {
+      toast.error(err.message || 'Error al crear compra');
     }
   };
 
@@ -373,12 +376,13 @@ export const InventoryView: React.FC<{ venueId: string }> = ({ venueId }) => {
         fetchPurchases();
         fetchItems();
         fetchMovements();
+        toast.success('Compra recibida y stock actualizado');
       } else {
         const err = await res.json();
-        alert(err.message || 'Error al recibir compra');
+        toast.error(err.message || 'Error al recibir compra');
       }
-    } catch (err) {
-      console.error('Error receiving purchase:', err);
+    } catch (err: any) {
+      toast.error(err.message || 'Error al recibir compra');
     }
   };
 
