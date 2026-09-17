@@ -21,6 +21,7 @@ interface AuthState {
   error: string | null;
   setCurrentUser: (user: UserInfo) => void;
   logout: () => void;
+  checkSession: () => Promise<boolean>;
   fetchVenueUsers: (venueId?: string) => Promise<void>;
   loginWithPin: (userId: string, pin: string, venueId?: string) => Promise<boolean>;
   loginWithPassword: (email: string, password: string) => Promise<boolean>;
@@ -90,6 +91,46 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.removeItem('poscocina_user');
     }
     set({ currentUser: null, user: null, token: null, isLocked: true });
+  },
+
+  checkSession: async () => {
+    const token = get().token;
+    if (!token) {
+      set({ currentUser: null, user: null, isLocked: true });
+      return false;
+    }
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const userData: UserInfo = {
+          id: data.user.id,
+          name: data.user.name,
+          roleName: data.user.roleName || data.user.role,
+          roleLabel: data.user.roleLabel,
+          role: data.user.role,
+          hierarchy: data.user.hierarchy,
+        };
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('poscocina_user', JSON.stringify(userData));
+        }
+        set({ currentUser: userData, user: userData, isLocked: false });
+        if (data.user.venueId && !get().venueId) {
+          set({ venueId: data.user.venueId });
+        }
+        return true;
+      } else {
+        get().logout();
+        return false;
+      }
+    } catch (err) {
+      console.warn('Error verifying session:', err);
+      return false;
+    }
   },
 
   fetchVenueUsers: async (venueId) => {

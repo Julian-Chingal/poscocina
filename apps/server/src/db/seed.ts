@@ -18,7 +18,13 @@ async function seed() {
   ];
 
   for (const role of rolesToInsert) {
-    await db.insert(schema.roles).values(role).onConflictDoNothing();
+    await db
+      .insert(schema.roles)
+      .values(role)
+      .onConflictDoUpdate({
+        target: schema.roles.name,
+        set: { label: role.label, hierarchy: role.hierarchy },
+      });
   }
 
   const allRoles = await db.select().from(schema.roles);

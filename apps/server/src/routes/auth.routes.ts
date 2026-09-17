@@ -50,7 +50,12 @@ export async function authRoutes(fastify: FastifyInstance) {
     authController.managerPinOverride(request, reply)
   );
 
-  // 5. Logout & Invalidate Session
+  // 5. Get current authenticated user profile / session verification
+  fastify.get('/api/auth/me', { preHandler: [fastify.authenticate] }, (request, reply) =>
+    authController.getMe(request, reply)
+  );
+
+  // 6. Logout & Invalidate Session
   fastify.post('/api/auth/logout', { preHandler: [fastify.authenticate] }, (request, reply) =>
     authController.logout(request, reply)
   );

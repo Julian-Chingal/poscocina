@@ -13,6 +13,7 @@ import {
   CalendarDays,
 } from 'lucide-react';
 import { useBrandingStore } from '../stores/branding.store';
+import { usePermissions } from '../hooks/usePermissions';
 
 interface AppItem {
   id: string;
@@ -127,11 +128,13 @@ interface AppLauncherViewProps {
 
 export const AppLauncherView: React.FC<AppLauncherViewProps> = ({ onSelectApp, searchQuery }) => {
   const { name: companyName, settings } = useBrandingStore();
+  const { canAccessModule } = usePermissions();
 
   const filteredApps = APPS.filter(
     (app) =>
-      app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.subtitle.toLowerCase().includes(searchQuery.toLowerCase())
+      canAccessModule(app.id) &&
+      (app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        app.subtitle.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (

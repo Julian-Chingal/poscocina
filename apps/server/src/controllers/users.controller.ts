@@ -23,6 +23,7 @@ export class UsersController {
     const data = validate(CreateUserSchema, request.body);
 
     const newUser = await usersService.createUser(targetVenueId, data, request.user?.sub);
+    request.server.io?.emit('user:created', newUser);
     return reply.status(201).send(newUser);
   }
 
@@ -31,6 +32,10 @@ export class UsersController {
     const data = validate(UpdateUserSchema, request.body);
 
     const updated = await usersService.updateUser(id, data, request.user?.sub);
+    request.server.io?.emit('user:updated', updated);
+    if (data.isActive === false) {
+      request.server.io?.emit('user:deactivated', { userId: id });
+    }
     return reply.send(updated);
   }
 
@@ -39,12 +44,14 @@ export class UsersController {
     const data = validate(ResetPinSchema, request.body);
 
     const result = await usersService.resetPin(id, data.newPin, request.user?.sub);
+    request.server.io?.emit('user:pin_reset', { userId: id });
     return reply.send(result);
   }
 
   async deleteUser(request: FastifyRequest, reply: FastifyReply) {
     const { id } = request.params as { id: string };
     const result = await usersService.deleteUser(id, request.user?.sub);
+    request.server.io?.emit('user:deactivated', { userId: id });
     return reply.send(result);
   }
 }

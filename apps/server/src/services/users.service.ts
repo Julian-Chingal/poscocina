@@ -86,7 +86,14 @@ export class UsersService {
     if (data.name !== undefined) updatePayload.name = data.name.trim();
     if (data.roleId !== undefined) updatePayload.roleId = data.roleId;
     if (data.avatarUrl !== undefined) updatePayload.avatarUrl = data.avatarUrl;
-    if (data.isActive !== undefined) updatePayload.isActive = data.isActive;
+    if (data.isActive !== undefined) {
+      updatePayload.isActive = data.isActive;
+      if (data.isActive === false) {
+        updatePayload.tokenVersion = (existing.tokenVersion || 1) + 1;
+        await redis.del(`user_token_version:${userId}`);
+        await redis.del(`pin_lockout:${userId}`);
+      }
+    }
 
     if (data.email !== undefined) {
       const normalized = data.email ? data.email.toLowerCase().trim() : null;

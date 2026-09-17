@@ -10,10 +10,10 @@ export const ROLES = {
 export type RoleName = (typeof ROLES)[keyof typeof ROLES];
 
 export const ROLE_HIERARCHY: Record<RoleName, number> = {
-  super_admin: 1,
-  manager: 2,
-  cashier: 3,
-  waiter: 4,
-  kitchen: 5,
-  kds_display: 6,
+  super_admin: 100,
+  manager: 80,
+  cashier: 60,
+  waiter: 40,
+  kitchen: 20,
+  kds_display: 10,
 };

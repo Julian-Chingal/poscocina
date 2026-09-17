@@ -100,12 +100,12 @@ export const PinPadModal: React.FC<PinPadModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
       <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative text-white">
-        {(onClose || currentUser) && (
+        {currentUser && !isMandatoryLock && (
           <button
             onClick={() => {
               if (onClose) {
                 onClose();
-              } else if (currentUser) {
+              } else {
                 useAuthStore.setState({ isLocked: false });
               }
             }}

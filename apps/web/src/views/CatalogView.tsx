@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useAuthStore } from '../stores/auth.store';
+import { usePermissions } from '../hooks/usePermissions';
+import { api } from '../services/api';
 
 interface Product {
   id: string;
@@ -56,7 +58,7 @@ const PRESET_COLORS = [
 ];
 
 export const CatalogView: React.FC<{ venueId: string }> = ({ venueId }) => {
-  const { token, currentUser } = useAuthStore();
+  const { token } = useAuthStore();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -98,18 +100,14 @@ export const CatalogView: React.FC<{ venueId: string }> = ({ venueId }) => {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const isManager =
-    currentUser?.roleName === 'manager' ||
-    currentUser?.roleName === 'super_admin' ||
-    (currentUser?.hierarchy && currentUser.hierarchy >= 80);
+  const { isManager } = usePermissions();
 
   const fetchCatalog = async () => {
     if (!venueId) return;
     try {
       setLoading(true);
-      const res = await fetch(`/api/venues/${venueId}/catalog`);
-      if (res.ok) {
-        const data = await res.json();
+      const data = await api.get(`/api/venues/${venueId}/catalog`);
+      if (data) {
         setCategories(data.categories || []);
         setProducts(data.products || []);
       }

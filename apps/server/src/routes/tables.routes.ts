@@ -24,7 +24,7 @@ export async function tablesRoutes(fastify: FastifyInstance) {
   );
 
   // 2. Get all tables for a venue with current order info
-  fastify.get('/api/venues/:venueId/tables', (request, reply) =>
+  fastify.get('/api/venues/:venueId/tables', staffGuard, (request, reply) =>
     tablesController.getVenueTables(request, reply)
   );
 

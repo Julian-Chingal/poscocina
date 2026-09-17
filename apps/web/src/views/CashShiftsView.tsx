@@ -18,6 +18,8 @@ import {
 import { useAuthStore } from '../stores/auth.store';
 import { useBrandingStore } from '../stores/branding.store';
 import { io } from 'socket.io-client';
+import { api } from '../services/api';
+import { toast } from '../components/ui/sonner';
 
 interface ActiveShiftInfo {
   open: boolean;
@@ -94,11 +96,8 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
   const fetchPendingBills = async () => {
     if (!venueId) return;
     try {
-      const res = await fetch(`/api/venues/${venueId}/pending-bills`);
-      if (res.ok) {
-        const data = await res.json();
-        setPendingBills(data);
-      }
+      const data = await api.get(`/api/venues/${venueId}/pending-bills`);
+      setPendingBills(data || []);
     } catch (err) {
       console.error('Error fetching pending bills:', err);
     }
@@ -107,11 +106,8 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
   const fetchShift = async () => {
     if (!venueId) return;
     try {
-      const res = await fetch(`/api/cash-shifts/current/${venueId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setShiftData(data);
-      }
+      const data = await api.get(`/api/cash-shifts/current/${venueId}`);
+      setShiftData(data || { open: false });
     } catch (err) {
       console.error('Error fetching cash shift:', err);
     } finally {
@@ -146,22 +142,17 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
   const handleOpenShift = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/cash-shifts/open', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          venueId,
-          cashierId: user?.id,
-          openingAmount: parseFloat(openingAmount) || 0,
-          notes: openingNotes,
-        }),
+      await api.post('/api/cash-shifts/open', {
+        venueId,
+        cashierId: user?.id,
+        openingAmount: parseFloat(openingAmount) || 0,
+        notes: openingNotes,
       });
-
-      if (res.ok) {
-        fetchShift();
-      }
-    } catch (err) {
+      toast.success('Turno de caja abierto exitosamente');
+      fetchShift();
+    } catch (err: any) {
       console.error('Error opening shift:', err);
+      toast.error(err.message || 'Error al abrir turno de caja');
     }
   };
 
@@ -170,22 +161,16 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
     if (!shiftData.shift?.id) return;
 
     try {
-      const res = await fetch(`/api/cash-shifts/${shiftData.shift.id}/close`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          closingAmount: parseFloat(closingCashCount) || 0,
-          notes: closingNotes,
-        }),
+      const data = await api.post(`/api/cash-shifts/${shiftData.shift.id}/close`, {
+        closingAmount: parseFloat(closingCashCount) || 0,
+        notes: closingNotes,
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        setCloseReport(data);
-        fetchShift();
-      }
-    } catch (err) {
+      toast.success('Turno de caja cerrado exitosamente');
+      setCloseReport(data);
+      fetchShift();
+    } catch (err: any) {
       console.error('Error closing shift:', err);
+      toast.error(err.message || 'Error al cerrar turno de caja');
     }
   };
 
@@ -211,40 +196,26 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
         ],
       };
 
-      const res = await fetch('/api/receipts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(paymentPayload),
-      });
+      const data = await api.post('/api/receipts', paymentPayload);
+      toast.success('Pago procesado y factura emitida');
+      setReceiptSuccess(data.receipt);
+      setSelectedBill(null);
+      setCashTendered('');
+      setCardReference('');
+      setTipPct(0);
+      fetchShift();
+      fetchPendingBills();
 
-      if (res.ok) {
-        const data = await res.json();
-        setReceiptSuccess(data.receipt);
-        setSelectedBill(null);
-        setCashTendered('');
-        setCardReference('');
-        setTipPct(0);
-        fetchShift();
-        fetchPendingBills();
+      // Print receipt
+      api.post('/api/hardware/print-receipt', { receiptId: data.receipt.id }).catch(() => {});
 
-        // Print receipt
-        fetch('/api/hardware/print-receipt', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ receiptId: data.receipt.id }),
-        }).catch(() => {});
-
-        // Open drawer if cash
-        if (paymentMethod === 'cash') {
-          fetch('/api/hardware/open-drawer', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ venueId }),
-          }).catch(() => {});
-        }
+      // Open drawer if cash
+      if (paymentMethod === 'cash') {
+        api.post('/api/hardware/open-drawer', { venueId }).catch(() => {});
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error confirming payment:', err);
+      toast.error(err.message || 'Error al procesar el pago');
     } finally {
       setProcessingPayment(false);
     }

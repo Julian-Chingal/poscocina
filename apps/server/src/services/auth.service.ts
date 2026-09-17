@@ -223,12 +223,57 @@ export class AuthService {
     return { success: true };
   }
 
+  async getUserProfile(userId: string) {
+    const [user] = await db
+      .select({
+        id: schema.users.id,
+        venueId: schema.users.venueId,
+        name: schema.users.name,
+        email: schema.users.email,
+        avatarUrl: schema.users.avatarUrl,
+        isActive: schema.users.isActive,
+        roleName: schema.roles.name,
+        roleLabel: schema.roles.label,
+        roleHierarchy: schema.roles.hierarchy,
+      })
+      .from(schema.users)
+      .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
+      .where(eq(schema.users.id, userId))
+      .limit(1);
+
+    if (!user || !user.isActive) {
+      throw new UnauthorizedError('Usuario no encontrado o inactivo');
+    }
+
+    return {
+      id: user.id,
+      venueId: user.venueId,
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      role: user.roleName,
+      roleName: user.roleName,
+      roleLabel: user.roleLabel,
+      hierarchy: user.roleHierarchy,
+      isActive: user.isActive,
+    };
+  }
+
   async verifyUserTokenVersion(userId: string, tokenVersion: number): Promise<boolean> {
     const cacheKey = `user_token_version:${userId}`;
-    const cachedVersion = await redis.get(cacheKey);
+    const cached = await redis.get(cacheKey);
 
-    if (cachedVersion !== null) {
-      return parseInt(cachedVersion, 10) === tokenVersion;
+    if (cached !== null) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (typeof parsed === 'object' && parsed !== null) {
+          if (!parsed.isActive) return false;
+          return parsed.version === tokenVersion;
+        }
+      } catch {
+        // Fallback for raw number string
+      }
+      return parseInt(cached, 10) === tokenVersion;
     }
 
     const [user] = await db
@@ -238,11 +283,12 @@ export class AuthService {
       .limit(1);
 
     if (!user || !user.isActive) {
+      await redis.set(cacheKey, JSON.stringify({ version: -1, isActive: false }), 'EX', 30);
       return false;
     }
 
     // Cache for 60 seconds
-    await redis.set(cacheKey, user.tokenVersion.toString(), 'EX', 60);
+    await redis.set(cacheKey, JSON.stringify({ version: user.tokenVersion, isActive: true }), 'EX', 60);
 
     return user.tokenVersion === tokenVersion;
   }

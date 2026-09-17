@@ -10,8 +10,12 @@ export async function productsRoutes(fastify: FastifyInstance) {
     ],
   };
 
+  const staffGuard = {
+    preHandler: [fastify.authenticate],
+  };
+
   // 1. Get full menu catalog for a venue (Categories, Products, Modifier Groups and Modifiers)
-  fastify.get('/api/venues/:venueId/catalog', (request, reply) =>
+  fastify.get('/api/venues/:venueId/catalog', staffGuard, (request, reply) =>
     catalogController.getVenueCatalog(request, reply)
   );
 

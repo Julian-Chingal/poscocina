@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 import { useBrandingStore } from '../stores/branding.store';
+import { usePermissions } from '../hooks/usePermissions';
 
 interface TopBarProps {
   currentView: string;
@@ -45,6 +46,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onSearchChange,
 }) => {
   const { currentUser, lockScreen, venueId, setVenueId } = useAuthStore();
+  const { isManager } = usePermissions();
   const {
     name: companyName,
     settings,
@@ -307,16 +309,18 @@ export const TopBar: React.FC<TopBarProps> = ({
             <span className="hidden lg:inline">En Línea</span>
           </div>
 
-          {/* Settings button */}
-          <button
-            onClick={() => onNavigate('settings')}
-            title="Ajustes de Marca y Configuración"
-            className={`p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-all ${
-              currentView === 'settings' ? 'text-orange-400 bg-slate-800' : ''
-            }`}
-          >
-            <Settings className="w-4 h-4" />
-          </button>
+          {/* Settings button (Manager only) */}
+          {isManager && (
+            <button
+              onClick={() => onNavigate('settings')}
+              title="Ajustes de Marca y Configuración"
+              className={`p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-all ${
+                currentView === 'settings' ? 'text-orange-400 bg-slate-800' : ''
+              }`}
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          )}
 
           {/* User profile with Quick PIN Switch & Lock */}
           {currentUser ? (

@@ -1,6 +1,7 @@
 import { useAuthStore } from '../stores/auth.store';
+import { toast } from '../components/ui/sonner';
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = '';
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | undefined | null>;
@@ -63,7 +64,10 @@ async function request<T = any>(endpoint: string, options: RequestOptions = {}):
   // Handle Unauthorized (Session expired or invalid token)
   if (response.status === 401) {
     console.warn('🔒 Sesión expirada o token no autorizado (401). Bloqueando terminal...');
-    useAuthStore.getState().lockScreen();
+    toast.error('Sesión expirada. Inicia sesión nuevamente');
+    useAuthStore.getState().logout();
+  } else if (response.status === 403) {
+    toast.error('No tienes permisos para realizar esta acción');
   }
 
   if (!response.ok) {

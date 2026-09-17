@@ -63,6 +63,18 @@ export class AuthController {
     return reply.send({ token, user });
   }
 
+  async getMe(request: FastifyRequest, reply: FastifyReply) {
+    if (!request.user?.sub) {
+      return reply.status(401).send({
+        statusCode: 401,
+        error: 'Unauthorized',
+        message: 'No autenticado',
+      });
+    }
+    const user = await authService.getUserProfile(request.user.sub);
+    return reply.send({ user });
+  }
+
   async logout(request: FastifyRequest, reply: FastifyReply) {
     if (request.user?.sub) {
       await authService.invalidateUserSession(request.user.sub, request.user.venueId);
