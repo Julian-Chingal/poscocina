@@ -1,226 +1,41 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { TopBar } from './components/TopBar';
-import { AppLauncherView } from './views/AppLauncherView';
-import { SalonView } from './views/SalonView';
-import { PosView } from './views/PosView';
-import { KdsView } from './views/KdsView';
-import { CatalogView } from './views/CatalogView';
-import { SettingsView } from './views/SettingsView';
-import { InventoryView } from './views/InventoryView';
-import { CashShiftsView } from './views/CashShiftsView';
-import { ReportsView } from './views/ReportsView';
-import { UsersView } from './views/UsersView';
-import { ReservationsView } from './views/ReservationsView';
-import { ModulePlaceholderView } from './views/ModulePlaceholderView';
+import { AppLauncherView } from './features/launcher';
+import { ViewLoadingFallback } from './components/ViewLoadingFallback';
 import { OfflineView } from './views/OfflineView';
-import { PinPadModal } from './components/PinPadModal';
-import { Toaster, toast } from './components/ui/sonner';
+import { PinPadModal } from './features/auth';
+import { Toaster } from './components/ui/sonner';
 import { useAuthStore } from './stores/auth.store';
-import { useBrandingStore } from './stores/branding.store';
 import { usePermissions } from './hooks/usePermissions';
-import { onNetworkStatusChange } from './services/api';
-import { io } from 'socket.io-client';
+import { useAppBootstrap } from './hooks/useAppBootstrap';
+import { useHashRouter } from './hooks/useHashRouter';
+import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
+import { useAppSocketEvents } from './hooks/useAppSocketEvents';
 
-const getViewFromHash = (): string => {
-  if (typeof window === 'undefined') return 'home';
-  const hash = window.location.hash.replace(/^#\/?/, '').trim();
-  return hash || 'home';
-};
+const SalonView = lazy(() => import('./features/salon'));
+const PosView = lazy(() => import('./features/pos'));
+const KdsView = lazy(() => import('./features/kds'));
+const CatalogView = lazy(() => import('./features/catalog'));
+const SettingsView = lazy(() => import('./features/settings'));
+const InventoryView = lazy(() => import('./features/inventory'));
+const CashShiftsView = lazy(() => import('./features/cash-shifts'));
+const ReportsView = lazy(() => import('./features/reports'));
+const UsersView = lazy(() => import('./features/users'));
+const ReservationsView = lazy(() => import('./features/reservations'));
+const ModulePlaceholderView = lazy(() => import('./views/ModulePlaceholderView'));
 
 export const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<string>(getViewFromHash);
   const [selectedTable, setSelectedTable] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [isApiOnline, setIsApiOnline] = useState<boolean>(true);
 
-  const { venueId, setVenueId, isLocked, currentUser, checkSession, logout, token } = useAuthStore();
-  const { loadBranding, settings } = useBrandingStore();
+  const { venueId, isLocked, currentUser } = useAuthStore();
   const { canAccessModule } = usePermissions();
 
-  const handleNavigate = useCallback(
-    (view: string) => {
-      if (view === 'home') {
-        setCurrentView('home');
-        window.location.hash = '';
-        return;
-      }
+  const { isApiOnline, checkHealthAndBootstrap } = useAppBootstrap();
+  const { currentView, handleNavigate } = useHashRouter();
 
-      if (!currentUser) {
-        useAuthStore.getState().lockScreen();
-        toast.error('Debes iniciar sesión para acceder al sistema');
-        return;
-      }
-
-      if (!canAccessModule(view)) {
-        toast.error('No tienes permisos para acceder a este módulo');
-        setCurrentView('home');
-        window.location.hash = '';
-        return;
-      }
-
-      setCurrentView(view);
-      window.location.hash = `/${view}`;
-    },
-    [currentUser, canAccessModule]
-  );
-
-  const checkHealthAndBootstrap = async () => {
-    try {
-      const healthRes = await fetch('/health');
-      if (!healthRes.ok) {
-        setIsApiOnline(false);
-        return;
-      }
-      setIsApiOnline(true);
-
-      // Verify token/session on startup
-      if (token) {
-        const isValid = await checkSession();
-        if (!isValid) {
-          toast.error('Sesión expirada. Inicia sesión nuevamente');
-        }
-      }
-
-      const savedVenueId = localStorage.getItem('poscocina_venue_id');
-      if (savedVenueId) {
-        const vRes = await fetch(`/api/venues/${savedVenueId}`);
-        if (vRes.ok) {
-          const data = await vRes.json();
-          if (data?.id) {
-            setVenueId(data.id);
-            loadBranding(data.id);
-            return;
-          }
-        }
-      }
-
-      const vRes = await fetch('/api/venues/first');
-      if (vRes.ok) {
-        const data = await vRes.json();
-        if (data?.id) {
-          setVenueId(data.id);
-          loadBranding(data.id);
-        }
-      }
-    } catch (err) {
-      console.warn('API health check failed:', err);
-      setIsApiOnline(false);
-    }
-  };
-
-  useEffect(() => {
-    checkHealthAndBootstrap();
-
-    // Heartbeat every 30 seconds
-    const timer = setInterval(() => {
-      fetch('/health')
-        .then((res) => setIsApiOnline(res.ok))
-        .catch(() => setIsApiOnline(false));
-    }, 30000);
-
-    // Reactive network observer from api.ts
-    const unsubscribe = onNetworkStatusChange((online) => {
-      setIsApiOnline(online);
-    });
-
-    return () => {
-      clearInterval(timer);
-      unsubscribe();
-    };
-  }, []);
-
-  // Sync with window.location.hash on hashchange
-  useEffect(() => {
-    const handleHashChange = () => {
-      const targetView = getViewFromHash();
-      if (targetView !== currentView) {
-        handleNavigate(targetView);
-      }
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [currentView, handleNavigate]);
-
-  // Route Guard verification whenever currentView or currentUser changes
-  useEffect(() => {
-    if (currentView !== 'home') {
-      if (!currentUser) {
-        setCurrentView('home');
-        window.location.hash = '';
-      } else if (!canAccessModule(currentView)) {
-        toast.error('No tienes permisos para acceder a este módulo');
-        setCurrentView('home');
-        window.location.hash = '';
-      }
-    }
-  }, [currentView, currentUser, canAccessModule]);
-
-  // Global POS Kiosk Keyboard Shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const activeEl = document.activeElement;
-      const isInput =
-        activeEl &&
-        (activeEl.tagName === 'INPUT' ||
-          activeEl.tagName === 'TEXTAREA' ||
-          (activeEl as HTMLElement).isContentEditable);
-
-      if (e.key === 'F1') {
-        e.preventDefault();
-        handleNavigate('salon');
-      } else if (e.key === 'F2') {
-        e.preventDefault();
-        handleNavigate('pos');
-      } else if (e.key === 'F3') {
-        e.preventDefault();
-        handleNavigate('kds');
-      } else if (e.key === 'F4') {
-        e.preventDefault();
-        handleNavigate('shifts');
-      } else if (e.key === 'Escape') {
-        if (!isInput) {
-          e.preventDefault();
-          handleNavigate('home');
-        }
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
-        e.preventDefault();
-        useAuthStore.getState().lockScreen();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleNavigate]);
-
-  // Socket.IO event listeners
-  useEffect(() => {
-    const socket = io();
-    socket.on('venue:settings_updated', () => {
-      if (venueId) loadBranding(venueId);
-    });
-
-    socket.on('user:deactivated', (payload: { userId: string }) => {
-      const current = useAuthStore.getState().currentUser;
-      if (current && current.id === payload.userId) {
-        toast.error('Tu cuenta ha sido desactivada. Comunícate con un administrador.');
-        logout();
-        setCurrentView('home');
-        window.location.hash = '';
-      }
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [venueId, loadBranding, logout]);
-
-  // Apply custom primary color dynamically to document root if specified
-  useEffect(() => {
-    if (settings.primaryColor) {
-      document.documentElement.style.setProperty('--primary-brand', settings.primaryColor);
-    }
-  }, [settings.primaryColor]);
+  useGlobalKeyboardShortcuts(handleNavigate);
+  useAppSocketEvents(() => handleNavigate('home'));
 
   const handleSelectTable = (table: any) => {
     setSelectedTable(table);
@@ -243,10 +58,8 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-orange-500">
-      {/* Global Notifications Toaster */}
       <Toaster />
 
-      {/* Global Top Bar */}
       <TopBar
         currentView={currentView}
         onNavigate={handleNavigate}
@@ -254,7 +67,6 @@ export const App: React.FC = () => {
         onSearchChange={setSearchQuery}
       />
 
-      {/* Main View Area */}
       <main className="flex-1 overflow-auto">
         {!currentUser ? (
           <div className="min-h-[calc(100vh-48px)] flex flex-col items-center justify-center p-6 text-center text-slate-400">
@@ -267,7 +79,7 @@ export const App: React.FC = () => {
             </p>
           </div>
         ) : (
-          <>
+          <Suspense fallback={<ViewLoadingFallback />}>
             {currentView === 'home' && (
               <AppLauncherView onSelectApp={handleSelectApp} searchQuery={searchQuery} />
             )}
@@ -324,11 +136,10 @@ export const App: React.FC = () => {
                 onBack={() => handleNavigate('home')}
               />
             )}
-          </>
+          </Suspense>
         )}
       </main>
 
-      {/* Terminal Lock / Auth Overlay */}
       {isLocked && (
         <PinPadModal
           isOpen={isLocked}

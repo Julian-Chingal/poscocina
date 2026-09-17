@@ -89,3 +89,5 @@ export const ModulePlaceholderView: React.FC<ModulePlaceholderProps> = ({ module
     </div>
   );
 };
+
+export default ModulePlaceholderView;
