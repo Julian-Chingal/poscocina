@@ -3,6 +3,7 @@ import { create } from 'zustand';
 export interface UserInfo {
   id: string;
   name: string;
+  email?: string;
   roleName: string;
   roleLabel: string;
   role?: string;

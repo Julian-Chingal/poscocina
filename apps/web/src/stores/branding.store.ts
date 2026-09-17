@@ -4,10 +4,11 @@ import { api } from '../services/api';
 export interface VenueItem {
   id: string;
   name: string;
-  slug: string;
+  slug?: string;
   address?: string | null;
   phone?: string | null;
-  isActive: boolean;
+  isActive?: boolean;
+  settings?: VenueSettings;
   createdAt?: string;
 }
 
