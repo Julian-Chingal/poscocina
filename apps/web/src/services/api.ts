@@ -1,8 +1,6 @@
 import { useAuthStore } from '../stores/auth.store';
 import { toast } from '../components/ui/sonner';
 
-const BASE_URL = '';
-
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | undefined | null>;
 }
@@ -42,7 +40,11 @@ export const setNetworkStatus = (isOnline: boolean) => {
 async function request<T = any>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { params, headers, ...customConfig } = options;
 
-  let url = endpoint.startsWith('http') ? endpoint : `${BASE_URL}${endpoint}`;
+  let url = endpoint.startsWith('http')
+    ? endpoint
+    : endpoint.startsWith('/api')
+    ? endpoint
+    : `/api${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
 
   if (params) {
     const searchParams = new URLSearchParams();
@@ -147,6 +149,9 @@ export const api = {
 
   post: <T = any>(endpoint: string, body?: any, options?: RequestOptions) =>
     request<T>(endpoint, { ...options, method: 'POST', body: body ? JSON.stringify(body) : undefined }),
+
+  put: <T = any>(endpoint: string, body?: any, options?: RequestOptions) =>
+    request<T>(endpoint, { ...options, method: 'PUT', body: body ? JSON.stringify(body) : undefined }),
 
   patch: <T = any>(endpoint: string, body?: any, options?: RequestOptions) =>
     request<T>(endpoint, { ...options, method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
