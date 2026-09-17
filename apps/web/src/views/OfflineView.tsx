@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { WifiOff, RefreshCw, AlertTriangle } from 'lucide-react';
+import { toast } from '../components/ui/sonner';
 
 interface OfflineViewProps {
   onRetry: () => Promise<void> | void;
@@ -7,11 +8,27 @@ interface OfflineViewProps {
 
 export const OfflineView: React.FC<OfflineViewProps> = ({ onRetry }) => {
   const [retrying, setRetrying] = useState(false);
+  const [diagnostics, setDiagnostics] = useState<string>('Sin respuesta / Network Error');
 
   const handleRetry = async () => {
     setRetrying(true);
     try {
-      await onRetry();
+      const res = await fetch('/health');
+      if (res.ok) {
+        toast.success('Conexión con el servidor restablecida');
+        await onRetry();
+      } else if (res.status === 503) {
+        const data = await res.json().catch(() => ({}));
+        const diagMsg = `Servicio degradado (503): DB ${data.database === 'up' ? 'OK' : 'CAÍDA'} | Redis ${data.redis === 'up' ? 'OK' : 'CAÍDO'}`;
+        setDiagnostics(diagMsg);
+        toast.error('El servidor está activo pero la base de datos o Redis no responden');
+      } else {
+        setDiagnostics(`Error del servidor (${res.status}): ${res.statusText}`);
+        toast.error('El servidor respondió con un código no disponible');
+      }
+    } catch {
+      setDiagnostics('Sin respuesta / Network Error');
+      toast.error('Aún no se puede conectar con el servidor backend');
     } finally {
       setTimeout(() => setRetrying(false), 500);
     }
@@ -45,7 +62,7 @@ export const OfflineView: React.FC<OfflineViewProps> = ({ onRetry }) => {
             Endpoint: <span className="text-slate-300">http://localhost:3000/health</span>
           </div>
           <div className="text-[11px] text-slate-500 pl-5">
-            Estado: <span className="text-rose-400">Sin respuesta / Network Error</span>
+            Estado: <span className="text-rose-400 font-bold">{diagnostics}</span>
           </div>
         </div>
 

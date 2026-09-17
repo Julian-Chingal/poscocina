@@ -18,6 +18,7 @@ import { Toaster, toast } from './components/ui/sonner';
 import { useAuthStore } from './stores/auth.store';
 import { useBrandingStore } from './stores/branding.store';
 import { usePermissions } from './hooks/usePermissions';
+import { onNetworkStatusChange } from './services/api';
 import { io } from 'socket.io-client';
 
 const getViewFromHash = (): string => {
@@ -117,7 +118,15 @@ export const App: React.FC = () => {
         .catch(() => setIsApiOnline(false));
     }, 30000);
 
-    return () => clearInterval(timer);
+    // Reactive network observer from api.ts
+    const unsubscribe = onNetworkStatusChange((online) => {
+      setIsApiOnline(online);
+    });
+
+    return () => {
+      clearInterval(timer);
+      unsubscribe();
+    };
   }, []);
 
   // Sync with window.location.hash on hashchange

@@ -19,6 +19,26 @@ export class ApiError extends Error {
   }
 }
 
+type NetworkListener = (isOnline: boolean) => void;
+const networkListeners = new Set<NetworkListener>();
+
+export const onNetworkStatusChange = (listener: NetworkListener) => {
+  networkListeners.add(listener);
+  return () => {
+    networkListeners.delete(listener);
+  };
+};
+
+export const setNetworkStatus = (isOnline: boolean) => {
+  networkListeners.forEach((listener) => {
+    try {
+      listener(isOnline);
+    } catch (e) {
+      console.error('Error in network listener:', e);
+    }
+  });
+};
+
 async function request<T = any>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { params, headers, ...customConfig } = options;
 
@@ -59,7 +79,25 @@ async function request<T = any>(endpoint: string, options: RequestOptions = {}):
     },
   };
 
-  const response = await fetch(url, config);
+  let response: Response;
+  try {
+    response = await fetch(url, config);
+  } catch (netErr: any) {
+    console.error('🌐 Error de red al comunicarse con el backend:', netErr);
+    setNetworkStatus(false);
+    toast.error('Error de conexión: El servidor backend no responde');
+    throw new ApiError(0, 'Servicio no disponible: No se pudo conectar al servidor backend', netErr);
+  }
+
+  // Manejar 503 Service Unavailable (DB o Redis caídos en healthcheck o endpoint)
+  if (response.status === 503) {
+    setNetworkStatus(false);
+    toast.error('Servicio no disponible: La base de datos o el backend están caídos');
+    throw new ApiError(503, 'Servicio no disponible');
+  }
+
+  // Notificar conectividad restaurada
+  setNetworkStatus(true);
 
   // Handle Unauthorized (Session expired or invalid token)
   if (response.status === 401) {
@@ -77,9 +115,20 @@ async function request<T = any>(endpoint: string, options: RequestOptions = {}):
     } catch {
       // Ignored if non-json error response
     }
+
+    const errorMessage =
+      errorData?.message ||
+      errorData?.error ||
+      `Error en petición (${response.status}): ${response.statusText}`;
+
+    // Disparar automáticamente Toast de error de shadcn para 400, 404, 409, 500
+    if ([400, 404, 409, 500].includes(response.status)) {
+      toast.error(errorMessage);
+    }
+
     throw new ApiError(
       response.status,
-      errorData?.message || errorData?.error || `Error en petición: ${response.statusText}`,
+      errorMessage,
       errorData
     );
   }
