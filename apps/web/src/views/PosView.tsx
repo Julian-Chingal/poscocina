@@ -20,9 +20,13 @@ import {
   Divide,
   UserPlus,
   Search,
+  AlertTriangle,
 } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 import { useBrandingStore } from '../stores/branding.store';
+import { api } from '../services/api';
+import { toast } from '../components/ui/sonner';
+import { io } from 'socket.io-client';
 
 interface Customer {
   id: string;
@@ -72,12 +76,16 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
   const { settings } = useBrandingStore();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [activeCategoryId, setActiveCategoryId] = useState<string>('');
+  const [activeCategoryId, setActiveCategoryId] = useState<string>('all');
+  const [productSearch, setProductSearch] = useState<string>('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [currentTable, setCurrentTable] = useState<TableItem | null>(selectedTable || null);
   const [allTables, setAllTables] = useState<TableItem[]>([]);
   const [orderSentSuccess, setOrderSentSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Cash shift validation state
+  const [isCashShiftOpen, setIsCashShiftOpen] = useState<boolean | null>(null);
 
   // Existing active order on table
   const [activeOrder, setActiveOrder] = useState<any | null>(null);
@@ -129,23 +137,79 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
     currentUser?.roleName === 'super_admin' ||
     (currentUser?.hierarchy && currentUser.hierarchy >= 60);
 
-  const fetchTables = () => {
-    fetch(`/api/venues/${venueId}/tables`)
-      .then((res) => res.json())
-      .then((data) => {
-        setAllTables(data || []);
-        if (currentTable) {
-          const updatedCurrent = data?.find((t: any) => t.id === currentTable.id);
-          if (updatedCurrent) setCurrentTable(updatedCurrent);
-        }
-      });
+  // Sincronizar mesa seleccionada desde fuera (ej: SalonView)
+  useEffect(() => {
+    if (selectedTable) {
+      setCurrentTable(selectedTable);
+    }
+  }, [selectedTable]);
+
+  // Validar turno de caja activo en el venue
+  const checkCashShift = async () => {
+    if (!venueId) return;
+    try {
+      const data = await api.get(`/cash-shifts/current/${venueId}`);
+      if (data && data.open === true) {
+        setIsCashShiftOpen(true);
+      } else {
+        setIsCashShiftOpen(false);
+      }
+    } catch (e) {
+      console.warn('Error comprobando turno de caja:', e);
+      setIsCashShiftOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    checkCashShift();
+  }, [venueId]);
+
+  // Suscribirse a eventos de apertura y cierre de caja en tiempo real
+  useEffect(() => {
+    const socket = io();
+
+    const handleShiftOpened = (shift: any) => {
+      if (!venueId || shift?.venueId === venueId) {
+        setIsCashShiftOpen(true);
+        toast.info(`Caja abierta por ${shift?.cashier?.name || 'cajero'}`);
+      }
+    };
+
+    const handleShiftClosed = (shift: any) => {
+      if (!venueId || shift?.venueId === venueId) {
+        setIsCashShiftOpen(false);
+        toast.warning('Turno de caja cerrado');
+      }
+    };
+
+    socket.on('cash_shift:opened', handleShiftOpened);
+    socket.on('cash_shift:closed', handleShiftClosed);
+
+    return () => {
+      socket.off('cash_shift:opened', handleShiftOpened);
+      socket.off('cash_shift:closed', handleShiftClosed);
+      socket.disconnect();
+    };
+  }, [venueId]);
+
+  const fetchTables = async () => {
+    if (!venueId) return;
+    try {
+      const data = await api.get(`/venues/${venueId}/tables`);
+      setAllTables(data || []);
+      if (currentTable) {
+        const updatedCurrent = data?.find((t: any) => t.id === currentTable.id);
+        if (updatedCurrent) setCurrentTable(updatedCurrent);
+      }
+    } catch (err) {
+      console.error('Error fetching tables:', err);
+    }
   };
 
   const fetchActiveOrder = async (orderId: string) => {
     try {
-      const res = await fetch(`/api/orders/${orderId}`);
-      if (res.ok) {
-        const data = await res.json();
+      const data = await api.get(`/orders/${orderId}`);
+      if (data) {
         setActiveOrder(data);
         setActiveOrderId(data.id);
         if (data.customer) {
@@ -169,13 +233,10 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
     }
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(
-          `/api/customers/search?venueId=${venueId}&query=${encodeURIComponent(customerSearchQuery)}`
+        const data = await api.get(
+          `/customers/search?venueId=${venueId}&query=${encodeURIComponent(customerSearchQuery)}`
         );
-        if (res.ok) {
-          const data = await res.json();
-          setCustomerSearchResults(data);
-        }
+        setCustomerSearchResults(data || []);
       } catch (err) {
         console.error('Customer search error:', err);
       }
@@ -194,26 +255,16 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
     setCustomerFormError(null);
 
     try {
-      const res = await fetch('/api/customers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          venueId,
-          name: customerForm.name.trim(),
-          documentType: customerForm.documentType,
-          documentNumber: customerForm.documentNumber.trim() || undefined,
-          phone: customerForm.phone.trim() || undefined,
-          email: customerForm.email.trim() || undefined,
-          address: customerForm.address.trim() || undefined,
-        }),
+      const newCustomer = await api.post('/customers', {
+        venueId,
+        name: customerForm.name.trim(),
+        documentType: customerForm.documentType,
+        documentNumber: customerForm.documentNumber.trim() || undefined,
+        phone: customerForm.phone.trim() || undefined,
+        email: customerForm.email.trim() || undefined,
+        address: customerForm.address.trim() || undefined,
       });
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || 'Error creando cliente');
-      }
-
-      const newCustomer = await res.json();
       setSelectedCustomer(newCustomer);
       setShowCreateCustomerModal(false);
       setCustomerForm({
@@ -224,8 +275,9 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
         email: '',
         address: '',
       });
+      toast.success('Cliente registrado exitosamente');
     } catch (err: any) {
-      setCustomerFormError(err.message);
+      setCustomerFormError(err.data?.message || err.message || 'Error creando cliente');
     } finally {
       setCustomerFormSubmitting(false);
     }
@@ -243,22 +295,28 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
   useEffect(() => {
     if (!venueId) return;
 
-    fetch(`/api/venues/${venueId}/catalog`)
-      .then((res) => res.json())
+    api.get(`/venues/${venueId}/catalog`)
       .then((data) => {
-        setCategories(data.categories || []);
-        setProducts(data.products || []);
-        if (data.categories?.length > 0) {
-          setActiveCategoryId(data.categories[0].id);
-        }
+        setCategories(data?.categories || []);
+        setProducts(data?.products || []);
+        setActiveCategoryId('all');
+      })
+      .catch((err) => {
+        console.error('Error cargando catálogo:', err);
       });
 
     fetchTables();
   }, [venueId]);
 
-  const filteredProducts = activeCategoryId
-    ? products.filter((p) => p.categoryId === activeCategoryId)
-    : products;
+  const filteredProducts = products.filter((p) => {
+    const matchesCategory =
+      activeCategoryId === 'all' || !activeCategoryId || p.categoryId === activeCategoryId;
+    const matchesSearch =
+      !productSearch.trim() ||
+      p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+      (p.description && p.description.toLowerCase().includes(productSearch.toLowerCase()));
+    return matchesCategory && matchesSearch;
+  });
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
@@ -340,6 +398,12 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
 
   const handleSendOrAppendOrder = async () => {
     if (cart.length === 0) return;
+
+    if (isCashShiftOpen === false) {
+      toast.warning('Caja cerrada: Debes abrir la caja antes de registrar pedidos');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -355,26 +419,17 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
           })),
         };
 
-        const res = await fetch(`/api/orders/${activeOrder.id}/items`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(appendPayload),
-        });
+        await api.post(`/orders/${activeOrder.id}/items`, appendPayload);
 
-        if (res.ok) {
-          setCart([]);
-          setOrderSentSuccess(true);
-          setTimeout(() => setOrderSentSuccess(false), 3000);
-          fetchActiveOrder(activeOrder.id);
-          fetchTables();
+        setCart([]);
+        setOrderSentSuccess(true);
+        toast.success('Comanda anexada y enviada a cocina');
+        setTimeout(() => setOrderSentSuccess(false), 3000);
+        fetchActiveOrder(activeOrder.id);
+        fetchTables();
 
-          // KDS print dispatch
-          fetch('/api/hardware/print-kitchen', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orderId: activeOrder.id }),
-          }).catch(() => {});
-        }
+        // KDS print dispatch
+        api.post('/hardware/print-kitchen', { orderId: activeOrder.id }).catch(() => {});
       } else {
         // CREATE new order
         const payload = {
@@ -393,31 +448,22 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
           })),
         };
 
-        const res = await fetch('/api/orders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+        const data = await api.post('/orders', payload);
 
-        if (res.ok) {
-          const data = await res.json();
-          setCart([]);
-          setActiveOrderId(data.order.id);
-          setActiveOrder(data.order);
-          setOrderSentSuccess(true);
-          setTimeout(() => setOrderSentSuccess(false), 3000);
-          fetchTables();
+        setCart([]);
+        setActiveOrderId(data.order.id);
+        setActiveOrder(data.order);
+        setOrderSentSuccess(true);
+        toast.success('Pedido creado y enviado a cocina');
+        setTimeout(() => setOrderSentSuccess(false), 3000);
+        fetchTables();
 
-          // KDS print dispatch
-          fetch('/api/hardware/print-kitchen', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orderId: data.order.id }),
-          }).catch(() => {});
-        }
+        // KDS print dispatch
+        api.post('/hardware/print-kitchen', { orderId: data.order.id }).catch(() => {});
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error sending order:', err);
+      toast.error(err.data?.message || err.message || 'Error al enviar pedido');
     } finally {
       setSubmitting(false);
     }
@@ -427,27 +473,19 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
     if (!activeOrderId && !activeOrder?.id) return;
     const targetId = activeOrder?.id || activeOrderId;
     try {
-      const res = await fetch(`/api/orders/${targetId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'check_requested' }),
-      });
+      await api.patch(`/orders/${targetId}/status`, { status: 'check_requested' });
 
-      if (res.ok) {
-        setCheckRequestedSuccess(true);
-        setTimeout(() => setCheckRequestedSuccess(false), 4000);
-        fetchTables();
-        if (targetId) fetchActiveOrder(targetId);
+      setCheckRequestedSuccess(true);
+      toast.info('Pre-cuenta solicitada para la mesa');
+      setTimeout(() => setCheckRequestedSuccess(false), 4000);
+      fetchTables();
+      if (targetId) fetchActiveOrder(targetId);
 
-        // Disparar impresión térmica de Pre-cuenta
-        fetch('/api/hardware/print-precheck', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId: targetId }),
-        }).catch(() => {});
-      }
-    } catch (err) {
+      // Disparar impresión térmica de Pre-cuenta
+      api.post('/hardware/print-precheck', { orderId: targetId }).catch(() => {});
+    } catch (err: any) {
       console.error('Error requesting check:', err);
+      toast.error(err.data?.message || err.message || 'Error al solicitar pre-cuenta');
     }
   };
 
@@ -455,20 +493,20 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
     if (!activeOrderId && !activeOrder?.id) return;
     const targetId = activeOrder?.id || activeOrderId;
     try {
-      const res = await fetch('/api/hardware/print-kitchen', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: targetId }),
-      });
-      if (res.ok) {
-        alert('Comanda reenviada exitosamente a las impresoras de cocina y barra');
-      }
-    } catch (err) {
+      await api.post('/hardware/print-kitchen', { orderId: targetId });
+      toast.success('Comanda reenviada exitosamente a impresoras de cocina');
+    } catch (err: any) {
       console.error('Error reprinting kitchen ticket:', err);
+      toast.error(err.data?.message || err.message || 'Error al reimprimir comanda');
     }
   };
 
   const handleOpenCheckout = async () => {
+    if (isCashShiftOpen === false) {
+      toast.warning('Caja cerrada: Debes abrir la caja antes de registrar pedidos');
+      return;
+    }
+
     // If order not yet created in DB, create it first
     if (!activeOrderId && cart.length > 0) {
       setSubmitting(true);
@@ -489,19 +527,12 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
           })),
         };
 
-        const res = await fetch('/api/orders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setActiveOrderId(data.order.id);
-          setShowCheckoutModal(true);
-        }
-      } catch (err) {
+        const data = await api.post('/orders', payload);
+        setActiveOrderId(data.order.id);
+        setShowCheckoutModal(true);
+      } catch (err: any) {
         console.error('Error creating order before checkout:', err);
+        toast.error(err.data?.message || err.message || 'Error al preparar la orden para cobro');
       } finally {
         setSubmitting(false);
       }
@@ -512,6 +543,12 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
 
   const handleConfirmPayment = async () => {
     if (!activeOrderId) return;
+
+    if (isCashShiftOpen === false) {
+      toast.warning('Caja cerrada: Debes abrir la caja antes de registrar pedidos');
+      return;
+    }
+
     setProcessingPayment(true);
 
     try {
@@ -535,35 +572,21 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
           paymentPayload.discountReason = discountReason || 'Cortesía de la casa';
         }
 
-        const res = await fetch('/api/receipts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(paymentPayload),
-        });
+        const data = await api.post('/receipts', paymentPayload);
 
-        if (res.ok) {
-          const data = await res.json();
-          setReceiptSuccess(data.receipt);
-          setCart([]);
-          setActiveOrderId(null);
-          setActiveOrder(null);
-          fetchTables();
+        setReceiptSuccess(data.receipt);
+        setCart([]);
+        setActiveOrderId(null);
+        setActiveOrder(null);
+        fetchTables();
+        toast.success('Cobro completado exitosamente');
 
-          // Disparo ESC/POS de ticket de venta al cliente
-          fetch('/api/hardware/print-receipt', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ receiptId: data.receipt.id }),
-          }).catch(() => {});
+        // Disparo ESC/POS de ticket de venta al cliente
+        api.post('/hardware/print-receipt', { receiptId: data.receipt.id }).catch(() => {});
 
-          // Si fue pago en efectivo, abrir automáticamente la gaveta de dinero
-          if (paymentMethod === 'cash') {
-            fetch('/api/hardware/open-drawer', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ venueId }),
-            }).catch(() => {});
-          }
+        // Si fue pago en efectivo, abrir automáticamente la gaveta de dinero
+        if (paymentMethod === 'cash') {
+          api.post('/hardware/open-drawer', { venueId }).catch(() => {});
         }
       } else if (checkoutMode === 'equal') {
         const splitPayload: any = {
@@ -581,51 +604,37 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
           ],
         };
 
-        const res = await fetch('/api/billing/split-equal', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(splitPayload),
-        });
+        const data = await api.post('/billing/split-equal', splitPayload);
 
-        if (res.ok) {
-          const data = await res.json();
+        // Print partial receipt
+        api.post('/hardware/print-receipt', { receiptId: data.receipt.id }).catch(() => {});
 
-          // Print partial receipt
-          fetch('/api/hardware/print-receipt', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ receiptId: data.receipt.id }),
-          }).catch(() => {});
+        if (paymentMethod === 'cash') {
+          api.post('/hardware/open-drawer', { venueId }).catch(() => {});
+        }
 
-          if (paymentMethod === 'cash') {
-            fetch('/api/hardware/open-drawer', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ venueId }),
-            }).catch(() => {});
-          }
-
-          if (data.isComplete) {
-            setReceiptSuccess(data.receipt);
-            setCart([]);
-            setActiveOrderId(null);
-            setActiveOrder(null);
-            fetchTables();
-            setSplitProgressMessage('');
-          } else {
-            setCurrentSplitIndex((prev) => prev + 1);
-            setCashTendered('');
-            setCardReference('');
-            setSplitProgressMessage(
-              `Parte ${data.splitNumber} de ${data.totalSplits} pagada. Restan $${data.remainingBalance.toLocaleString()}`
-            );
-            fetchTables();
-            if (activeOrderId) fetchActiveOrder(activeOrderId);
-          }
+        if (data.isComplete) {
+          setReceiptSuccess(data.receipt);
+          setCart([]);
+          setActiveOrderId(null);
+          setActiveOrder(null);
+          fetchTables();
+          setSplitProgressMessage('');
+          toast.success('Cobro total dividido finalizado');
+        } else {
+          setCurrentSplitIndex((prev) => prev + 1);
+          setCashTendered('');
+          setCardReference('');
+          setSplitProgressMessage(
+            `Parte ${data.splitNumber} de ${data.totalSplits} pagada. Restan $${data.remainingBalance.toLocaleString()}`
+          );
+          fetchTables();
+          if (activeOrderId) fetchActiveOrder(activeOrderId);
+          toast.info(`Fracción ${data.splitNumber}/${data.totalSplits} cobrada`);
         }
       } else if (checkoutMode === 'items') {
         if (selectedItemIds.length === 0) {
-          alert('Por favor selecciona al menos un plato a cobrar.');
+          toast.error('Por favor selecciona al menos un plato a cobrar.');
           setProcessingPayment(false);
           return;
         }
@@ -644,52 +653,39 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
           ],
         };
 
-        const res = await fetch('/api/billing/split-items', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(splitPayload),
-        });
+        const data = await api.post('/billing/split-items', splitPayload);
 
-        if (res.ok) {
-          const data = await res.json();
+        // Print receipt
+        api.post('/hardware/print-receipt', { receiptId: data.receipt.id }).catch(() => {});
 
-          // Print receipt
-          fetch('/api/hardware/print-receipt', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ receiptId: data.receipt.id }),
-          }).catch(() => {});
+        if (paymentMethod === 'cash') {
+          api.post('/hardware/open-drawer', { venueId }).catch(() => {});
+        }
 
-          if (paymentMethod === 'cash') {
-            fetch('/api/hardware/open-drawer', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ venueId }),
-            }).catch(() => {});
-          }
-
-          if (data.isComplete) {
-            setReceiptSuccess(data.receipt);
-            setCart([]);
-            setActiveOrderId(null);
-            setActiveOrder(null);
-            setSelectedItemIds([]);
-            fetchTables();
-            setSplitProgressMessage('');
-          } else {
-            setSelectedItemIds([]);
-            setCashTendered('');
-            setCardReference('');
-            setSplitProgressMessage(
-              `Ítems cobrados. Restante en orden: $${data.remainingBalance.toLocaleString()}`
-            );
-            fetchTables();
-            if (activeOrderId) fetchActiveOrder(activeOrderId);
-          }
+        if (data.isComplete) {
+          setReceiptSuccess(data.receipt);
+          setCart([]);
+          setActiveOrderId(null);
+          setActiveOrder(null);
+          setSelectedItemIds([]);
+          fetchTables();
+          setSplitProgressMessage('');
+          toast.success('Todos los ítems han sido cancelados');
+        } else {
+          setSelectedItemIds([]);
+          setCashTendered('');
+          setCardReference('');
+          setSplitProgressMessage(
+            `Ítems cobrados. Restante en orden: $${data.remainingBalance.toLocaleString()}`
+          );
+          fetchTables();
+          if (activeOrderId) fetchActiveOrder(activeOrderId);
+          toast.info('Ítems seleccionados cobrados');
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error issuing payment:', err);
+      toast.error(err.data?.message || err.message || 'Error al procesar el pago');
     } finally {
       setProcessingPayment(false);
     }
@@ -699,49 +695,125 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
     <div className="flex h-[calc(100vh-48px)] overflow-hidden">
       {/* Left Column: Menu Catalog */}
       <div className="flex-1 flex flex-col border-r border-slate-800 bg-slate-900 overflow-hidden">
-        {/* Category Tabs */}
-        <div className="flex items-center space-x-2 p-4 border-b border-slate-800 overflow-x-auto">
-          {categories.map((cat) => (
+        {/* Banner de alerta si la caja está cerrada */}
+        {isCashShiftOpen === false && (
+          <div className="bg-amber-500/15 border-b border-amber-500/30 text-amber-300 px-4 py-2.5 flex items-center justify-between gap-3 text-xs shrink-0">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>
+                <strong>Caja cerrada:</strong> Debes abrir la caja antes de registrar pedidos o cobrar comandas.
+              </span>
+            </div>
+            <a
+              href="#/shifts"
+              className="text-[11px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1 rounded-lg transition-colors inline-flex items-center gap-1 shrink-0"
+            >
+              Abrir Turno de Caja
+            </a>
+          </div>
+        )}
+
+        {/* Search Bar & Category Tabs */}
+        <div className="p-3 border-b border-slate-800 flex flex-col md:flex-row items-center gap-3 shrink-0">
+          <div className="relative w-full md:w-64 shrink-0">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              placeholder="Buscar plato o bebida..."
+              value={productSearch}
+              onChange={(e) => setProductSearch(e.target.value)}
+              className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-orange-500"
+            />
+            {productSearch && (
+              <button
+                onClick={() => setProductSearch('')}
+                className="absolute right-2.5 top-2 text-slate-400 hover:text-white"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center space-x-2 overflow-x-auto w-full pb-1 md:pb-0">
             <button
-              key={cat.id}
-              onClick={() => setActiveCategoryId(cat.id)}
-              className={`px-5 py-2.5 rounded-xl font-medium text-sm whitespace-nowrap transition-all cursor-pointer ${
-                activeCategoryId === cat.id
-                  ? 'bg-orange-600 text-white shadow-md'
+              key="all"
+              onClick={() => setActiveCategoryId('all')}
+              className={`px-4 py-1.5 rounded-xl font-medium text-xs whitespace-nowrap transition-all cursor-pointer ${
+                activeCategoryId === 'all' || !activeCategoryId
+                  ? 'bg-orange-600 text-white shadow-md font-bold'
                   : 'bg-slate-800 text-slate-400 hover:text-slate-200'
               }`}
             >
-              {cat.name}
+              Todas ({products.length})
             </button>
-          ))}
+            {categories.map((cat) => {
+              const catCount = products.filter((p) => p.categoryId === cat.id).length;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategoryId(cat.id)}
+                  className={`px-4 py-1.5 rounded-xl font-medium text-xs whitespace-nowrap transition-all cursor-pointer ${
+                    activeCategoryId === cat.id
+                      ? 'bg-orange-600 text-white shadow-md font-bold'
+                      : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {cat.name} ({catCount})
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Products Grid */}
         <div className="p-6 overflow-y-auto flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-max">
-          {filteredProducts.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => addToCart(p)}
-              className="flex flex-col justify-between p-4 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 hover:border-orange-500/60 transition-all text-left group cursor-pointer shadow"
-            >
-              <div>
-                <h4 className="font-bold text-white group-hover:text-orange-400 transition-colors">
-                  {p.name}
-                </h4>
-                {p.description && (
-                  <p className="text-xs text-slate-400 mt-1 line-clamp-2">{p.description}</p>
-                )}
-              </div>
-              <div className="mt-4 flex items-center justify-between">
-                <span className="text-sm font-extrabold text-orange-400">
-                  ${parseFloat(p.price).toLocaleString()}
-                </span>
-                <span className="bg-slate-700 group-hover:bg-orange-600 p-1.5 rounded-lg text-white transition-colors">
-                  <Plus className="w-4 h-4" />
-                </span>
-              </div>
-            </button>
-          ))}
+          {filteredProducts.length === 0 ? (
+            <div className="col-span-full py-16 text-center text-slate-500 text-xs flex flex-col items-center justify-center">
+              <AlertTriangle className="w-8 h-8 text-slate-600 mb-2" />
+              <p className="font-semibold text-slate-400">No se encontraron productos</p>
+              <p className="mt-1 text-slate-500">
+                {productSearch
+                  ? 'No hay platos que coincidan con la búsqueda'
+                  : 'Esta categoría no tiene productos registrados'}
+              </p>
+              {(productSearch || (activeCategoryId !== 'all' && activeCategoryId)) && (
+                <button
+                  onClick={() => {
+                    setProductSearch('');
+                    setActiveCategoryId('all');
+                  }}
+                  className="mt-3 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs cursor-pointer"
+                >
+                  Ver todos los productos ({products.length})
+                </button>
+              )}
+            </div>
+          ) : (
+            filteredProducts.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => addToCart(p)}
+                className="flex flex-col justify-between p-4 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 hover:border-orange-500/60 transition-all text-left group cursor-pointer shadow"
+              >
+                <div>
+                  <h4 className="font-bold text-white group-hover:text-orange-400 transition-colors">
+                    {p.name}
+                  </h4>
+                  {p.description && (
+                    <p className="text-xs text-slate-400 mt-1 line-clamp-2">{p.description}</p>
+                  )}
+                </div>
+                <div className="mt-4 flex items-center justify-between">
+                  <span className="text-sm font-extrabold text-orange-400">
+                    ${parseFloat(p.price).toLocaleString()}
+                  </span>
+                  <span className="bg-slate-700 group-hover:bg-orange-600 p-1.5 rounded-lg text-white transition-colors">
+                    <Plus className="w-4 h-4" />
+                  </span>
+                </div>
+              </button>
+            ))
+          )}
         </div>
       </div>
 

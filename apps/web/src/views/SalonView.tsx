@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useAuthStore } from '../stores/auth.store';
+import { api } from '../services/api';
+import { toast } from '../components/ui/sonner';
 
 interface FloorPlanItem {
   id: string;
@@ -42,7 +44,7 @@ interface SalonViewProps {
 }
 
 export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) => {
-  const { token, currentUser } = useAuthStore();
+  const { currentUser } = useAuthStore();
   const [floorPlans, setFloorPlans] = useState<FloorPlanItem[]>([]);
   const [activeFloorPlanId, setActiveFloorPlanId] = useState<string>('all');
   const [tables, setTables] = useState<TableItem[]>([]);
@@ -70,6 +72,7 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
 
   // Transfer & Merge Modals
   const [transferSourceTable, setTransferSourceTable] = useState<TableItem | null>(null);
+  const [transferTargetZone, setTransferTargetZone] = useState<string>('all');
   const [mergeSourceTable, setMergeSourceTable] = useState<TableItem | null>(null);
   const [selectedTargetTableId, setSelectedTargetTableId] = useState<string>('');
   const [actionLoading, setActionLoading] = useState(false);
@@ -88,22 +91,13 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
     try {
       setLoading(true);
 
-      const [tablesRes, plansRes] = await Promise.all([
-        fetch(`/api/venues/${venueId}/tables`),
-        fetch(`/api/venues/${venueId}/floor-plans`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }),
+      const [tablesData, plansData] = await Promise.all([
+        api.get(`/venues/${venueId}/tables`),
+        api.get(`/venues/${venueId}/floor-plans`),
       ]);
 
-      if (tablesRes.ok) {
-        const data = await tablesRes.json();
-        setTables(data);
-      }
-
-      if (plansRes.ok) {
-        const plans = await plansRes.json();
-        setFloorPlans(plans);
-      }
+      setTables(tablesData || []);
+      setFloorPlans(plansData || []);
     } catch (err) {
       console.error('Error fetching salon data:', err);
     } finally {
@@ -178,11 +172,9 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
       setSubmitting(true);
       setFormError(null);
 
-      const url = editingTable ? `/api/tables/${editingTable.id}` : '/api/tables';
-      const method = editingTable ? 'PATCH' : 'POST';
-
       const payload = editingTable
         ? {
+            floorPlanId: tableForm.floorPlanId || undefined,
             label: tableForm.label.trim(),
             capacity: Number(tableForm.capacity),
             shape: tableForm.shape,
@@ -195,24 +187,20 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
             shape: tableForm.shape,
           };
 
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || 'Error al guardar mesa');
+      if (editingTable) {
+        await api.patch(`/tables/${editingTable.id}`, payload);
+        toast.success('Mesa actualizada correctamente');
+      } else {
+        await api.post('/tables', payload);
+        toast.success('Mesa creada correctamente');
       }
 
       setShowTableModal(false);
       fetchData();
     } catch (err: any) {
-      setFormError(err.message || 'Ocurrió un error');
+      const msg = err.data?.message || err.message || 'Ocurrió un error al guardar mesa';
+      setFormError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -224,27 +212,18 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
 
     try {
       setSubmitting(true);
-      const res = await fetch(`/api/venues/${venueId}/floor-plans`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name: newFloorPlanName.trim() }),
+      const created = await api.post(`/venues/${venueId}/floor-plans`, {
+        name: newFloorPlanName.trim(),
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || 'Error al crear zona');
-      }
-
-      const created = await res.json();
       setFloorPlans((prev) => [...prev, created]);
       setActiveFloorPlanId(created.id);
       setShowFloorPlanModal(false);
       setNewFloorPlanName('');
+      toast.success('Zona o salón creado exitosamente');
     } catch (err: any) {
-      alert(`Error al crear zona: ${err.message}`);
+      const msg = err.data?.message || err.message || 'Error al crear zona';
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -254,22 +233,13 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
     if (!deleteTarget) return;
     try {
       setSubmitting(true);
-      const res = await fetch(`/api/tables/${deleteTarget.id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || 'Error al eliminar mesa');
-      }
-
+      await api.delete(`/tables/${deleteTarget.id}`);
+      toast.success('Mesa eliminada correctamente');
       setDeleteTarget(null);
       fetchData();
     } catch (err: any) {
-      alert(`No se pudo eliminar: ${err.message}`);
+      const msg = err.data?.message || err.message || 'No se pudo eliminar mesa';
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -280,24 +250,23 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
     setActionLoading(true);
     setActionError(null);
     try {
-      const res = await fetch('/api/tables/transfer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sourceTableId: transferSourceTable.id,
-          targetTableId: selectedTargetTableId,
-        }),
+      const targetTable = tables.find((t) => t.id === selectedTargetTableId);
+      const targetPlan = floorPlans.find((p) => p.id === targetTable?.floorPlanId);
+      const zoneName = targetPlan?.name || 'otra zona';
+
+      await api.post('/tables/transfer', {
+        sourceTableId: transferSourceTable.id,
+        targetTableId: selectedTargetTableId,
       });
-      if (res.ok) {
-        setTransferSourceTable(null);
-        setSelectedTargetTableId('');
-        fetchData();
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setActionError(data.message || 'Error al transferir mesa');
-      }
+
+      toast.success(`Mesa movida con éxito a ${zoneName}`);
+      setTransferSourceTable(null);
+      setSelectedTargetTableId('');
+      fetchData();
     } catch (err: any) {
-      setActionError(err.message || 'Error de conexión');
+      const msg = err.data?.message || err.message || 'Error al transferir mesa';
+      setActionError(msg);
+      toast.error(msg);
     } finally {
       setActionLoading(false);
     }
@@ -308,24 +277,19 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
     setActionLoading(true);
     setActionError(null);
     try {
-      const res = await fetch('/api/tables/merge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sourceTableId: mergeSourceTable.id,
-          targetTableId: selectedTargetTableId,
-        }),
+      await api.post('/tables/merge', {
+        sourceTableId: mergeSourceTable.id,
+        targetTableId: selectedTargetTableId,
       });
-      if (res.ok) {
-        setMergeSourceTable(null);
-        setSelectedTargetTableId('');
-        fetchData();
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setActionError(data.message || 'Error al unir mesas');
-      }
+
+      toast.success('Mesas unidas exitosamente');
+      setMergeSourceTable(null);
+      setSelectedTargetTableId('');
+      fetchData();
     } catch (err: any) {
-      setActionError(err.message || 'Error de conexión');
+      const msg = err.data?.message || err.message || 'Error al unir mesas';
+      setActionError(msg);
+      toast.error(msg);
     } finally {
       setActionLoading(false);
     }
@@ -873,37 +837,62 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
 
             {(() => {
               const freeTables = tables.filter(
-                (t) => t.id !== transferSourceTable.id && t.status === 'free'
+                (t) =>
+                  t.id !== transferSourceTable.id &&
+                  t.status === 'free' &&
+                  (transferTargetZone === 'all' || t.floorPlanId === transferTargetZone)
               );
-
-              if (freeTables.length === 0) {
-                return (
-                  <div className="p-6 bg-slate-800/60 rounded-2xl border border-slate-700/60 text-center text-slate-400 text-xs">
-                    <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-amber-400" />
-                    <span>No hay mesas libres disponibles para realizar el traslado en este momento.</span>
-                  </div>
-                );
-              }
 
               return (
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                      Selecciona la Mesa Destino (Libre):
+                      Filtrar por Zona o Salón:
                     </label>
                     <select
-                      value={selectedTargetTableId}
-                      onChange={(e) => setSelectedTargetTableId(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
+                      value={transferTargetZone}
+                      onChange={(e) => {
+                        setTransferTargetZone(e.target.value);
+                        setSelectedTargetTableId('');
+                      }}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500 mb-3"
                     >
-                      <option value="">-- Elige una mesa libre --</option>
-                      {freeTables.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.label} (Capacidad: {t.capacity} personas)
+                      <option value="all">Todas las Zonas ({floorPlans.length})</option>
+                      {floorPlans.map((plan) => (
+                        <option key={plan.id} value={plan.id}>
+                          {plan.name}
                         </option>
                       ))}
                     </select>
                   </div>
+
+                  {freeTables.length === 0 ? (
+                    <div className="p-4 bg-slate-800/60 rounded-2xl border border-slate-700/60 text-center text-slate-400 text-xs">
+                      <AlertTriangle className="w-6 h-6 mx-auto mb-1.5 text-amber-400" />
+                      <span>No hay mesas libres disponibles en la zona seleccionada.</span>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                        Selecciona la Mesa Destino (Libre):
+                      </label>
+                      <select
+                        value={selectedTargetTableId}
+                        onChange={(e) => setSelectedTargetTableId(e.target.value)}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
+                      >
+                        <option value="">-- Elige una mesa libre --</option>
+                        {freeTables.map((t) => {
+                          const plan = floorPlans.find((p) => p.id === t.floorPlanId);
+                          return (
+                            <option key={t.id} value={t.id}>
+                              [{plan ? plan.name : 'Zona'}] {t.label} (Cap: {t.capacity} personas)
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                  )}
 
                   <div className="flex justify-end space-x-3 pt-3 border-t border-slate-800">
                     <button

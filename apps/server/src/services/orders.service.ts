@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import * as schema from '../db/schema.js';
 import { NotFoundError, BadRequestError } from '../errors/app-error.js';
@@ -34,6 +34,17 @@ export class OrdersService {
     }
 
     return await db.transaction(async (tx) => {
+      // 0. Validar turno de caja activo antes de crear comanda
+      const [activeShift] = await tx
+        .select()
+        .from(schema.cashShifts)
+        .where(and(eq(schema.cashShifts.venueId, venueId), eq(schema.cashShifts.status, 'open')))
+        .limit(1);
+
+      if (!activeShift) {
+        throw new BadRequestError('Caja cerrada: Debes abrir la caja antes de registrar pedidos');
+      }
+
       // 1. Calculate item totals and subtotal
       let subtotal = 0;
       for (const item of items) {
@@ -55,11 +66,14 @@ export class OrdersService {
         .limit(1);
 
       const venueSettings = (venueRecord?.settings as Record<string, any>) || {};
-      const taxRate = typeof venueSettings.defaultTaxRate === 'number'
-        ? venueSettings.defaultTaxRate
-        : typeof venueSettings.tax_rate === 'number'
-        ? venueSettings.tax_rate
-        : 0.08;
+      const taxRate =
+        typeof venueSettings.taxRate === 'number'
+          ? venueSettings.taxRate
+          : typeof venueSettings.defaultTaxRate === 'number'
+          ? venueSettings.defaultTaxRate
+          : typeof venueSettings.tax_rate === 'number'
+          ? venueSettings.tax_rate
+          : 0.08;
 
       const taxTotal = subtotal * taxRate;
       const total = subtotal + taxTotal;
@@ -189,6 +203,17 @@ export class OrdersService {
     }
 
     return await db.transaction(async (tx) => {
+      // 0. Validar turno de caja activo antes de anexar ítems
+      const [activeShift] = await tx
+        .select()
+        .from(schema.cashShifts)
+        .where(and(eq(schema.cashShifts.venueId, existingOrder.venueId), eq(schema.cashShifts.status, 'open')))
+        .limit(1);
+
+      if (!activeShift) {
+        throw new BadRequestError('Caja cerrada: Debes abrir la caja antes de registrar pedidos');
+      }
+
       let additionalSubtotal = 0;
       for (const item of items) {
         const qty = item.quantity || 1;
@@ -209,7 +234,9 @@ export class OrdersService {
 
       const venueSettings = (venueRecord?.settings as Record<string, any>) || {};
       const taxRate =
-        typeof venueSettings.defaultTaxRate === 'number'
+        typeof venueSettings.taxRate === 'number'
+          ? venueSettings.taxRate
+          : typeof venueSettings.defaultTaxRate === 'number'
           ? venueSettings.defaultTaxRate
           : typeof venueSettings.tax_rate === 'number'
           ? venueSettings.tax_rate

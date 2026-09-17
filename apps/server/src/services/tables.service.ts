@@ -71,6 +71,7 @@ export class TablesService {
   async updateTable(
     id: string,
     data: {
+      floorPlanId?: string;
       label?: string;
       capacity?: number;
       positionX?: number;
@@ -83,6 +84,7 @@ export class TablesService {
     if (!existing) throw new NotFoundError('Mesa no encontrada');
 
     const updatePayload: Record<string, any> = { updatedAt: new Date() };
+    if (data.floorPlanId !== undefined) updatePayload.floorPlanId = data.floorPlanId;
     if (data.label !== undefined) updatePayload.label = data.label.trim();
     if (data.capacity !== undefined) updatePayload.capacity = data.capacity;
     if (data.positionX !== undefined) updatePayload.positionX = data.positionX.toString();

@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useBrandingStore, VenueSettings, VenueItem } from '../stores/branding.store';
 import { useAuthStore } from '../stores/auth.store';
+import { toast } from '../components/ui/sonner';
 
 const COLOR_PRESETS = [
   { name: 'Naranja Gourmet', hex: '#ea580c' },
@@ -310,6 +311,7 @@ export const SettingsView: React.FC = () => {
     e.preventDefault();
     setSaving(true);
 
+    const numericTaxRate = parseFloat(taxRate) / 100;
     const updatedSettings: Partial<VenueSettings> = {
       companyName,
       logoUrl,
@@ -318,7 +320,8 @@ export const SettingsView: React.FC = () => {
       phone,
       currency,
       taxType,
-      taxRate: parseFloat(taxRate) / 100,
+      taxRate: numericTaxRate,
+      defaultTaxRate: numericTaxRate,
       defaultTipPct: parseFloat(defaultTipPct) || 0,
       paperWidth,
       autoPrintReceipt,
@@ -335,7 +338,10 @@ export const SettingsView: React.FC = () => {
     setSaving(false);
     if (success) {
       setSavedSuccess(true);
+      toast.success('Ajustes guardados correctamente');
       setTimeout(() => setSavedSuccess(false), 3000);
+    } else {
+      toast.error('Error al guardar ajustes de configuración');
     }
   };
 

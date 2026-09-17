@@ -16,6 +16,7 @@ export const CreateTableSchema = z.object({
 });
 
 export const UpdateTableSchema = z.object({
+  floorPlanId: z.string().uuid('ID de salón no válido').optional(),
   label: z.string().min(1).optional(),
   capacity: z.number().int().min(1).optional(),
   positionX: z.number().optional(),

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { api } from '../services/api';
 
 export interface VenueItem {
   id: string;
@@ -17,6 +18,7 @@ export interface VenueSettings {
   currency?: string;
   taxType?: 'INC_8' | 'IVA_19' | 'EXENTO';
   taxRate?: number;
+  defaultTaxRate?: number;
   taxId?: string;
   defaultTipPct?: number;
   phone?: string;
@@ -67,14 +69,10 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
 
   loadAllVenues: async () => {
     try {
-      const res = await fetch('/api/venues');
-      if (res.ok) {
-        const data = await res.json();
-        const venuesList = Array.isArray(data) ? data : data.venues || [];
-        set({ venues: venuesList });
-        return venuesList;
-      }
-      return [];
+      const data = await api.get('/venues');
+      const venuesList = Array.isArray(data) ? data : data?.venues || [];
+      set({ venues: venuesList });
+      return venuesList;
     } catch (err) {
       console.error('Error loading venues list:', err);
       return [];
@@ -91,16 +89,15 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
     if (!venueId) return;
     set({ isLoading: true, venueId });
     try {
-      const res = await fetch(`/api/venues/${venueId}`);
-      if (res.ok) {
-        const data = await res.json();
+      const data = await api.get(`/venues/${venueId}`);
+      if (data) {
         const serverSettings = data.settings || {};
-        const resolvedTaxRate = typeof serverSettings.defaultTaxRate === 'number'
+        const resolvedTaxRate = typeof serverSettings.taxRate === 'number'
+          ? serverSettings.taxRate
+          : typeof serverSettings.defaultTaxRate === 'number'
           ? serverSettings.defaultTaxRate
           : typeof serverSettings.tax_rate === 'number'
           ? serverSettings.tax_rate
-          : typeof serverSettings.taxRate === 'number'
-          ? serverSettings.taxRate
           : 0.08;
 
         const resolvedTaxType = serverSettings.taxType || (resolvedTaxRate === 0.19 ? 'IVA_19' : resolvedTaxRate === 0 ? 'EXENTO' : 'INC_8');
@@ -123,6 +120,7 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
             receiptFooter: '¡Gracias por su visita! Vuelva pronto.',
             ...serverSettings,
             taxRate: resolvedTaxRate,
+            defaultTaxRate: resolvedTaxRate,
           },
         });
 
@@ -152,14 +150,8 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
         },
       };
 
-      const res = await fetch(`/api/venues/${venueId}/settings`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        const updated = await res.json();
+      const updated = await api.patch(`/venues/${venueId}/settings`, payload);
+      if (updated) {
         const newSettings = {
           ...currentSettings,
           ...(updated.settings || {}),

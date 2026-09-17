@@ -42,29 +42,14 @@ export interface SplitItemsInput {
 
 export class BillingService {
   private async resolveActiveShift(venueId: string) {
-    let [activeShift] = await db
+    const [activeShift] = await db
       .select()
       .from(schema.cashShifts)
       .where(and(eq(schema.cashShifts.venueId, venueId), eq(schema.cashShifts.status, 'open')))
       .limit(1);
 
     if (!activeShift) {
-      const [firstUser] = await db
-        .select()
-        .from(schema.users)
-        .where(eq(schema.users.venueId, venueId))
-        .limit(1);
-      const [autoShift] = await db
-        .insert(schema.cashShifts)
-        .values({
-          venueId,
-          cashierId: firstUser.id,
-          openingAmount: '0.00',
-          status: 'open',
-          notes: 'Turno iniciado automáticamente por cobro',
-        })
-        .returning();
-      activeShift = autoShift;
+      throw new BadRequestError('Caja cerrada: Debes abrir la caja antes de registrar cobros');
     }
     return activeShift;
   }
