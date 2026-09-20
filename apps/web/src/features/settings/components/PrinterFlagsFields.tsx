@@ -1,5 +1,7 @@
 import React from 'react';
 import { PrinterFormData } from '../types/settings.types';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface Props {
   formData: PrinterFormData;
@@ -7,33 +9,36 @@ interface Props {
 }
 
 export const PrinterFlagsFields: React.FC<Props> = ({ formData, onChange }) => (
-  <div className="space-y-2 pt-2 border-t border-slate-800 text-xs">
-    <label className="flex items-center space-x-2.5 cursor-pointer">
-      <input
-        type="checkbox"
+  <div className="space-y-3 pt-2 border-t border-slate-800 text-xs">
+    <div className="flex items-center space-x-2.5">
+      <Switch
+        id="autoPrintOnOrder"
         checked={formData.autoPrintOnOrder}
-        onChange={(e) => onChange({ autoPrintOnOrder: e.target.checked })}
-        className="w-4 h-4 rounded border-slate-700 text-orange-600 focus:ring-orange-500"
+        onCheckedChange={(checked) => onChange({ autoPrintOnOrder: checked })}
       />
-      <span className="text-slate-300 font-medium">Imprimir comanda al marchar pedido</span>
-    </label>
-    <label className="flex items-center space-x-2.5 cursor-pointer">
-      <input
-        type="checkbox"
+      <Label htmlFor="autoPrintOnOrder" className="text-slate-300 font-medium cursor-pointer">
+        Imprimir comanda al marchar pedido
+      </Label>
+    </div>
+    <div className="flex items-center space-x-2.5">
+      <Switch
+        id="autoPrintOnPayment"
         checked={formData.autoPrintOnPayment}
-        onChange={(e) => onChange({ autoPrintOnPayment: e.target.checked })}
-        className="w-4 h-4 rounded border-slate-700 text-orange-600 focus:ring-orange-500"
+        onCheckedChange={(checked) => onChange({ autoPrintOnPayment: checked })}
       />
-      <span className="text-slate-300 font-medium">Imprimir factura al registrar pago</span>
-    </label>
-    <label className="flex items-center space-x-2.5 cursor-pointer">
-      <input
-        type="checkbox"
+      <Label htmlFor="autoPrintOnPayment" className="text-slate-300 font-medium cursor-pointer">
+        Imprimir factura al registrar pago
+      </Label>
+    </div>
+    <div className="flex items-center space-x-2.5">
+      <Switch
+        id="openDrawerOnPrint"
         checked={formData.openDrawerOnPrint}
-        onChange={(e) => onChange({ openDrawerOnPrint: e.target.checked })}
-        className="w-4 h-4 rounded border-slate-700 text-orange-600 focus:ring-orange-500"
+        onCheckedChange={(checked) => onChange({ openDrawerOnPrint: checked })}
       />
-      <span className="text-slate-300 font-medium">Pulso eléctrico de apertura de gaveta</span>
-    </label>
+      <Label htmlFor="openDrawerOnPrint" className="text-slate-300 font-medium cursor-pointer">
+        Pulso eléctrico de apertura de gaveta
+      </Label>
+    </div>
   </div>
 );

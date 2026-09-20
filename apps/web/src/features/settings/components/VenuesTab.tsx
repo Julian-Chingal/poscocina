@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useVenuesManagement } from '../hooks/useVenuesManagement';
 import { VenueCard } from './VenueCard';
 import { NewVenueModal } from './NewVenueModal';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   isActive: boolean;
@@ -35,13 +36,14 @@ export const VenuesTab: React.FC<Props> = ({ isActive }) => {
         </div>
 
         {currentUser?.roleName === 'super_admin' && (
-          <button
+          <Button
+            type="button"
             onClick={openModal}
-            className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-semibold text-xs transition cursor-pointer shadow-lg shadow-orange-600/20"
+            className="flex items-center space-x-2 px-4 py-2 h-auto rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-semibold text-xs transition cursor-pointer shadow-lg shadow-orange-600/20"
           >
             <Plus className="w-4 h-4" />
             <span>Nueva Sede</span>
-          </button>
+          </Button>
         )}
       </div>
 

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Search } from 'lucide-react';
 import { Category } from '../types/pos.types';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   categories: Category[];
@@ -19,42 +21,48 @@ export const CategoryChips: React.FC<Props> = ({
 }) => (
   <div className="space-y-3 mb-4">
     <div className="relative">
-      <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
-      <input
+      <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5 pointer-events-none" />
+      <Input
         type="text"
         placeholder="Buscar plato o bebida..."
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+        className="pl-10 h-10 rounded-xl"
       />
     </div>
 
     <div className="flex space-x-2 overflow-x-auto pb-1 scrollbar-none">
-      <button
+      <Button
+        variant={activeCategoryId === 'all' ? 'default' : 'ghost'}
+        size="sm"
         type="button"
         onClick={() => onSelectCategory('all')}
-        className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer transition ${
+        className={`px-3.5 h-8 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
           activeCategoryId === 'all'
-            ? 'bg-orange-600 text-white shadow'
-            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            ? 'bg-orange-600 hover:bg-orange-500 text-white shadow'
+            : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
         }`}
       >
         Todos
-      </button>
+      </Button>
       {categories.map((c) => (
-        <button
+        <Button
           key={c.id}
+          variant={activeCategoryId === c.id ? 'default' : 'ghost'}
+          size="sm"
           type="button"
           onClick={() => onSelectCategory(c.id)}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer transition ${
+          className={`px-3.5 h-8 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
             activeCategoryId === c.id
-              ? 'bg-orange-600 text-white shadow'
-              : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+              ? 'bg-orange-600 hover:bg-orange-500 text-white shadow'
+              : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
           }`}
         >
           {c.name}
-        </button>
+        </Button>
       ))}
     </div>
   </div>
 );
+
+export default CategoryChips;

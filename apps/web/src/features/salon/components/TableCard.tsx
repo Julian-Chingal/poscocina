@@ -11,7 +11,9 @@ import {
   GitMerge,
 } from 'lucide-react';
 import { TableItem } from '../types/salon.types';
-import { TableStatusBadge } from '@/components/ui/status-badge';
+import { TableStatusBadge } from '@/components/common/status-badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 interface Props {
   table: TableItem;
@@ -53,7 +55,7 @@ export const TableCard: React.FC<Props> = ({
     table.shape === 'circle' ? CircleIcon : table.shape === 'square' ? Square : RectangleHorizontal;
 
   return (
-    <div
+    <Card
       onClick={() => onSelect(table)}
       className={`relative flex flex-col justify-between p-6 rounded-2xl border-2 transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-1 ${getStatusColor(
         table.status
@@ -67,20 +69,24 @@ export const TableCard: React.FC<Props> = ({
 
         {isEditMode ? (
           <div className="flex items-center space-x-1" onClick={(e) => e.stopPropagation()}>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               type="button"
               onClick={(e) => onEdit(table, e)}
-              className="p-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-200 transition"
+              className="h-7 w-7 p-1 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-200"
             >
               <Edit2 className="w-3.5 h-3.5" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               type="button"
               onClick={() => onDelete(table)}
-              className="p-1.5 rounded-lg bg-slate-900/80 hover:bg-rose-950 text-rose-400 transition"
+              className="h-7 w-7 p-1 rounded-lg bg-slate-900/80 hover:bg-rose-950 text-rose-400"
             >
               <Trash2 className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           </div>
         ) : (
           <TableStatusBadge status={table.status} />
@@ -105,25 +111,31 @@ export const TableCard: React.FC<Props> = ({
           className="mt-3 pt-2.5 border-t border-slate-700/50 flex items-center justify-between text-xs"
           onClick={(e) => e.stopPropagation()}
         >
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             type="button"
             onClick={() => onStartTransfer(table)}
-            className="px-2 py-1 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center space-x-1 cursor-pointer transition text-[11px] border border-slate-700/60"
+            className="px-2 h-7 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center space-x-1 text-[11px] border border-slate-700/60"
           >
             <ArrowRightLeft className="w-3 h-3 text-cyan-400" />
             <span>Cambiar</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             type="button"
             onClick={() => onStartMerge(table)}
-            className="px-2 py-1 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center space-x-1 cursor-pointer transition text-[11px] border border-slate-700/60"
+            className="px-2 h-7 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center space-x-1 text-[11px] border border-slate-700/60"
           >
             <GitMerge className="w-3 h-3 text-amber-400" />
             <span>Unir</span>
-          </button>
+          </Button>
         </div>
       )}
-    </div>
+    </Card>
   );
 };
+
+export default TableCard;

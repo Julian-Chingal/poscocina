@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sparkles, Save, Check } from 'lucide-react';
 import { SettingsTab } from '../types/settings.types';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   activeTab: SettingsTab;
@@ -23,12 +24,13 @@ export const SettingsHeader: React.FC<Props> = ({ activeTab, saving, savedSucces
     </div>
 
     {activeTab !== 'venues' && (
-      <button
+      <Button
+        type="button"
         onClick={onSave}
         disabled={saving}
-        className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer shadow-lg ${
+        className={`flex items-center space-x-2 px-6 py-2.5 h-auto rounded-xl font-bold text-sm transition-all cursor-pointer shadow-lg ${
           savedSuccess
-            ? 'bg-emerald-600 text-white'
+            ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
             : 'bg-orange-600 hover:bg-orange-500 text-white shadow-orange-600/20'
         }`}
       >
@@ -43,7 +45,7 @@ export const SettingsHeader: React.FC<Props> = ({ activeTab, saving, savedSucces
             <span>{saving ? 'Guardando...' : 'Guardar Cambios'}</span>
           </>
         )}
-      </button>
+      </Button>
     )}
   </header>
 );

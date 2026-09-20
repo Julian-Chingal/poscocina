@@ -45,3 +45,23 @@ export interface PosViewProps {
 export type SplitMode = 'single' | 'equal' | 'items';
 export type PaymentMethod = 'cash' | 'card_credit' | 'transfer';
 export type DiscountType = 'percent' | 'fixed';
+
+export interface PosOrderItem {
+  id?: string;
+  productId: string;
+  quantity: number;
+  notes?: string;
+  modifiers?: Array<{ modifierId: string; priceDelta: number }>;
+}
+
+export interface PosOrder {
+  id: string;
+  orderNumber?: string;
+  tableId?: string;
+  venueId?: string;
+  status?: string;
+  subtotal?: string | number;
+  taxTotal?: string | number;
+  total?: string | number;
+  items?: PosOrderItem[];
+}

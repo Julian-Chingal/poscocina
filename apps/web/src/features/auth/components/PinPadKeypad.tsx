@@ -1,5 +1,6 @@
 import React from 'react';
 import { Delete } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface PinPadKeypadProps {
   onDigit: (digit: string) => void;
@@ -17,39 +18,44 @@ export const PinPadKeypad: React.FC<PinPadKeypadProps> = ({
   return (
     <div className="grid grid-cols-3 gap-2 sm:gap-2.5 max-w-xs mx-auto">
       {digits.map((d) => (
-        <button
+        <Button
           key={d}
           type="button"
+          variant="ghost"
           onClick={() => onDigit(d)}
-          className="h-14 sm:h-16 rounded-2xl bg-slate-800/90 hover:bg-slate-700/90 active:scale-95 text-xl font-bold text-white shadow transition cursor-pointer flex items-center justify-center border border-slate-700/60"
+          className="h-14 sm:h-16 rounded-2xl bg-card hover:bg-muted active:scale-95 text-xl font-bold text-foreground shadow-xs transition cursor-pointer flex items-center justify-center border border-border"
         >
           {d}
-        </button>
+        </Button>
       ))}
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={onClear}
-        className="h-14 sm:h-16 rounded-2xl bg-slate-800/50 hover:bg-slate-800 active:scale-95 text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer flex items-center justify-center border border-slate-700/40"
+        className="h-14 sm:h-16 rounded-2xl bg-muted/40 hover:bg-muted active:scale-95 text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer flex items-center justify-center border border-border"
       >
         Limpiar
-      </button>
+      </Button>
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={() => onDigit('0')}
-        className="h-14 sm:h-16 rounded-2xl bg-slate-800/90 hover:bg-slate-700/90 active:scale-95 text-xl font-bold text-white shadow transition cursor-pointer flex items-center justify-center border border-slate-700/60"
+        className="h-14 sm:h-16 rounded-2xl bg-card hover:bg-muted active:scale-95 text-xl font-bold text-foreground shadow-xs transition cursor-pointer flex items-center justify-center border border-border"
       >
         0
-      </button>
+      </Button>
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={onDelete}
-        className="h-14 sm:h-16 rounded-2xl bg-slate-800/50 hover:bg-slate-800 active:scale-95 text-slate-400 hover:text-rose-400 transition cursor-pointer flex items-center justify-center border border-slate-700/40"
+        className="h-14 sm:h-16 rounded-2xl bg-muted/40 hover:bg-muted active:scale-95 text-muted-foreground hover:text-destructive transition cursor-pointer flex items-center justify-center border border-border"
       >
         <Delete className="w-5 h-5" />
-      </button>
+      </Button>
     </div>
   );
 };
+

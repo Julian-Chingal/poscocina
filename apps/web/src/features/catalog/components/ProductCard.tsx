@@ -1,6 +1,8 @@
 import React from 'react';
 import { CheckCircle, XCircle, Edit2, Trash2, Boxes, Printer } from 'lucide-react';
 import { Product, Category } from '../types/catalog.types';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 
 interface Props {
   product: Product;
@@ -22,14 +24,14 @@ export const ProductCard: React.FC<Props> = ({
   const taxPercent = product.taxRate ? Number(product.taxRate) * 100 : 8;
 
   return (
-    <div
+    <Card
       className={`p-5 rounded-2xl border transition-all flex flex-col justify-between shadow-md relative group ${
         product.isAvailable
           ? 'bg-slate-800/60 border-slate-700/60 hover:border-slate-600'
           : 'bg-slate-900/40 border-slate-800 opacity-60'
       }`}
     >
-      <div>
+      <CardContent className="p-0">
         <div className="flex items-start justify-between mb-2">
           <span
             className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
@@ -42,10 +44,12 @@ export const ProductCard: React.FC<Props> = ({
           </span>
 
           <div className="flex items-center space-x-2">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               type="button"
               onClick={() => onToggleAvailability(product.id)}
-              className={`flex items-center space-x-1 text-[11px] font-bold px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
+              className={`flex items-center space-x-1 text-[11px] font-bold px-2 h-7 rounded-lg border transition-all ${
                 product.isAvailable
                   ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-400 hover:bg-emerald-900/60'
                   : 'bg-rose-950/60 border-rose-500/50 text-rose-400 hover:bg-rose-900/60'
@@ -62,26 +66,30 @@ export const ProductCard: React.FC<Props> = ({
                   <span>Agotado (86)</span>
                 </>
               )}
-            </button>
+            </Button>
 
             {isManager && (
               <div className="flex items-center space-x-1 opacity-80 group-hover:opacity-100 transition">
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   type="button"
                   onClick={() => onEdit(product)}
                   title="Editar producto"
-                  className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-700 transition cursor-pointer"
+                  className="h-7 w-7 p-1 text-slate-400 hover:text-white rounded hover:bg-slate-700"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   type="button"
                   onClick={() => onDelete(product)}
                   title="Eliminar producto"
-                  className="p-1 text-slate-400 hover:text-rose-400 rounded hover:bg-slate-700 transition cursor-pointer"
+                  className="h-7 w-7 p-1 text-slate-400 hover:text-rose-400 rounded hover:bg-slate-700"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                </Button>
               </div>
             )}
           </div>
@@ -91,9 +99,9 @@ export const ProductCard: React.FC<Props> = ({
         {product.description && (
           <p className="text-xs text-slate-400 mt-1 line-clamp-2">{product.description}</p>
         )}
-      </div>
+      </CardContent>
 
-      <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs">
+      <CardFooter className="p-0 mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs">
         <div>
           <span className="text-base font-black text-orange-400">
             ${Number(product.price).toLocaleString()}
@@ -118,7 +126,9 @@ export const ProductCard: React.FC<Props> = ({
             <span>{product.printerStation === 'bar' ? 'Barra' : 'Cocina'}</span>
           </span>
         </div>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 };
+
+export default ProductCard;

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calendar, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ReservationsHeaderProps {
   onOpenNew: () => void;
@@ -19,13 +20,14 @@ export const ReservationsHeader: React.FC<ReservationsHeaderProps> = ({ onOpenNe
       </div>
 
       <div className="flex items-center gap-3 w-full sm:w-auto">
-        <button
+        <Button
+          type="button"
           onClick={onOpenNew}
-          className="flex items-center gap-2 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg transition cursor-pointer"
+          className="flex items-center gap-2 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white text-xs font-bold px-4 py-2.5 h-auto rounded-xl shadow-lg transition cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Nueva Reserva</span>
-        </button>
+        </Button>
       </div>
     </div>
   );

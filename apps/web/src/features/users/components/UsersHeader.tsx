@@ -1,6 +1,8 @@
 import React from 'react';
 import { Users, UserPlus, Search, CheckCircle, X } from 'lucide-react';
 import { UserFilterStatus } from '../types/users.types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface UsersHeaderProps {
   onOpenCreate: () => void;
@@ -45,13 +47,13 @@ export const UsersHeader: React.FC<UsersHeaderProps> = ({
           </div>
         </div>
 
-        <button
+        <Button
           onClick={onOpenCreate}
-          className="py-3 px-5 rounded-2xl bg-amber-500 hover:bg-amber-400 active:scale-98 text-slate-950 font-bold text-xs shadow-md transition flex items-center gap-2 cursor-pointer"
+          className="py-3 px-5 h-auto rounded-2xl bg-amber-500 hover:bg-amber-400 active:scale-98 text-slate-950 font-bold text-xs shadow-md transition flex items-center gap-2 cursor-pointer"
         >
           <UserPlus className="w-4 h-4" />
           <span>Nuevo Empleado</span>
-        </button>
+        </Button>
       </div>
 
       {/* Notifications */}
@@ -61,55 +63,58 @@ export const UsersHeader: React.FC<UsersHeaderProps> = ({
             <CheckCircle className="w-4 h-4 shrink-0" />
             <span>{actionSuccess}</span>
           </div>
-          <button onClick={onDismissSuccess} className="text-emerald-400 hover:text-white">
+          <Button variant="ghost" size="icon" onClick={onDismissSuccess} className="h-6 w-6 text-emerald-400 hover:text-white">
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Filters and Search */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 p-1 rounded-2xl w-full sm:w-auto">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => onFilterChange('active')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
+            className={`px-4 py-2 h-auto rounded-xl text-xs font-semibold transition cursor-pointer ${
               filterStatus === 'active'
-                ? 'bg-amber-500 text-slate-950 shadow'
+                ? 'bg-amber-500 text-slate-950 shadow hover:bg-amber-400'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             Activos ({activeCount})
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => onFilterChange('all')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
+            className={`px-4 py-2 h-auto rounded-xl text-xs font-semibold transition cursor-pointer ${
               filterStatus === 'all'
-                ? 'bg-amber-500 text-slate-950 shadow'
+                ? 'bg-amber-500 text-slate-950 shadow hover:bg-amber-400'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             Todos ({totalCount})
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => onFilterChange('inactive')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
+            className={`px-4 py-2 h-auto rounded-xl text-xs font-semibold transition cursor-pointer ${
               filterStatus === 'inactive'
-                ? 'bg-amber-500 text-slate-950 shadow'
+                ? 'bg-amber-500 text-slate-950 shadow hover:bg-amber-400'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             Inactivos ({inactiveCount})
-          </button>
+          </Button>
         </div>
 
         <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
-          <input
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 z-10" />
+          <Input
             type="text"
             placeholder="Buscar por nombre, rol o email..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
+            className="w-full pl-10 pr-4 h-10 rounded-2xl text-xs"
           />
         </div>
       </div>

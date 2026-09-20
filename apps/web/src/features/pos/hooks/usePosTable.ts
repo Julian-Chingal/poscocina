@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { io } from 'socket.io-client';
 import { posApi } from '../api/pos.api';
-import { TableItem, CartItem } from '../types/pos.types';
+import { TableItem, CartItem, PosOrder } from '../types/pos.types';
+import { usePosSocket } from './usePosSocket';
 import { toast } from '@/components/ui/sonner';
 
 export const usePosTable = (
@@ -11,7 +11,7 @@ export const usePosTable = (
 ) => {
   const [currentTable, setCurrentTable] = useState<TableItem | null>(initialTable || null);
   const [allTables, setAllTables] = useState<TableItem[]>([]);
-  const [activeOrder, setActiveOrder] = useState<any | null>(null);
+  const [activeOrder, setActiveOrder] = useState<PosOrder | null>(null);
   const [isCashShiftOpen, setIsCashShiftOpen] = useState<boolean | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [orderSentSuccess, setOrderSentSuccess] = useState(false);
@@ -53,18 +53,18 @@ export const usePosTable = (
     }
   }, []);
 
+  const handleShiftOpened = useCallback(() => setIsCashShiftOpen(true), []);
+  const handleShiftClosed = useCallback(() => setIsCashShiftOpen(false), []);
+
+  usePosSocket({
+    onShiftOpened: handleShiftOpened,
+    onShiftClosed: handleShiftClosed,
+  });
+
   useEffect(() => {
     checkCashShift();
     fetchTables();
-
-    const socket = io();
-    socket.on('cash_shift:opened', () => setIsCashShiftOpen(true));
-    socket.on('cash_shift:closed', () => setIsCashShiftOpen(false));
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [venueId, checkCashShift, fetchTables]);
+  }, [checkCashShift, fetchTables]);
 
   useEffect(() => {
     if (currentTable?.currentOrderId) {
@@ -134,3 +134,5 @@ export const usePosTable = (
     refreshOrder: () => activeOrder?.id && fetchActiveOrder(activeOrder.id),
   };
 };
+
+export default usePosTable;

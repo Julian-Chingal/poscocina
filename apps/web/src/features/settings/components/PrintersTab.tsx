@@ -6,6 +6,8 @@ import { PrinterModal } from './PrinterModal';
 import { ReceiptPreviewCard } from './ReceiptPreviewCard';
 import { ReceiptSettingsCard } from './ReceiptSettingsCard';
 import { PaperWidth, TaxType } from '../types/settings.types';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 interface Props {
   paperWidth: PaperWidth;
@@ -58,7 +60,7 @@ export const PrintersTab: React.FC<Props> = ({
 
   return (
     <div className="space-y-8">
-      <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-sm">
+      <Card className="bg-slate-800/60 border-slate-700/60 p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-700/60 gap-4 mb-5">
           <div>
             <div className="flex items-center space-x-2">
@@ -69,14 +71,14 @@ export const PrintersTab: React.FC<Props> = ({
               Ruteo directo por red TCP (puerto 9100) para comandas en cocina/barra y recibos en caja.
             </p>
           </div>
-          <button
+          <Button
             type="button"
             onClick={openNewPrinter}
-            className="flex items-center space-x-2 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-lg shadow-orange-600/20"
+            className="flex items-center space-x-2 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 h-auto rounded-xl text-xs font-bold transition shadow-lg shadow-orange-600/20"
           >
             <Plus className="w-4 h-4" />
             <span>Nueva Impresora</span>
-          </button>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -92,12 +94,12 @@ export const PrintersTab: React.FC<Props> = ({
             />
           ))}
           {printers.length === 0 && (
-            <div className="col-span-full p-8 text-center text-slate-500 text-xs border border-dashed border-slate-700 rounded-2xl">
+            <Card className="col-span-full p-8 text-center text-slate-500 text-xs border border-dashed border-slate-700 bg-transparent">
               No hay impresoras térmicas configuradas para esta sede.
-            </div>
+            </Card>
           )}
         </div>
-      </div>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">

@@ -1,5 +1,6 @@
 import React from 'react';
 import { ReceiptText, Lock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   isShiftOpen: boolean;
@@ -22,13 +23,14 @@ export const CashShiftsHeader: React.FC<Props> = ({ isShiftOpen, onOpenCloseModa
     </div>
 
     {isShiftOpen && (
-      <button
+      <Button
+        variant="destructive"
         onClick={onOpenCloseModal}
-        className="flex items-center space-x-2 bg-rose-600 hover:bg-rose-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg shadow-rose-600/20"
+        className="flex items-center space-x-2 bg-rose-600 hover:bg-rose-500 text-white px-4 py-2.5 h-auto rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg shadow-rose-600/20"
       >
         <Lock className="w-4 h-4" />
         <span>Cerrar Turno (Arqueo Ciego)</span>
-      </button>
+      </Button>
     )}
   </div>
 );

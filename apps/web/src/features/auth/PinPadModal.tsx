@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { X, KeyRound, Mail } from 'lucide-react';
+import { KeyRound } from 'lucide-react';
 import { useAuthStore, UserInfo } from '@/stores/auth.store';
 import { PinPadModalProps, AuthMode } from './types/auth.types';
 import { UserAvatarSelector } from './components/UserAvatarSelector';
 import { PinDisplay } from './components/PinDisplay';
 import { PinPadKeypad } from './components/PinPadKeypad';
 import { PasswordLoginForm } from './components/PasswordLoginForm';
+import { AuthModeSwitcher } from './components/AuthModeSwitcher';
+import { PasswordLoginFormValues } from './schemas/auth.schemas';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 export const PinPadModal: React.FC<PinPadModalProps> = ({
   isOpen,
@@ -19,20 +28,18 @@ export const PinPadModal: React.FC<PinPadModalProps> = ({
     loginWithPin,
     loginWithPassword,
     isLoading,
+    unlockScreen,
   } = useAuthStore();
 
   const [authMode, setAuthMode] = useState<AuthMode>('pin');
   const [selectedUser, setSelectedUser] = useState<UserInfo | null>(currentUser);
   const [pin, setPin] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       fetchVenueUsers();
       setPin('');
-      setPassword('');
       setLocalError(null);
     }
   }, [isOpen, fetchVenueUsers]);
@@ -42,8 +49,6 @@ export const PinPadModal: React.FC<PinPadModalProps> = ({
       setSelectedUser(currentUser || venueUsers[0]);
     }
   }, [venueUsers, selectedUser, currentUser]);
-
-  if (!isOpen) return null;
 
   const handleDigit = (digit: string) => {
     if (pin.length < 6) {
@@ -62,6 +67,7 @@ export const PinPadModal: React.FC<PinPadModalProps> = ({
       setPin('');
       setLocalError(null);
       if (onClose) onClose();
+      else unlockScreen();
     } else {
       setPin('');
       const serverErr = useAuthStore.getState().error;
@@ -69,84 +75,50 @@ export const PinPadModal: React.FC<PinPadModalProps> = ({
     }
   };
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      setLocalError('Por favor complete su correo y contraseña');
-      return;
-    }
-    const success = await loginWithPassword(email, password);
+  const handlePasswordSubmit = async (values: PasswordLoginFormValues) => {
+    const success = await loginWithPassword(values.email, values.password);
     if (success) {
-      setEmail('');
-      setPassword('');
       setLocalError(null);
       if (onClose) onClose();
+      else unlockScreen();
     } else {
       const serverErr = useAuthStore.getState().error;
       setLocalError(serverErr || 'Credenciales incorrectas o usuario inactivo');
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative text-white">
-        {currentUser && !isMandatoryLock && (
-          <button
-            onClick={() => {
-              if (onClose) onClose();
-              else useAuthStore.setState({ isLocked: false });
-            }}
-            title="Cerrar modal"
-            className="absolute top-6 right-6 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-800 transition cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        )}
+  const handleClose = () => {
+    if (currentUser && !isMandatoryLock) {
+      if (onClose) onClose();
+      else unlockScreen();
+    }
+  };
 
-        {/* Header */}
-        <div className="text-center mb-5">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center mb-3">
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent
+        maxWidth="md"
+        onClose={currentUser && !isMandatoryLock ? handleClose : undefined}
+      >
+        <DialogHeader className="text-center sm:text-center pr-0">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-primary/15 text-primary border border-primary/25 flex items-center justify-center mb-3">
             <KeyRound className="w-7 h-7" />
           </div>
-          <h2 className="text-xl font-bold text-slate-100">
+          <DialogTitle className="text-xl font-bold">
             {isMandatoryLock ? 'Terminal de Servicio' : 'Control de Acceso'}
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          </DialogTitle>
+          <DialogDescription className="text-xs">
             Autenticación segura para operadores y administradores
-          </p>
-        </div>
+          </DialogDescription>
+        </DialogHeader>
 
-        {/* Mode switcher */}
-        <div className="flex p-1 bg-slate-800/80 border border-slate-700/80 rounded-2xl mb-5 text-xs font-semibold">
-          <button
-            onClick={() => {
-              setAuthMode('pin');
-              setLocalError(null);
-            }}
-            className={`flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5 ${
-              authMode === 'pin'
-                ? 'bg-amber-500 text-slate-950 shadow-md font-bold'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <KeyRound className="w-3.5 h-3.5" />
-            <span>PIN Rápido</span>
-          </button>
-          <button
-            onClick={() => {
-              setAuthMode('password');
-              setLocalError(null);
-            }}
-            className={`flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5 ${
-              authMode === 'password'
-                ? 'bg-amber-500 text-slate-950 shadow-md font-bold'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Mail className="w-3.5 h-3.5" />
-            <span>Correo / Clave</span>
-          </button>
-        </div>
+        <AuthModeSwitcher
+          mode={authMode}
+          onModeChange={(m) => {
+            setAuthMode(m);
+            setLocalError(null);
+          }}
+        />
 
         {authMode === 'pin' ? (
           <div>
@@ -176,17 +148,13 @@ export const PinPadModal: React.FC<PinPadModalProps> = ({
           </div>
         ) : (
           <PasswordLoginForm
-            email={email}
-            setEmail={setEmail}
-            password={password}
-            setPassword={setPassword}
             onSubmit={handlePasswordSubmit}
             isLoading={isLoading}
             error={localError}
           />
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

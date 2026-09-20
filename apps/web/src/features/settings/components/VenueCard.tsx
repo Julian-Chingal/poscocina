@@ -2,6 +2,10 @@ import React from 'react';
 import { Store, MapPin, Phone, Layers, Wallet, UtensilsCrossed, Users } from 'lucide-react';
 import { VenueItem } from '@/stores/branding.store';
 import { VenueSummaryData } from '../types/settings.types';
+import { Button } from '@/components/ui/button';
+import { Card, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 interface Props {
   venue: VenueItem;
@@ -11,8 +15,8 @@ interface Props {
 }
 
 export const VenueCard: React.FC<Props> = ({ venue, isCurrent, summary, onSwitch }) => (
-  <div
-    className={`bg-slate-800/60 border rounded-2xl p-6 transition flex flex-col justify-between space-y-4 ${
+  <Card
+    className={`p-6 transition flex flex-col justify-between space-y-4 ${
       isCurrent
         ? 'border-orange-500/80 shadow-lg shadow-orange-500/10'
         : 'border-slate-700/60 hover:border-slate-600'
@@ -34,13 +38,15 @@ export const VenueCard: React.FC<Props> = ({ venue, isCurrent, summary, onSwitch
           </div>
         </div>
         {isCurrent && (
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30">
+          <Badge variant="outline" className="text-[10px] font-bold bg-orange-500/20 text-orange-400 border-orange-500/30">
             Sede Activa
-          </span>
+          </Badge>
         )}
       </div>
 
-      <div className="space-y-1 text-xs text-slate-400 border-t border-slate-700/60 pt-3">
+      <Separator className="bg-slate-700/60" />
+
+      <div className="space-y-1 text-xs text-slate-400">
         {venue.address && (
           <div className="flex items-center space-x-2">
             <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
@@ -56,7 +62,7 @@ export const VenueCard: React.FC<Props> = ({ venue, isCurrent, summary, onSwitch
       </div>
 
       <div className="grid grid-cols-2 gap-2 pt-2">
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-2.5">
+        <Card className="bg-slate-900/60 border-slate-800 p-2.5">
           <div className="flex items-center space-x-1.5 text-slate-400 text-[10px]">
             <Layers className="w-3 h-3 text-orange-400" />
             <span>Mesas</span>
@@ -64,9 +70,9 @@ export const VenueCard: React.FC<Props> = ({ venue, isCurrent, summary, onSwitch
           <div className="text-sm font-bold text-white mt-1">
             {summary ? `${summary.tables.occupied} / ${summary.tables.total}` : '...'}
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-2.5">
+        <Card className="bg-slate-900/60 border-slate-800 p-2.5">
           <div className="flex items-center space-x-1.5 text-slate-400 text-[10px]">
             <Wallet className="w-3 h-3 text-emerald-400" />
             <span>Caja</span>
@@ -82,9 +88,9 @@ export const VenueCard: React.FC<Props> = ({ venue, isCurrent, summary, onSwitch
               '...'
             )}
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-2.5">
+        <Card className="bg-slate-900/60 border-slate-800 p-2.5">
           <div className="flex items-center space-x-1.5 text-slate-400 text-[10px]">
             <UtensilsCrossed className="w-3 h-3 text-amber-400" />
             <span>Comandas</span>
@@ -92,9 +98,9 @@ export const VenueCard: React.FC<Props> = ({ venue, isCurrent, summary, onSwitch
           <div className="text-sm font-bold text-white mt-1">
             {summary ? `${summary.activeOrders} activas` : '...'}
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-2.5">
+        <Card className="bg-slate-900/60 border-slate-800 p-2.5">
           <div className="flex items-center space-x-1.5 text-slate-400 text-[10px]">
             <Users className="w-3 h-3 text-blue-400" />
             <span>Personal</span>
@@ -102,23 +108,25 @@ export const VenueCard: React.FC<Props> = ({ venue, isCurrent, summary, onSwitch
           <div className="text-sm font-bold text-white mt-1">
             {summary ? `${summary.activeStaff} activos` : '...'}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
 
-    <div>
+    <CardFooter className="p-0 border-t-0 mt-0">
       {isCurrent ? (
         <div className="w-full py-2 text-center text-xs font-semibold text-orange-400 bg-orange-500/10 rounded-xl">
           Operando actualmente en este terminal
         </div>
       ) : (
-        <button
+        <Button
+          variant="ghost"
+          type="button"
           onClick={() => onSwitch(venue.id)}
-          className="w-full py-2 text-center text-xs font-semibold text-slate-300 hover:text-white bg-slate-700/60 hover:bg-slate-700 rounded-xl transition cursor-pointer"
+          className="w-full py-2 h-auto text-center text-xs font-semibold text-slate-300 hover:text-white bg-slate-700/60 hover:bg-slate-700 rounded-xl transition cursor-pointer"
         >
           Cambiar a esta Sede
-        </button>
+        </Button>
       )}
-    </div>
-  </div>
+    </CardFooter>
+  </Card>
 );

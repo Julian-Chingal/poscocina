@@ -1,7 +1,11 @@
-import React, { ChangeEvent } from 'react';
-import { Building2, Image as ImageIcon, UtensilsCrossed } from 'lucide-react';
+import React, { ChangeEvent, useRef } from 'react';
+import { Building2, Image as ImageIcon, UtensilsCrossed, X } from 'lucide-react';
 import { IdentityPreviewCard } from './IdentityPreviewCard';
 import { ColorPickerSection } from './ColorPickerSection';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 interface Props {
   companyName: string;
@@ -20,6 +24,8 @@ export const IdentityTab: React.FC<Props> = ({
   phone,
   onFieldChange,
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -32,41 +38,43 @@ export const IdentityTab: React.FC<Props> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2 space-y-6">
-        <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center space-x-2.5 pb-4 border-b border-slate-700/60 mb-5">
-            <Building2 className="w-5 h-5 text-orange-400" />
-            <h3 className="font-bold text-white text-base">Identidad Corporativa</h3>
+        <Card className="bg-card border-border p-6 shadow-sm">
+          <div className="flex items-center space-x-2.5 pb-4 border-b border-border mb-5">
+            <Building2 className="w-5 h-5 text-primary" />
+            <h3 className="font-bold text-foreground text-base">Identidad Corporativa</h3>
           </div>
 
           <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <div className="space-y-1.5">
+              <Label className="block text-xs font-semibold text-foreground">
                 Nombre Comercial del Restaurante / Empresa
-              </label>
-              <input
+              </Label>
+              <Input
                 type="text"
                 value={companyName}
                 onChange={(e) => onFieldChange('companyName', e.target.value)}
                 placeholder="Ej. La Brasa Roja Gourmet"
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500"
+                className="h-10 text-sm"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <div className="space-y-1.5">
+              <Label className="block text-xs font-semibold text-foreground">
                 Logo del Sistema y Tickets
-              </label>
+              </Label>
               <div className="flex items-center space-x-4">
                 {logoUrl ? (
-                  <div className="w-16 h-16 rounded-xl border border-slate-700 bg-slate-900 p-1 flex items-center justify-center relative group">
+                  <div className="w-16 h-16 rounded-xl border border-border bg-muted/40 p-1 flex items-center justify-center relative group">
                     <img src={logoUrl} alt="Logo" className="max-h-full max-w-full object-contain rounded" />
-                    <button
+                    <Button
+                      variant="destructive"
+                      size="icon"
                       type="button"
                       onClick={() => onFieldChange('logoUrl', '')}
-                      className="absolute -top-2 -right-2 bg-rose-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-2 -right-2 rounded-full w-5 h-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                     >
-                      ×
-                    </button>
+                      <X className="w-3 h-3" />
+                    </Button>
                   </div>
                 ) : (
                   <div
@@ -77,18 +85,32 @@ export const IdentityTab: React.FC<Props> = ({
                   </div>
                 )}
                 <div className="flex-1 space-y-2">
-                  <input
+                  <Input
                     type="text"
                     value={logoUrl}
                     onChange={(e) => onFieldChange('logoUrl', e.target.value)}
                     placeholder="Pegar URL de imagen (https://...)"
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="h-8 text-xs"
                   />
-                  <label className="inline-flex text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg cursor-pointer items-center space-x-1.5">
-                    <ImageIcon className="w-3.5 h-3.5" />
-                    <span>Subir desde dispositivo</span>
-                    <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
-                  </label>
+                  <div>
+                    <Input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="h-8 text-xs cursor-pointer"
+                    >
+                      <ImageIcon className="w-3.5 h-3.5 mr-1.5" />
+                      <span>Subir desde dispositivo</span>
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -99,27 +121,27 @@ export const IdentityTab: React.FC<Props> = ({
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Dirección de la Sede</label>
-                <input
+              <div className="space-y-1.5">
+                <Label className="block text-xs font-semibold text-slate-300">Dirección de la Sede</Label>
+                <Input
                   type="text"
                   value={venueAddress}
                   onChange={(e) => onFieldChange('venueAddress', e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500"
+                  className="h-10 text-sm"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Teléfono de Contacto</label>
-                <input
+              <div className="space-y-1.5">
+                <Label className="block text-xs font-semibold text-slate-300">Teléfono de Contacto</Label>
+                <Input
                   type="text"
                   value={phone}
                   onChange={(e) => onFieldChange('phone', e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500"
+                  className="h-10 text-sm"
                 />
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
       <IdentityPreviewCard
         companyName={companyName}

@@ -1,5 +1,7 @@
 import React from 'react';
 import { Settings2, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface Props {
   isEditMode: boolean;
@@ -20,9 +22,9 @@ export const SalonHeader: React.FC<Props> = ({
         <h2 className="text-2xl font-extrabold text-white tracking-tight flex items-center space-x-2">
           <span>Mapa de Salón y Mesas</span>
           {isEditMode && (
-            <span className="text-xs font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-full">
+            <Badge variant="outline" className="text-xs font-bold uppercase bg-amber-500/20 text-amber-300 border-amber-500/40">
               Modo Edición
-            </span>
+            </Badge>
           )}
         </h2>
         <p className="text-slate-400 text-sm mt-0.5">
@@ -56,28 +58,29 @@ export const SalonHeader: React.FC<Props> = ({
         {/* Manager Controls */}
         {isManager && (
           <div className="flex items-center space-x-2">
-            <button
+            <Button
+              variant={isEditMode ? 'default' : 'ghost'}
               type="button"
               onClick={onToggleEditMode}
-              className={`flex items-center space-x-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl border transition cursor-pointer ${
+              className={`flex items-center space-x-1.5 text-xs font-semibold px-3.5 h-9 rounded-xl border transition ${
                 isEditMode
-                  ? 'bg-amber-600 border-amber-500 text-white shadow-lg shadow-amber-600/20'
+                  ? 'bg-amber-600 border-amber-500 text-white shadow-lg shadow-amber-600/20 hover:bg-amber-500'
                   : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700'
               }`}
             >
               <Settings2 className="w-3.5 h-3.5" />
               <span>{isEditMode ? 'Finalizar Edición' : 'Editar Salón'}</span>
-            </button>
+            </Button>
 
             {isEditMode && (
-              <button
+              <Button
                 type="button"
                 onClick={onOpenCreateTable}
-                className="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow cursor-pointer transition"
+                className="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3.5 h-9 rounded-xl shadow transition"
               >
                 <Plus className="w-4 h-4" />
                 <span>Nueva Mesa</span>
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -85,3 +88,5 @@ export const SalonHeader: React.FC<Props> = ({
     </div>
   );
 };
+
+export default SalonHeader;

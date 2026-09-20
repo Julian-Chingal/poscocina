@@ -1,6 +1,8 @@
 import React from 'react';
 import { Customer } from '../types/reservations.types';
 import { useCustomerAutocomplete } from '../hooks/useCustomerAutocomplete';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 interface CustomerAutocompleteFieldProps {
   venueId: string;
@@ -19,17 +21,17 @@ export const CustomerAutocompleteField: React.FC<CustomerAutocompleteFieldProps>
   } = useCustomerAutocomplete(venueId);
 
   return (
-    <div>
-      <label className="block text-xs font-medium text-slate-300 mb-1">
+    <div className="space-y-1.5">
+      <Label className="block text-xs font-medium text-slate-300">
         Buscar Cliente Habitual (Cédula o Nombre)
-      </label>
+      </Label>
       <div className="relative">
-        <input
+        <Input
           type="text"
           placeholder="Buscar por cédula/NIT, nombre o tel..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-pink-500"
+          className="h-9 text-xs"
         />
         {results.length > 0 && (
           <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-20 max-h-40 overflow-y-auto">

@@ -21,8 +21,8 @@ export const AppsGrid: React.FC<AppsGridProps> = ({ searchQuery, onSelectApp }) 
 
   if (filteredApps.length === 0) {
     return (
-      <div className="text-center py-16 text-slate-400 z-10">
-        <Search className="w-10 h-10 mx-auto text-slate-600 mb-2" />
+      <div className="text-center py-16 text-muted-foreground z-10">
+        <Search className="w-10 h-10 mx-auto text-muted-foreground/60 mb-2" />
         <p>No se encontraron módulos con el término "{searchQuery}".</p>
       </div>
     );

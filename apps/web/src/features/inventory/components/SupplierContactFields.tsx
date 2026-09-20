@@ -1,4 +1,7 @@
 import React from 'react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Props {
   contact: string;
@@ -27,59 +30,59 @@ export const SupplierContactFields: React.FC<Props> = ({
 }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-3">
-      <div>
-        <label className="block text-xs font-semibold text-slate-300 mb-1">Contacto Comercial:</label>
-        <input
+      <div className="space-y-1.5">
+        <Label className="block text-xs font-semibold text-slate-300">Contacto Comercial:</Label>
+        <Input
           type="text"
           placeholder="Ej. Carlos Mendoza"
           value={contact}
           onChange={(e) => onContactChange(e.target.value)}
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+          className="h-8 text-xs"
         />
       </div>
-      <div>
-        <label className="block text-xs font-semibold text-slate-300 mb-1">Teléfono / WhatsApp:</label>
-        <input
+      <div className="space-y-1.5">
+        <Label className="block text-xs font-semibold text-slate-300">Teléfono / WhatsApp:</Label>
+        <Input
           type="text"
           placeholder="3101234567"
           value={phone}
           onChange={(e) => onPhoneChange(e.target.value)}
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none"
+          className="h-8 text-xs font-mono"
         />
       </div>
     </div>
 
     <div className="grid grid-cols-2 gap-3">
-      <div>
-        <label className="block text-xs font-semibold text-slate-300 mb-1">Correo Electrónico:</label>
-        <input
+      <div className="space-y-1.5">
+        <Label className="block text-xs font-semibold text-slate-300">Correo Electrónico:</Label>
+        <Input
           type="email"
           placeholder="facturacion@proveedor.com"
           value={email}
           onChange={(e) => onEmailChange(e.target.value)}
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+          className="h-8 text-xs"
         />
       </div>
-      <div>
-        <label className="block text-xs font-semibold text-slate-300 mb-1">Dirección Física:</label>
-        <input
+      <div className="space-y-1.5">
+        <Label className="block text-xs font-semibold text-slate-300">Dirección Física:</Label>
+        <Input
           type="text"
           placeholder="Calle 100 # 15-20"
           value={address}
           onChange={(e) => onAddressChange(e.target.value)}
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+          className="h-8 text-xs"
         />
       </div>
     </div>
 
-    <div>
-      <label className="block text-xs font-semibold text-slate-300 mb-1">Notas de Despacho / Condiciones:</label>
-      <textarea
+    <div className="space-y-1.5">
+      <Label className="block text-xs font-semibold text-slate-300">Notas de Despacho / Condiciones:</Label>
+      <Textarea
         rows={2}
         placeholder="Ej. Entregas martes y jueves, crédito a 15 días"
         value={notes}
         onChange={(e) => onNotesChange(e.target.value)}
-        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+        className="text-xs"
       />
     </div>
   </div>

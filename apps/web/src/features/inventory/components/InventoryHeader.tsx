@@ -1,6 +1,7 @@
 import React from 'react';
 import { Boxes, Truck, Building2, CookingPot, History } from 'lucide-react';
 import { InventoryTab } from '../types/inventory.types';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   activeTab: InventoryTab;
@@ -31,18 +32,20 @@ export const InventoryHeader: React.FC<Props> = ({ activeTab, onSelectTab }) => 
 
       <nav className="flex space-x-2 overflow-x-auto pb-1 scrollbar-none">
         {tabs.map(({ id, label, icon: Icon }) => (
-          <button
+          <Button
             key={id}
+            variant="ghost"
+            type="button"
             onClick={() => onSelectTab(id)}
-            className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+            className={`flex items-center space-x-2 px-4 py-2.5 h-auto rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
               activeTab === id
-                ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30'
+                ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600/30 hover:text-emerald-300'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
             }`}
           >
             <Icon className="w-4 h-4" />
             <span>{label}</span>
-          </button>
+          </Button>
         ))}
       </nav>
     </div>

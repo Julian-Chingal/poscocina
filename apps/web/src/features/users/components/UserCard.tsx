@@ -1,6 +1,9 @@
 import React from 'react';
 import { Shield, KeyRound, Edit2, XCircle, CheckCircle } from 'lucide-react';
 import { UserItem } from '../types/users.types';
+import { Button } from '@/components/ui/button';
+import { Card, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface UserCardProps {
   user: UserItem;
@@ -20,8 +23,8 @@ export const UserCard: React.FC<UserCardProps> = ({
   const isManager = user.roleHierarchy >= 80;
 
   return (
-    <div
-      className={`bg-slate-900 border rounded-3xl p-5 shadow-sm transition flex flex-col justify-between ${
+    <Card
+      className={`rounded-3xl p-5 shadow-sm transition flex flex-col justify-between ${
         user.isActive ? 'border-slate-800 hover:border-slate-700' : 'border-slate-800/40 opacity-60 bg-slate-950'
       }`}
     >
@@ -42,9 +45,9 @@ export const UserCard: React.FC<UserCardProps> = ({
               <h3 className="font-bold text-sm text-white flex items-center gap-1.5">
                 <span>{user.name}</span>
                 {isSelf && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-normal">
+                  <Badge variant="outline" className="text-[10px] bg-amber-500/20 text-amber-300 border-amber-500/30 font-normal">
                     Tú
-                  </span>
+                  </Badge>
                 )}
               </h3>
               <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
@@ -54,19 +57,20 @@ export const UserCard: React.FC<UserCardProps> = ({
             </div>
           </div>
 
-          <span
-            className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider ${
+          <Badge
+            variant="outline"
+            className={`text-[10px] font-bold uppercase tracking-wider ${
               user.isActive
-                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                : 'bg-rose-500/15 text-rose-400 border-rose-500/30'
             }`}
           >
             {user.isActive ? 'Activo' : 'Inactivo'}
-          </span>
+          </Badge>
         </div>
 
         {/* Details */}
-        <div className="bg-slate-950/60 rounded-2xl p-3 border border-slate-800/80 space-y-1.5 text-xs text-slate-400 mb-4">
+        <Card className="bg-slate-950/60 p-3 border-slate-800/80 space-y-1.5 text-xs text-slate-400 mb-4">
           <div className="flex justify-between items-center">
             <span className="text-slate-500">Email:</span>
             <span className="font-mono text-slate-300 truncate max-w-[180px]">
@@ -80,33 +84,38 @@ export const UserCard: React.FC<UserCardProps> = ({
               <span>Habilitado (••••)</span>
             </span>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Actions Footer */}
-      <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+      <CardFooter className="p-0 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs mt-0">
         <div className="flex gap-2">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => onEdit(user)}
             title="Editar empleado"
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer"
+            className="h-8 w-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer"
           >
             <Edit2 className="w-3.5 h-3.5" />
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => onResetPin(user)}
             title="Restablecer PIN"
-            className="p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 transition cursor-pointer"
+            className="h-8 w-8 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 transition cursor-pointer"
           >
             <KeyRound className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         </div>
 
         {!isSelf && (
-          <button
+          <Button
+            variant="ghost"
             onClick={() => onToggleActive(user)}
-            className={`px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer flex items-center gap-1 text-[11px] ${
+            className={`px-3 py-1.5 h-auto rounded-xl font-semibold transition cursor-pointer flex items-center gap-1 text-[11px] ${
               user.isActive
                 ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20'
                 : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20'
@@ -123,9 +132,9 @@ export const UserCard: React.FC<UserCardProps> = ({
                 <span>Reactivar</span>
               </>
             )}
-          </button>
+          </Button>
         )}
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 };

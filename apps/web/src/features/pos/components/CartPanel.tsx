@@ -4,6 +4,9 @@ import { CartItem, Customer, TableItem } from '../types/pos.types';
 import { CartItemRow } from './CartItemRow';
 import { CustomerSelectDropdown } from './CustomerSelectDropdown';
 import { CartFooter } from './CartFooter';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface Props {
   cart: CartItem[];
@@ -52,26 +55,28 @@ export const CartPanel: React.FC<Props> = ({
   onClearCustomer,
   onOpenCreateCustomerModal,
 }) => (
-  <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between h-[80vh] shadow-sm">
+  <Card className="bg-slate-800/60 border-slate-700/60 p-4 flex flex-col justify-between h-[80vh] shadow-sm">
     <div className="space-y-3 overflow-hidden flex flex-col flex-1">
       <div className="flex items-center justify-between pb-2 border-b border-slate-700/60">
         <div className="flex items-center space-x-2 text-xs font-bold text-white">
           <ShoppingCart className="w-4 h-4 text-orange-400" />
           <span>Comanda Actual</span>
           {cart.length > 0 && (
-            <span className="px-1.5 py-0.2 bg-orange-600/20 text-orange-400 rounded-full text-[10px]">
+            <Badge variant="outline" className="px-1.5 py-0.5 bg-orange-600/20 text-orange-400 border-orange-500/30 text-[10px]">
               {cart.length}
-            </span>
+            </Badge>
           )}
         </div>
         {cart.length > 0 && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             type="button"
             onClick={onClearCart}
-            className="text-[10px] text-rose-400 hover:text-rose-300 cursor-pointer"
+            className="h-6 px-2 text-[10px] text-rose-400 hover:text-rose-300 hover:bg-rose-950/30"
           >
             Limpiar
-          </button>
+          </Button>
         )}
       </div>
 
@@ -86,7 +91,8 @@ export const CartPanel: React.FC<Props> = ({
         onOpenCreateModal={onOpenCreateCustomerModal}
       />
 
-      <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+      {/* Cart Items List */}
+      <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
         {cart.map((item, idx) => (
           <CartItemRow
             key={`${item.product.id}-${idx}`}
@@ -98,10 +104,10 @@ export const CartPanel: React.FC<Props> = ({
         ))}
 
         {cart.length === 0 && (
-          <div className="h-44 flex flex-col items-center justify-center text-center text-slate-500 text-xs border border-dashed border-slate-700/60 rounded-xl p-4">
+          <Card className="h-44 flex flex-col items-center justify-center text-center text-slate-500 text-xs border border-dashed border-slate-700/60 bg-transparent p-4">
             <ShoppingCart className="w-6 h-6 mb-2 opacity-40" />
             <span>Selecciona productos del catálogo para armar la comanda.</span>
-          </div>
+          </Card>
         )}
       </div>
     </div>
@@ -119,5 +125,7 @@ export const CartPanel: React.FC<Props> = ({
       onRequestCheck={onRequestCheck}
       onOpenCheckout={onOpenCheckout}
     />
-  </div>
+  </Card>
 );
+
+export default CartPanel;

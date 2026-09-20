@@ -2,6 +2,7 @@ import React from 'react';
 import { AlertCircle, Plus } from 'lucide-react';
 import { TableItem } from '../types/salon.types';
 import { TableCard } from './TableCard';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   tables: TableItem[];
@@ -32,14 +33,14 @@ export const TablesGrid: React.FC<Props> = ({
         <AlertCircle className="w-10 h-10 mx-auto mb-3 text-slate-600" />
         <p className="text-base font-semibold text-slate-300">No hay mesas configuradas en esta zona.</p>
         {isManager && (
-          <button
+          <Button
             type="button"
             onClick={onOpenCreateTable}
-            className="mt-4 inline-flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow cursor-pointer transition"
+            className="mt-4 inline-flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 h-9 rounded-xl shadow transition"
           >
             <Plus className="w-4 h-4" />
             <span>Crear la primera mesa</span>
-          </button>
+          </Button>
         )}
       </div>
     );
@@ -62,3 +63,5 @@ export const TablesGrid: React.FC<Props> = ({
     </div>
   );
 };
+
+export default TablesGrid;

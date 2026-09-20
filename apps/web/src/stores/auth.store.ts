@@ -27,6 +27,7 @@ interface AuthState {
   loginWithPin: (userId: string, pin: string, venueId?: string) => Promise<boolean>;
   loginWithPassword: (email: string, password: string) => Promise<boolean>;
   lockScreen: () => void;
+  unlockScreen: () => void;
   unlockWithPin: (userId: string, pin: string, venueId?: string) => Promise<boolean>;
 }
 
@@ -274,6 +275,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   lockScreen: () => set({ isLocked: true }),
+  unlockScreen: () => set({ isLocked: false }),
 
   unlockWithPin: async (userId: string, pin: string, venueId?: string) => {
     return get().loginWithPin(userId, pin, venueId);

@@ -1,6 +1,11 @@
 import React from 'react';
 import { Divide, Tag } from 'lucide-react';
 import { SplitMode, DiscountType } from '../types/pos.types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select } from '@/components/common/native-select';
+import { Switch } from '@/components/ui/switch';
 
 interface Props {
   checkoutMode: SplitMode;
@@ -39,18 +44,20 @@ export const SplitBillSection: React.FC<Props> = ({
       </span>
       <div className="flex space-x-1">
         {(['single', 'equal'] as SplitMode[]).map((mode) => (
-          <button
+          <Button
             key={mode}
             type="button"
+            size="sm"
+            variant={checkoutMode === mode ? 'default' : 'secondary'}
             onClick={() => onModeChange(mode)}
-            className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
+            className={`h-7 px-2.5 text-xs font-medium cursor-pointer ${
               checkoutMode === mode
-                ? 'bg-orange-600 text-white font-bold'
-                : 'bg-slate-800 text-slate-400 hover:text-white'
+                ? 'bg-orange-600 text-white font-bold hover:bg-orange-500'
+                : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
             }`}
           >
             {mode === 'single' ? 'Cuenta Total' : 'Partes Iguales'}
-          </button>
+          </Button>
         ))}
       </div>
     </div>
@@ -60,66 +67,70 @@ export const SplitBillSection: React.FC<Props> = ({
         <span className="text-slate-400">Dividir entre cuántas personas:</span>
         <div className="flex items-center space-x-2">
           {[2, 3, 4, 5].map((cnt) => (
-            <button
+            <Button
               key={cnt}
               type="button"
+              size="sm"
+              variant={equalSplitCount === cnt ? 'default' : 'secondary'}
               onClick={() => onSplitCountChange(cnt)}
-              className={`w-7 h-7 rounded-lg font-mono font-bold cursor-pointer transition ${
+              className={`w-7 h-7 p-0 rounded-lg font-mono font-bold cursor-pointer ${
                 equalSplitCount === cnt
-                  ? 'bg-orange-600 text-white'
+                  ? 'bg-orange-600 text-white hover:bg-orange-500'
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
               {cnt}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
     )}
 
     <div className="pt-2 border-t border-slate-800/80">
-      <label className="flex items-center space-x-2 cursor-pointer mb-2">
-        <input
-          type="checkbox"
+      <div className="flex items-center space-x-2 mb-2">
+        <Switch
+          id="apply-discount-toggle"
           checked={applyDiscount}
-          onChange={(e) => onApplyDiscountChange(e.target.checked)}
-          className="w-3.5 h-3.5 rounded border-slate-700 text-orange-600 focus:ring-orange-500"
+          onCheckedChange={onApplyDiscountChange}
         />
-        <span className="text-slate-300 font-semibold flex items-center space-x-1">
+        <Label
+          htmlFor="apply-discount-toggle"
+          className="text-slate-300 font-semibold flex items-center space-x-1 cursor-pointer"
+        >
           <Tag className="w-3 h-3 text-orange-400" />
           <span>Aplicar Descuento Especial</span>
-        </span>
-      </label>
+        </Label>
+      </div>
 
       {applyDiscount && (
         <div className="grid grid-cols-3 gap-2 p-2.5 bg-slate-800/60 rounded-xl">
-          <div>
-            <label className="block text-[10px] text-slate-400 mb-1">Tipo:</label>
-            <select
+          <div className="space-y-1">
+            <Label className="block text-[10px] text-slate-400">Tipo:</Label>
+            <Select
               value={discountType}
               onChange={(e: any) => onDiscountTypeChange(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none"
+              className="h-8 text-xs"
             >
               <option value="percent">Porcentaje (%)</option>
               <option value="fixed">Monto Fijo ($)</option>
-            </select>
+            </Select>
           </div>
-          <div>
-            <label className="block text-[10px] text-slate-400 mb-1">Valor:</label>
-            <input
+          <div className="space-y-1">
+            <Label className="block text-[10px] text-slate-400">Valor:</Label>
+            <Input
               type="number"
               value={discountValue}
               onChange={(e) => onDiscountValueChange(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white font-mono focus:outline-none"
+              className="h-8 text-xs font-mono"
             />
           </div>
-          <div>
-            <label className="block text-[10px] text-slate-400 mb-1">Motivo:</label>
-            <input
+          <div className="space-y-1">
+            <Label className="block text-[10px] text-slate-400">Motivo:</Label>
+            <Input
               type="text"
               value={discountReason}
               onChange={(e) => onDiscountReasonChange(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none"
+              className="h-8 text-xs"
             />
           </div>
         </div>

@@ -1,6 +1,9 @@
 import React from 'react';
 import { AlertCircle } from 'lucide-react';
 import { KdsItem } from '../types/kds.types';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface KdsItemCardProps {
   item: KdsItem;
@@ -15,7 +18,7 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({ item, onNextStatus }) 
   if (isDelivered) return null;
 
   return (
-    <div
+    <Card
       className={`p-3 rounded-xl border transition-all ${
         isReady
           ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300'
@@ -26,17 +29,19 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({ item, onNextStatus }) 
     >
       <div className="flex items-start justify-between gap-2">
         <div className="font-bold flex items-center space-x-2 min-w-0">
-          <span className="text-orange-400 text-xs font-black bg-orange-950/80 px-2 py-0.5 rounded border border-orange-800 flex-shrink-0">
+          <Badge variant="outline" className="text-orange-400 text-xs font-black bg-orange-950/80 border-orange-800 shrink-0">
             {item.quantity}x
-          </span>
+          </Badge>
           <span className="text-white text-xs leading-snug truncate">
             {item.product?.name || 'Producto'}
           </span>
         </div>
 
-        <button
+        <Button
+          type="button"
+          size="sm"
           onClick={() => onNextStatus(item)}
-          className={`text-[11px] px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer flex-shrink-0 ${
+          className={`text-[11px] h-7 px-2.5 rounded-lg font-bold transition-all cursor-pointer flex-shrink-0 ${
             isReady
               ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
               : isCooking
@@ -45,7 +50,7 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({ item, onNextStatus }) 
           }`}
         >
           {isReady ? 'Servido ✓' : isCooking ? '¡Listo!' : 'Cocinar'}
-        </button>
+        </Button>
       </div>
 
       {item.notes && (
@@ -54,6 +59,6 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({ item, onNextStatus }) 
           <span>Nota: {item.notes}</span>
         </div>
       )}
-    </div>
+    </Card>
   );
 };

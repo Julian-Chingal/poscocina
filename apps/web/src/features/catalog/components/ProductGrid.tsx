@@ -1,7 +1,7 @@
 import React from 'react';
 import { Utensils } from 'lucide-react';
 import { Product, Category } from '../types/catalog.types';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/common/empty-state';
 import { ProductCard } from './ProductCard';
 
 interface Props {

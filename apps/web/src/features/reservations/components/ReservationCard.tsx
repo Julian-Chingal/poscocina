@@ -10,6 +10,9 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { Reservation, ReservationStatus } from '../types/reservations.types';
+import { Button } from '@/components/ui/button';
+import { Card, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface ReservationCardProps {
   reservation: Reservation;
@@ -21,33 +24,33 @@ const renderStatusBadge = (status: ReservationStatus) => {
   switch (status) {
     case 'pending':
       return (
-        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+        <Badge variant="outline" className="gap-1 text-[11px] font-semibold bg-amber-500/20 text-amber-300 border-amber-500/30">
           <Clock className="w-3 h-3" /> Pendiente
-        </span>
+        </Badge>
       );
     case 'confirmed':
       return (
-        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+        <Badge variant="outline" className="gap-1 text-[11px] font-semibold bg-blue-500/20 text-blue-300 border-blue-500/30">
           <CheckCircle2 className="w-3 h-3" /> Confirmada
-        </span>
+        </Badge>
       );
     case 'seated':
       return (
-        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+        <Badge variant="outline" className="gap-1 text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
           <UserCheck className="w-3 h-3" /> Sentados
-        </span>
+        </Badge>
       );
     case 'cancelled':
       return (
-        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
+        <Badge variant="destructive" className="gap-1 text-[11px] font-semibold bg-rose-500/20 text-rose-300 border-rose-500/30">
           <XCircle className="w-3 h-3" /> Cancelada
-        </span>
+        </Badge>
       );
     case 'no_show':
       return (
-        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600">
+        <Badge variant="outline" className="gap-1 text-[11px] font-semibold bg-slate-700 text-slate-300 border-slate-600">
           <AlertCircle className="w-3 h-3" /> No Asistió
-        </span>
+        </Badge>
       );
   }
 };
@@ -63,7 +66,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
   });
 
   return (
-    <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition flex flex-col justify-between">
+    <Card className="p-5 hover:border-slate-700 transition flex flex-col justify-between shadow-sm">
       <div>
         <div className="flex items-start justify-between gap-2 mb-3">
           <div>
@@ -111,35 +114,42 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
       </div>
 
       {/* Card Action Buttons */}
-      <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+      <CardFooter className="p-0 pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2 mt-0">
         {reservation.status === 'pending' && (
-          <button
+          <Button
+            size="sm"
+            type="button"
             onClick={() => onUpdateStatus(reservation.id, 'confirmed')}
-            className="flex-1 py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+            className="flex-1 py-1.5 px-3 h-8 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
           >
             <CheckCircle2 className="w-3.5 h-3.5" /> Confirmar
-          </button>
+          </Button>
         )}
 
         {(reservation.status === 'pending' || reservation.status === 'confirmed') && (
-          <button
+          <Button
+            size="sm"
+            type="button"
             onClick={() => onSeatReservation(reservation)}
-            className="flex-1 py-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+            className="flex-1 py-1.5 px-3 h-8 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
           >
             <UserCheck className="w-3.5 h-3.5" /> Sentar Mesa
-          </button>
+          </Button>
         )}
 
         {(reservation.status === 'pending' || reservation.status === 'confirmed') && (
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
+            type="button"
             onClick={() => onUpdateStatus(reservation.id, 'cancelled')}
             title="Cancelar reserva"
-            className="p-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800 text-rose-300 text-xs transition cursor-pointer"
+            className="h-8 w-8 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800 text-rose-300 text-xs transition cursor-pointer p-0"
           >
             <XCircle className="w-4 h-4" />
-          </button>
+          </Button>
         )}
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 };

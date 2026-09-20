@@ -1,4 +1,6 @@
 import React from 'react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 interface CustomerContactFieldsProps {
   customerName: string;
@@ -15,23 +17,23 @@ export const CustomerContactFields: React.FC<CustomerContactFieldsProps> = ({
 }) => {
   return (
     <div className="grid grid-cols-2 gap-3">
-      <div>
-        <label className="block text-xs font-medium text-slate-300 mb-1">Nombre *</label>
-        <input
+      <div className="space-y-1.5">
+        <Label className="block text-xs font-medium text-slate-300">Nombre *</Label>
+        <Input
           type="text"
           required
           value={customerName}
           onChange={(e) => onCustomerNameChange(e.target.value)}
-          className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 focus:outline-none focus:border-pink-500"
+          className="h-9 text-xs"
         />
       </div>
-      <div>
-        <label className="block text-xs font-medium text-slate-300 mb-1">Teléfono</label>
-        <input
+      <div className="space-y-1.5">
+        <Label className="block text-xs font-medium text-slate-300">Teléfono</Label>
+        <Input
           type="tel"
           value={customerPhone}
           onChange={(e) => onCustomerPhoneChange(e.target.value)}
-          className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 focus:outline-none focus:border-pink-500"
+          className="h-9 text-xs font-mono"
         />
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Utensils, Plus } from 'lucide-react';
-import { SearchInput } from '@/components/ui/search-input';
+import { SearchInput } from '@/components/common/search-input';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   search: string;
@@ -39,16 +40,18 @@ export const CatalogHeader: React.FC<Props> = ({
         />
 
         {isManager && (
-          <button
+          <Button
             type="button"
             onClick={onOpenCreateProduct}
-            className="flex items-center space-x-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg hover:shadow-blue-500/20 transition cursor-pointer whitespace-nowrap"
+            className="flex items-center space-x-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 h-10 rounded-xl shadow-lg hover:shadow-blue-500/20 whitespace-nowrap"
           >
             <Plus className="w-4 h-4" />
             <span>Nuevo Producto</span>
-          </button>
+          </Button>
         )}
       </div>
     </div>
   );
 };
+
+export default CatalogHeader;

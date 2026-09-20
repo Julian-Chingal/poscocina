@@ -1,7 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { Users, X, AlertTriangle } from 'lucide-react';
-import { TableItem, TableFormData, FloorPlanItem } from '../types/salon.types';
-import { TableShapeCapacityFields } from './TableShapeCapacityFields';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Users } from 'lucide-react';
+import { TableItem, FloorPlanItem } from '../types/salon.types';
+import { TableSchema, TableFormValues } from '../schemas/salon.schemas';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/common/native-select';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   isOpen: boolean;
@@ -10,9 +30,9 @@ interface Props {
   defaultFloorPlanId: string;
   totalTables: number;
   submitting: boolean;
-  formError: string | null;
+  formError?: string | null;
   onClose: () => void;
-  onSubmit: (formData: TableFormData) => Promise<void>;
+  onSubmit: (formData: TableFormValues) => Promise<void>;
 }
 
 export const TableModal: React.FC<Props> = ({
@@ -26,117 +46,177 @@ export const TableModal: React.FC<Props> = ({
   onClose,
   onSubmit,
 }) => {
-  const [form, setForm] = useState<TableFormData>({
-    label: '',
-    floorPlanId: '',
-    capacity: 4,
-    shape: 'rect',
-    status: 'free',
+  const defaultPlanId =
+    defaultFloorPlanId !== 'all' ? defaultFloorPlanId : floorPlans[0]?.id || '';
+
+  const form = useForm<TableFormValues>({
+    resolver: zodResolver(TableSchema),
+    defaultValues: {
+      label: '',
+      floorPlanId: defaultPlanId,
+      capacity: 4,
+      shape: 'rect',
+      status: 'free',
+    },
   });
 
   useEffect(() => {
     if (editingTable) {
-      setForm({
+      form.reset({
         label: editingTable.label,
         floorPlanId: editingTable.floorPlanId || floorPlans[0]?.id || '',
         capacity: editingTable.capacity || 4,
         shape: editingTable.shape || 'rect',
-        status: editingTable.status,
+        status: editingTable.status || 'free',
       });
     } else {
-      setForm({
+      form.reset({
         label: `Mesa ${totalTables + 1}`,
-        floorPlanId: defaultFloorPlanId !== 'all' ? defaultFloorPlanId : floorPlans[0]?.id || '',
+        floorPlanId: defaultPlanId,
         capacity: 4,
         shape: 'rect',
         status: 'free',
       });
     }
-  }, [editingTable, defaultFloorPlanId, floorPlans, totalTables, isOpen]);
+  }, [editingTable, defaultPlanId, floorPlans, totalTables, isOpen, form]);
 
-  if (!isOpen) return null;
+  const handleSubmit = form.handleSubmit(async (values) => {
+    await onSubmit(values);
+  });
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-md p-6 shadow-2xl">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
-          <h3 className="text-base font-bold text-white flex items-center space-x-2">
-            <Users className="w-4 h-4 text-emerald-400" />
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent maxWidth="md" onClose={onClose}>
+        <DialogHeader>
+          <DialogTitle className="flex items-center space-x-2">
+            <Users className="w-5 h-5 text-emerald-400" />
             <span>{editingTable ? 'Editar Mesa' : 'Nueva Mesa'}</span>
-          </h3>
-          <button type="button" onClick={onClose} className="text-slate-400 hover:text-white p-1">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
 
         {formError && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-950/50 border border-rose-800 text-rose-300 text-xs flex items-center space-x-2">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
-            <span>{formError}</span>
+          <div className="mb-4 p-3 rounded-xl bg-rose-950/50 border border-rose-800 text-rose-300 text-xs">
+            {formError}
           </div>
         )}
 
-        <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Nombre de Mesa *</label>
-            <input
-              type="text"
-              required
-              value={form.label}
-              onChange={(e) => setForm({ ...form, label: e.target.value })}
-              placeholder="Ej. Mesa 5, Barra 2"
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
+        <Form {...form}>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="label"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre o Número de Mesa *</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Ej. Mesa 5, Barra 2" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          {!editingTable && floorPlans.length > 0 && (
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Zona o Salón *</label>
-              <select
-                required
-                value={form.floorPlanId}
-                onChange={(e) => setForm({ ...form, floorPlanId: e.target.value })}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
-              >
-                {floorPlans.map((plan) => (
-                  <option key={plan.id} value={plan.id}>{plan.name}</option>
-                ))}
-              </select>
+            {!editingTable && floorPlans.length > 0 && (
+              <FormField
+                control={form.control}
+                name="floorPlanId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Zona o Salón *</FormLabel>
+                    <FormControl>
+                      <Select {...field}>
+                        {floorPlans.map((plan) => (
+                          <option key={plan.id} value={plan.id}>
+                            {plan.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="capacity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Capacidad Comensales</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="30"
+                        value={field.value}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="shape"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Forma Visual</FormLabel>
+                    <FormControl>
+                      <Select {...field}>
+                        <option value="rect">Rectangular</option>
+                        <option value="square">Cuadrada</option>
+                        <option value="circle">Redonda</option>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-          )}
 
-          <TableShapeCapacityFields
-            capacity={form.capacity}
-            shape={form.shape}
-            onCapacityChange={(cap) => setForm({ ...form, capacity: cap })}
-            onShapeChange={(sh) => setForm({ ...form, shape: sh })}
-          />
+            {editingTable && (
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estado Operativo</FormLabel>
+                    <FormControl>
+                      <Select {...field}>
+                        <option value="free">Libre</option>
+                        <option value="occupied">Ocupada</option>
+                        <option value="check_requested">Pidiendo Cuenta</option>
+                        <option value="reserved">Reservada</option>
+                        <option value="blocked">Bloqueada</option>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
-          {editingTable && (
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Estado Actual</label>
-              <select
-                value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value as TableItem['status'] })}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
+            <DialogFooter>
+              <Button variant="ghost" type="button" onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={submitting || form.formState.isSubmitting}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
               >
-                <option value="free">Libre</option>
-                <option value="occupied">Ocupada</option>
-                <option value="check_requested">Pidiendo Cuenta</option>
-                <option value="reserved">Reservada</option>
-                <option value="blocked">Bloqueada</option>
-              </select>
-            </div>
-          )}
-
-          <div className="flex justify-end space-x-3 pt-4 border-t border-slate-800">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white rounded-xl">Cancelar</button>
-            <button type="submit" disabled={submitting} className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow cursor-pointer disabled:opacity-50">
-              {submitting ? 'Guardando...' : 'Guardar Mesa'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+                {submitting ? 'Guardando...' : 'Guardar Mesa'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 };
+
+export default TableModal;

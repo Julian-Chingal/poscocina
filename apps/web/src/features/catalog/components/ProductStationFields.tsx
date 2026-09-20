@@ -1,5 +1,8 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/common/native-select';
 
 interface Props {
   printerStation: string;
@@ -16,28 +19,30 @@ export const ProductStationFields: React.FC<Props> = ({
 }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <div>
-      <label className="block text-xs font-semibold text-slate-300 mb-1">Estación de Impresión</label>
-      <select
+      <Label className="mb-1.5 block">Estación de Impresión</Label>
+      <Select
         value={printerStation}
         onChange={(e) => onPrinterStationChange(e.target.value)}
-        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+        className="h-10 rounded-xl"
       >
         <option value="kitchen">Cocina Principal (KDS)</option>
         <option value="bar">Barra de Bebidas (Bar)</option>
-      </select>
+      </Select>
     </div>
     <div>
-      <label className="block text-xs font-semibold text-slate-300 mb-1">Tiempo preparación (min)</label>
+      <Label className="mb-1.5 block">Tiempo preparación (min)</Label>
       <div className="relative">
-        <Clock className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
-        <input
+        <Clock className="w-4 h-4 absolute left-3 top-2.5 text-slate-500 pointer-events-none" />
+        <Input
           type="number"
           min="0"
           value={prepTimeMin}
           onChange={(e) => onPrepTimeMinChange(parseInt(e.target.value) || 0)}
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+          className="pl-9 h-10 rounded-xl"
         />
       </div>
     </div>
   </div>
 );
+
+export default ProductStationFields;

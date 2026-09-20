@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { catalogApi } from '../api/catalog.api';
-import { Category, Product, CategoryFormData, ProductFormData, DeleteTarget } from '../types/catalog.types';
+import { Category, Product, DeleteTarget } from '../types/catalog.types';
+import { CategoryFormValues, ProductFormValues } from '../schemas/catalog.schemas';
 import { toast } from '@/components/ui/sonner';
 
 export const useCatalogMutations = (venueId: string, onSuccess: () => void) => {
@@ -36,11 +37,7 @@ export const useCatalogMutations = (venueId: string, onSuccess: () => void) => {
     setShowCategoryModal(true);
   };
 
-  const saveCategory = async (data: CategoryFormData) => {
-    if (!data.name.trim()) {
-      setFormError('El nombre de la categoría es obligatorio.');
-      return;
-    }
+  const saveCategory = async (data: CategoryFormValues) => {
     try {
       setSubmitting(true);
       setFormError(null);
@@ -51,6 +48,7 @@ export const useCatalogMutations = (venueId: string, onSuccess: () => void) => {
       }
       setShowCategoryModal(false);
       onSuccess();
+      toast.success('Categoría guardada exitosamente');
     } catch (err: any) {
       setFormError(err.message || 'Error al guardar categoría');
     } finally {
@@ -70,31 +68,17 @@ export const useCatalogMutations = (venueId: string, onSuccess: () => void) => {
     setShowProductModal(true);
   };
 
-  const saveProduct = async (data: ProductFormData) => {
-    if (!data.name.trim()) {
-      setFormError('El nombre del producto es obligatorio.');
-      return;
-    }
-    if (!data.categoryId) {
-      setFormError('Debes seleccionar una categoría.');
-      return;
-    }
-    const numPrice = parseFloat(data.price);
-    if (isNaN(numPrice) || numPrice <= 0) {
-      setFormError('Ingresa un precio válido mayor a 0.');
-      return;
-    }
-
+  const saveProduct = async (data: ProductFormValues) => {
     try {
       setSubmitting(true);
       setFormError(null);
       const payload = {
         categoryId: data.categoryId,
         name: data.name.trim(),
-        price: numPrice,
+        price: parseFloat(data.price),
         taxRate: data.taxRate,
         printerStation: data.printerStation,
-        description: data.description.trim() || undefined,
+        description: data.description?.trim() || undefined,
         prepTimeMin: Number(data.prepTimeMin) || 0,
         trackInventory: data.trackInventory,
         isAvailable: data.isAvailable,
@@ -107,6 +91,7 @@ export const useCatalogMutations = (venueId: string, onSuccess: () => void) => {
       }
       setShowProductModal(false);
       onSuccess();
+      toast.success('Producto guardado exitosamente');
     } catch (err: any) {
       setFormError(err.message || 'Error al guardar producto');
     } finally {
@@ -154,3 +139,5 @@ export const useCatalogMutations = (venueId: string, onSuccess: () => void) => {
     confirmDelete,
   };
 };
+
+export default useCatalogMutations;

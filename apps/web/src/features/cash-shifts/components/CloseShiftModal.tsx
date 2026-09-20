@@ -1,5 +1,26 @@
-import React, { useState, FormEvent } from 'react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle } from 'lucide-react';
+import { CloseShiftSchema, CloseShiftFormValues } from '../schemas/cash-shifts.schemas';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   isOpen: boolean;
@@ -8,81 +29,93 @@ interface Props {
 }
 
 export const CloseShiftModal: React.FC<Props> = ({ isOpen, onClose, onConfirmClose }) => {
-  const [closingAmount, setClosingAmount] = useState('');
-  const [closingNotes, setClosingNotes] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const form = useForm<CloseShiftFormValues>({
+    resolver: zodResolver(CloseShiftSchema),
+    defaultValues: {
+      closingAmount: '',
+      closingNotes: '',
+    },
+  });
 
-  if (!isOpen) return null;
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    await onConfirmClose(parseFloat(closingAmount) || 0, closingNotes);
-    setSubmitting(false);
-  };
+  const handleSubmit = form.handleSubmit(async (values) => {
+    await onConfirmClose(parseFloat(values.closingAmount) || 0, values.closingNotes);
+    form.reset();
+  });
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-        <div className="flex items-center space-x-2 text-rose-400 text-xs font-bold uppercase mb-1">
-          <AlertCircle className="w-4 h-4" />
-          <span>Auditoría de Cierre</span>
-        </div>
-        <h3 className="text-lg font-bold text-white mb-2">Arqueo Ciego de Caja</h3>
-        <p className="text-xs text-slate-400 mb-5">
-          Ingresa el total de dinero en efectivo físico contado en la gaveta. Por seguridad, el
-          sistema no muestra el total recaudado hasta confirmar el conteo.
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Efectivo Físico Contado:
-            </label>
-            <div className="relative">
-              <span className="absolute left-3.5 top-2.5 text-slate-400 text-sm font-bold">$</span>
-              <input
-                type="number"
-                required
-                placeholder="0"
-                value={closingAmount}
-                onChange={(e) => setClosingAmount(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-8 pr-4 py-2.5 text-white font-mono text-sm focus:outline-none focus:border-rose-500"
-              />
-            </div>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent maxWidth="md" onClose={onClose}>
+        <DialogHeader>
+          <div className="flex items-center space-x-2 text-rose-400 text-xs font-bold uppercase mb-1">
+            <AlertCircle className="w-4 h-4" />
+            <span>Auditoría de Cierre</span>
           </div>
+          <DialogTitle className="text-lg font-bold">Arqueo Ciego de Caja</DialogTitle>
+          <DialogDescription>
+            Ingresa el total de dinero en efectivo físico contado en la gaveta. Por seguridad, el sistema no muestra el total recaudado hasta confirmar el conteo.
+          </DialogDescription>
+        </DialogHeader>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Notas de Cierre:
-            </label>
-            <input
-              type="text"
-              placeholder="Ej. Billetes desgastados o cambio exacto"
-              value={closingNotes}
-              onChange={(e) => setClosingNotes(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+        <Form {...form}>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="closingAmount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Efectivo Físico Contado *</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-2.5 text-slate-400 text-sm font-bold pointer-events-none">
+                        $
+                      </span>
+                      <Input
+                        {...field}
+                        type="number"
+                        placeholder="0"
+                        className="pl-8 font-mono text-sm h-10 rounded-xl"
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-800">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
-            >
-              {submitting ? 'Cerrando...' : 'Confirmar y Cerrar Turno'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+            <FormField
+              control={form.control}
+              name="closingNotes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notas de Cierre</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Ej. Billetes desgastados o cambio exacto"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <Button variant="ghost" type="button" onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                className="bg-rose-600 hover:bg-rose-500 text-white font-bold"
+              >
+                {form.formState.isSubmitting ? 'Cerrando...' : 'Confirmar y Cerrar Turno'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 };
+
+export default CloseShiftModal;

@@ -3,6 +3,7 @@ import { Wallet } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth.store';
 import { useBrandingStore } from '../../stores/branding.store';
 import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
 
 interface ShiftStatusBadgeProps {
@@ -49,7 +50,8 @@ export const ShiftStatusBadge: React.FC<ShiftStatusBadgeProps> = ({
   }, [venueId]);
 
   return (
-    <button
+    <Button
+      variant="ghost"
       onClick={onNavigateShifts}
       title={
         shiftStatus.isOpen
@@ -57,7 +59,7 @@ export const ShiftStatusBadge: React.FC<ShiftStatusBadgeProps> = ({
           : 'Caja Cerrada - Clic para abrir turno [F4]'
       }
       className={cn(
-        'hidden sm:inline-flex items-center transition cursor-pointer select-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-orange-500 rounded-full',
+        'h-auto p-0 hover:bg-transparent hidden sm:inline-flex items-center transition cursor-pointer select-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-full',
         className
       )}
     >
@@ -70,6 +72,6 @@ export const ShiftStatusBadge: React.FC<ShiftStatusBadgeProps> = ({
           {shiftStatus.isOpen ? 'Caja Abierta' : 'Caja Cerrada'}
         </span>
       </Badge>
-    </button>
+    </Button>
   );
 };

@@ -12,21 +12,20 @@ export const LauncherHeader: React.FC = () => {
           <img
             src={settings.logoUrl}
             alt="Logo"
-            className="w-12 h-12 object-contain rounded-xl p-1 bg-slate-800 border border-slate-700 shadow"
+            className="w-12 h-12 object-contain rounded-xl p-1 bg-card border border-border shadow-xs"
           />
         ) : (
           <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg"
-            style={{ backgroundColor: settings.primaryColor || '#f97316' }}
+            className="w-12 h-12 rounded-xl flex items-center justify-center text-primary-foreground shadow-md bg-primary"
           >
             <Utensils className="w-6 h-6" />
           </div>
         )}
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">
+        <h1 className="text-3xl font-extrabold text-foreground tracking-tight">
           {settings.companyName || companyName}
         </h1>
       </div>
-      <p className="text-slate-400 text-sm">
+      <p className="text-muted-foreground text-sm">
         Plataforma modular de gestión gastronómica. Selecciona un módulo para comenzar.
       </p>
     </div>

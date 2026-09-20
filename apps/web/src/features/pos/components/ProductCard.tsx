@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
 import { Product } from '../types/pos.types';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   product: Product;
@@ -11,17 +12,18 @@ export const ProductCard: React.FC<Props> = React.memo(({ product, onAddToCart }
   const priceNum = parseFloat(product.price || '0');
 
   return (
-    <button
+    <Button
+      variant="ghost"
       type="button"
       onClick={() => onAddToCart(product)}
-      className="bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 hover:border-orange-500/60 rounded-2xl p-3.5 text-left flex flex-col justify-between space-y-2 transition-all cursor-pointer shadow-sm group active:scale-[0.98]"
+      className="h-auto bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 hover:border-orange-500/60 rounded-2xl p-3.5 text-left flex flex-col justify-between space-y-2 transition-all cursor-pointer shadow-sm group active:scale-[0.98] w-full items-stretch whitespace-normal"
     >
       <div>
         <h4 className="text-xs font-bold text-white group-hover:text-orange-400 transition-colors line-clamp-2">
           {product.name}
         </h4>
         {product.description && (
-          <p className="text-[10px] text-slate-400 mt-1 line-clamp-2">{product.description}</p>
+          <p className="text-[10px] text-slate-400 mt-1 line-clamp-2 font-normal">{product.description}</p>
         )}
       </div>
 
@@ -33,6 +35,6 @@ export const ProductCard: React.FC<Props> = React.memo(({ product, onAddToCart }
           <Plus className="w-3.5 h-3.5" />
         </span>
       </div>
-    </button>
+    </Button>
   );
 });

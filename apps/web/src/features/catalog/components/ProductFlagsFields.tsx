@@ -1,4 +1,6 @@
 import React from 'react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface Props {
   trackInventory: boolean;
@@ -13,24 +15,26 @@ export const ProductFlagsFields: React.FC<Props> = ({
   onTrackInventoryChange,
   onIsAvailableChange,
 }) => (
-  <div className="pt-2 flex items-center space-x-6">
-    <label className="flex items-center space-x-2 cursor-pointer">
-      <input
-        type="checkbox"
+  <div className="pt-2 flex flex-wrap items-center gap-6">
+    <div className="flex items-center space-x-2">
+      <Switch
         checked={trackInventory}
-        onChange={(e) => onTrackInventoryChange(e.target.checked)}
-        className="w-4 h-4 rounded border-slate-700 text-blue-600"
+        onCheckedChange={onTrackInventoryChange}
       />
-      <span className="text-xs font-medium text-slate-300">Descontar insumos (Receta)</span>
-    </label>
-    <label className="flex items-center space-x-2 cursor-pointer">
-      <input
-        type="checkbox"
+      <Label className="font-normal cursor-pointer" onClick={() => onTrackInventoryChange(!trackInventory)}>
+        Descontar insumos (Receta)
+      </Label>
+    </div>
+    <div className="flex items-center space-x-2">
+      <Switch
         checked={isAvailable}
-        onChange={(e) => onIsAvailableChange(e.target.checked)}
-        className="w-4 h-4 rounded border-slate-700 text-blue-600"
+        onCheckedChange={onIsAvailableChange}
       />
-      <span className="text-xs font-medium text-slate-300">Disponible en carta</span>
-    </label>
+      <Label className="font-normal cursor-pointer" onClick={() => onIsAvailableChange(!isAvailable)}>
+        Disponible en carta
+      </Label>
+    </div>
   </div>
 );
+
+export default ProductFlagsFields;

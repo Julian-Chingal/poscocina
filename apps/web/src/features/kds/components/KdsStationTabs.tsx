@@ -1,6 +1,7 @@
 import React from 'react';
 import { STATIONS } from '../constants/kds.constants';
 import { StationFilter } from '../types/kds.types';
+import { Button } from '@/components/ui/button';
 
 interface KdsStationTabsProps {
   activeStation: StationFilter;
@@ -17,18 +18,19 @@ export const KdsStationTabs: React.FC<KdsStationTabsProps> = ({
         const Icon = station.icon;
         const isActive = activeStation === station.id;
         return (
-          <button
+          <Button
             key={station.id}
+            variant={isActive ? 'default' : 'secondary'}
             onClick={() => onSelectStation(station.id)}
-            className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer whitespace-nowrap ${
+            className={`flex items-center space-x-2 px-4 py-2.5 h-auto rounded-xl font-bold text-xs transition-all cursor-pointer whitespace-nowrap ${
               isActive
-                ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
+                ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20 hover:bg-orange-500'
                 : 'bg-slate-800/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700/60'
             }`}
           >
             <Icon className="w-4 h-4" />
             <span>{station.label}</span>
-          </button>
+          </Button>
         );
       })}
     </div>

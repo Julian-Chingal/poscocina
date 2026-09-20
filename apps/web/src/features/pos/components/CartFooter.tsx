@@ -1,6 +1,7 @@
 import React from 'react';
 import { Send, Receipt, Sparkles } from 'lucide-react';
 import { TableItem } from '../types/pos.types';
+import { Button } from '@/components/ui/button';
 
 interface CartFooterProps {
   cartLength: number;
@@ -47,11 +48,11 @@ export const CartFooter: React.FC<CartFooterProps> = ({
       </div>
 
       <div className="grid grid-cols-2 gap-2 pt-1">
-        <button
+        <Button
           type="button"
           disabled={cartLength === 0 || submitting}
           onClick={onSendOrder}
-          className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition cursor-pointer ${
+          className={`h-10 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition ${
             orderSentSuccess
               ? 'bg-emerald-600 text-white'
               : 'bg-orange-600 hover:bg-orange-500 text-white disabled:bg-slate-800 disabled:text-slate-600'
@@ -59,29 +60,32 @@ export const CartFooter: React.FC<CartFooterProps> = ({
         >
           <Send className="w-3.5 h-3.5" />
           <span>{submitting ? 'Marchando...' : orderSentSuccess ? '¡Enviada!' : 'Marchar'}</span>
-        </button>
+        </Button>
 
         {activeOrder ? (
-          <button
+          <Button
             type="button"
             onClick={onOpenCheckout}
-            className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-lg shadow-emerald-600/20"
+            className="h-10 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition shadow-lg shadow-emerald-600/20"
           >
             <Receipt className="w-3.5 h-3.5" />
             <span>Cobrar Cuenta</span>
-          </button>
+          </Button>
         ) : (
-          <button
+          <Button
+            variant="ghost"
             type="button"
             disabled={!currentTable}
             onClick={onRequestCheck}
-            className="py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition cursor-pointer border border-slate-700 disabled:opacity-50"
+            className="h-10 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition border border-slate-700 disabled:opacity-50"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             <span>Pedir Cuenta</span>
-          </button>
+          </Button>
         )}
       </div>
     </div>
   );
 };
+
+export default CartFooter;

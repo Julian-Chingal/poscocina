@@ -1,6 +1,8 @@
 import React from 'react';
 import { Calendar, Search, RefreshCw } from 'lucide-react';
 import { ReservationFilterStatus } from '../types/reservations.types';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface ReservationsFilterBarProps {
   selectedDate: string;
@@ -35,52 +37,58 @@ export const ReservationsFilterBar: React.FC<ReservationsFilterBarProps> = ({
     <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-slate-900/80 border border-slate-800 mb-6">
       <div className="flex flex-wrap items-center gap-3">
         {/* Date Picker */}
-        <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
+        <div className="flex items-center gap-2 bg-slate-950 px-3 py-1 rounded-xl border border-slate-700 text-xs">
           <Calendar className="w-4 h-4 text-slate-400" />
-          <input
+          <Input
             type="date"
             value={selectedDate}
             onChange={(e) => onDateChange(e.target.value)}
-            className="bg-transparent text-slate-200 outline-none cursor-pointer"
+            className="h-7 border-0 bg-transparent p-0 text-slate-200 cursor-pointer focus-visible:ring-0"
           />
         </div>
 
         {/* Status Tabs */}
         <div className="flex bg-slate-950 border border-slate-800 rounded-xl p-1 text-xs">
           {STATUS_OPTIONS.map((st) => (
-            <button
+            <Button
               key={st.id}
+              variant="ghost"
+              size="sm"
+              type="button"
               onClick={() => onStatusFilterChange(st.id)}
-              className={`px-3 py-1 rounded-lg capitalize font-medium transition cursor-pointer ${
+              className={`px-3 py-1 h-7 rounded-lg capitalize font-medium transition cursor-pointer text-xs ${
                 statusFilter === st.id
-                  ? 'bg-pink-600 text-white shadow'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-pink-600 text-white shadow hover:bg-pink-500 hover:text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
               }`}
             >
               {st.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
 
       <div className="flex items-center gap-2">
         <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-          <input
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 z-10" />
+          <Input
             type="text"
             placeholder="Buscar por cliente o mesa..."
             value={searchTerm}
             onChange={(e) => onSearchTermChange(e.target.value)}
-            className="pl-9 pr-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-pink-500 w-52"
+            className="pl-9 pr-3 h-8 rounded-xl bg-slate-950 border-slate-800 text-xs w-52"
           />
         </div>
-        <button
+        <Button
+          variant="outline"
+          size="icon"
+          type="button"
           onClick={onRefresh}
           title="Recargar"
-          className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white transition cursor-pointer"
+          className="h-8 w-8 rounded-xl bg-slate-950 border-slate-800 text-slate-400 hover:text-white transition cursor-pointer"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-        </button>
+        </Button>
       </div>
     </div>
   );

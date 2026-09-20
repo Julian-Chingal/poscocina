@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Badge } from './badge';
-import { cn } from '../../lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 // 1. Table Status Badge
 export type TableStatus =
@@ -12,11 +12,11 @@ export type TableStatus =
 
 const tableStatusConfig: Record<
   TableStatus,
-  { label: string; variant: 'success' | 'warning' | 'info' | 'destructive' | 'secondary' | 'outline' }
+  { label: string; variant: 'default' | 'outline' | 'secondary' | 'destructive' }
 > = {
-  free: { label: 'Libre', variant: 'success' },
-  occupied: { label: 'Ocupada', variant: 'warning' },
-  check_requested: { label: 'Cuenta Pedida', variant: 'info' },
+  free: { label: 'Libre', variant: 'default' },
+  occupied: { label: 'Ocupada', variant: 'destructive' },
+  check_requested: { label: 'Cuenta Pedida', variant: 'secondary' },
   reserved: { label: 'Reservada', variant: 'outline' },
   blocked: { label: 'Bloqueada', variant: 'secondary' },
 };
@@ -52,14 +52,14 @@ export type OrderStatus =
 
 const orderStatusConfig: Record<
   OrderStatus,
-  { label: string; variant: 'default' | 'success' | 'warning' | 'info' | 'destructive' | 'secondary' }
+  { label: string; variant: 'default' | 'outline' | 'secondary' | 'destructive' }
 > = {
   open: { label: 'Abierta', variant: 'secondary' },
-  sent_to_kitchen: { label: 'Enviada a Cocina', variant: 'warning' },
-  partially_ready: { label: 'Parcialmente Lista', variant: 'warning' },
-  ready: { label: 'Lista para Servir', variant: 'success' },
-  check_requested: { label: 'Cuenta Pedida', variant: 'info' },
-  paid: { label: 'Pagada', variant: 'success' },
+  sent_to_kitchen: { label: 'Enviada a Cocina', variant: 'secondary' },
+  partially_ready: { label: 'Parcialmente Lista', variant: 'secondary' },
+  ready: { label: 'Lista para Servir', variant: 'default' },
+  check_requested: { label: 'Cuenta Pedida', variant: 'secondary' },
+  paid: { label: 'Pagada', variant: 'default' },
   cancelled: { label: 'Cancelada', variant: 'destructive' },
   voided: { label: 'Anulada', variant: 'destructive' },
 };
@@ -93,13 +93,13 @@ export type ItemStatus =
 
 const itemStatusConfig: Record<
   ItemStatus,
-  { label: string; variant: 'default' | 'success' | 'warning' | 'info' | 'destructive' | 'secondary' }
+  { label: string; variant: 'default' | 'outline' | 'secondary' | 'destructive' }
 > = {
   pending: { label: 'Pendiente', variant: 'secondary' },
-  sent: { label: 'Enviado', variant: 'warning' },
-  in_preparation: { label: 'En Preparación', variant: 'warning' },
-  ready: { label: 'Listo', variant: 'success' },
-  delivered: { label: 'Entregado', variant: 'info' },
+  sent: { label: 'Enviado', variant: 'secondary' },
+  in_preparation: { label: 'En Preparación', variant: 'secondary' },
+  ready: { label: 'Listo', variant: 'default' },
+  delivered: { label: 'Entregado', variant: 'secondary' },
   cancelled: { label: 'Cancelado', variant: 'destructive' },
 };
 

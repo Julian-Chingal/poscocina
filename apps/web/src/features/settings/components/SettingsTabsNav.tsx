@@ -1,6 +1,7 @@
 import React from 'react';
 import { Building2, Receipt, Printer, Store } from 'lucide-react';
 import { SettingsTab } from '../types/settings.types';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   activeTab: SettingsTab;
@@ -21,12 +22,14 @@ export const SettingsTabsNav: React.FC<Props> = ({ activeTab, onSelectTab, venue
       {tabs.map(({ id, label, icon: Icon, count }) => {
         const isActive = activeTab === id;
         return (
-          <button
+          <Button
             key={id}
+            variant="ghost"
+            type="button"
             onClick={() => onSelectTab(id)}
-            className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer shrink-0 ${
+            className={`flex items-center space-x-2 px-4 py-2.5 h-auto rounded-xl text-xs font-semibold transition cursor-pointer shrink-0 ${
               isActive
-                ? 'bg-orange-600/20 text-orange-400 border border-orange-500/30'
+                ? 'bg-orange-600/20 text-orange-400 border border-orange-500/30 hover:bg-orange-600/30 hover:text-orange-300'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
             }`}
           >
@@ -37,7 +40,7 @@ export const SettingsTabsNav: React.FC<Props> = ({ activeTab, onSelectTab, venue
                 {count}
               </span>
             )}
-          </button>
+          </Button>
         );
       })}
     </nav>

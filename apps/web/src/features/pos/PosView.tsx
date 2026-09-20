@@ -113,7 +113,11 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
         onDiscountTypeChange={checkout.setDiscountType}
         onDiscountValueChange={checkout.setDiscountValue}
         onDiscountReasonChange={checkout.setDiscountReason}
-        onProcessPayment={(total, tip) => checkout.processPayment(table.activeOrder.id, total, tip)}
+        onProcessPayment={(total, tip) => {
+          if (table.activeOrder?.id) {
+            checkout.processPayment(table.activeOrder.id, total, tip);
+          }
+        }}
       />
 
       <CreateCustomerModal

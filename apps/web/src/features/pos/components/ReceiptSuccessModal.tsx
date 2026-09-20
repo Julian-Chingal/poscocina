@@ -1,6 +1,15 @@
 import React from 'react';
 import { CheckCircle2, Printer } from 'lucide-react';
 import { posApi } from '../api/pos.api';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 interface Props {
   receipt: any;
@@ -8,51 +17,58 @@ interface Props {
 }
 
 export const ReceiptSuccessModal: React.FC<Props> = ({ receipt, onDismiss }) => {
-  if (!receipt) return null;
-
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4">
+    <Dialog open={Boolean(receipt)} onOpenChange={(open) => !open && onDismiss()}>
+      <DialogContent maxWidth="sm" onClose={onDismiss} className="text-center sm:text-center space-y-4">
         <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
           <CheckCircle2 className="w-7 h-7" />
         </div>
 
-        <div>
-          <h3 className="text-xl font-black text-white">Factura Emitida</h3>
-          <p className="text-xs text-slate-400 mt-1">Comprobante #{receipt.receiptNumber}</p>
-        </div>
+        <DialogHeader className="text-center sm:text-center pr-0">
+          <DialogTitle className="text-xl font-black">Factura Emitida</DialogTitle>
+          <DialogDescription className="text-xs">
+            Comprobante #{receipt?.receiptNumber}
+          </DialogDescription>
+        </DialogHeader>
 
-        <div className="p-4 bg-slate-800/80 rounded-2xl border border-slate-700/60 text-xs space-y-1.5 text-left">
-          <div className="flex justify-between text-slate-400">
-            <span>Fecha:</span>
-            <span className="text-slate-200">{new Date(receipt.issuedAt).toLocaleTimeString()}</span>
-          </div>
-          <div className="flex justify-between text-slate-400">
-            <span>Total Pagado:</span>
-            <span className="text-emerald-400 font-mono font-bold">
-              ${parseFloat(receipt.total || '0').toLocaleString()}
-            </span>
-          </div>
-        </div>
+        {receipt && (
+          <Card className="p-4 bg-slate-800/80 rounded-2xl border-slate-700/60 text-xs space-y-1.5 text-left">
+            <div className="flex justify-between text-slate-400">
+              <span>Fecha:</span>
+              <span className="text-slate-200">
+                {new Date(receipt.issuedAt).toLocaleTimeString()}
+              </span>
+            </div>
+            <div className="flex justify-between text-slate-400">
+              <span>Total Pagado:</span>
+              <span className="text-emerald-400 font-mono font-bold">
+                ${parseFloat(receipt.total || '0').toLocaleString()}
+              </span>
+            </div>
+          </Card>
+        )}
 
         <div className="space-y-2 pt-2">
-          <button
+          <Button
+            variant="ghost"
             type="button"
-            onClick={() => posApi.printReceipt(receipt.id).catch(() => {})}
-            className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 border border-slate-700 transition"
+            onClick={() => receipt && posApi.printReceipt(receipt.id).catch(() => {})}
+            className="w-full h-10 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 border border-slate-700"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Reimprimir Comprobante</span>
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={onDismiss}
-            className="w-full py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-orange-600/20"
+            className="w-full h-10 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-bold shadow-md shadow-orange-600/20"
           >
             Continuar
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
+
+export default ReceiptSuccessModal;

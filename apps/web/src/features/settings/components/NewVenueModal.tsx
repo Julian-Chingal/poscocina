@@ -1,6 +1,26 @@
-import React, { useState, FormEvent } from 'react';
-import { Store, X } from 'lucide-react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Store, AlertCircle } from 'lucide-react';
 import { NewVenuePayload } from '../types/settings.types';
+import { NewVenueSchema, NewVenueFormValues } from '../schemas/settings.schemas';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   isOpen: boolean;
@@ -10,18 +30,29 @@ interface Props {
   onSubmit: (payload: NewVenuePayload) => void;
 }
 
-export const NewVenueModal: React.FC<Props> = ({ isOpen, isCreating, error, onClose, onSubmit }) => {
-  const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
-  const [address, setAddress] = useState('');
-  const [phone, setPhone] = useState('');
-
-  if (!isOpen) return null;
+export const NewVenueModal: React.FC<Props> = ({
+  isOpen,
+  isCreating,
+  error,
+  onClose,
+  onSubmit,
+}) => {
+  const form = useForm<NewVenueFormValues>({
+    resolver: zodResolver(NewVenueSchema),
+    defaultValues: {
+      name: '',
+      slug: '',
+      address: '',
+      phone: '',
+    },
+  });
 
   const handleNameChange = (val: string) => {
-    setName(val);
-    if (!slug) {
-      setSlug(
+    form.setValue('name', val);
+    const currentSlug = form.getValues('slug');
+    if (!currentSlug || currentSlug.trim() === '') {
+      form.setValue(
+        'slug',
         val
           .toLowerCase()
           .replace(/\s+/g, '-')
@@ -30,96 +61,117 @@ export const NewVenueModal: React.FC<Props> = ({ isOpen, isCreating, error, onCl
     }
   };
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || !slug.trim()) return;
-    onSubmit({ name: name.trim(), slug: slug.trim(), address: address.trim(), phone: phone.trim() });
-  };
+  const handleSubmit = form.handleSubmit((values) => {
+    onSubmit({
+      name: values.name.trim(),
+      slug: values.slug.trim(),
+      address: values.address.trim(),
+      phone: values.phone.trim(),
+    });
+    form.reset();
+  });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <div className="flex items-center space-x-2">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent maxWidth="md" onClose={onClose}>
+        <DialogHeader>
+          <DialogTitle className="flex items-center space-x-2">
             <Store className="w-5 h-5 text-orange-400" />
-            <h3 className="font-bold text-white text-base">Crear Nueva Sucursal</h3>
-          </div>
-          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+            <span>Crear Nueva Sucursal</span>
+          </DialogTitle>
+        </DialogHeader>
 
         {error && (
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs">
-            {error}
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2 mb-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3.5">
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Nombre de la Sede *</label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => handleNameChange(e.target.value)}
-              placeholder="Ej. Sede El Poblado"
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500"
+        <Form {...form}>
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre de la Sede *</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Ej. Sede El Poblado"
+                      onChange={(e) => handleNameChange(e.target.value)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Slug URL Identificador *</label>
-            <input
-              type="text"
-              required
-              value={slug}
-              onChange={(e) => setSlug(e.target.value.toLowerCase())}
-              placeholder="ej. sede-el-poblado"
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500 font-mono"
+            <FormField
+              control={form.control}
+              name="slug"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Slug URL Identificador *</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="ej. sede-el-poblado"
+                      className="font-mono"
+                      onChange={(e) => field.onChange(e.target.value.toLowerCase())}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Dirección</label>
-            <input
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Cra. 43A # 1-50"
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500"
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dirección</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Cra. 43A # 1-50" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Teléfono</label>
-            <input
-              type="text"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+57 300 987 6543"
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500"
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Teléfono</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="+57 300 987 6543" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="pt-3 flex space-x-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-semibold"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isCreating}
-              className="flex-1 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition shadow"
-            >
-              {isCreating ? 'Creando Sede...' : 'Crear Sede'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+            <DialogFooter>
+              <Button variant="ghost" type="button" onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={isCreating || form.formState.isSubmitting}
+                className="bg-orange-600 hover:bg-orange-500 text-white font-bold"
+              >
+                {isCreating ? 'Creando Sede...' : 'Crear Sede'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 };
+
+export default NewVenueModal;

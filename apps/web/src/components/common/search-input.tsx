@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { Search, X } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export interface SearchInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
@@ -23,29 +25,31 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
   ) => {
     return (
       <div className={cn('relative w-full', className)}>
-        <Search className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-        <input
+        <Search className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+        <Input
           ref={ref}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="flex h-8 w-full rounded-lg border border-slate-700 bg-slate-900/80 pl-9 pr-8 py-1 text-xs text-slate-100 shadow-sm transition-colors placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-8 pl-9 pr-8 py-1 text-xs bg-muted/40 border-border placeholder:text-muted-foreground/60 text-foreground"
           {...props}
         />
         {value.length > 0 && (
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             type="button"
             onClick={() => {
               onChange('');
               if (onClear) onClear();
             }}
             title="Limpiar búsqueda"
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white rounded-md transition cursor-pointer select-none"
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-1 text-muted-foreground hover:text-foreground cursor-pointer"
           >
             <X className="size-3" />
             <span className="sr-only">Limpiar</span>
-          </button>
+          </Button>
         )}
       </div>
     );

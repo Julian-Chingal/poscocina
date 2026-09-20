@@ -2,6 +2,7 @@ import React from 'react';
 import { PieChart } from 'lucide-react';
 import { OverviewMetrics } from '../types/reports.types';
 import { formatCurrency } from '../utils/formatCurrency';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 
 interface PaymentMethodsBreakdownProps {
   overview: OverviewMetrics | null;
@@ -23,17 +24,17 @@ export const PaymentMethodsBreakdown: React.FC<PaymentMethodsBreakdownProps> = (
   const methods = overview?.paymentMethods || [];
 
   return (
-    <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+    <Card className="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-sm flex flex-col justify-between">
       <div>
-        <div className="flex items-center gap-2 mb-4">
+        <CardHeader className="p-6 pb-4 flex flex-row items-center gap-2 space-y-0">
           <PieChart className="w-5 h-5 text-emerald-400" />
           <div>
-            <h3 className="font-bold text-sm text-white">Medios de Pago</h3>
-            <p className="text-[11px] text-slate-400">Participación sobre el total recaudado</p>
+            <CardTitle className="font-bold text-sm text-white">Medios de Pago</CardTitle>
+            <CardDescription className="text-[11px] text-slate-400">Participación sobre el total recaudado</CardDescription>
           </div>
-        </div>
+        </CardHeader>
 
-        <div className="space-y-3.5">
+        <CardContent className="p-6 pt-0 space-y-3.5">
           {methods.length === 0 ? (
             <p className="text-xs text-slate-500 py-6 text-center">No hay registros de cobros en este periodo</p>
           ) : (
@@ -59,13 +60,13 @@ export const PaymentMethodsBreakdown: React.FC<PaymentMethodsBreakdownProps> = (
               </div>
             ))
           )}
-        </div>
+        </CardContent>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-slate-800/80 text-[11px] text-slate-400 flex justify-between">
+      <CardFooter className="p-6 pt-4 border-t border-slate-800/80 text-[11px] text-slate-400 flex justify-between">
         <span>Total Recibos Pagados:</span>
         <span className="font-bold text-slate-200">{overview?.ticketCount || 0}</span>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 };

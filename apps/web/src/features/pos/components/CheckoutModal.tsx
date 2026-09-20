@@ -1,9 +1,18 @@
-import React from 'react';
-import { X, Sparkles, Receipt } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Sparkles, Receipt } from 'lucide-react';
 import { SplitMode, PaymentMethod, DiscountType, Customer } from '../types/pos.types';
 import { SplitBillSection } from './SplitBillSection';
 import { CheckoutSummary } from './CheckoutSummary';
 import { PaymentMethodSelector } from './PaymentMethodSelector';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   isOpen: boolean;
@@ -62,42 +71,55 @@ export const CheckoutModal: React.FC<Props> = ({
   onDiscountReasonChange,
   onProcessPayment,
 }) => {
+  const { baseSubtotal, discountAmount, baseTax, tipAmount, finalTotal } = useMemo(() => {
+    if (!order) {
+      return { baseSubtotal: 0, discountAmount: 0, baseTax: 0, tipAmount: 0, finalTotal: 0 };
+    }
+    const sub = parseFloat(order.subtotal || '0');
+    const tax = parseFloat(order.taxTotal || '0');
+
+    let disc = 0;
+    if (applyDiscount) {
+      const val = parseFloat(discountValue) || 0;
+      disc = discountType === 'percent' ? (sub * val) / 100 : val;
+    }
+
+    const subAfterDiscount = Math.max(0, sub - disc);
+    const tip = (subAfterDiscount * tipPct) / 100;
+    let total = subAfterDiscount + tax + tip;
+
+    if (checkoutMode === 'equal' && equalSplitCount > 0) {
+      total = total / equalSplitCount;
+    }
+
+    return {
+      baseSubtotal: sub,
+      discountAmount: disc,
+      baseTax: tax,
+      tipAmount: tip,
+      finalTotal: total,
+    };
+  }, [order, applyDiscount, discountValue, discountType, tipPct, checkoutMode, equalSplitCount]);
+
   if (!isOpen || !order) return null;
 
-  const baseSubtotal = parseFloat(order.subtotal || '0');
-  const baseTax = parseFloat(order.taxTotal || '0');
-
-  let discountAmount = 0;
-  if (applyDiscount) {
-    const val = parseFloat(discountValue) || 0;
-    discountAmount = discountType === 'percent' ? (baseSubtotal * val) / 100 : val;
-  }
-
-  const subtotalAfterDiscount = Math.max(0, baseSubtotal - discountAmount);
-  const tipAmount = (subtotalAfterDiscount * tipPct) / 100;
-  let finalTotal = subtotalAfterDiscount + baseTax + tipAmount;
-
-  if (checkoutMode === 'equal') {
-    finalTotal = finalTotal / equalSplitCount;
-  }
-
   const tenderedNum = parseFloat(cashTendered) || 0;
+  const isCashInvalid = paymentMethod === 'cash' && tenderedNum > 0 && tenderedNum < finalTotal;
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
-        <button onClick={onClose} className="absolute top-5 right-5 text-slate-400 hover:text-white p-1">
-          <X className="w-5 h-5" />
-        </button>
-
-        <div className="flex items-center space-x-2 text-xs font-bold text-orange-400 uppercase mb-1">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Facturación POS</span>
-        </div>
-        <h3 className="text-xl font-black text-white">Cobro de Orden</h3>
-        <p className="text-xs text-slate-400 mb-4">
-          Orden #{order.orderNumber || order.id?.slice(0, 6)} {customer && `• Cliente: ${customer.name}`}
-        </p>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent maxWidth="lg" onClose={onClose} className="max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center space-x-2 text-xs font-bold text-orange-400 uppercase mb-1">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Facturación POS</span>
+          </div>
+          <DialogTitle className="text-xl font-black">Cobro de Orden</DialogTitle>
+          <DialogDescription>
+            Orden #{order.orderNumber || order.id?.slice(0, 6)}{' '}
+            {customer && `• Cliente: ${customer.name}`}
+          </DialogDescription>
+        </DialogHeader>
 
         <CheckoutSummary
           baseSubtotal={baseSubtotal}
@@ -135,21 +157,23 @@ export const CheckoutModal: React.FC<Props> = ({
           onCardReferenceChange={onCardReferenceChange}
         />
 
-        <div className="flex justify-end space-x-3 pt-3 border-t border-slate-800">
-          <button onClick={onClose} className="px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-white">
+        <DialogFooter>
+          <Button variant="ghost" type="button" onClick={onClose}>
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            disabled={processing || (paymentMethod === 'cash' && tenderedNum > 0 && tenderedNum < finalTotal)}
+            disabled={processing || isCashInvalid}
             onClick={() => onProcessPayment(finalTotal, tipAmount)}
-            className="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center space-x-2 disabled:opacity-50"
+            className="bg-orange-600 hover:bg-orange-500 text-white font-bold flex items-center space-x-2"
           >
             <Receipt className="w-4 h-4" />
             <span>{processing ? 'Emitiendo...' : 'Facturar'}</span>
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
+
+export default CheckoutModal;

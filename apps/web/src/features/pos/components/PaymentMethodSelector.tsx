@@ -1,6 +1,10 @@
 import React from 'react';
 import { DollarSign, CreditCard, Send } from 'lucide-react';
 import { PaymentMethod } from '../types/pos.types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
 interface PaymentMethodSelectorProps {
   paymentMethod: PaymentMethod;
@@ -35,53 +39,57 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
       <div className="my-4">
         <div className="grid grid-cols-3 gap-2">
           {METHODS.map(({ id, label, icon: Icon }) => (
-            <button
+            <Button
               key={id}
+              variant="ghost"
               type="button"
               onClick={() => onPaymentMethodChange(id)}
-              className={`p-2.5 rounded-xl border flex flex-col items-center space-y-1 ${
+              className={`h-auto p-2.5 rounded-xl border flex flex-col items-center space-y-1 ${
                 paymentMethod === id
-                  ? 'bg-orange-600/20 border-orange-500 text-orange-400'
-                  : 'bg-slate-800 border-slate-700 text-slate-400'
+                  ? 'bg-orange-600/20 border-orange-500 text-orange-400 hover:bg-orange-600/30 hover:text-orange-300'
+                  : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
               }`}
             >
               <Icon className="w-4 h-4" />
               <span className="text-xs font-bold">{label}</span>
-            </button>
+            </Button>
           ))}
         </div>
       </div>
 
       {paymentMethod === 'cash' && (
-        <div className="p-3 bg-slate-800/40 rounded-2xl border border-slate-700/60 mb-4 space-y-2 text-xs">
+        <Card className="p-3 bg-slate-800/40 rounded-2xl border-slate-700/60 mb-4 space-y-2 text-xs">
           <div className="flex justify-between items-center">
-            <span className="text-slate-400">Efectivo Entregado:</span>
-            <input
+            <span className="text-slate-400 font-medium">Efectivo Entregado:</span>
+            <Input
               type="number"
               value={cashTendered}
               onChange={(e) => onCashTenderedChange(e.target.value)}
               placeholder={finalTotal.toString()}
-              className="w-36 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-white font-mono text-right"
+              className="w-36 h-8 text-right font-mono"
             />
           </div>
           {tenderedNum > 0 && (
-            <div className="flex justify-between items-center pt-1 border-t border-slate-700/60">
-              <span className="text-slate-400">Vueltas:</span>
-              <span className="text-sm font-black font-mono text-emerald-400">
-                ${changeDue.toLocaleString()}
-              </span>
-            </div>
+            <>
+              <Separator className="bg-slate-700/60 my-1" />
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Vueltas:</span>
+                <span className="text-sm font-black font-mono text-emerald-400">
+                  ${changeDue.toLocaleString()}
+                </span>
+              </div>
+            </>
           )}
-        </div>
+        </Card>
       )}
 
       {paymentMethod !== 'cash' && (
-        <input
+        <Input
           type="text"
           placeholder="Número de Aprobación / Referencia"
           value={cardReference}
           onChange={(e) => onCardReferenceChange(e.target.value)}
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs mb-4"
+          className="w-full mb-4"
         />
       )}
     </>

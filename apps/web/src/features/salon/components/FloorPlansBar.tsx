@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
 import { FloorPlanItem, TableItem } from '../types/salon.types';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   floorPlans: FloorPlanItem[];
@@ -23,43 +24,48 @@ export const FloorPlansBar: React.FC<Props> = ({
 
   return (
     <div className="flex items-center space-x-2 overflow-x-auto pb-4 mb-6">
-      <button
+      <Button
+        variant={activeFloorPlanId === 'all' ? 'default' : 'ghost'}
         type="button"
         onClick={() => onSelectFloorPlan('all')}
-        className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+        className={`px-4 h-9 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
           activeFloorPlanId === 'all'
-            ? 'bg-emerald-600 text-white shadow'
-            : 'bg-slate-800/80 text-slate-400 hover:text-white'
+            ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow'
+            : 'bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800'
         }`}
       >
         Todas las zonas ({tables.length})
-      </button>
+      </Button>
 
       {floorPlans.map((plan) => (
-        <button
+        <Button
           key={plan.id}
+          variant={activeFloorPlanId === plan.id ? 'default' : 'ghost'}
           type="button"
           onClick={() => onSelectFloorPlan(plan.id)}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+          className={`px-4 h-9 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
             activeFloorPlanId === plan.id
-              ? 'bg-emerald-600 text-white shadow'
-              : 'bg-slate-800/80 text-slate-400 hover:text-white'
+              ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow'
+              : 'bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800'
           }`}
         >
           {plan.name} ({tables.filter((t) => t.floorPlanId === plan.id).length})
-        </button>
+        </Button>
       ))}
 
       {isEditMode && (
-        <button
+        <Button
+          variant="ghost"
           type="button"
           onClick={onOpenNewFloorPlan}
-          className="flex items-center space-x-1 px-3 py-2 rounded-xl text-xs font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition whitespace-nowrap cursor-pointer"
+          className="flex items-center space-x-1 px-3 h-9 rounded-xl text-xs font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 whitespace-nowrap"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Nueva Zona</span>
-        </button>
+        </Button>
       )}
     </div>
   );
 };
+
+export default FloorPlansBar;

@@ -1,5 +1,8 @@
 import React from 'react';
 import { SplitMode } from '../types/pos.types';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
 interface CheckoutSummaryProps {
   baseSubtotal: number;
@@ -23,7 +26,7 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
   onTipPctChange,
 }) => {
   return (
-    <div className="p-3.5 bg-slate-800/80 rounded-2xl border border-slate-700/60 mb-4 space-y-1.5 text-xs">
+    <Card className="p-3.5 bg-slate-800/80 rounded-2xl border-slate-700/60 mb-4 space-y-1.5 text-xs">
       <div className="flex justify-between text-slate-400">
         <span>Subtotal:</span>
         <span className="font-mono text-slate-200">${baseSubtotal.toLocaleString()}</span>
@@ -42,23 +45,26 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
         <span>Propina:</span>
         <div className="flex space-x-1">
           {[0, 5, 10].map((pct) => (
-            <button
+            <Button
               key={pct}
+              variant={tipPct === pct ? 'default' : 'secondary'}
+              size="sm"
               type="button"
               onClick={() => onTipPctChange(pct)}
-              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                tipPct === pct ? 'bg-orange-600 text-white' : 'bg-slate-700 text-slate-400'
+              className={`h-6 px-2 text-[10px] font-bold ${
+                tipPct === pct ? 'bg-orange-600 text-white hover:bg-orange-500' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
               {pct}%
-            </button>
+            </Button>
           ))}
         </div>
       </div>
-      <div className="flex justify-between text-base font-extrabold text-white pt-1.5 border-t border-slate-700">
+      <Separator className="bg-slate-700 my-1" />
+      <div className="flex justify-between text-base font-extrabold text-white">
         <span>{checkoutMode === 'equal' ? `Parte (1 de ${equalSplitCount}):` : 'Total a Pagar:'}</span>
         <span className="font-mono text-orange-400">${finalTotal.toLocaleString()}</span>
       </div>
-    </div>
+    </Card>
   );
 };

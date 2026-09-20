@@ -26,8 +26,8 @@ export const PinDisplay: React.FC<PinDisplayProps> = ({ pin, error, isLoading })
               key={idx}
               className={`w-4 h-4 rounded-full transition-all duration-150 ${
                 isFilled
-                  ? 'bg-amber-400 scale-110 shadow-[0_0_8px_rgba(251,191,36,0.5)]'
-                  : 'bg-slate-700/80 border border-slate-600/60'
+                  ? 'bg-primary scale-110 shadow-xs'
+                  : 'bg-muted border border-border'
               }`}
             />
           );
@@ -35,7 +35,7 @@ export const PinDisplay: React.FC<PinDisplayProps> = ({ pin, error, isLoading })
       </div>
 
       {isLoading && (
-        <span className="text-xs text-amber-400 font-medium animate-pulse block mt-1">
+        <span className="text-xs text-primary font-medium animate-pulse block mt-1">
           Validando credencial...
         </span>
       )}

@@ -1,6 +1,12 @@
 import React from 'react';
 import { Printer, UtensilsCrossed } from 'lucide-react';
 import { PaperWidth, TaxType } from '../types/settings.types';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from '@/components/ui/card';
 
 interface Props {
   paperWidth: PaperWidth;
@@ -33,17 +39,20 @@ export const ReceiptPreviewCard: React.FC<Props> = ({
   defaultTipPct,
   currency,
 }) => (
-  <div className="space-y-4">
-    <div className="flex items-center space-x-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-      <Printer className="w-4 h-4" />
-      <span>Vista Previa {paperWidth}mm</span>
-    </div>
+  <Card className="shadow-sm">
+    <CardHeader className="pb-3 border-b border-slate-800">
+      <CardTitle className="flex items-center space-x-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+        <Printer className="w-4 h-4" />
+        <span>Vista Previa {paperWidth}mm</span>
+      </CardTitle>
+    </CardHeader>
 
-    <div
-      className={`bg-amber-50 text-slate-900 rounded-2xl p-5 shadow-2xl border border-amber-200/60 font-mono text-xs space-y-3 select-none mx-auto ${
-        paperWidth === 58 ? 'max-w-[260px] text-[10px]' : 'max-w-sm'
-      }`}
-    >
+    <CardContent className="pt-4">
+      <div
+        className={`bg-amber-50 text-slate-900 rounded-2xl p-5 shadow-2xl border border-amber-200/60 font-mono text-xs space-y-3 select-none mx-auto ${
+          paperWidth === 58 ? 'max-w-[260px] text-[10px]' : 'max-w-sm'
+        }`}
+      >
       <div className="text-center border-b border-dashed border-slate-400 pb-3">
         {logoUrl ? (
           <img src={logoUrl} alt="Logo" className="w-10 h-10 object-contain mx-auto mb-1.5" />
@@ -110,5 +119,6 @@ export const ReceiptPreviewCard: React.FC<Props> = ({
         <p className="mt-1 text-[8px] text-slate-400">poscocina POS • Impreso en {paperWidth}mm</p>
       </div>
     </div>
-  </div>
+    </CardContent>
+  </Card>
 );

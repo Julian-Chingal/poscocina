@@ -2,6 +2,8 @@ import React from 'react';
 import { Wifi, Play, Edit2, Trash2, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { PrinterDevice, TestPrintResult } from '../types/settings.types';
 import { STATION_LABELS } from '../constants/settings.constants';
+import { Button } from '@/components/ui/button';
+import { Card, CardFooter } from '@/components/ui/card';
 
 interface Props {
   printer: PrinterDevice;
@@ -23,7 +25,7 @@ export const PrinterCard: React.FC<Props> = ({
   const result = testResult?.id === printer.id ? testResult : null;
 
   return (
-    <div className="bg-slate-900/80 border border-slate-700/80 rounded-2xl p-4 flex flex-col justify-between space-y-3 relative group">
+    <Card className="p-4 flex flex-col justify-between space-y-3 relative group">
       <div>
         <div className="flex items-start justify-between">
           <div>
@@ -84,34 +86,40 @@ export const PrinterCard: React.FC<Props> = ({
         </div>
       )}
 
-      <div className="flex items-center justify-between pt-3 border-t border-slate-800">
-        <button
+      <CardFooter className="p-0 flex items-center justify-between pt-3 border-t border-slate-800 mt-0">
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           disabled={isTesting}
           onClick={() => onTest(printer)}
-          className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center space-x-1 transition cursor-pointer border border-slate-700"
+          className="px-2.5 py-1.5 h-auto bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center space-x-1 transition cursor-pointer border border-slate-700"
         >
           <Play className="w-3 h-3 text-emerald-400" />
           <span>{isTesting ? 'Enviando...' : 'Test Impresión'}</span>
-        </button>
+        </Button>
 
         <div className="flex items-center space-x-1">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             type="button"
             onClick={() => onEdit(printer)}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
+            className="h-7 w-7 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
           >
             <Edit2 className="w-3.5 h-3.5" />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             type="button"
             onClick={() => onDelete(printer.id)}
-            className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+            className="h-7 w-7 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 };

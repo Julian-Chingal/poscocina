@@ -6,7 +6,9 @@ import { VenueSelector } from './navigation/VenueSelector';
 import { ShiftStatusBadge } from './navigation/ShiftStatusBadge';
 import { UserNav } from './navigation/UserNav';
 import { TopBarSearch } from './navigation/TopBarSearch';
+import { ThemeToggle } from './navigation/ThemeToggle';
 import { Button } from './ui/button';
+import { Badge } from './ui/badge';
 
 interface TopBarProps {
   currentView: string;
@@ -60,22 +62,24 @@ export const TopBar: React.FC<TopBarProps> = ({
   };
 
   return (
-    <header className="h-12 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-3 sm:px-4 text-slate-200 select-none shadow-sm z-30 sticky top-0 gap-3">
+    <header className="h-12 bg-card/90 backdrop-blur-md border-b border-border flex items-center justify-between px-3 sm:px-4 text-foreground select-none shadow-xs z-30 sticky top-0 gap-3 transition-colors">
       {/* Left section */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <BrandLink isHome={isHome} onNavigate={onNavigate} />
         <VenueSelector onNavigateSettings={() => onNavigate('settings')} />
 
         {!isHome && (
-          <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 border-l border-slate-800 pl-3">
-            <button
+          <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground border-l border-border pl-3">
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => onNavigate('home')}
-              className="hover:text-slate-200 cursor-pointer transition-colors"
+              className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground hover:bg-transparent cursor-pointer transition-colors"
             >
               Apps
-            </button>
-            <span className="text-slate-600">/</span>
-            <span className="font-semibold text-white truncate max-w-[180px]">
+            </Button>
+            <span className="text-muted-foreground/60">/</span>
+            <span className="font-semibold text-foreground truncate max-w-[180px]">
               {VIEW_TITLES[currentView] || currentView}
             </span>
           </div>
@@ -91,23 +95,25 @@ export const TopBar: React.FC<TopBarProps> = ({
       />
 
       {/* Right section */}
-      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+      <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
         <ShiftStatusBadge onNavigateShifts={() => onNavigate('shifts')} />
+
+        <ThemeToggle />
 
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleFullscreen}
           title={isFullscreen ? 'Salir de Pantalla Completa' : 'Modo Quiosco Pantalla Completa'}
-          className="size-8 text-slate-400 hover:text-white"
+          className="size-8 text-muted-foreground hover:text-foreground cursor-pointer"
         >
           {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
         </Button>
 
-        <div className="hidden lg:flex items-center gap-1.5 text-[11px] font-medium text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-2 py-1 rounded-full select-none">
-          <Circle className="size-2 fill-emerald-400 text-emerald-400 animate-pulse" />
+        <Badge variant="outline" className="hidden lg:flex items-center gap-1.5 text-[11px] font-medium text-emerald-500 bg-emerald-500/10 border-emerald-500/20 px-2 py-1 select-none">
+          <Circle className="size-2 fill-emerald-500 text-emerald-500 animate-pulse" />
           <span>En Línea</span>
-        </div>
+        </Badge>
 
         {currentUser && (
           <Button
@@ -115,7 +121,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             size="icon"
             onClick={() => lockScreen()}
             title="Bloquear terminal (Ctrl+L)"
-            className="size-8 text-slate-400 hover:text-amber-400 hover:bg-slate-800"
+            className="size-8 text-muted-foreground hover:text-amber-500 hover:bg-muted cursor-pointer"
           >
             <Lock className="size-3.5" />
           </Button>
@@ -126,3 +132,4 @@ export const TopBar: React.FC<TopBarProps> = ({
     </header>
   );
 };
+

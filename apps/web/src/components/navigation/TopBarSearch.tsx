@@ -18,7 +18,7 @@ export const TopBarSearch: React.FC<TopBarSearchProps> = ({
   return (
     <div className="flex-1 max-w-md hidden md:block">
       <div className="relative">
-        <Search className="size-3.5 absolute left-3 top-2.5 text-slate-400 pointer-events-none" />
+        <Search className="size-3.5 absolute left-3 top-2.5 text-muted-foreground pointer-events-none" />
         <Input
           type="text"
           placeholder="Buscar app o comando... (F1 Mesas, F2 POS, F3 KDS, F4 Caja)"
@@ -29,7 +29,7 @@ export const TopBarSearch: React.FC<TopBarSearchProps> = ({
               onNavigateHome();
             }
           }}
-          className="pl-9 pr-3 py-1 bg-slate-800/80 border-slate-700/80 text-xs focus-visible:border-orange-500"
+          className="pl-9 pr-3 py-1 bg-muted/50 border-border text-foreground text-xs focus-visible:ring-1 focus-visible:ring-primary"
         />
       </div>
     </div>

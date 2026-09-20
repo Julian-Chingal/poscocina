@@ -1,36 +1,43 @@
-import React from 'react';
-import { Toaster as Sonner, toast } from 'sonner';
+import {
+  CircleCheck,
+  Info,
+  LoaderCircle,
+  OctagonX,
+  TriangleAlert,
+} from "lucide-react"
+import { useTheme } from "next-themes"
+import { Toaster as Sonner, toast } from "sonner"
 
-type ToasterProps = React.ComponentProps<typeof Sonner>;
+type ToasterProps = React.ComponentProps<typeof Sonner>
 
-export const Toaster: React.FC<ToasterProps> = ({ ...props }) => {
+const Toaster = ({ ...props }: ToasterProps) => {
+  const { theme = "system" } = useTheme()
+
   return (
     <Sonner
+      theme={theme as ToasterProps["theme"]}
       className="toaster group"
+      icons={{
+        success: <CircleCheck className="h-4 w-4" />,
+        info: <Info className="h-4 w-4" />,
+        warning: <TriangleAlert className="h-4 w-4" />,
+        error: <OctagonX className="h-4 w-4" />,
+        loading: <LoaderCircle className="h-4 w-4 animate-spin" />,
+      }}
       toastOptions={{
         classNames: {
           toast:
-            'group toast group-[.toaster]:bg-slate-900 group-[.toaster]:text-slate-100 group-[.toaster]:border-slate-800 group-[.toaster]:shadow-2xl group-[.toaster]:rounded-2xl font-sans',
-          description: 'group-[.toast]:text-slate-400',
+            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
+          description: "group-[.toast]:text-muted-foreground",
           actionButton:
-            'group-[.toast]:bg-amber-500 group-[.toast]:text-slate-950 font-medium',
+            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
           cancelButton:
-            'group-[.toast]:bg-slate-800 group-[.toast]:text-slate-400',
-          error:
-            'group-[.toaster]:!bg-rose-950/95 group-[.toaster]:!text-rose-100 group-[.toaster]:!border-rose-800/80',
-          success:
-            'group-[.toaster]:!bg-emerald-950/95 group-[.toaster]:!text-emerald-100 group-[.toaster]:!border-emerald-800/80',
-          warning:
-            'group-[.toaster]:!bg-amber-950/95 group-[.toaster]:!text-amber-100 group-[.toaster]:!border-amber-800/80',
-          info:
-            'group-[.toaster]:!bg-blue-950/95 group-[.toaster]:!text-blue-100 group-[.toaster]:!border-blue-800/80',
+            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
         },
       }}
-      richColors
-      position="top-right"
       {...props}
     />
-  );
-};
+  )
+}
 
-export { toast };
+export { Toaster, toast }
