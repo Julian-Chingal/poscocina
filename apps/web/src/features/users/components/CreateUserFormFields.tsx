@@ -19,7 +19,7 @@ export const CreateUserFormFields: React.FC<CreateUserFormFieldsProps> = ({
   return (
     <>
       <div className="space-y-1.5">
-        <Label className="text-xs font-semibold text-slate-300 block">Nombre Completo *</Label>
+        <Label className="text-xs font-semibold text-foreground block">Nombre Completo *</Label>
         <Input
           type="text"
           required
@@ -31,7 +31,7 @@ export const CreateUserFormFields: React.FC<CreateUserFormFieldsProps> = ({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs font-semibold text-slate-300 block">Rol en el Restaurante *</Label>
+        <Label className="text-xs font-semibold text-foreground block">Rol en el Restaurante *</Label>
         <Select
           value={formData.roleId || roles[0]?.id || ''}
           onChange={(e) => onChange({ roleId: e.target.value })}
@@ -46,9 +46,9 @@ export const CreateUserFormFields: React.FC<CreateUserFormFieldsProps> = ({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs font-semibold text-slate-300 block">PIN Numérico (4-6 dígitos) *</Label>
+        <Label className="text-xs font-semibold text-foreground block">PIN Numérico (4-6 dígitos) *</Label>
         <div className="relative">
-          <KeyRound className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 z-10" />
+          <KeyRound className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
           <Input
             type="password"
             required
@@ -59,15 +59,15 @@ export const CreateUserFormFields: React.FC<CreateUserFormFieldsProps> = ({
             className="pl-10 font-mono tracking-widest h-10 text-sm"
           />
         </div>
-        <span className="text-[10px] text-slate-500 mt-1 block">Clave táctil para comandas y terminales</span>
+        <span className="text-[10px] text-muted-foreground mt-1 block">Clave táctil para comandas y terminales</span>
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs font-semibold text-slate-300 block">
-          Correo Electrónico <span className="text-slate-500 font-normal">(Opcional para meseros/cocina)</span>
+        <Label className="text-xs font-semibold text-foreground block">
+          Correo Electrónico <span className="text-muted-foreground font-normal">(Opcional para meseros/cocina)</span>
         </Label>
         <div className="relative">
-          <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 z-10" />
+          <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
           <Input
             type="email"
             placeholder="laura@poscocina.com"
@@ -79,11 +79,11 @@ export const CreateUserFormFields: React.FC<CreateUserFormFieldsProps> = ({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs font-semibold text-slate-300 block">
-          Contraseña Maestra <span className="text-slate-500 font-normal">(Obligatorio si tiene correo)</span>
+        <Label className="text-xs font-semibold text-foreground block">
+          Contraseña Maestra <span className="text-muted-foreground font-normal">(Obligatorio si tiene correo)</span>
         </Label>
         <div className="relative">
-          <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 z-10" />
+          <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
           <Input
             type="password"
             placeholder="••••••••"

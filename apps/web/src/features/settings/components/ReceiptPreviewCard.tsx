@@ -40,8 +40,8 @@ export const ReceiptPreviewCard: React.FC<Props> = ({
   currency,
 }) => (
   <Card className="shadow-sm">
-    <CardHeader className="pb-3 border-b border-slate-800">
-      <CardTitle className="flex items-center space-x-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+    <CardHeader className="pb-3 border-b border-border">
+      <CardTitle className="flex items-center space-x-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
         <Printer className="w-4 h-4" />
         <span>Vista Previa {paperWidth}mm</span>
       </CardTitle>

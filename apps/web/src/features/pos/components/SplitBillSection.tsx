@@ -36,10 +36,10 @@ export const SplitBillSection: React.FC<Props> = ({
   onDiscountValueChange,
   onDiscountReasonChange,
 }) => (
-  <div className="space-y-3 pt-2 border-t border-slate-800 text-xs">
+  <div className="space-y-3 pt-2 border-t border-border text-xs">
     <div className="flex items-center justify-between">
-      <span className="font-semibold text-slate-300 flex items-center space-x-1.5">
-        <Divide className="w-3.5 h-3.5 text-orange-400" />
+      <span className="font-semibold text-foreground flex items-center space-x-1.5">
+        <Divide className="w-3.5 h-3.5 text-primary" />
         <span>División de Cuenta:</span>
       </span>
       <div className="flex space-x-1">
@@ -52,8 +52,8 @@ export const SplitBillSection: React.FC<Props> = ({
             onClick={() => onModeChange(mode)}
             className={`h-7 px-2.5 text-xs font-medium cursor-pointer ${
               checkoutMode === mode
-                ? 'bg-orange-600 text-white font-bold hover:bg-orange-500'
-                : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                ? 'bg-primary text-primary-foreground font-bold hover:bg-primary/90'
+                : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
             }`}
           >
             {mode === 'single' ? 'Cuenta Total' : 'Partes Iguales'}
@@ -63,8 +63,8 @@ export const SplitBillSection: React.FC<Props> = ({
     </div>
 
     {checkoutMode === 'equal' && (
-      <div className="flex items-center justify-between p-2.5 bg-slate-800/60 rounded-xl">
-        <span className="text-slate-400">Dividir entre cuántas personas:</span>
+      <div className="flex items-center justify-between p-2.5 bg-muted/40 border border-border rounded-xl">
+        <span className="text-muted-foreground">Dividir entre cuántas personas:</span>
         <div className="flex items-center space-x-2">
           {[2, 3, 4, 5].map((cnt) => (
             <Button
@@ -75,8 +75,8 @@ export const SplitBillSection: React.FC<Props> = ({
               onClick={() => onSplitCountChange(cnt)}
               className={`w-7 h-7 p-0 rounded-lg font-mono font-bold cursor-pointer ${
                 equalSplitCount === cnt
-                  ? 'bg-orange-600 text-white hover:bg-orange-500'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
               }`}
             >
               {cnt}
@@ -86,7 +86,7 @@ export const SplitBillSection: React.FC<Props> = ({
       </div>
     )}
 
-    <div className="pt-2 border-t border-slate-800/80">
+    <div className="pt-2 border-t border-border">
       <div className="flex items-center space-x-2 mb-2">
         <Switch
           id="apply-discount-toggle"
@@ -95,17 +95,17 @@ export const SplitBillSection: React.FC<Props> = ({
         />
         <Label
           htmlFor="apply-discount-toggle"
-          className="text-slate-300 font-semibold flex items-center space-x-1 cursor-pointer"
+          className="text-foreground font-semibold flex items-center space-x-1 cursor-pointer"
         >
-          <Tag className="w-3 h-3 text-orange-400" />
+          <Tag className="w-3 h-3 text-primary" />
           <span>Aplicar Descuento Especial</span>
         </Label>
       </div>
 
       {applyDiscount && (
-        <div className="grid grid-cols-3 gap-2 p-2.5 bg-slate-800/60 rounded-xl">
+        <div className="grid grid-cols-3 gap-2 p-2.5 bg-muted/40 border border-border rounded-xl">
           <div className="space-y-1">
-            <Label className="block text-[10px] text-slate-400">Tipo:</Label>
+            <Label className="block text-[10px] text-muted-foreground">Tipo:</Label>
             <Select
               value={discountType}
               onChange={(e: any) => onDiscountTypeChange(e.target.value)}
@@ -116,7 +116,7 @@ export const SplitBillSection: React.FC<Props> = ({
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="block text-[10px] text-slate-400">Valor:</Label>
+            <Label className="block text-[10px] text-muted-foreground">Valor:</Label>
             <Input
               type="number"
               value={discountValue}
@@ -125,7 +125,7 @@ export const SplitBillSection: React.FC<Props> = ({
             />
           </div>
           <div className="space-y-1">
-            <Label className="block text-[10px] text-slate-400">Motivo:</Label>
+            <Label className="block text-[10px] text-muted-foreground">Motivo:</Label>
             <Input
               type="text"
               value={discountReason}

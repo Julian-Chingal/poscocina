@@ -21,7 +21,7 @@ export const CategoryChips: React.FC<Props> = ({
 }) => (
   <div className="space-y-3 mb-4">
     <div className="relative">
-      <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5 pointer-events-none" />
+      <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-2.5 pointer-events-none" />
       <Input
         type="text"
         placeholder="Buscar plato o bebida..."
@@ -39,8 +39,8 @@ export const CategoryChips: React.FC<Props> = ({
         onClick={() => onSelectCategory('all')}
         className={`px-3.5 h-8 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
           activeCategoryId === 'all'
-            ? 'bg-orange-600 hover:bg-orange-500 text-white shadow'
-            : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
+            ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow'
+            : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
         }`}
       >
         Todos
@@ -54,8 +54,8 @@ export const CategoryChips: React.FC<Props> = ({
           onClick={() => onSelectCategory(c.id)}
           className={`px-3.5 h-8 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
             activeCategoryId === c.id
-              ? 'bg-orange-600 hover:bg-orange-500 text-white shadow'
-              : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
+              ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
           }`}
         >
           {c.name}

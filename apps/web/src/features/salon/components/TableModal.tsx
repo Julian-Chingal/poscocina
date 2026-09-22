@@ -207,7 +207,7 @@ export const TableModal: React.FC<Props> = ({
               <Button
                 type="submit"
                 disabled={submitting || form.formState.isSubmitting}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
               >
                 {submitting ? 'Guardando...' : 'Guardar Mesa'}
               </Button>

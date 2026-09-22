@@ -24,36 +24,36 @@ export const PaymentMethodsBreakdown: React.FC<PaymentMethodsBreakdownProps> = (
   const methods = overview?.paymentMethods || [];
 
   return (
-    <Card className="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-sm flex flex-col justify-between">
+    <Card className="shadow-sm flex flex-col justify-between">
       <div>
         <CardHeader className="p-6 pb-4 flex flex-row items-center gap-2 space-y-0">
-          <PieChart className="w-5 h-5 text-emerald-400" />
+          <PieChart className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
           <div>
-            <CardTitle className="font-bold text-sm text-white">Medios de Pago</CardTitle>
-            <CardDescription className="text-[11px] text-slate-400">Participación sobre el total recaudado</CardDescription>
+            <CardTitle className="font-bold text-sm text-foreground">Medios de Pago</CardTitle>
+            <CardDescription className="text-[11px] text-muted-foreground">Participación sobre el total recaudado</CardDescription>
           </div>
         </CardHeader>
 
         <CardContent className="p-6 pt-0 space-y-3.5">
           {methods.length === 0 ? (
-            <p className="text-xs text-slate-500 py-6 text-center">No hay registros de cobros en este periodo</p>
+            <p className="text-xs text-muted-foreground py-6 text-center">No hay registros de cobros en este periodo</p>
           ) : (
             methods.map((p) => (
               <div key={p.method} className="space-y-1.5">
                 <div className="flex justify-between text-xs">
-                  <span className="font-medium text-slate-200">{LABEL_MAP[p.method] || p.method}</span>
+                  <span className="font-medium text-foreground">{LABEL_MAP[p.method] || p.method}</span>
                   <div className="text-right">
-                    <span className="font-bold text-white">{formatCurrency(p.totalAmount)}</span>
-                    <span className="text-[10px] text-slate-400 ml-1.5">({p.percentage}%)</span>
+                    <span className="font-bold text-foreground">{formatCurrency(p.totalAmount)}</span>
+                    <span className="text-[10px] text-muted-foreground ml-1.5">({p.percentage}%)</span>
                   </div>
                 </div>
-                <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
                   <div
-                    className={`h-full rounded-full ${COLOR_MAP[p.method] || 'bg-orange-500'}`}
+                    className={`h-full rounded-full ${COLOR_MAP[p.method] || 'bg-primary'}`}
                     style={{ width: `${p.percentage}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-[10px] text-slate-400">
+                <div className="flex justify-between text-[10px] text-muted-foreground">
                   <span>{p.count} transacciones</span>
                   {p.totalTip > 0 && <span>Propina: {formatCurrency(p.totalTip)}</span>}
                 </div>
@@ -63,9 +63,9 @@ export const PaymentMethodsBreakdown: React.FC<PaymentMethodsBreakdownProps> = (
         </CardContent>
       </div>
 
-      <CardFooter className="p-6 pt-4 border-t border-slate-800/80 text-[11px] text-slate-400 flex justify-between">
+      <CardFooter className="p-6 pt-4 border-t border-border text-[11px] text-muted-foreground flex justify-between">
         <span>Total Recibos Pagados:</span>
-        <span className="font-bold text-slate-200">{overview?.ticketCount || 0}</span>
+        <span className="font-bold text-foreground">{overview?.ticketCount || 0}</span>
       </CardFooter>
     </Card>
   );

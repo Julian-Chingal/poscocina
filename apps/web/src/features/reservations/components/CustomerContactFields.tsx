@@ -18,7 +18,7 @@ export const CustomerContactFields: React.FC<CustomerContactFieldsProps> = ({
   return (
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-1.5">
-        <Label className="block text-xs font-medium text-slate-300">Nombre *</Label>
+        <Label className="block text-xs font-medium text-muted-foreground">Nombre *</Label>
         <Input
           type="text"
           required
@@ -28,7 +28,7 @@ export const CustomerContactFields: React.FC<CustomerContactFieldsProps> = ({
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="block text-xs font-medium text-slate-300">Teléfono</Label>
+        <Label className="block text-xs font-medium text-muted-foreground">Teléfono</Label>
         <Input
           type="tel"
           value={customerPhone}

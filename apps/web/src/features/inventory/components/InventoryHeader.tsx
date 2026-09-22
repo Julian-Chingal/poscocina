@@ -18,14 +18,14 @@ export const InventoryHeader: React.FC<Props> = ({ activeTab, onSelectTab }) => 
   ];
 
   return (
-    <div className="pb-4 mb-6 border-b border-slate-800 space-y-4">
+    <div className="pb-4 mb-6 border-b border-border space-y-4">
       <div>
-        <div className="flex items-center space-x-2 text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1">
+        <div className="flex items-center space-x-2 text-xs font-semibold text-primary uppercase tracking-wider mb-1">
           <Boxes className="w-3.5 h-3.5" />
           <span>Cadena de Suministro & Costos</span>
         </div>
-        <h2 className="text-2xl font-extrabold text-white tracking-tight">Control de Inventarios</h2>
-        <p className="text-sm text-slate-400 mt-0.5">
+        <h2 className="text-2xl font-extrabold text-foreground tracking-tight">Control de Inventarios</h2>
+        <p className="text-sm text-muted-foreground mt-0.5">
           Gestión de insumos, escandallos por plato, compras a proveedores y trazabilidad Kardex.
         </p>
       </div>
@@ -39,8 +39,8 @@ export const InventoryHeader: React.FC<Props> = ({ activeTab, onSelectTab }) => 
             onClick={() => onSelectTab(id)}
             className={`flex items-center space-x-2 px-4 py-2.5 h-auto rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
               activeTab === id
-                ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600/30 hover:text-emerald-300'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-primary/15 text-primary border border-primary/30 hover:bg-primary/20 hover:text-primary'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
             }`}
           >
             <Icon className="w-4 h-4" />

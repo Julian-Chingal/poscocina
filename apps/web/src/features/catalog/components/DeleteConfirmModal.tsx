@@ -27,7 +27,7 @@ export const DeleteConfirmModal: React.FC<Props> = ({
   return (
     <Dialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent maxWidth="sm" onClose={onClose} className="text-center sm:text-center">
-        <div className="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center mx-auto mb-2">
+        <div className="w-12 h-12 rounded-full bg-destructive/15 border border-destructive/30 text-destructive flex items-center justify-center mx-auto mb-2">
           <Trash2 className="w-6 h-6" />
         </div>
         <DialogHeader className="text-center sm:text-center pr-0">
@@ -35,7 +35,7 @@ export const DeleteConfirmModal: React.FC<Props> = ({
             ¿Eliminar {deleteTarget?.type === 'category' ? 'categoría' : 'producto'}?
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Estás a punto de eliminar <span className="text-white font-semibold">"{deleteTarget?.name}"</span>. Esta acción no se puede deshacer.
+            Estás a punto de eliminar <span className="text-foreground font-semibold">"{deleteTarget?.name}"</span>. Esta acción no se puede deshacer.
           </DialogDescription>
         </DialogHeader>
 
@@ -47,7 +47,7 @@ export const DeleteConfirmModal: React.FC<Props> = ({
             type="button"
             onClick={onConfirm}
             disabled={submitting}
-            className="bg-rose-600 hover:bg-rose-500 text-white font-bold"
+            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold"
           >
             {submitting ? 'Eliminando...' : 'Sí, eliminar'}
           </Button>

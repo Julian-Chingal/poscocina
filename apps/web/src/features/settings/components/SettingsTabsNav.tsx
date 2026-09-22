@@ -18,7 +18,7 @@ export const SettingsTabsNav: React.FC<Props> = ({ activeTab, onSelectTab, venue
   ];
 
   return (
-    <nav className="flex space-x-2 border-b border-slate-800 pb-3 mb-8 overflow-x-auto">
+    <nav className="flex space-x-2 border-b border-border pb-3 mb-8 overflow-x-auto">
       {tabs.map(({ id, label, icon: Icon, count }) => {
         const isActive = activeTab === id;
         return (
@@ -29,14 +29,14 @@ export const SettingsTabsNav: React.FC<Props> = ({ activeTab, onSelectTab, venue
             onClick={() => onSelectTab(id)}
             className={`flex items-center space-x-2 px-4 py-2.5 h-auto rounded-xl text-xs font-semibold transition cursor-pointer shrink-0 ${
               isActive
-                ? 'bg-orange-600/20 text-orange-400 border border-orange-500/30 hover:bg-orange-600/30 hover:text-orange-300'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-primary/15 text-primary border border-primary/30 hover:bg-primary/20 hover:text-primary'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
             }`}
           >
             <Icon className="w-4 h-4" />
             <span>{label}</span>
             {count !== undefined && (
-              <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-800 text-slate-300">
+              <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] bg-muted text-muted-foreground">
                 {count}
               </span>
             )}

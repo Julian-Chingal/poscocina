@@ -32,7 +32,7 @@ export const PurchaseLineRow: React.FC<Props> = ({
   const subtotal = (parseFloat(line.quantity) || 0) * (parseFloat(line.unitCost) || 0);
 
   return (
-    <Card className="flex flex-row items-center space-x-2 bg-slate-900/80 p-2 rounded-xl border-slate-800 text-xs">
+    <Card className="flex flex-row items-center space-x-2 bg-muted/40 p-2 rounded-xl border-border text-xs">
       <div className="flex-1">
         <Select
           value={line.inventoryItemId}
@@ -63,7 +63,7 @@ export const PurchaseLineRow: React.FC<Props> = ({
         onChange={(e) => onUpdate(index, 'unitCost', e.target.value)}
         className="w-24 h-8 font-mono text-xs"
       />
-      <div className="w-24 text-right font-mono font-bold text-emerald-400">
+      <div className="w-24 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">
         ${subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
       </div>
       {canRemove && (
@@ -72,7 +72,7 @@ export const PurchaseLineRow: React.FC<Props> = ({
           size="icon"
           type="button"
           onClick={() => onRemove(index)}
-          className="h-7 w-7 text-slate-500 hover:text-rose-400 p-1 cursor-pointer transition-colors"
+          className="h-7 w-7 text-muted-foreground hover:text-destructive p-1 cursor-pointer transition-colors"
         >
           <Trash2 className="w-4 h-4" />
         </Button>

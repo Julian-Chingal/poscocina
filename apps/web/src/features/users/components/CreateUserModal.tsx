@@ -71,7 +71,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent maxWidth="md" onClose={onClose}>
         <DialogHeader className="flex flex-row items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-primary/20 text-primary border border-primary/30 flex items-center justify-center shrink-0">
             <UserPlus className="w-6 h-6" />
           </div>
           <div>
@@ -83,7 +83,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
         </DialogHeader>
 
         {actionError && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+          <div className="mb-4 p-3 rounded-xl bg-destructive/15 border border-destructive/30 text-destructive text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{actionError}</span>
           </div>
@@ -133,7 +133,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                   <FormLabel>PIN Numérico (4-6 dígitos) *</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <KeyRound className="w-4 h-4 absolute left-3 top-2.5 text-slate-500 pointer-events-none" />
+                      <KeyRound className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground pointer-events-none" />
                       <Input
                         {...field}
                         type="password"
@@ -157,11 +157,11 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                 <FormItem>
                   <FormLabel>
                     Correo Electrónico{' '}
-                    <span className="text-slate-500 font-normal">(Opcional)</span>
+                    <span className="text-muted-foreground font-normal">(Opcional)</span>
                   </FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Mail className="w-4 h-4 absolute left-3 top-2.5 text-slate-500 pointer-events-none" />
+                      <Mail className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground pointer-events-none" />
                       <Input
                         {...field}
                         type="email"
@@ -182,11 +182,11 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                 <FormItem>
                   <FormLabel>
                     Contraseña Maestra{' '}
-                    <span className="text-slate-500 font-normal">(Si tiene correo)</span>
+                    <span className="text-muted-foreground font-normal">(Si tiene correo)</span>
                   </FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Lock className="w-4 h-4 absolute left-3 top-2.5 text-slate-500 pointer-events-none" />
+                      <Lock className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground pointer-events-none" />
                       <Input
                         {...field}
                         type="password"
@@ -207,7 +207,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
               <Button
                 type="submit"
                 disabled={submitting || form.formState.isSubmitting}
-                className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
               >
                 {submitting ? 'Guardando...' : 'Guardar Empleado'}
               </Button>

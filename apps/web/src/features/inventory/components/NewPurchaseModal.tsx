@@ -69,7 +69,7 @@ export const NewPurchaseModal: React.FC<Props> = ({
       <DialogContent maxWidth="2xl" onClose={onClose} className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            <Receipt className="w-5 h-5 text-emerald-400" />
+            <Receipt className="w-5 h-5 text-primary" />
             <span>Registrar Factura de Compra de Insumos</span>
           </DialogTitle>
         </DialogHeader>
@@ -85,9 +85,9 @@ export const NewPurchaseModal: React.FC<Props> = ({
             onStatusChange={setStatus}
           />
 
-          <div className="border border-slate-800 rounded-xl p-4 bg-slate-950/40">
+          <div className="border border-border rounded-xl p-4 bg-muted/20">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+              <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
                 Insumos Comprados
               </h4>
               <Button
@@ -99,7 +99,7 @@ export const NewPurchaseModal: React.FC<Props> = ({
                     { inventoryItemId: items[0]?.id || '', quantity: '1', unitCost: '0' },
                   ])
                 }
-                className="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center space-x-1 h-7 px-2"
+                className="text-xs font-bold text-primary hover:text-primary/80 flex items-center space-x-1 h-7 px-2"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Agregar Fila</span>
@@ -120,9 +120,9 @@ export const NewPurchaseModal: React.FC<Props> = ({
               ))}
             </div>
 
-            <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-800">
-              <span className="text-xs font-semibold text-slate-400">Total Factura:</span>
-              <span className="text-lg font-mono font-black text-emerald-400">
+            <div className="flex items-center justify-between pt-3 mt-3 border-t border-border">
+              <span className="text-xs font-semibold text-muted-foreground">Total Factura:</span>
+              <span className="text-lg font-mono font-black text-emerald-600 dark:text-emerald-400">
                 ${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
@@ -143,7 +143,7 @@ export const NewPurchaseModal: React.FC<Props> = ({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
             >
               {isSubmitting ? 'Guardando...' : 'Guardar Factura'}
             </Button>

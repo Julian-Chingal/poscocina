@@ -20,10 +20,10 @@ export const KdsOrdersGrid: React.FC<KdsOrdersGridProps> = ({
   if (orders.length === 0) {
     const stationLabel = STATIONS.find((s) => s.id === activeStation)?.label.toLowerCase() || '';
     return (
-      <div className="bg-slate-800/40 border border-slate-700/80 rounded-3xl p-16 text-center text-slate-400">
+      <div className="bg-muted/40 border border-border rounded-3xl p-16 text-center text-muted-foreground">
         <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-emerald-500/80" />
-        <p className="text-lg font-bold text-slate-200">¡Estación al día!</p>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-lg font-bold text-foreground">¡Estación al día!</p>
+        <p className="text-xs text-muted-foreground/80 mt-1">
           No hay comandas pendientes en {stationLabel}.
         </p>
       </div>

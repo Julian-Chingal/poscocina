@@ -101,7 +101,7 @@ export const PrinterModal: React.FC<Props> = ({
       <DialogContent maxWidth="lg" onClose={onClose} className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            <Printer className="w-5 h-5 text-orange-400" />
+            <Printer className="w-5 h-5 text-primary" />
             <span>{editingPrinter ? 'Editar Impresora' : 'Nueva Impresora'}</span>
           </DialogTitle>
         </DialogHeader>
@@ -216,12 +216,12 @@ export const PrinterModal: React.FC<Props> = ({
               )}
             </div>
 
-            <div className="space-y-3 pt-3 border-t border-slate-800">
+            <div className="space-y-3 pt-3 border-t border-border">
               <FormField
                 control={form.control}
                 name="autoPrintOnOrder"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between space-y-0 p-2 rounded-xl bg-slate-800/40 border border-slate-700/40">
+                  <FormItem className="flex items-center justify-between space-y-0 p-2 rounded-xl bg-muted/40 border border-border">
                     <FormLabel className="font-medium cursor-pointer">
                       Imprimir comanda al marchar pedido
                     </FormLabel>
@@ -236,7 +236,7 @@ export const PrinterModal: React.FC<Props> = ({
                 control={form.control}
                 name="autoPrintOnPayment"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between space-y-0 p-2 rounded-xl bg-slate-800/40 border border-slate-700/40">
+                  <FormItem className="flex items-center justify-between space-y-0 p-2 rounded-xl bg-muted/40 border border-border">
                     <FormLabel className="font-medium cursor-pointer">
                       Imprimir factura al registrar pago
                     </FormLabel>
@@ -251,7 +251,7 @@ export const PrinterModal: React.FC<Props> = ({
                 control={form.control}
                 name="openDrawerOnPrint"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between space-y-0 p-2 rounded-xl bg-slate-800/40 border border-slate-700/40">
+                  <FormItem className="flex items-center justify-between space-y-0 p-2 rounded-xl bg-muted/40 border border-border">
                     <FormLabel className="font-medium cursor-pointer">
                       Pulso eléctrico de apertura de gaveta
                     </FormLabel>
@@ -269,7 +269,7 @@ export const PrinterModal: React.FC<Props> = ({
               </Button>
               <Button
                 type="submit"
-                className="bg-orange-600 hover:bg-orange-500 text-white font-bold"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
               >
                 {editingPrinter ? 'Guardar Cambios' : 'Registrar Impresora'}
               </Button>

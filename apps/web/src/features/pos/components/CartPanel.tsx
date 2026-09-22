@@ -55,14 +55,14 @@ export const CartPanel: React.FC<Props> = ({
   onClearCustomer,
   onOpenCreateCustomerModal,
 }) => (
-  <Card className="bg-slate-800/60 border-slate-700/60 p-4 flex flex-col justify-between h-[80vh] shadow-sm">
+  <Card className="p-4 flex flex-col justify-between h-[80vh] shadow-sm">
     <div className="space-y-3 overflow-hidden flex flex-col flex-1">
-      <div className="flex items-center justify-between pb-2 border-b border-slate-700/60">
-        <div className="flex items-center space-x-2 text-xs font-bold text-white">
-          <ShoppingCart className="w-4 h-4 text-orange-400" />
+      <div className="flex items-center justify-between pb-2 border-b border-border">
+        <div className="flex items-center space-x-2 text-xs font-bold text-foreground">
+          <ShoppingCart className="w-4 h-4 text-primary" />
           <span>Comanda Actual</span>
           {cart.length > 0 && (
-            <Badge variant="outline" className="px-1.5 py-0.5 bg-orange-600/20 text-orange-400 border-orange-500/30 text-[10px]">
+            <Badge variant="outline" className="px-1.5 py-0.5 bg-primary/15 text-primary border-primary/30 text-[10px]">
               {cart.length}
             </Badge>
           )}
@@ -73,7 +73,7 @@ export const CartPanel: React.FC<Props> = ({
             size="sm"
             type="button"
             onClick={onClearCart}
-            className="h-6 px-2 text-[10px] text-rose-400 hover:text-rose-300 hover:bg-rose-950/30"
+            className="h-6 px-2 text-[10px] text-destructive hover:text-destructive/80 hover:bg-destructive/10"
           >
             Limpiar
           </Button>
@@ -104,7 +104,7 @@ export const CartPanel: React.FC<Props> = ({
         ))}
 
         {cart.length === 0 && (
-          <Card className="h-44 flex flex-col items-center justify-center text-center text-slate-500 text-xs border border-dashed border-slate-700/60 bg-transparent p-4">
+          <Card className="h-44 flex flex-col items-center justify-center text-center text-muted-foreground text-xs border border-dashed border-border bg-transparent p-4">
             <ShoppingCart className="w-6 h-6 mb-2 opacity-40" />
             <span>Selecciona productos del catálogo para armar la comanda.</span>
           </Card>

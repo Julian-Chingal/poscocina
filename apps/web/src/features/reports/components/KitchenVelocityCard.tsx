@@ -9,38 +9,38 @@ interface KitchenVelocityCardProps {
 
 export const KitchenVelocityCard: React.FC<KitchenVelocityCardProps> = ({ kdsMetrics }) => {
   return (
-    <Card className="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-sm">
+    <Card className="shadow-sm">
       <CardHeader className="p-6 pb-4 flex flex-row items-center gap-2 space-y-0">
-        <ChefHat className="w-5 h-5 text-rose-400" />
+        <ChefHat className="w-5 h-5 text-destructive" />
         <div>
-          <CardTitle className="font-bold text-sm text-white">Velocidad en Cocina (KDS)</CardTitle>
-          <CardDescription className="text-[11px] text-slate-400">Tiempos de preparación y estado</CardDescription>
+          <CardTitle className="font-bold text-sm text-foreground">Velocidad en Cocina (KDS)</CardTitle>
+          <CardDescription className="text-[11px] text-muted-foreground">Tiempos de preparación y estado</CardDescription>
         </div>
       </CardHeader>
 
       <CardContent className="p-6 pt-0 space-y-4">
         {/* Average Prep Time Metric */}
-        <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 text-center">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+        <div className="p-4 rounded-xl bg-muted/40 border border-border text-center">
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
             Tiempo Promedio de Preparación
           </span>
-          <div className="text-3xl font-black text-rose-400 tracking-tight">
-            {kdsMetrics?.avgPrepMinutes || 0} <span className="text-sm font-semibold text-slate-300">min</span>
+          <div className="text-3xl font-black text-destructive tracking-tight">
+            {kdsMetrics?.avgPrepMinutes || 0} <span className="text-sm font-semibold text-muted-foreground">min</span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-1">Desde comanda enviada hasta marcada como lista</p>
+          <p className="text-[10px] text-muted-foreground mt-1">Desde comanda enviada hasta marcada como lista</p>
         </div>
 
         {/* Kitchen Orders Breakdown */}
         <div className="space-y-2 text-xs">
-          <div className="flex justify-between items-center p-2 rounded-lg bg-emerald-950/20 border border-emerald-900/30 text-emerald-300">
+          <div className="flex justify-between items-center p-2 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
             <span>Platos Despachados:</span>
             <span className="font-bold">{kdsMetrics?.totalCompleted || 0}</span>
           </div>
-          <div className="flex justify-between items-center p-2 rounded-lg bg-amber-950/20 border border-amber-900/30 text-amber-300">
+          <div className="flex justify-between items-center p-2 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400">
             <span>En Preparación Ahora:</span>
             <span className="font-bold">{kdsMetrics?.totalPreparing || 0}</span>
           </div>
-          <div className="flex justify-between items-center p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-300">
+          <div className="flex justify-between items-center p-2 rounded-lg bg-muted/50 border border-border text-foreground">
             <span>Pendientes en Cola:</span>
             <span className="font-bold">{kdsMetrics?.totalPending || 0}</span>
           </div>

@@ -80,7 +80,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
     <Dialog open={Boolean(user)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent maxWidth="md" onClose={onClose}>
         <DialogHeader className="flex flex-row items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-primary/20 text-primary border border-primary/30 flex items-center justify-center shrink-0">
             <Edit2 className="w-6 h-6" />
           </div>
           <div>
@@ -90,7 +90,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
         </DialogHeader>
 
         {actionError && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+          <div className="mb-4 p-3 rounded-xl bg-destructive/15 border border-destructive/30 text-destructive text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{actionError}</span>
           </div>
@@ -153,7 +153,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
               <Button
                 type="submit"
                 disabled={submitting || form.formState.isSubmitting}
-                className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
               >
                 {submitting ? 'Actualizando...' : 'Actualizar'}
               </Button>

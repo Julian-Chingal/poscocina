@@ -47,10 +47,10 @@ export const StockMovementModal: React.FC<Props> = ({
       <DialogContent maxWidth="md" onClose={onClose}>
         <DialogHeader>
           <div className="flex items-center space-x-2">
-            <ArrowDownRight className="w-5 h-5 text-emerald-400" />
+            <ArrowDownRight className="w-5 h-5 text-primary" />
             <div>
               <DialogTitle className="text-base font-bold">Ajuste de Existencias</DialogTitle>
-              <DialogDescription className="text-xs text-slate-400">
+              <DialogDescription className="text-xs text-muted-foreground">
                 {item.name} ({item.unit})
               </DialogDescription>
             </div>
@@ -62,9 +62,9 @@ export const StockMovementModal: React.FC<Props> = ({
             <Label className="mb-1 block">Tipo de Movimiento</Label>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { id: 'purchase' as const, label: 'Entrada (+)', color: 'border-emerald-500 text-emerald-400' },
-                { id: 'waste' as const, label: 'Merma (-)', color: 'border-rose-500 text-rose-400' },
-                { id: 'adjustment' as const, label: 'Ajuste', color: 'border-cyan-500 text-cyan-400' },
+                { id: 'purchase' as const, label: 'Entrada (+)', color: 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' },
+                { id: 'waste' as const, label: 'Merma (-)', color: 'border-destructive/40 text-destructive bg-destructive/10' },
+                { id: 'adjustment' as const, label: 'Ajuste', color: 'border-primary/40 text-primary bg-primary/10' },
               ].map(({ id, label, color }) => (
                 <Button
                   key={id}
@@ -72,7 +72,7 @@ export const StockMovementModal: React.FC<Props> = ({
                   variant="ghost"
                   onClick={() => setMovementType(id)}
                   className={`p-2 h-auto rounded-xl border text-xs font-bold transition cursor-pointer ${
-                    movementType === id ? `bg-slate-800 ${color}` : 'border-slate-800 text-slate-400'
+                    movementType === id ? color : 'border-border text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {label}
@@ -112,7 +112,7 @@ export const StockMovementModal: React.FC<Props> = ({
             <Button
               type="submit"
               disabled={isSubmitting || !quantity || parseFloat(quantity) <= 0}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
             >
               {isSubmitting ? 'Registrando...' : 'Confirmar Movimiento'}
             </Button>

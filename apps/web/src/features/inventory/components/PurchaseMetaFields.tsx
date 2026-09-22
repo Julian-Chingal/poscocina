@@ -28,7 +28,7 @@ export const PurchaseMetaFields: React.FC<Props> = ({
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <div className="space-y-1.5">
-        <Label className="block text-xs font-semibold text-slate-300">Proveedor: *</Label>
+        <Label className="block text-xs font-semibold text-foreground">Proveedor: *</Label>
         <Select
           required
           value={supplierId}
@@ -44,7 +44,7 @@ export const PurchaseMetaFields: React.FC<Props> = ({
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="block text-xs font-semibold text-slate-300">Número Factura: *</Label>
+        <Label className="block text-xs font-semibold text-foreground">Número Factura: *</Label>
         <Input
           type="text"
           required
@@ -59,12 +59,12 @@ export const PurchaseMetaFields: React.FC<Props> = ({
     <div className="grid grid-cols-2 gap-3">
       <Button
         type="button"
-        variant={status === 'received' ? 'default' : 'secondary'}
+        variant="ghost"
         onClick={() => onStatusChange('received')}
         className={`h-9 rounded-xl text-xs font-bold border flex items-center justify-center space-x-1.5 cursor-pointer ${
           status === 'received'
-            ? 'bg-emerald-600 border-emerald-500 text-white shadow hover:bg-emerald-500'
-            : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white'
+            ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-400 shadow hover:bg-emerald-500/25'
+            : 'bg-muted/40 border-border text-muted-foreground hover:bg-muted hover:text-foreground'
         }`}
       >
         <CheckCircle className="w-3.5 h-3.5" />
@@ -72,12 +72,12 @@ export const PurchaseMetaFields: React.FC<Props> = ({
       </Button>
       <Button
         type="button"
-        variant={status === 'draft' ? 'default' : 'secondary'}
+        variant="ghost"
         onClick={() => onStatusChange('draft')}
         className={`h-9 rounded-xl text-xs font-bold border flex items-center justify-center space-x-1.5 cursor-pointer ${
           status === 'draft'
-            ? 'bg-amber-600 border-amber-500 text-white shadow hover:bg-amber-500'
-            : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white'
+            ? 'bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-amber-400 shadow hover:bg-amber-500/25'
+            : 'bg-muted/40 border-border text-muted-foreground hover:bg-muted hover:text-foreground'
         }`}
       >
         <Clock className="w-3.5 h-3.5" />

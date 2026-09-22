@@ -58,7 +58,7 @@ export const ResetPinModal: React.FC<ResetPinModalProps> = ({
     <Dialog open={Boolean(user)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent maxWidth="sm" onClose={onClose}>
         <DialogHeader className="text-center sm:text-center pr-0">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center mb-3">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-primary/20 text-primary border border-primary/30 flex items-center justify-center mb-3">
             <KeyRound className="w-7 h-7" />
           </div>
           <DialogTitle className="text-lg font-bold">Cambiar PIN</DialogTitle>
@@ -68,7 +68,7 @@ export const ResetPinModal: React.FC<ResetPinModalProps> = ({
         </DialogHeader>
 
         {actionError && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+          <div className="mb-4 p-3 rounded-xl bg-destructive/15 border border-destructive/30 text-destructive text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{actionError}</span>
           </div>
@@ -104,7 +104,7 @@ export const ResetPinModal: React.FC<ResetPinModalProps> = ({
               <Button
                 type="submit"
                 disabled={submitting || form.formState.isSubmitting}
-                className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
               >
                 {submitting ? 'Guardando...' : 'Asignar PIN'}
               </Button>

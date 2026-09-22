@@ -20,12 +20,12 @@ export const UsersGrid: React.FC<UsersGridProps> = ({
   onToggleActive,
 }) => {
   if (loading) {
-    return <div className="p-12 text-center text-slate-500 text-sm">Cargando nómina de empleados...</div>;
+    return <div className="p-12 text-center text-muted-foreground text-sm">Cargando nómina de empleados...</div>;
   }
 
   if (users.length === 0) {
     return (
-      <div className="p-12 text-center bg-slate-900/50 border border-slate-800 rounded-3xl text-slate-400 text-sm">
+      <div className="p-12 text-center bg-muted/40 border border-border rounded-3xl text-muted-foreground text-sm">
         No se encontraron empleados con los filtros actuales.
       </div>
     );

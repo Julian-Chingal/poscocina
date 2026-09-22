@@ -32,8 +32,8 @@ export const CategoryTabs: React.FC<Props> = ({
         onClick={() => onSelectCategory('all')}
         className={`px-4 h-9 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
           activeCategory === 'all'
-            ? 'bg-blue-600 hover:bg-blue-500 text-white shadow'
-            : 'bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800'
+            ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow'
+            : 'bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted'
         }`}
       >
         Todas ({products.length})
@@ -45,13 +45,13 @@ export const CategoryTabs: React.FC<Props> = ({
           onClick={() => onSelectCategory(c.id)}
           className={`group relative flex items-center space-x-2 px-3.5 h-9 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer border ${
             activeCategory === c.id
-              ? 'bg-slate-800 border-blue-500 text-white shadow'
-              : 'bg-slate-800/60 border-slate-700/60 text-slate-400 hover:text-white'
+              ? 'bg-card border-primary text-foreground shadow'
+              : 'bg-card/50 border-border text-muted-foreground hover:text-foreground hover:bg-muted/40'
           }`}
         >
           <span
             className="w-2.5 h-2.5 rounded-full"
-            style={{ backgroundColor: c.color || '#3b82f6' }}
+            style={{ backgroundColor: c.color || 'var(--primary)' }}
           />
           <span>
             {c.name} ({products.filter((p) => p.categoryId === c.id).length})
@@ -65,7 +65,7 @@ export const CategoryTabs: React.FC<Props> = ({
                 type="button"
                 onClick={(e) => onEditCategory(c, e)}
                 title="Editar categoría"
-                className="h-6 w-6 p-1 text-slate-400 hover:text-blue-400"
+                className="h-6 w-6 p-1 text-muted-foreground hover:text-primary"
               >
                 <Edit2 className="w-3 h-3" />
               </Button>
@@ -78,7 +78,7 @@ export const CategoryTabs: React.FC<Props> = ({
                   onDeleteCategory(c);
                 }}
                 title="Eliminar categoría"
-                className="h-6 w-6 p-1 text-slate-400 hover:text-rose-400"
+                className="h-6 w-6 p-1 text-muted-foreground hover:text-destructive"
               >
                 <Trash2 className="w-3 h-3" />
               </Button>
@@ -92,7 +92,7 @@ export const CategoryTabs: React.FC<Props> = ({
           variant="ghost"
           type="button"
           onClick={onOpenCreateCategory}
-          className="flex items-center space-x-1.5 px-3 h-9 rounded-xl text-xs font-semibold text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 whitespace-nowrap"
+          className="flex items-center space-x-1.5 px-3 h-9 rounded-xl text-xs font-semibold text-primary hover:text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30 whitespace-nowrap"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Nueva Categoría</span>

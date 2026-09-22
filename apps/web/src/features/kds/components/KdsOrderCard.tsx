@@ -21,23 +21,23 @@ export const KdsOrderCard: React.FC<KdsOrderCardProps> = ({
 
   return (
     <Card
-      className={`bg-slate-800/90 border rounded-2xl overflow-hidden flex flex-col shadow-xl transition-all ${urgency.cardBorder}`}
+      className={`border rounded-2xl overflow-hidden flex flex-col shadow-xl transition-all ${urgency.cardBorder}`}
     >
       {/* Order Header */}
-      <CardHeader className="bg-slate-900 px-4 py-3 border-b border-slate-700/80 flex flex-row items-center justify-between space-y-0">
+      <CardHeader className="bg-muted/40 px-4 py-3 border-b border-border flex flex-row items-center justify-between space-y-0">
         <div>
           <div className="flex items-center space-x-2">
-            <span className="text-base font-black text-white">
+            <span className="text-base font-black text-foreground">
               {order.table?.label || 'Para Llevar'}
             </span>
             {order.orderNumber && (
-              <span className="text-xs font-mono text-slate-400">
+              <span className="text-xs font-mono text-muted-foreground">
                 #{order.orderNumber}
               </span>
             )}
           </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">
-            Mesero: <span className="text-slate-300 font-medium">{order.waiter?.name || 'Caja'}</span>
+          <div className="text-[11px] text-muted-foreground mt-0.5">
+            Mesero: <span className="text-foreground font-medium">{order.waiter?.name || 'Caja'}</span>
           </div>
         </div>
 

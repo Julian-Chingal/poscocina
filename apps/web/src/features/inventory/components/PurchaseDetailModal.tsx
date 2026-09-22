@@ -30,7 +30,7 @@ export const PurchaseDetailModal: React.FC<Props> = ({ purchase, onClose }) => {
       <DialogContent maxWidth="xl" onClose={onClose}>
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            <Receipt className="w-5 h-5 text-emerald-400" />
+            <Receipt className="w-5 h-5 text-primary" />
             <span>Factura #{purchase?.invoiceNumber}</span>
           </DialogTitle>
           <DialogDescription>
@@ -39,7 +39,7 @@ export const PurchaseDetailModal: React.FC<Props> = ({ purchase, onClose }) => {
         </DialogHeader>
 
         {purchase && (
-          <div className="space-y-3 mb-5 max-h-64 overflow-y-auto rounded-xl border border-slate-800">
+          <div className="space-y-3 mb-5 max-h-64 overflow-y-auto rounded-xl border border-border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -52,7 +52,7 @@ export const PurchaseDetailModal: React.FC<Props> = ({ purchase, onClose }) => {
               <TableBody>
                 {purchase.items?.map((it) => (
                   <TableRow key={it.id}>
-                    <TableCell className="p-3 font-semibold text-white">
+                    <TableCell className="p-3 font-semibold text-foreground">
                       {it.inventoryItem?.name || 'Insumo'}
                     </TableCell>
                     <TableCell className="p-3 font-mono">
@@ -61,7 +61,7 @@ export const PurchaseDetailModal: React.FC<Props> = ({ purchase, onClose }) => {
                     <TableCell className="p-3 font-mono">
                       ${parseFloat(it.unitCost).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </TableCell>
-                    <TableCell className="p-3 font-mono font-bold text-emerald-400 text-right">
+                    <TableCell className="p-3 font-mono font-bold text-emerald-600 dark:text-emerald-400 text-right">
                       ${parseFloat(it.totalCost).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </TableCell>
                   </TableRow>
@@ -72,14 +72,14 @@ export const PurchaseDetailModal: React.FC<Props> = ({ purchase, onClose }) => {
         )}
 
         {purchase && (
-          <div className="flex items-center justify-between pt-3 border-t border-slate-800 text-xs">
+          <div className="flex items-center justify-between pt-3 border-t border-border text-xs">
             <div>
-              <span className="text-slate-400">Estado: </span>
-              <span className="font-bold text-white uppercase">{purchase.status}</span>
+              <span className="text-muted-foreground">Estado: </span>
+              <span className="font-bold text-foreground uppercase">{purchase.status}</span>
             </div>
             <div className="text-right">
-              <span className="text-slate-400 mr-2">Total Compra:</span>
-              <span className="font-mono font-black text-emerald-400 text-sm">
+              <span className="text-muted-foreground mr-2">Total Compra:</span>
+              <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">
                 ${parseFloat(purchase.totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </span>
             </div>

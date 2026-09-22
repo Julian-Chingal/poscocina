@@ -62,7 +62,7 @@ export const NewItemModal: React.FC<Props> = ({
       <DialogContent maxWidth="md" onClose={onClose}>
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            <Boxes className="w-5 h-5 text-emerald-400" />
+            <Boxes className="w-5 h-5 text-primary" />
             <span>Nuevo Insumo de Cocina / Barra</span>
           </DialogTitle>
         </DialogHeader>
@@ -160,7 +160,7 @@ export const NewItemModal: React.FC<Props> = ({
               <Button
                 type="submit"
                 disabled={isSubmitting || form.formState.isSubmitting}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
               >
                 {isSubmitting || form.formState.isSubmitting ? 'Guardando...' : 'Crear Insumo'}
               </Button>

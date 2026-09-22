@@ -27,8 +27,8 @@ export const ProductCard: React.FC<Props> = ({
     <Card
       className={`p-5 rounded-2xl border transition-all flex flex-col justify-between shadow-md relative group ${
         product.isAvailable
-          ? 'bg-slate-800/60 border-slate-700/60 hover:border-slate-600'
-          : 'bg-slate-900/40 border-slate-800 opacity-60'
+          ? 'bg-card border-border hover:border-primary/50'
+          : 'bg-card/40 border-border opacity-60'
       }`}
     >
       <CardContent className="p-0">
@@ -36,8 +36,8 @@ export const ProductCard: React.FC<Props> = ({
           <span
             className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
             style={{
-              backgroundColor: `${category?.color || '#3b82f6'}20`,
-              color: category?.color || '#60a5fa',
+              backgroundColor: `${category?.color || 'var(--primary)'}20`,
+              color: category?.color || 'var(--primary)',
             }}
           >
             {category?.name || 'Categoría'}
@@ -51,8 +51,8 @@ export const ProductCard: React.FC<Props> = ({
               onClick={() => onToggleAvailability(product.id)}
               className={`flex items-center space-x-1 text-[11px] font-bold px-2 h-7 rounded-lg border transition-all ${
                 product.isAvailable
-                  ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-400 hover:bg-emerald-900/60'
-                  : 'bg-rose-950/60 border-rose-500/50 text-rose-400 hover:bg-rose-900/60'
+                  ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/25'
+                  : 'bg-destructive/15 border-destructive/30 text-destructive hover:bg-destructive/25'
               }`}
             >
               {product.isAvailable ? (
@@ -76,7 +76,7 @@ export const ProductCard: React.FC<Props> = ({
                   type="button"
                   onClick={() => onEdit(product)}
                   title="Editar producto"
-                  className="h-7 w-7 p-1 text-slate-400 hover:text-white rounded hover:bg-slate-700"
+                  className="h-7 w-7 p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
                 </Button>
@@ -86,7 +86,7 @@ export const ProductCard: React.FC<Props> = ({
                   type="button"
                   onClick={() => onDelete(product)}
                   title="Eliminar producto"
-                  className="h-7 w-7 p-1 text-slate-400 hover:text-rose-400 rounded hover:bg-slate-700"
+                  className="h-7 w-7 p-1 text-muted-foreground hover:text-destructive rounded hover:bg-muted"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </Button>
@@ -95,18 +95,18 @@ export const ProductCard: React.FC<Props> = ({
           </div>
         </div>
 
-        <h3 className="text-base font-bold text-white mt-1">{product.name}</h3>
+        <h3 className="text-base font-bold text-foreground mt-1">{product.name}</h3>
         {product.description && (
-          <p className="text-xs text-slate-400 mt-1 line-clamp-2">{product.description}</p>
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{product.description}</p>
         )}
       </CardContent>
 
-      <CardFooter className="p-0 mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs">
+      <CardFooter className="p-0 mt-5 pt-3 border-t border-border flex items-center justify-between text-xs">
         <div>
-          <span className="text-base font-black text-orange-400">
+          <span className="text-base font-black text-primary">
             ${Number(product.price).toLocaleString()}
           </span>
-          <span className="text-[10px] text-slate-400 ml-1.5 font-medium">
+          <span className="text-[10px] text-muted-foreground ml-1.5 font-medium">
             ({taxPercent === 8 ? 'INC 8%' : taxPercent === 19 ? 'IVA 19%' : 'Exento'})
           </span>
         </div>
@@ -115,14 +115,14 @@ export const ProductCard: React.FC<Props> = ({
           {product.trackInventory && (
             <span
               title="Control de inventario activo"
-              className="text-[10px] text-purple-400 bg-purple-950/40 px-1.5 py-0.5 rounded border border-purple-800/50 flex items-center space-x-1"
+              className="text-[10px] text-purple-600 dark:text-purple-400 bg-purple-500/15 px-1.5 py-0.5 rounded border border-purple-500/30 flex items-center space-x-1"
             >
               <Boxes className="w-3 h-3" />
               <span>Receta</span>
             </span>
           )}
-          <span className="text-[11px] text-slate-300 bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800 flex items-center space-x-1">
-            <Printer className="w-3 h-3 text-slate-400" />
+          <span className="text-[11px] text-foreground bg-muted px-2 py-0.5 rounded-md border border-border flex items-center space-x-1">
+            <Printer className="w-3 h-3 text-muted-foreground" />
             <span>{product.printerStation === 'bar' ? 'Barra' : 'Cocina'}</span>
           </span>
         </div>

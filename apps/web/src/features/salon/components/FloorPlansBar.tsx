@@ -30,8 +30,8 @@ export const FloorPlansBar: React.FC<Props> = ({
         onClick={() => onSelectFloorPlan('all')}
         className={`px-4 h-9 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
           activeFloorPlanId === 'all'
-            ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow'
-            : 'bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800'
+            ? 'bg-primary text-primary-foreground shadow'
+            : 'bg-muted/70 text-muted-foreground hover:text-foreground hover:bg-muted'
         }`}
       >
         Todas las zonas ({tables.length})
@@ -45,8 +45,8 @@ export const FloorPlansBar: React.FC<Props> = ({
           onClick={() => onSelectFloorPlan(plan.id)}
           className={`px-4 h-9 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
             activeFloorPlanId === plan.id
-              ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow'
-              : 'bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800'
+              ? 'bg-primary text-primary-foreground shadow'
+              : 'bg-muted/70 text-muted-foreground hover:text-foreground hover:bg-muted'
           }`}
         >
           {plan.name} ({tables.filter((t) => t.floorPlanId === plan.id).length})

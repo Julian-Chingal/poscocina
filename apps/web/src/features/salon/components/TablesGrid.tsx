@@ -29,9 +29,9 @@ export const TablesGrid: React.FC<Props> = ({
 }) => {
   if (tables.length === 0) {
     return (
-      <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-12 text-center text-slate-400">
-        <AlertCircle className="w-10 h-10 mx-auto mb-3 text-slate-600" />
-        <p className="text-base font-semibold text-slate-300">No hay mesas configuradas en esta zona.</p>
+      <div className="bg-muted/40 border border-border rounded-2xl p-12 text-center text-muted-foreground">
+        <AlertCircle className="w-10 h-10 mx-auto mb-3 text-muted-foreground/60" />
+        <p className="text-base font-semibold text-foreground">No hay mesas configuradas en esta zona.</p>
         {isManager && (
           <Button
             type="button"

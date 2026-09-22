@@ -165,7 +165,7 @@ export const CheckoutModal: React.FC<Props> = ({
             type="button"
             disabled={processing || isCashInvalid}
             onClick={() => onProcessPayment(finalTotal, tipAmount)}
-            className="bg-orange-600 hover:bg-orange-500 text-white font-bold flex items-center space-x-2"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold flex items-center space-x-2"
           >
             <Receipt className="w-4 h-4" />
             <span>{processing ? 'Emitiendo...' : 'Facturar'}</span>

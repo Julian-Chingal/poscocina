@@ -30,10 +30,10 @@ export const StockTable: React.FC<Props> = ({
   onOpenMovementModal,
 }) => (
   <Card className="shadow-sm overflow-hidden">
-    <CardHeader className="p-4 sm:p-6 pb-4 border-b border-slate-800">
+    <CardHeader className="p-4 sm:p-6 pb-4 border-b border-border">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
+          <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
           <Input
             type="text"
             placeholder="Buscar insumo por nombre..."
@@ -46,7 +46,7 @@ export const StockTable: React.FC<Props> = ({
         <Button
           type="button"
           onClick={onOpenNewItemModal}
-          className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 h-auto rounded-xl text-xs font-bold transition cursor-pointer shadow-lg shadow-emerald-600/20"
+          className="flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 h-auto rounded-xl text-xs font-bold transition cursor-pointer shadow-lg shadow-primary/20"
         >
           <Plus className="w-4 h-4" />
           <span>Nuevo Insumo</span>
@@ -74,20 +74,20 @@ export const StockTable: React.FC<Props> = ({
 
             return (
               <TableRow key={item.id}>
-                <TableCell className="font-bold text-white">{item.name}</TableCell>
-                <TableCell className="font-mono text-slate-400">{item.unit}</TableCell>
-                <TableCell className="font-mono font-bold text-white">{current}</TableCell>
-                <TableCell className="font-mono text-slate-300">
+                <TableCell className="font-bold text-foreground">{item.name}</TableCell>
+                <TableCell className="font-mono text-muted-foreground">{item.unit}</TableCell>
+                <TableCell className="font-mono font-bold text-foreground">{current}</TableCell>
+                <TableCell className="font-mono text-muted-foreground">
                   ${parseFloat(item.costPerUnit || '0').toLocaleString()}
                 </TableCell>
                 <TableCell>
                   {isLow ? (
-                    <Badge variant="destructive" className="space-x-1 text-[10px] font-bold bg-rose-950/60 text-rose-400 border border-rose-800/40">
+                    <Badge variant="destructive" className="space-x-1 text-[10px] font-bold bg-destructive/15 text-destructive border border-destructive/30">
                       <AlertTriangle className="w-3 h-3" />
                       <span>Stock Crítico</span>
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="space-x-1 text-[10px] font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-800/40">
+                    <Badge variant="outline" className="space-x-1 text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
                       <span>Disponible</span>
                     </Badge>
                   )}
@@ -98,9 +98,9 @@ export const StockTable: React.FC<Props> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => onOpenMovementModal(item)}
-                    className="px-2.5 py-1.5 h-auto bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold inline-flex items-center space-x-1 transition cursor-pointer border border-slate-700"
+                    className="px-2.5 py-1.5 h-auto rounded-lg text-xs font-semibold inline-flex items-center space-x-1 transition cursor-pointer"
                   >
-                    <ArrowDownRight className="w-3 h-3 text-emerald-400" />
+                    <ArrowDownRight className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                     <span>Ajustar</span>
                   </Button>
                 </TableCell>
@@ -109,7 +109,7 @@ export const StockTable: React.FC<Props> = ({
           })}
           {items.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="py-8 text-center text-slate-500 text-xs">
+              <TableCell colSpan={6} className="py-8 text-center text-muted-foreground text-xs">
                 No hay insumos registrados en el inventario.
               </TableCell>
             </TableRow>

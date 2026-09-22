@@ -32,7 +32,7 @@ export const ProductStationFields: React.FC<Props> = ({
     <div>
       <Label className="mb-1.5 block">Tiempo preparación (min)</Label>
       <div className="relative">
-        <Clock className="w-4 h-4 absolute left-3 top-2.5 text-slate-500 pointer-events-none" />
+        <Clock className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground pointer-events-none" />
         <Input
           type="number"
           min="0"

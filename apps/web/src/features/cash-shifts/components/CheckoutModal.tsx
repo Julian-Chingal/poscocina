@@ -54,7 +54,7 @@ export const CheckoutModal: React.FC<Props> = ({
     <Dialog open={Boolean(bill)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent maxWidth="lg" onClose={onClose} className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center space-x-2 text-xs font-bold text-orange-400 uppercase mb-1">
+          <div className="flex items-center space-x-2 text-xs font-bold text-primary uppercase mb-1">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Caja & Facturación Directa</span>
           </div>
@@ -77,9 +77,9 @@ export const CheckoutModal: React.FC<Props> = ({
           <Label className="block mb-2">Medio de Pago:</Label>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { id: 'cash' as const, label: 'Efectivo', icon: DollarSign, active: 'bg-emerald-950/60 border-emerald-500 text-emerald-400' },
-              { id: 'card_credit' as const, label: 'Tarjeta', icon: CreditCard, active: 'bg-blue-950/60 border-blue-500 text-blue-400' },
-              { id: 'transfer' as const, label: 'Transferencia', icon: Send, active: 'bg-purple-950/60 border-purple-500 text-purple-400' },
+              { id: 'cash' as const, label: 'Efectivo', icon: DollarSign, active: 'bg-emerald-500/15 border-emerald-500 text-emerald-600 dark:text-emerald-400' },
+              { id: 'card_credit' as const, label: 'Tarjeta', icon: CreditCard, active: 'bg-blue-500/15 border-blue-500 text-blue-600 dark:text-blue-400' },
+              { id: 'transfer' as const, label: 'Transferencia', icon: Send, active: 'bg-purple-500/15 border-purple-500 text-purple-600 dark:text-purple-400' },
             ].map(({ id, label, icon: Icon, active }) => (
               <Button
                 key={id}
@@ -87,7 +87,7 @@ export const CheckoutModal: React.FC<Props> = ({
                 type="button"
                 onClick={() => setPaymentMethod(id)}
                 className={`p-3 h-auto rounded-xl border flex flex-col items-center justify-center space-y-1 transition-all cursor-pointer ${
-                  paymentMethod === id ? `${active} shadow-sm` : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
+                  paymentMethod === id ? `${active} shadow-sm` : 'bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted'
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -98,10 +98,10 @@ export const CheckoutModal: React.FC<Props> = ({
         </div>
 
         {paymentMethod === 'cash' && (
-          <Card className="p-4 bg-slate-800/40 rounded-2xl border-slate-700/60 mb-5 space-y-3">
+          <Card className="p-4 bg-muted/40 rounded-2xl border-border mb-5 space-y-3">
             <Label className="block">Efectivo Entregado:</Label>
             <div className="relative">
-              <span className="absolute left-3.5 top-2.5 text-slate-400 text-sm font-bold pointer-events-none">$</span>
+              <span className="absolute left-3.5 top-2.5 text-muted-foreground text-sm font-bold pointer-events-none">$</span>
               <Input
                 type="number"
                 value={cashTendered}
@@ -119,7 +119,7 @@ export const CheckoutModal: React.FC<Props> = ({
                   size="sm"
                   type="button"
                   onClick={() => setCashTendered(val.toString())}
-                  className="h-7 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-mono rounded-lg border border-slate-700 cursor-pointer"
+                  className="h-7 px-2.5 py-1 text-[11px] font-mono rounded-lg cursor-pointer"
                 >
                   ${val.toLocaleString()}
                 </Button>
@@ -128,10 +128,10 @@ export const CheckoutModal: React.FC<Props> = ({
 
             {tenderedNum > 0 && (
               <>
-                <Separator className="bg-slate-700/60 my-2" />
+                <Separator className="my-2" />
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-400">Cambio / Vueltas:</span>
-                  <span className="text-sm font-black font-mono text-emerald-400">${changeDue.toLocaleString()}</span>
+                  <span className="text-muted-foreground">Cambio / Vueltas:</span>
+                  <span className="text-sm font-black font-mono text-emerald-600 dark:text-emerald-400">${changeDue.toLocaleString()}</span>
                 </div>
               </>
             )}
@@ -159,7 +159,7 @@ export const CheckoutModal: React.FC<Props> = ({
             type="button"
             disabled={isProcessing || isCashInvalid}
             onClick={() => onConfirmPayment(paymentMethod, billTotal, tipAmount, cardReference)}
-            className="bg-orange-600 hover:bg-orange-500 text-white font-bold flex items-center space-x-2"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold flex items-center space-x-2"
           >
             <Receipt className="w-4 h-4" />
             <span>{isProcessing ? 'Emitiendo...' : 'Confirmar y Facturar'}</span>

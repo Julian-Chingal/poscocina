@@ -20,7 +20,7 @@ export const APPS: AppItem[] = [
     icon: LayoutGrid,
     gradient: 'from-emerald-400 to-teal-600',
     badge: 'En vivo',
-    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    badgeColor: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
     category: 'operacion',
   },
   {
@@ -30,7 +30,7 @@ export const APPS: AppItem[] = [
     icon: CalendarDays,
     gradient: 'from-pink-500 to-rose-600',
     badge: 'Fase 6',
-    badgeColor: 'bg-pink-500/20 text-pink-300 border-pink-500/30',
+    badgeColor: 'bg-pink-500/15 text-pink-700 dark:text-pink-300 border-pink-500/30',
     category: 'operacion',
   },
   {
@@ -48,7 +48,7 @@ export const APPS: AppItem[] = [
     icon: ChefHat,
     gradient: 'from-rose-500 to-red-600',
     badge: 'KDS',
-    badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+    badgeColor: 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30',
     category: 'operacion',
   },
   {
@@ -65,7 +65,7 @@ export const APPS: AppItem[] = [
     subtitle: 'Descuento automático de insumos',
     icon: Boxes,
     gradient: 'from-violet-400 to-purple-600',
-    badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+    badgeColor: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30',
     category: 'gestion',
   },
   {
@@ -74,7 +74,7 @@ export const APPS: AppItem[] = [
     subtitle: 'Arqueos, pagos y tickets',
     icon: ReceiptText,
     gradient: 'from-cyan-400 to-blue-600',
-    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+    badgeColor: 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-500/30',
     category: 'gestion',
   },
   {
@@ -84,7 +84,7 @@ export const APPS: AppItem[] = [
     icon: BarChart3,
     gradient: 'from-fuchsia-400 to-pink-600',
     badge: 'BI En vivo',
-    badgeColor: 'bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/30',
+    badgeColor: 'bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-500/30',
     category: 'gestion',
   },
   {

@@ -93,13 +93,13 @@ export const CreateReservationModal: React.FC<CreateReservationModalProps> = ({
       <DialogContent maxWidth="lg" onClose={onClose} className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Plus className="w-5 h-5 text-pink-500" />
+            <Plus className="w-5 h-5 text-primary" />
             <span>Nueva Reserva de Mesa</span>
           </DialogTitle>
         </DialogHeader>
 
         {errorMessage && (
-          <div className="p-3 mb-4 rounded-xl bg-rose-950/50 border border-rose-800 text-rose-300 text-xs flex items-center gap-2">
+          <div className="p-3 mb-4 rounded-xl bg-destructive/15 border border-destructive/30 text-destructive text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMessage}</span>
           </div>
@@ -156,7 +156,7 @@ export const CreateReservationModal: React.FC<CreateReservationModalProps> = ({
               <Button
                 type="submit"
                 disabled={submitting || form.formState.isSubmitting}
-                className="bg-pink-600 hover:bg-pink-500 text-white font-bold"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
               >
                 {submitting || form.formState.isSubmitting ? 'Registrando...' : 'Confirmar Reserva'}
               </Button>

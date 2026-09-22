@@ -79,7 +79,7 @@ export const NewSupplierModal: React.FC<Props> = ({
       <DialogContent maxWidth="lg" onClose={onClose} className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            <Truck className="w-5 h-5 text-blue-400" />
+            <Truck className="w-5 h-5 text-primary" />
             <span>Registrar Nuevo Proveedor</span>
           </DialogTitle>
         </DialogHeader>
@@ -165,7 +165,7 @@ export const NewSupplierModal: React.FC<Props> = ({
               <Button
                 type="submit"
                 disabled={isSubmitting || form.formState.isSubmitting}
-                className="bg-blue-600 hover:bg-blue-500 text-white font-bold"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
               >
                 {isSubmitting || form.formState.isSubmitting ? 'Guardando...' : 'Guardar Proveedor'}
               </Button>

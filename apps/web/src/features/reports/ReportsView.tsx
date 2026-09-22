@@ -41,7 +41,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ venueId }) => {
   } = useAuditLogs(venueId, activeTab);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 text-slate-100 print:p-0 print:text-black">
+    <div className="p-6 max-w-7xl mx-auto space-y-6 text-foreground print:p-0 print:text-black">
       <ReportsHeader
         period={period}
         onPeriodChange={setPeriod}
@@ -71,7 +71,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ venueId }) => {
       )}
 
       {activeTab === 'audit' && (
-        <Suspense fallback={<div className="p-8 text-center text-slate-400">Cargando auditoría...</div>}>
+        <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Cargando auditoría...</div>}>
           <AuditTrailTab
             auditLogs={auditLogs}
             auditFilterAction={auditFilterAction}

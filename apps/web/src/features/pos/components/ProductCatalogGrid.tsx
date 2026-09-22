@@ -10,7 +10,7 @@ interface Props {
 export const ProductCatalogGrid: React.FC<Props> = ({ products, onAddToCart }) => {
   if (products.length === 0) {
     return (
-      <div className="p-8 text-center text-slate-500 text-xs border border-dashed border-slate-800 rounded-2xl">
+      <div className="p-8 text-center text-muted-foreground text-xs border border-dashed border-border rounded-2xl">
         No se encontraron productos en esta categoría o búsqueda.
       </div>
     );

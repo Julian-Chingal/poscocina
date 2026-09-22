@@ -107,13 +107,13 @@ export const ProductModal: React.FC<Props> = ({
       <DialogContent maxWidth="lg" onClose={onClose} className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            <Utensils className="w-5 h-5 text-blue-400" />
+            <Utensils className="w-5 h-5 text-primary" />
             <span>{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</span>
           </DialogTitle>
         </DialogHeader>
 
         {formError && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-950/50 border border-rose-800 text-rose-300 text-xs">
+          <div className="mb-4 p-3 rounded-xl bg-destructive/15 border border-destructive/30 text-destructive text-xs">
             {formError}
           </div>
         )}
@@ -166,7 +166,7 @@ export const ProductModal: React.FC<Props> = ({
                     <FormLabel>Precio (COP) *</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <DollarSign className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-500 pointer-events-none" />
+                        <DollarSign className="w-3.5 h-3.5 absolute left-3 top-2.5 text-muted-foreground pointer-events-none" />
                         <Input
                           {...field}
                           type="number"
@@ -232,7 +232,7 @@ export const ProductModal: React.FC<Props> = ({
                     <FormLabel>Tiempo Estimado (min)</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Clock className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-500 pointer-events-none" />
+                        <Clock className="w-3.5 h-3.5 absolute left-3 top-2.5 text-muted-foreground pointer-events-none" />
                         <Input
                           {...field}
                           type="number"
@@ -311,7 +311,7 @@ export const ProductModal: React.FC<Props> = ({
               <Button
                 type="submit"
                 disabled={submitting || form.formState.isSubmitting}
-                className="bg-blue-600 hover:bg-blue-500 text-white font-bold"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
               >
                 {submitting ? 'Guardando...' : 'Guardar Producto'}
               </Button>

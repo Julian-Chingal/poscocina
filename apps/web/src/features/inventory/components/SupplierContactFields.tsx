@@ -31,7 +31,7 @@ export const SupplierContactFields: React.FC<Props> = ({
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-1.5">
-        <Label className="block text-xs font-semibold text-slate-300">Contacto Comercial:</Label>
+        <Label className="block text-xs font-semibold text-foreground">Contacto Comercial:</Label>
         <Input
           type="text"
           placeholder="Ej. Carlos Mendoza"
@@ -41,7 +41,7 @@ export const SupplierContactFields: React.FC<Props> = ({
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="block text-xs font-semibold text-slate-300">Teléfono / WhatsApp:</Label>
+        <Label className="block text-xs font-semibold text-foreground">Teléfono / WhatsApp:</Label>
         <Input
           type="text"
           placeholder="3101234567"
@@ -54,7 +54,7 @@ export const SupplierContactFields: React.FC<Props> = ({
 
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-1.5">
-        <Label className="block text-xs font-semibold text-slate-300">Correo Electrónico:</Label>
+        <Label className="block text-xs font-semibold text-foreground">Correo Electrónico:</Label>
         <Input
           type="email"
           placeholder="facturacion@proveedor.com"
@@ -64,7 +64,7 @@ export const SupplierContactFields: React.FC<Props> = ({
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="block text-xs font-semibold text-slate-300">Dirección Física:</Label>
+        <Label className="block text-xs font-semibold text-foreground">Dirección Física:</Label>
         <Input
           type="text"
           placeholder="Calle 100 # 15-20"
@@ -76,7 +76,7 @@ export const SupplierContactFields: React.FC<Props> = ({
     </div>
 
     <div className="space-y-1.5">
-      <Label className="block text-xs font-semibold text-slate-300">Notas de Despacho / Condiciones:</Label>
+      <Label className="block text-xs font-semibold text-foreground">Notas de Despacho / Condiciones:</Label>
       <Textarea
         rows={2}
         placeholder="Ej. Entregas martes y jueves, crédito a 15 días"

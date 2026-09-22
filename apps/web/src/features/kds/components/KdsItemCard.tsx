@@ -21,18 +21,18 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({ item, onNextStatus }) 
     <Card
       className={`p-3 rounded-xl border transition-all ${
         isReady
-          ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300'
+          ? 'bg-emerald-500/10 border-emerald-500/40 text-foreground'
           : isCooking
-          ? 'bg-amber-950/40 border-amber-500/50 text-amber-200'
-          : 'bg-slate-900/80 border-slate-700/70 text-slate-200'
+          ? 'bg-amber-500/10 border-amber-500/40 text-foreground'
+          : 'bg-card border-border text-foreground'
       }`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="font-bold flex items-center space-x-2 min-w-0">
-          <Badge variant="outline" className="text-orange-400 text-xs font-black bg-orange-950/80 border-orange-800 shrink-0">
+          <Badge variant="outline" className="text-primary text-xs font-black bg-primary/15 border-primary/30 shrink-0">
             {item.quantity}x
           </Badge>
-          <span className="text-white text-xs leading-snug truncate">
+          <span className="text-foreground text-xs leading-snug truncate">
             {item.product?.name || 'Producto'}
           </span>
         </div>
@@ -46,7 +46,7 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({ item, onNextStatus }) 
               ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
               : isCooking
               ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-sm'
-              : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+              : 'bg-primary hover:bg-primary/90 text-primary-foreground'
           }`}
         >
           {isReady ? 'Servido ✓' : isCooking ? '¡Listo!' : 'Cocinar'}
@@ -54,7 +54,7 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({ item, onNextStatus }) 
       </div>
 
       {item.notes && (
-        <div className="mt-2 text-[11px] text-rose-300 bg-rose-950/40 p-1.5 rounded-lg border border-rose-800/40 flex items-start space-x-1.5">
+        <div className="mt-2 text-[11px] text-destructive bg-destructive/10 p-1.5 rounded-lg border border-destructive/30 flex items-start space-x-1.5">
           <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
           <span>Nota: {item.notes}</span>
         </div>

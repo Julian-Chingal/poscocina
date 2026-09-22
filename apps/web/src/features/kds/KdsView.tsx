@@ -18,7 +18,7 @@ export const KdsView: React.FC<KdsViewProps> = ({ venueId }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="text-slate-400 animate-spin text-3xl">⏳</div>
+        <div className="text-muted-foreground animate-spin text-3xl">⏳</div>
       </div>
     );
   }

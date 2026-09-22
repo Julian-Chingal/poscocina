@@ -80,13 +80,13 @@ export const CategoryModal: React.FC<Props> = ({
       <DialogContent maxWidth="md" onClose={onClose}>
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            <Layers className="w-5 h-5 text-blue-400" />
+            <Layers className="w-5 h-5 text-primary" />
             <span>{editingCategory ? 'Editar Categoría' : 'Nueva Categoría'}</span>
           </DialogTitle>
         </DialogHeader>
 
         {formError && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-950/50 border border-rose-800 text-rose-300 text-xs">
+          <div className="mb-4 p-3 rounded-xl bg-destructive/15 border border-destructive/30 text-destructive text-xs">
             {formError}
           </div>
         )}
@@ -126,7 +126,7 @@ export const CategoryModal: React.FC<Props> = ({
                           onClick={() => field.onChange(col)}
                           className={`w-6 h-6 p-0 min-w-0 rounded-full transition-transform cursor-pointer ${
                             field.value === col
-                              ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-slate-900'
+                              ? 'scale-125 ring-2 ring-foreground ring-offset-2 ring-offset-background'
                               : 'opacity-80 hover:opacity-100'
                           }`}
                           style={{ backgroundColor: col }}
@@ -166,7 +166,7 @@ export const CategoryModal: React.FC<Props> = ({
               <Button
                 type="submit"
                 disabled={submitting || form.formState.isSubmitting}
-                className="bg-blue-600 hover:bg-blue-500 text-white font-bold"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
               >
                 {submitting ? 'Guardando...' : 'Guardar Categoría'}
               </Button>

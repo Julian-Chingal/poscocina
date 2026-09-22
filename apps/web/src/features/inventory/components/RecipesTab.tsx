@@ -36,10 +36,10 @@ export const RecipesTab: React.FC<Props> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Products Column */}
-      <Card className="bg-slate-800/60 border-slate-700/60 rounded-2xl shadow-sm">
+      <Card className="rounded-2xl shadow-sm">
         <CardHeader className="p-5 pb-3">
-          <CardTitle className="text-sm font-bold text-white">Platos & Bebidas</CardTitle>
-          <CardDescription className="text-xs text-slate-400">
+          <CardTitle className="text-sm font-bold text-foreground">Platos & Bebidas</CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">
             Selecciona un producto para configurar los insumos que descuenta al venderse.
           </CardDescription>
         </CardHeader>
@@ -53,8 +53,8 @@ export const RecipesTab: React.FC<Props> = ({
                 onClick={() => onSelectProduct(prod.id)}
                 className={`w-full text-left px-3.5 py-2.5 h-auto rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-between ${
                   selectedProductId === prod.id
-                    ? 'bg-purple-600 text-white shadow hover:bg-purple-500'
-                    : 'bg-slate-800/40 text-slate-300 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-primary text-primary-foreground shadow hover:bg-primary/90'
+                    : 'bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
                 <span className="truncate">{prod.name}</span>
@@ -68,24 +68,24 @@ export const RecipesTab: React.FC<Props> = ({
       </Card>
 
       {/* Recipe Editor Column */}
-      <Card className="md:col-span-2 bg-slate-800/60 border-slate-700/60 rounded-2xl shadow-sm">
-        <CardHeader className="p-5 pb-4 border-b border-slate-800 flex flex-row items-center justify-between space-y-0">
+      <Card className="md:col-span-2 rounded-2xl shadow-sm">
+        <CardHeader className="p-5 pb-4 border-b border-border flex flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle className="text-sm font-bold text-white flex items-center space-x-2">
-              <CookingPot className="w-4 h-4 text-purple-400" />
+            <CardTitle className="text-sm font-bold text-foreground flex items-center space-x-2">
+              <CookingPot className="w-4 h-4 text-primary" />
               <span>Ingredientes de la Receta (Escandallo)</span>
             </CardTitle>
-            <CardDescription className="text-xs text-slate-400">{selectedProduct?.name || 'Selecciona un producto'}</CardDescription>
+            <CardDescription className="text-xs text-muted-foreground">{selectedProduct?.name || 'Selecciona un producto'}</CardDescription>
           </div>
 
           <div className="flex items-center space-x-2">
             <Button
               type="button"
-              variant="secondary"
+              variant="outline"
               size="sm"
               onClick={() => items.length > 0 && onAddIngredient(items[0].id)}
               disabled={!selectedProductId || items.length === 0}
-              className="flex items-center space-x-1.5 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white px-3 py-1.5 h-auto rounded-xl text-xs font-bold transition-all cursor-pointer"
+              className="flex items-center space-x-1.5 disabled:opacity-50 px-3 py-1.5 h-auto rounded-xl text-xs font-bold transition-all cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Añadir Insumo</span>
@@ -96,7 +96,7 @@ export const RecipesTab: React.FC<Props> = ({
               size="sm"
               onClick={onSaveRecipe}
               disabled={isSaving || !selectedProductId}
-              className="flex items-center space-x-1.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white px-4 py-1.5 h-auto rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg shadow-purple-600/20"
+              className="flex items-center space-x-1.5 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground px-4 py-1.5 h-auto rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg shadow-primary/20"
             >
               <Save className="w-3.5 h-3.5" />
               <span>{isSaving ? 'Guardando...' : 'Guardar Receta'}</span>
@@ -108,14 +108,14 @@ export const RecipesTab: React.FC<Props> = ({
           {currentRecipe.map((ingredient, idx) => {
             const selectedItem = items.find((i) => i.id === ingredient.inventoryItemId);
             return (
-              <Card key={idx} className="flex flex-row items-center space-x-3 bg-slate-900/60 border-slate-800 p-3 rounded-xl">
+              <Card key={idx} className="flex flex-row items-center space-x-3 bg-muted/40 border-border p-3 rounded-xl">
                 <div className="flex-1 space-y-1">
-                  <Label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Insumo</Label>
-                  <span className="text-xs font-semibold text-white block truncate">{selectedItem?.name || ingredient.inventoryItemId}</span>
+                  <Label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Insumo</Label>
+                  <span className="text-xs font-semibold text-foreground block truncate">{selectedItem?.name || ingredient.inventoryItemId}</span>
                 </div>
 
                 <div className="w-32 space-y-1">
-                  <Label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <Label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                     Cantidad ({selectedItem?.unit || 'ud'})
                   </Label>
                   <Input
@@ -133,7 +133,7 @@ export const RecipesTab: React.FC<Props> = ({
                     size="icon"
                     type="button"
                     onClick={() => onRemoveIngredient(ingredient.inventoryItemId)}
-                    className="h-8 w-8 text-slate-500 hover:text-rose-400 p-1.5 transition-colors cursor-pointer"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive p-1.5 transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -143,7 +143,7 @@ export const RecipesTab: React.FC<Props> = ({
           })}
 
           {currentRecipe.length === 0 && (
-            <div className="p-8 text-center text-slate-500 text-xs border border-dashed border-slate-800 rounded-xl">
+            <div className="p-8 text-center text-muted-foreground text-xs border border-dashed border-border rounded-xl">
               Este producto no tiene ingredientes configurados en su receta.
             </div>
           )}

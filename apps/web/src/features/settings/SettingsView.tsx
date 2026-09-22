@@ -11,8 +11,8 @@ const PrintersTab = lazy(() => import('./components/PrintersTab'));
 const VenuesTab = lazy(() => import('./components/VenuesTab'));
 
 const TabSkeleton: React.FC = () => (
-  <div className="w-full py-16 flex flex-col items-center justify-center space-y-3 text-slate-500">
-    <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+  <div className="w-full py-16 flex flex-col items-center justify-center space-y-3 text-muted-foreground">
+    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
     <span className="text-xs font-mono">Cargando módulo de configuración...</span>
   </div>
 );

@@ -76,13 +76,13 @@ export const NewVenueModal: React.FC<Props> = ({
       <DialogContent maxWidth="md" onClose={onClose}>
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            <Store className="w-5 h-5 text-orange-400" />
+            <Store className="w-5 h-5 text-primary" />
             <span>Crear Nueva Sucursal</span>
           </DialogTitle>
         </DialogHeader>
 
         {error && (
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2 mb-2">
+          <div className="p-3 rounded-xl bg-destructive/15 border border-destructive/30 text-destructive text-xs flex items-center gap-2 mb-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -162,7 +162,7 @@ export const NewVenueModal: React.FC<Props> = ({
               <Button
                 type="submit"
                 disabled={isCreating || form.formState.isSubmitting}
-                className="bg-orange-600 hover:bg-orange-500 text-white font-bold"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
               >
                 {isCreating ? 'Creando Sede...' : 'Crear Sede'}
               </Button>

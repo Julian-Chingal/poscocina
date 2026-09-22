@@ -28,9 +28,9 @@ export const OpenShiftCard: React.FC<Props> = ({ onOpenShift }) => {
   };
 
   return (
-    <Card className="max-w-md mx-auto rounded-3xl p-8 shadow-2xl border-slate-700/60">
+    <Card className="max-w-md mx-auto rounded-3xl p-8 shadow-2xl">
       <CardHeader className="p-0 pb-6">
-        <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mb-4">
+        <div className="w-12 h-12 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mb-4">
           <Unlock className="w-6 h-6" />
         </div>
         <CardTitle className="text-xl">
@@ -44,11 +44,11 @@ export const OpenShiftCard: React.FC<Props> = ({ onOpenShift }) => {
       <CardContent className="p-0">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="opening-amount" className="block text-xs font-semibold text-slate-300">
+            <Label htmlFor="opening-amount" className="block text-xs font-semibold text-foreground">
               Fondo Inicial en Efectivo:
             </Label>
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold z-10">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-bold z-10">
                 $
               </span>
               <Input
@@ -63,7 +63,7 @@ export const OpenShiftCard: React.FC<Props> = ({ onOpenShift }) => {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="opening-notes" className="block text-xs font-semibold text-slate-300">
+            <Label htmlFor="opening-notes" className="block text-xs font-semibold text-foreground">
               Observaciones de Apertura:
             </Label>
             <Input
@@ -79,7 +79,7 @@ export const OpenShiftCard: React.FC<Props> = ({ onOpenShift }) => {
           <Button
             type="submit"
             disabled={submitting}
-            className="w-full h-11 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs transition-colors shadow-lg shadow-cyan-600/20 cursor-pointer disabled:opacity-50"
+            className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs transition-colors shadow-lg cursor-pointer disabled:opacity-50"
           >
             {submitting ? 'Abriendo turno...' : 'Abrir Turno de Caja'}
           </Button>

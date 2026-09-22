@@ -24,37 +24,37 @@ export const CartItemRow: React.FC<Props> = ({
   const lineTotal = (unitPrice + modsDelta) * item.quantity;
 
   return (
-    <Card className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800 space-y-2">
+    <Card className="p-2.5 bg-muted/30 rounded-xl border border-border space-y-2">
       <div className="flex items-start justify-between">
         <div className="flex-1 pr-2">
-          <h5 className="text-xs font-bold text-white leading-snug">{item.product.name}</h5>
-          <span className="text-[10px] font-mono text-slate-400">
+          <h5 className="text-xs font-bold text-foreground leading-snug">{item.product.name}</h5>
+          <span className="text-[10px] font-mono text-muted-foreground">
             ${(unitPrice + modsDelta).toLocaleString()} c/u
           </span>
         </div>
-        <span className="text-xs font-black font-mono text-orange-400">
+        <span className="text-xs font-black font-mono text-primary">
           ${lineTotal.toLocaleString()}
         </span>
       </div>
 
-      <div className="flex items-center justify-between pt-1 border-t border-slate-800/60">
+      <div className="flex items-center justify-between pt-1 border-t border-border/60">
         <div className="flex items-center space-x-1">
           <Button
             variant="ghost"
             size="icon"
             type="button"
             onClick={() => onUpdateQuantity(index, -1)}
-            className="h-6 w-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 p-0"
+            className="h-6 w-6 rounded bg-muted hover:bg-muted/80 text-foreground p-0"
           >
-            {item.quantity === 1 ? <Trash2 className="w-3 h-3 text-rose-400" /> : <Minus className="w-3 h-3" />}
+            {item.quantity === 1 ? <Trash2 className="w-3 h-3 text-destructive" /> : <Minus className="w-3 h-3" />}
           </Button>
-          <span className="w-6 text-center text-xs font-bold text-white font-mono">{item.quantity}</span>
+          <span className="w-6 text-center text-xs font-bold text-foreground font-mono">{item.quantity}</span>
           <Button
             variant="ghost"
             size="icon"
             type="button"
             onClick={() => onUpdateQuantity(index, 1)}
-            className="h-6 w-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 p-0"
+            className="h-6 w-6 rounded bg-muted hover:bg-muted/80 text-foreground p-0"
           >
             <Plus className="w-3 h-3" />
           </Button>
@@ -66,7 +66,7 @@ export const CartItemRow: React.FC<Props> = ({
           type="button"
           onClick={() => setShowNotesInput(!showNotesInput)}
           className={`h-6 px-1 text-[10px] flex items-center space-x-1 ${
-            item.notes ? 'text-orange-400 font-semibold' : 'text-slate-500 hover:text-slate-300'
+            item.notes ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <FileText className="w-3 h-3" />
@@ -80,7 +80,7 @@ export const CartItemRow: React.FC<Props> = ({
           placeholder="Nota para cocina (ej. sin cebolla)"
           value={item.notes}
           onChange={(e) => onUpdateNotes(index, e.target.value)}
-          className="h-7 text-[11px] rounded-lg bg-slate-950"
+          className="h-7 text-[11px] rounded-lg bg-background"
         />
       )}
     </Card>

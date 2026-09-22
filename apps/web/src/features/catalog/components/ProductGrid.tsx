@@ -28,7 +28,7 @@ export const ProductGrid: React.FC<Props> = ({
   if (loading && products.length === 0) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="text-slate-400 animate-spin text-2xl">⏳</div>
+        <div className="text-muted-foreground animate-spin text-2xl">⏳</div>
       </div>
     );
   }

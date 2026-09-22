@@ -66,7 +66,7 @@ export const CloseShiftModal: React.FC<Props> = ({ isOpen, onClose, onConfirmClo
                   <FormLabel>Efectivo Físico Contado *</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-slate-400 text-sm font-bold pointer-events-none">
+                      <span className="absolute left-3.5 top-2.5 text-muted-foreground text-sm font-bold pointer-events-none">
                         $
                       </span>
                       <Input
@@ -105,8 +105,9 @@ export const CloseShiftModal: React.FC<Props> = ({ isOpen, onClose, onConfirmClo
               </Button>
               <Button
                 type="submit"
+                variant="destructive"
                 disabled={form.formState.isSubmitting}
-                className="bg-rose-600 hover:bg-rose-500 text-white font-bold"
+                className="font-bold"
               >
                 {form.formState.isSubmitting ? 'Cerrando...' : 'Confirmar y Cerrar Turno'}
               </Button>

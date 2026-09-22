@@ -30,9 +30,9 @@ export const ReceiptSettingsCard: React.FC<Props> = ({
   onFieldChange,
 }) => (
   <Card className="shadow-sm">
-    <CardHeader className="pb-4 border-b border-slate-800">
+    <CardHeader className="pb-4 border-b border-border">
       <div className="flex items-center space-x-2.5">
-        <Printer className="w-5 h-5 text-orange-400" />
+        <Printer className="w-5 h-5 text-primary" />
         <div>
           <CardTitle className="text-base">Configuración de Ticket Térmico</CardTitle>
           <CardDescription className="text-xs">Formato compatible con 58mm y 80mm vía USB o Red.</CardDescription>
@@ -42,7 +42,7 @@ export const ReceiptSettingsCard: React.FC<Props> = ({
 
     <CardContent className="pt-6 space-y-4">
       <div className="space-y-2">
-        <Label className="block text-xs font-semibold text-slate-300">Ancho de Papel</Label>
+        <Label className="block text-xs font-semibold text-foreground">Ancho de Papel</Label>
         <div className="grid grid-cols-2 gap-3 max-w-sm">
           {[80, 58].map((w) => (
             <Button
@@ -52,12 +52,12 @@ export const ReceiptSettingsCard: React.FC<Props> = ({
               onClick={() => onFieldChange('paperWidth', w as PaperWidth)}
               className={`p-3 h-auto rounded-xl border flex flex-col items-center justify-center transition cursor-pointer ${
                 paperWidth === w
-                  ? 'border-orange-500 bg-orange-500/10 text-white font-bold hover:bg-orange-500/20'
-                  : 'border-slate-700 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800'
+                  ? 'border-primary bg-primary/10 text-primary font-bold hover:bg-primary/20'
+                  : 'border-border bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
             >
               <span className="block text-sm">{w} mm</span>
-              <span className="text-[10px] text-slate-400 font-normal">{w === 80 ? '42-48 col' : '32 col'}</span>
+              <span className="text-[10px] text-muted-foreground font-normal">{w === 80 ? '42-48 col' : '32 col'}</span>
             </Button>
           ))}
         </div>
@@ -70,13 +70,13 @@ export const ReceiptSettingsCard: React.FC<Props> = ({
           onCheckedChange={(checked) => onFieldChange('autoPrintReceipt', checked)}
         />
         <Label htmlFor="autoPrintReceipt" className="cursor-pointer">
-          <span className="text-sm font-medium text-white block">Impresión automática al cobrar</span>
-          <span className="text-xs text-slate-400 block font-normal">Lanza la orden tras registrar el pago exitoso.</span>
+          <span className="text-sm font-medium text-foreground block">Impresión automática al cobrar</span>
+          <span className="text-xs text-muted-foreground block font-normal">Lanza la orden tras registrar el pago exitoso.</span>
         </Label>
       </div>
 
       <div className="space-y-1.5">
-        <Label className="block text-xs font-semibold text-slate-300">Encabezado de Ticket</Label>
+        <Label className="block text-xs font-semibold text-foreground">Encabezado de Ticket</Label>
         <Input
           type="text"
           value={receiptHeader}
@@ -86,7 +86,7 @@ export const ReceiptSettingsCard: React.FC<Props> = ({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="block text-xs font-semibold text-slate-300">Pie de Página</Label>
+        <Label className="block text-xs font-semibold text-foreground">Pie de Página</Label>
         <Textarea
           rows={3}
           value={receiptFooter}

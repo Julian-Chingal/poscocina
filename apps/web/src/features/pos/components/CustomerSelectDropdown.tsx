@@ -28,12 +28,12 @@ export const CustomerSelectDropdown: React.FC<Props> = ({
 }) => {
   if (selectedCustomer) {
     return (
-      <Card className="p-2.5 bg-orange-950/30 border-orange-500/40 flex items-center justify-between">
+      <Card className="p-2.5 bg-primary/10 border-primary/30 flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <UserCheck className="w-4 h-4 text-orange-400" />
+          <UserCheck className="w-4 h-4 text-primary" />
           <div className="truncate">
-            <span className="text-xs font-bold text-white block truncate">{selectedCustomer.name}</span>
-            <span className="text-[10px] text-slate-400 font-mono">
+            <span className="text-xs font-bold text-foreground block truncate">{selectedCustomer.name}</span>
+            <span className="text-[10px] text-muted-foreground font-mono">
               {selectedCustomer.documentType || 'Doc'}: {selectedCustomer.documentNumber || 'Sin doc'}
             </span>
           </div>
@@ -43,7 +43,7 @@ export const CustomerSelectDropdown: React.FC<Props> = ({
           size="icon"
           type="button"
           onClick={onClearCustomer}
-          className="h-7 w-7 p-1 text-slate-400 hover:text-white"
+          className="h-7 w-7 p-1 text-muted-foreground hover:text-foreground"
         >
           <X className="w-3.5 h-3.5" />
         </Button>
@@ -62,11 +62,11 @@ export const CustomerSelectDropdown: React.FC<Props> = ({
           className="flex-1 h-9 rounded-xl text-xs"
         />
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
           type="button"
           onClick={onOpenCreateModal}
-          className="h-9 w-9 bg-slate-800 hover:bg-slate-700 text-orange-400 rounded-xl border border-slate-700"
+          className="h-9 w-9 text-primary rounded-xl"
           title="Registrar nuevo cliente"
         >
           <UserPlus className="w-3.5 h-3.5" />
@@ -74,17 +74,17 @@ export const CustomerSelectDropdown: React.FC<Props> = ({
       </div>
 
       {showDropdown && searchResults.length > 0 && (
-        <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-popover border border-border rounded-xl shadow-xl max-h-48 overflow-y-auto text-popover-foreground">
           {searchResults.map((c) => (
             <Button
               key={c.id}
               variant="ghost"
               type="button"
               onClick={() => onSelectCustomer(c)}
-              className="w-full justify-start h-auto flex-col items-start px-3 py-2 text-xs text-slate-200 hover:bg-slate-800 border-b border-slate-800/60 last:border-0 rounded-none cursor-pointer"
+              className="w-full justify-start h-auto flex-col items-start px-3 py-2 text-xs text-foreground hover:bg-muted border-b border-border last:border-0 rounded-none cursor-pointer"
             >
               <div className="font-bold">{c.name}</div>
-              <div className="text-[10px] text-slate-400 font-mono">
+              <div className="text-[10px] text-muted-foreground font-mono">
                 {c.documentType}: {c.documentNumber} {c.phone && `• ${c.phone}`}
               </div>
             </Button>

@@ -60,12 +60,12 @@ export const TransferTableModal: React.FC<Props> = ({
           </div>
           <DialogTitle>Cambiar de Mesa</DialogTitle>
           <DialogDescription>
-            Trasladar la comanda activa de <strong className="text-white">{sourceTable.label}</strong> hacia una mesa disponible.
+            Trasladar la comanda activa de <strong className="text-foreground">{sourceTable.label}</strong> hacia una mesa disponible.
           </DialogDescription>
         </DialogHeader>
 
         {actionError && (
-          <div className="p-3 bg-rose-950/50 border border-rose-800 text-rose-300 text-xs rounded-xl mb-4">
+          <div className="p-3 bg-destructive/15 border border-destructive/30 text-destructive text-xs rounded-xl mb-4">
             {actionError}
           </div>
         )}
@@ -88,8 +88,8 @@ export const TransferTableModal: React.FC<Props> = ({
           </div>
 
           {freeTables.length === 0 ? (
-            <Card className="p-4 bg-slate-800/60 rounded-2xl border-slate-700/60 text-center text-slate-400 text-xs">
-              <AlertTriangle className="w-6 h-6 mx-auto mb-1.5 text-amber-400" />
+            <Card className="p-4 bg-muted/40 rounded-2xl border-border text-center text-muted-foreground text-xs">
+              <AlertTriangle className="w-6 h-6 mx-auto mb-1.5 text-amber-500" />
               <span>No hay mesas libres disponibles en la zona seleccionada.</span>
             </Card>
           ) : (

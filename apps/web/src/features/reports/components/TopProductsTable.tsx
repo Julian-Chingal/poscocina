@@ -53,23 +53,23 @@ export const TopProductsTable: React.FC<TopProductsTableProps> = ({ topProducts 
           <TableBody>
             {topProducts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-slate-500">
+                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
                   Sin movimientos de venta registrados en este periodo
                 </TableCell>
               </TableRow>
             ) : (
               topProducts.map((p, idx) => (
                 <TableRow key={p.id}>
-                  <TableCell className="font-bold text-amber-400">{idx + 1}</TableCell>
-                  <TableCell className="font-semibold text-white">{p.name}</TableCell>
+                  <TableCell className="font-bold text-amber-600 dark:text-amber-400">{idx + 1}</TableCell>
+                  <TableCell className="font-semibold text-foreground">{p.name}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="text-slate-300 text-[10px] bg-slate-800 border-slate-700">
+                    <Badge variant="outline" className="text-muted-foreground text-[10px] bg-muted/50 border-border">
                       {p.category}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right text-slate-300">{formatCurrency(p.price)}</TableCell>
-                  <TableCell className="text-center font-bold text-amber-300">{p.quantity}</TableCell>
-                  <TableCell className="text-right font-extrabold text-emerald-400">
+                  <TableCell className="text-right text-muted-foreground">{formatCurrency(p.price)}</TableCell>
+                  <TableCell className="text-center font-bold text-foreground">{p.quantity}</TableCell>
+                  <TableCell className="text-right font-extrabold text-emerald-600 dark:text-emerald-400">
                     {formatCurrency(p.revenue)}
                   </TableCell>
                 </TableRow>

@@ -31,7 +31,7 @@ export const ReservationDateTimeFields: React.FC<ReservationDateTimeFieldsProps>
     <>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className="block text-xs font-medium text-slate-300">Fecha</Label>
+          <Label className="block text-xs font-medium text-muted-foreground">Fecha</Label>
           <Input
             type="date"
             required
@@ -41,7 +41,7 @@ export const ReservationDateTimeFields: React.FC<ReservationDateTimeFieldsProps>
           />
         </div>
         <div className="space-y-1.5">
-          <Label className="block text-xs font-medium text-slate-300">Hora</Label>
+          <Label className="block text-xs font-medium text-muted-foreground">Hora</Label>
           <Input
             type="time"
             required
@@ -54,7 +54,7 @@ export const ReservationDateTimeFields: React.FC<ReservationDateTimeFieldsProps>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className="block text-xs font-medium text-slate-300">Comensales</Label>
+          <Label className="block text-xs font-medium text-muted-foreground">Comensales</Label>
           <Input
             type="number"
             min={1}
@@ -65,7 +65,7 @@ export const ReservationDateTimeFields: React.FC<ReservationDateTimeFieldsProps>
           />
         </div>
         <div className="space-y-1.5">
-          <Label className="block text-xs font-medium text-slate-300">Mesa Sugerida</Label>
+          <Label className="block text-xs font-medium text-muted-foreground">Mesa Sugerida</Label>
           <Select
             value={tableId}
             onChange={(e) => onTableIdChange(e.target.value)}

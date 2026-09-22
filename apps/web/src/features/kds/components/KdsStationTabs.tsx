@@ -24,8 +24,8 @@ export const KdsStationTabs: React.FC<KdsStationTabsProps> = ({
             onClick={() => onSelectStation(station.id)}
             className={`flex items-center space-x-2 px-4 py-2.5 h-auto rounded-xl font-bold text-xs transition-all cursor-pointer whitespace-nowrap ${
               isActive
-                ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20 hover:bg-orange-500'
-                : 'bg-slate-800/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700/60'
+                ? 'bg-primary text-primary-foreground shadow-md hover:bg-primary/90'
+                : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border'
             }`}
           >
             <Icon className="w-4 h-4" />

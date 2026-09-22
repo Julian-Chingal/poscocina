@@ -32,16 +32,16 @@ export const ReceiptSuccessModal: React.FC<Props> = ({ receipt, onDismiss }) => 
         </DialogHeader>
 
         {receipt && (
-          <Card className="p-4 bg-slate-800/80 rounded-2xl border-slate-700/60 text-xs space-y-1.5 text-left">
-            <div className="flex justify-between text-slate-400">
+          <Card className="p-4 bg-muted/40 rounded-2xl border-border text-xs space-y-1.5 text-left">
+            <div className="flex justify-between text-muted-foreground">
               <span>Fecha:</span>
-              <span className="text-slate-200">
+              <span className="text-foreground">
                 {new Date(receipt.issuedAt).toLocaleTimeString()}
               </span>
             </div>
-            <div className="flex justify-between text-slate-400">
+            <div className="flex justify-between text-muted-foreground">
               <span>Total Pagado:</span>
-              <span className="text-emerald-400 font-mono font-bold">
+              <span className="text-emerald-600 dark:text-emerald-400 font-mono font-bold">
                 ${parseFloat(receipt.total || '0').toLocaleString()}
               </span>
             </div>
@@ -50,10 +50,10 @@ export const ReceiptSuccessModal: React.FC<Props> = ({ receipt, onDismiss }) => 
 
         <div className="space-y-2 pt-2">
           <Button
-            variant="ghost"
+            variant="outline"
             type="button"
             onClick={() => receipt && posApi.printReceipt(receipt.id).catch(() => {})}
-            className="w-full h-10 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 border border-slate-700"
+            className="w-full h-10 rounded-xl text-xs font-bold flex items-center justify-center space-x-2"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Reimprimir Comprobante</span>
@@ -61,7 +61,7 @@ export const ReceiptSuccessModal: React.FC<Props> = ({ receipt, onDismiss }) => 
           <Button
             type="button"
             onClick={onDismiss}
-            className="w-full h-10 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-bold shadow-md shadow-orange-600/20"
+            className="w-full h-10 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-xs font-bold shadow-md"
           >
             Continuar
           </Button>

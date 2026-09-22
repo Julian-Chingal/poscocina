@@ -9,14 +9,14 @@ interface Props {
 }
 
 export const PrinterFlagsFields: React.FC<Props> = ({ formData, onChange }) => (
-  <div className="space-y-3 pt-2 border-t border-slate-800 text-xs">
+  <div className="space-y-3 pt-2 border-t border-border text-xs">
     <div className="flex items-center space-x-2.5">
       <Switch
         id="autoPrintOnOrder"
         checked={formData.autoPrintOnOrder}
         onCheckedChange={(checked) => onChange({ autoPrintOnOrder: checked })}
       />
-      <Label htmlFor="autoPrintOnOrder" className="text-slate-300 font-medium cursor-pointer">
+      <Label htmlFor="autoPrintOnOrder" className="text-foreground font-medium cursor-pointer">
         Imprimir comanda al marchar pedido
       </Label>
     </div>
@@ -26,7 +26,7 @@ export const PrinterFlagsFields: React.FC<Props> = ({ formData, onChange }) => (
         checked={formData.autoPrintOnPayment}
         onCheckedChange={(checked) => onChange({ autoPrintOnPayment: checked })}
       />
-      <Label htmlFor="autoPrintOnPayment" className="text-slate-300 font-medium cursor-pointer">
+      <Label htmlFor="autoPrintOnPayment" className="text-foreground font-medium cursor-pointer">
         Imprimir factura al registrar pago
       </Label>
     </div>
@@ -36,7 +36,7 @@ export const PrinterFlagsFields: React.FC<Props> = ({ formData, onChange }) => (
         checked={formData.openDrawerOnPrint}
         onCheckedChange={(checked) => onChange({ openDrawerOnPrint: checked })}
       />
-      <Label htmlFor="openDrawerOnPrint" className="text-slate-300 font-medium cursor-pointer">
+      <Label htmlFor="openDrawerOnPrint" className="text-foreground font-medium cursor-pointer">
         Pulso eléctrico de apertura de gaveta
       </Label>
     </div>

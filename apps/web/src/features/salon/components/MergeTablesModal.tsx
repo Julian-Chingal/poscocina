@@ -53,19 +53,19 @@ export const MergeTablesModal: React.FC<Props> = ({
           </div>
           <DialogTitle className="text-xl font-black">Unir Mesas (Fusión)</DialogTitle>
           <DialogDescription>
-            Todos los ítems de <strong className="text-white">{sourceTable.label}</strong> se transferirán a la mesa seleccionada, liberando luego la mesa origen.
+            Todos los ítems de <strong className="text-foreground">{sourceTable.label}</strong> se transferirán a la mesa seleccionada, liberando luego la mesa origen.
           </DialogDescription>
         </DialogHeader>
 
         {actionError && (
-          <div className="p-3 bg-rose-950/50 border border-rose-800 text-rose-300 text-xs rounded-xl mb-4">
+          <div className="p-3 bg-destructive/15 border border-destructive/30 text-destructive text-xs rounded-xl mb-4">
             {actionError}
           </div>
         )}
 
         {occupiedTables.length === 0 ? (
-          <Card className="p-6 bg-slate-800/60 rounded-2xl border-slate-700/60 text-center text-slate-400 text-xs">
-            <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-amber-400" />
+          <Card className="p-6 bg-muted/40 rounded-2xl border-border text-center text-muted-foreground text-xs">
+            <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-amber-500" />
             <span>No hay otras mesas ocupadas para fusionar.</span>
           </Card>
         ) : (

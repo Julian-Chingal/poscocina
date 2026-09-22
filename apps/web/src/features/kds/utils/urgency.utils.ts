@@ -8,23 +8,23 @@ export const getUrgencyStyles = (openedAt: string, currentTime: number): Urgency
 
   if (elapsedMinutes >= 20) {
     return {
-      badge: 'bg-rose-950/80 text-rose-300 border-rose-600 animate-pulse font-extrabold',
-      cardBorder: 'border-rose-600/80 shadow-rose-950/50',
+      badge: 'bg-destructive/15 text-destructive border-destructive/40 animate-pulse font-extrabold',
+      cardBorder: 'border-destructive/80 shadow-destructive/20',
       elapsedMinutes,
       label: 'Retrasado',
     };
   }
   if (elapsedMinutes >= 10) {
     return {
-      badge: 'bg-amber-950/70 text-amber-300 border-amber-600 font-bold',
-      cardBorder: 'border-amber-600/60 shadow-amber-950/30',
+      badge: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/40 font-bold',
+      cardBorder: 'border-amber-500/60 shadow-amber-500/20',
       elapsedMinutes,
       label: 'Demora media',
     };
   }
   return {
-    badge: 'bg-emerald-950/60 text-emerald-300 border-emerald-700',
-    cardBorder: 'border-slate-700/80',
+    badge: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/40',
+    cardBorder: 'border-border',
     elapsedMinutes,
     label: 'A tiempo',
   };

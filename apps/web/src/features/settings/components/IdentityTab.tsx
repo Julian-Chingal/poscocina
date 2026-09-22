@@ -122,7 +122,7 @@ export const IdentityTab: React.FC<Props> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <div className="space-y-1.5">
-                <Label className="block text-xs font-semibold text-slate-300">Dirección de la Sede</Label>
+                <Label className="block text-xs font-semibold text-foreground">Dirección de la Sede</Label>
                 <Input
                   type="text"
                   value={venueAddress}
@@ -131,7 +131,7 @@ export const IdentityTab: React.FC<Props> = ({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="block text-xs font-semibold text-slate-300">Teléfono de Contacto</Label>
+                <Label className="block text-xs font-semibold text-foreground">Teléfono de Contacto</Label>
                 <Input
                   type="text"
                   value={phone}

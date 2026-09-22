@@ -22,7 +22,7 @@ export const CustomerAutocompleteField: React.FC<CustomerAutocompleteFieldProps>
 
   return (
     <div className="space-y-1.5">
-      <Label className="block text-xs font-medium text-slate-300">
+      <Label className="block text-xs font-medium text-muted-foreground">
         Buscar Cliente Habitual (Cédula o Nombre)
       </Label>
       <div className="relative">
@@ -34,7 +34,7 @@ export const CustomerAutocompleteField: React.FC<CustomerAutocompleteFieldProps>
           className="h-9 text-xs"
         />
         {results.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-20 max-h-40 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-xl shadow-xl z-20 max-h-40 overflow-y-auto">
             {results.map((c) => (
               <div
                 key={c.id}
@@ -42,10 +42,10 @@ export const CustomerAutocompleteField: React.FC<CustomerAutocompleteFieldProps>
                   selectCustomer(c);
                   onSelectCustomer(c);
                 }}
-                className="px-3 py-2 text-xs hover:bg-slate-700 cursor-pointer border-b border-slate-700/50 last:border-0"
+                className="px-3 py-2 text-xs hover:bg-muted/50 cursor-pointer border-b border-border/50 last:border-0"
               >
-                <div className="font-bold text-slate-100">{c.name}</div>
-                <div className="text-[11px] text-slate-400">
+                <div className="font-bold text-foreground">{c.name}</div>
+                <div className="text-[11px] text-muted-foreground">
                   Doc: {c.documentNumber || 'S/N'} • Tel: {c.phone || 'S/N'}
                 </div>
               </div>

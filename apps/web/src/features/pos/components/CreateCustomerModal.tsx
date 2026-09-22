@@ -174,7 +174,7 @@ export const CreateCustomerModal: React.FC<Props> = ({
               <Button
                 type="submit"
                 disabled={isSubmitting || form.formState.isSubmitting}
-                className="bg-orange-600 hover:bg-orange-500 text-white font-bold"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
               >
                 {isSubmitting ? 'Guardando...' : 'Guardar Cliente'}
               </Button>

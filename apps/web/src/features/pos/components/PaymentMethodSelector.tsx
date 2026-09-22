@@ -46,8 +46,8 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
               onClick={() => onPaymentMethodChange(id)}
               className={`h-auto p-2.5 rounded-xl border flex flex-col items-center space-y-1 ${
                 paymentMethod === id
-                  ? 'bg-orange-600/20 border-orange-500 text-orange-400 hover:bg-orange-600/30 hover:text-orange-300'
-                  : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+                  ? 'bg-primary/15 border-primary text-primary hover:bg-primary/20 hover:text-primary'
+                  : 'bg-card border-border text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -58,9 +58,9 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
       </div>
 
       {paymentMethod === 'cash' && (
-        <Card className="p-3 bg-slate-800/40 rounded-2xl border-slate-700/60 mb-4 space-y-2 text-xs">
+        <Card className="p-3 bg-muted/40 rounded-2xl border-border mb-4 space-y-2 text-xs">
           <div className="flex justify-between items-center">
-            <span className="text-slate-400 font-medium">Efectivo Entregado:</span>
+            <span className="text-muted-foreground font-medium">Efectivo Entregado:</span>
             <Input
               type="number"
               value={cashTendered}
@@ -71,10 +71,10 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
           </div>
           {tenderedNum > 0 && (
             <>
-              <Separator className="bg-slate-700/60 my-1" />
+              <Separator className="my-1" />
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">Vueltas:</span>
-                <span className="text-sm font-black font-mono text-emerald-400">
+                <span className="text-muted-foreground">Vueltas:</span>
+                <span className="text-sm font-black font-mono text-emerald-600 dark:text-emerald-400">
                   ${changeDue.toLocaleString()}
                 </span>
               </div>
