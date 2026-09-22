@@ -1,6 +1,6 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { auditService } from '../services/audit.service.js';
+import { auditService } from '../utils/audit.service.js';
 
 export interface AuthenticatedUser {
   sub: string;
@@ -42,8 +42,9 @@ export const authPlugin = fp(async (fastify: FastifyInstance) => {
       const decoded = await fastify.jwt.verify<AuthenticatedUser>(token);
 
       // Verify token version in database/cache for immediate session revocation
-      const { authService } = await import('../services/auth.service.js');
-      const isVersionValid = await authService.verifyUserTokenVersion(decoded.sub, decoded.tokenVersion || 1);
+      const { authRepository } = await import('../modules/auth/repositories/auth.repository.js');
+      const user = await authRepository.findUserWithRoleById(decoded.sub);
+      const isVersionValid = user && user.isActive && user.tokenVersion === (decoded.tokenVersion || 1);
       if (!isVersionValid) {
         return reply.status(401).send({
           statusCode: 401,

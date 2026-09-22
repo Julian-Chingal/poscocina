@@ -1,0 +1,87 @@
+import { eq, and, sql } from 'drizzle-orm';
+import { db } from '../../../db/index.js';
+import * as schema from '../../../db/schema.js';
+import { IAuthRepository } from '../interfaces/auth.interface.js';
+
+export class AuthRepository implements IAuthRepository {
+  constructor(private readonly database = db) {}
+
+  async findVenueUsers(venueId: string) {
+    return await this.database
+      .select({
+        id: schema.users.id,
+        name: schema.users.name,
+        roleId: schema.users.roleId,
+        roleName: schema.roles.name,
+        roleLabel: schema.roles.label,
+      })
+      .from(schema.users)
+      .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
+      .where(and(eq(schema.users.venueId, venueId), eq(schema.users.isActive, true)));
+  }
+
+  async findUserWithRoleById(userId: string) {
+    const [user] = await this.database
+      .select({
+        id: schema.users.id,
+        name: schema.users.name,
+        venueId: schema.users.venueId,
+        email: schema.users.email,
+        pinHash: schema.users.pinHash,
+        tokenVersion: schema.users.tokenVersion,
+        roleName: schema.roles.name,
+        roleHierarchy: schema.roles.hierarchy,
+        isActive: schema.users.isActive,
+      })
+      .from(schema.users)
+      .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
+      .where(eq(schema.users.id, userId))
+      .limit(1);
+
+    return user || null;
+  }
+
+  async findUserWithRoleByEmail(email: string) {
+    const [user] = await this.database
+      .select({
+        id: schema.users.id,
+        name: schema.users.name,
+        email: schema.users.email,
+        venueId: schema.users.venueId,
+        passwordHash: schema.users.passwordHash,
+        tokenVersion: schema.users.tokenVersion,
+        roleName: schema.roles.name,
+        roleHierarchy: schema.roles.hierarchy,
+        isActive: schema.users.isActive,
+      })
+      .from(schema.users)
+      .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
+      .where(eq(schema.users.email, email.toLowerCase().trim()))
+      .limit(1);
+
+    return user || null;
+  }
+
+  async findManagersByVenue(venueId: string) {
+    return await this.database
+      .select({
+        id: schema.users.id,
+        name: schema.users.name,
+        pinHash: schema.users.pinHash,
+        roleName: schema.roles.name,
+        roleHierarchy: schema.roles.hierarchy,
+      })
+      .from(schema.users)
+      .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
+      .where(and(eq(schema.users.venueId, venueId), eq(schema.users.isActive, true)));
+  }
+
+  async incrementTokenVersion(userId: string): Promise<void> {
+    await this.database
+      .update(schema.users)
+      .set({ tokenVersion: sql`${schema.users.tokenVersion} + 1` })
+      .where(eq(schema.users.id, userId));
+  }
+}
+
+export const authRepository = new AuthRepository();
