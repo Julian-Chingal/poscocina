@@ -7,21 +7,19 @@ import { env } from './config/env.js';
 import { authPlugin } from './plugins/auth.plugin.js';
 import { socketPlugin } from './plugins/socket.plugin.js';
 import { errorHandlerPlugin } from './plugins/error-handler.plugin.js';
-import { healthRoutes } from './routes/health.routes.js';
-import { authRoutes } from './routes/auth.routes.js';
-import { auditRoutes } from './routes/audit.routes.js';
-import { tablesRoutes } from './routes/tables.routes.js';
-import { productsRoutes } from './routes/products.routes.js';
-import { ordersRoutes } from './routes/orders.routes.js';
-import { venuesRoutes } from './routes/venues.routes.js';
-import { inventoryRoutes } from './routes/inventory.routes.js';
-import { billingRoutes } from './routes/billing.routes.js';
-import { analyticsRoutes } from './routes/analytics.routes.js';
-import { hardwareRoutes } from './routes/hardware.routes.js';
-import { usersRoutes } from './routes/users.routes.js';
-import { customersRoutes } from './routes/customers.routes.js';
-import { reservationsRoutes } from './routes/reservations.routes.js';
-import { purchasesRoutes } from './routes/purchases.routes.js';
+// Domain Feature Modules (Vertical Slices)
+import { healthModule } from './modules/health/index.js';
+import { authModule } from './modules/auth/index.js';
+import { billingModule } from './modules/billing/index.js';
+import { hardwareModule } from './modules/hardware/index.js';
+import { ordersModule } from './modules/orders/index.js';
+import { tablesModule } from './modules/tables/index.js';
+import { catalogModule } from './modules/catalog/index.js';
+import { inventoryModule } from './modules/inventory/index.js';
+import { reservationsModule } from './modules/reservations/index.js';
+import { customersModule } from './modules/customers/index.js';
+import { analyticsModule } from './modules/analytics/index.js';
+import { venuesModule } from './modules/venues/index.js';
 
 export async function buildServer() {
   const server = Fastify({
@@ -33,11 +31,11 @@ export async function buildServer() {
 
   // 1. Security Headers (Helmet)
   await server.register(helmet, {
-    contentSecurityPolicy: false, // Disabled for dev WebSocket and Vite HMR
+    contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
   });
 
-  // 2. Global Rate Limiting (DDoS & Brute Force Prevention)
+  // 2. Global Rate Limiting
   await server.register(rateLimit, {
     max: 200,
     timeWindow: '1 minute',
@@ -46,12 +44,11 @@ export async function buildServer() {
   // 3. CORS
   await server.register(cors, {
     origin: (origin, cb) => {
-      // Allow localhost dev origins or empty origin (mobile/curl/local LAN)
       if (!origin || env.CORS_ORIGIN.split(',').some((allowed) => origin.startsWith(allowed.trim()))) {
         cb(null, true);
         return;
       }
-      cb(null, true); // Permissive in dev, restricted in prod
+      cb(null, true);
     },
     credentials: true,
   });
@@ -70,22 +67,19 @@ export async function buildServer() {
   // 6. Real-time WebSocket plugin
   await server.register(socketPlugin);
 
-  // 7. Register Routes
-  await server.register(healthRoutes);
-  await server.register(authRoutes);
-  await server.register(auditRoutes);
-  await server.register(venuesRoutes);
-  await server.register(tablesRoutes);
-  await server.register(productsRoutes);
-  await server.register(ordersRoutes);
-  await server.register(inventoryRoutes);
-  await server.register(billingRoutes);
-  await server.register(analyticsRoutes);
-  await server.register(hardwareRoutes);
-  await server.register(usersRoutes);
-  await server.register(customersRoutes);
-  await server.register(reservationsRoutes);
-  await server.register(purchasesRoutes);
+  // 7. Register Domain Feature Modules
+  await server.register(healthModule);
+  await server.register(authModule);
+  await server.register(venuesModule);
+  await server.register(tablesModule);
+  await server.register(catalogModule);
+  await server.register(ordersModule);
+  await server.register(inventoryModule);
+  await server.register(billingModule);
+  await server.register(analyticsModule);
+  await server.register(hardwareModule);
+  await server.register(customersModule);
+  await server.register(reservationsModule);
 
   return server;
 }
