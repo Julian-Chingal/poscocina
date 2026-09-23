@@ -5,26 +5,36 @@ import { useAuthStore } from '../stores/auth.store';
 import { useBrandingStore } from '../stores/branding.store';
 
 export const useAppSocketEvents = (onNavigateHome: () => void) => {
-  const { venueId, logout } = useAuthStore();
-  const { loadBranding } = useBrandingStore();
+  // Atomic Zustand selectors
+  const venueId = useAuthStore((s) => s.venueId);
+  const logout = useAuthStore((s) => s.logout);
+  const loadBranding = useBrandingStore((s) => s.loadBranding);
 
   useEffect(() => {
     const socket = io();
 
-    socket.on('venue:settings_updated', () => {
-      if (venueId) loadBranding(venueId);
-    });
+    const handleSettingsUpdated = () => {
+      if (venueId) {
+        loadBranding(venueId);
+      }
+    };
 
-    socket.on('user:deactivated', (payload: { userId: string }) => {
+    const handleUserDeactivated = (payload: { userId: string }) => {
       const current = useAuthStore.getState().currentUser;
       if (current && current.id === payload.userId) {
         toast.error('Tu cuenta ha sido desactivada. Comunícate con un administrador.');
         logout();
         onNavigateHome();
       }
-    });
+    };
+
+    socket.on('venue:settings_updated', handleSettingsUpdated);
+    socket.on('user:deactivated', handleUserDeactivated);
 
     return () => {
+      // Explicitly detach event listeners before disconnecting socket
+      socket.off('venue:settings_updated', handleSettingsUpdated);
+      socket.off('user:deactivated', handleUserDeactivated);
       socket.disconnect();
     };
   }, [venueId, loadBranding, logout, onNavigateHome]);

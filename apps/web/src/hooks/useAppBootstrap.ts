@@ -3,12 +3,18 @@ import { toast } from '../components/ui/sonner';
 import { useAuthStore } from '../stores/auth.store';
 import { useBrandingStore } from '../stores/branding.store';
 import { useShiftStore } from '../stores/shift.store';
-import { onNetworkStatusChange } from '../services/api';
+import { api, onNetworkStatusChange } from '../services/api';
 
 export const useAppBootstrap = () => {
   const [isApiOnline, setIsApiOnline] = useState<boolean>(true);
-  const { setVenueId, checkSession, token } = useAuthStore();
-  const { loadBranding, settings } = useBrandingStore();
+
+  // Atomic Zustand selectors
+  const token = useAuthStore((s) => s.token);
+  const setVenueId = useAuthStore((s) => s.setVenueId);
+  const checkSession = useAuthStore((s) => s.checkSession);
+
+  const loadBranding = useBrandingStore((s) => s.loadBranding);
+  const primaryColor = useBrandingStore((s) => s.settings.primaryColor);
 
   const checkHealthAndBootstrap = useCallback(async () => {
     try {
@@ -28,26 +34,28 @@ export const useAppBootstrap = () => {
 
       const savedVenueId = localStorage.getItem('poscocina_venue_id');
       if (savedVenueId) {
-        const vRes = await fetch(`/api/venues/${savedVenueId}`);
-        if (vRes.ok) {
-          const data = await vRes.json();
+        try {
+          const data = await api.get(`/venues/${savedVenueId}`);
           if (data?.id) {
             setVenueId(data.id);
             loadBranding(data.id);
             useShiftStore.getState().fetchCurrentShift(data.id);
             return;
           }
+        } catch {
+          // If saved venue fails or is invalid, proceed to fallback first venue
         }
       }
 
-      const vRes = await fetch('/api/venues/first');
-      if (vRes.ok) {
-        const data = await vRes.json();
+      try {
+        const data = await api.get('/venues/first');
         if (data?.id) {
           setVenueId(data.id);
           loadBranding(data.id);
           useShiftStore.getState().fetchCurrentShift(data.id);
         }
+      } catch (venueErr) {
+        console.warn('Could not bootstrap default venue:', venueErr);
       }
     } catch (err) {
       console.warn('API health check failed:', err);
@@ -75,10 +83,10 @@ export const useAppBootstrap = () => {
   }, [checkHealthAndBootstrap]);
 
   useEffect(() => {
-    if (settings.primaryColor) {
-      document.documentElement.style.setProperty('--primary-brand', settings.primaryColor);
+    if (primaryColor) {
+      document.documentElement.style.setProperty('--primary-brand', primaryColor);
     }
-  }, [settings.primaryColor]);
+  }, [primaryColor]);
 
   return {
     isApiOnline,

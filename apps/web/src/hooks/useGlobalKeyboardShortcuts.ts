@@ -4,6 +4,14 @@ import { useAuthStore } from '../stores/auth.store';
 export const useGlobalKeyboardShortcuts = (onNavigate: (view: string) => void) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Protect modal interactions (e.g. PIN Pad, confirmation dialogs, prompt dialogs)
+      const hasActiveModal = Boolean(
+        document.querySelector('[role="dialog"], [role="alertdialog"]')
+      );
+      if (hasActiveModal) {
+        return;
+      }
+
       const activeEl = document.activeElement;
       const isInput =
         activeEl &&

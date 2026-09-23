@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from '../components/ui/sonner';
 import { useAuthStore } from '../stores/auth.store';
 import { usePermissions } from './usePermissions';
@@ -11,14 +11,26 @@ const getViewFromHash = (): string => {
 
 export const useHashRouter = () => {
   const [currentView, setCurrentView] = useState<string>(getViewFromHash);
-  const { currentUser } = useAuthStore();
+  // Atomic selector to avoid re-renders on unrelated auth state changes
+  const currentUser = useAuthStore((s) => s.currentUser);
   const { canAccessModule } = usePermissions();
+
+  // Flag to avoid race conditions and re-entrant loops when updating hash programmatically
+  const isInternalNavRef = useRef(false);
+
+  const syncHashToView = useCallback((view: string) => {
+    const expectedHash = view === 'home' ? '' : `#/${view}`;
+    if (window.location.hash !== expectedHash) {
+      isInternalNavRef.current = true;
+      window.location.hash = expectedHash;
+    }
+  }, []);
 
   const handleNavigate = useCallback(
     (view: string) => {
       if (view === 'home') {
         setCurrentView('home');
-        window.location.hash = '';
+        syncHashToView('home');
         return;
       }
 
@@ -31,40 +43,68 @@ export const useHashRouter = () => {
       if (!canAccessModule(view)) {
         toast.error('No tienes permisos para acceder a este módulo');
         setCurrentView('home');
-        window.location.hash = '';
+        syncHashToView('home');
         return;
       }
 
       setCurrentView(view);
-      window.location.hash = `/${view}`;
+      syncHashToView(view);
     },
-    [currentUser, canAccessModule]
+    [currentUser, canAccessModule, syncHashToView]
   );
 
   useEffect(() => {
     const handleHashChange = () => {
-      const targetView = getViewFromHash();
-      if (targetView !== currentView) {
-        handleNavigate(targetView);
+      // Guard against race conditions from programmatic hash changes
+      if (isInternalNavRef.current) {
+        isInternalNavRef.current = false;
+        return;
       }
+
+      const targetView = getViewFromHash();
+      if (targetView === 'home') {
+        setCurrentView('home');
+        return;
+      }
+
+      const user = useAuthStore.getState().currentUser;
+      if (!user) {
+        useAuthStore.getState().lockScreen();
+        toast.error('Debes iniciar sesión para acceder al sistema');
+        setCurrentView('home');
+        isInternalNavRef.current = true;
+        window.location.hash = '';
+        return;
+      }
+
+      if (!canAccessModule(targetView)) {
+        toast.error('No tienes permisos para acceder a este módulo');
+        setCurrentView('home');
+        isInternalNavRef.current = true;
+        window.location.hash = '';
+        return;
+      }
+
+      setCurrentView(targetView);
     };
 
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [currentView, handleNavigate]);
+  }, [canAccessModule]);
 
+  // Auth / permissions synchronization on view changes
   useEffect(() => {
     if (currentView !== 'home') {
       if (!currentUser) {
         setCurrentView('home');
-        window.location.hash = '';
+        syncHashToView('home');
       } else if (!canAccessModule(currentView)) {
         toast.error('No tienes permisos para acceder a este módulo');
         setCurrentView('home');
-        window.location.hash = '';
+        syncHashToView('home');
       }
     }
-  }, [currentView, currentUser, canAccessModule]);
+  }, [currentView, currentUser, canAccessModule, syncHashToView]);
 
   return {
     currentView,
