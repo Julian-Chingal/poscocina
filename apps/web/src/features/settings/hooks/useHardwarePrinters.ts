@@ -48,7 +48,6 @@ export const useHardwarePrinters = () => {
   };
 
   const deletePrinter = async (id: string) => {
-    if (!window.confirm('¿Deseas eliminar esta impresora?')) return;
     try {
       await settingsApi.deletePrinter(id);
       toast.success('Impresora eliminada');

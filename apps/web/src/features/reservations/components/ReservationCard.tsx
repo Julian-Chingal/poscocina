@@ -13,6 +13,16 @@ import { Reservation, ReservationStatus } from '../types/reservations.types';
 import { Button } from '@/components/ui/button';
 import { Card, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface ReservationCardProps {
   reservation: Reservation;
@@ -60,10 +70,17 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
   onUpdateStatus,
   onSeatReservation,
 }) => {
+  const [showCancelAlert, setShowCancelAlert] = React.useState(false);
+
   const timeStr = new Date(reservation.reservationTime).toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit',
   });
+
+  const handleConfirmCancel = () => {
+    onUpdateStatus(reservation.id, 'cancelled');
+    setShowCancelAlert(false);
+  };
 
   return (
     <Card className="p-5 hover:border-border/80 transition flex flex-col justify-between shadow-sm">
@@ -142,7 +159,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
             variant="ghost"
             size="icon"
             type="button"
-            onClick={() => onUpdateStatus(reservation.id, 'cancelled')}
+            onClick={() => setShowCancelAlert(true)}
             title="Cancelar reserva"
             className="h-8 w-8 rounded-xl bg-destructive/10 hover:bg-destructive/20 border border-destructive/20 text-destructive text-xs transition cursor-pointer p-0"
           >
@@ -150,6 +167,33 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
           </Button>
         )}
       </CardFooter>
+
+      <AlertDialog open={showCancelAlert} onOpenChange={setShowCancelAlert}>
+        <AlertDialogContent className="max-w-sm text-center sm:text-center">
+          <AlertDialogHeader className="text-center sm:text-center">
+            <AlertDialogTitle className="text-base font-bold">
+              ¿Cancelar Reserva?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs">
+              ¿Estás seguro de cancelar la reserva a nombre de <span className="text-foreground font-semibold">"{reservation.customerName}"</span> ({reservation.guestCount} personas)?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="justify-center sm:justify-center mt-4 gap-2">
+            <AlertDialogCancel onClick={() => setShowCancelAlert(false)}>
+              No, volver
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleConfirmCancel();
+              }}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold"
+            >
+              Sí, cancelar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

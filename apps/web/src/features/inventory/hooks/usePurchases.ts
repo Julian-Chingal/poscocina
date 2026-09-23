@@ -48,9 +48,6 @@ export const usePurchases = (venueId: string, onPurchaseCreated?: () => void) =>
   };
 
   const receivePurchase = async (purchaseId: string) => {
-    if (!window.confirm('¿Confirmas la recepción física de esta factura? Se ingresará el stock al inventario y se recalculará el Costo Promedio Ponderado (CPP).')) {
-      return;
-    }
     try {
       await inventoryApi.receivePurchase(venueId, purchaseId);
       toast.success('Compra recibida y stock actualizado');

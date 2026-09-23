@@ -12,6 +12,16 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Props {
   purchases: Purchase[];
@@ -26,6 +36,19 @@ export const PurchasesTab: React.FC<Props> = ({
   onSelectPurchaseDetail,
   onReceivePurchase,
 }) => {
+  const [purchaseToReceive, setPurchaseToReceive] = React.useState<Purchase | null>(null);
+  const [isReceiving, setIsReceiving] = React.useState(false);
+
+  const handleConfirmReceive = async () => {
+    if (!purchaseToReceive) return;
+    setIsReceiving(true);
+    try {
+      await onReceivePurchase(purchaseToReceive.id);
+      setPurchaseToReceive(null);
+    } finally {
+      setIsReceiving(false);
+    }
+  };
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
@@ -105,7 +128,7 @@ export const PurchasesTab: React.FC<Props> = ({
                         <Button
                           type="button"
                           size="sm"
-                          onClick={() => onReceivePurchase(purchase.id)}
+                          onClick={() => setPurchaseToReceive(purchase)}
                           className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer inline-flex items-center space-x-1 shadow-md shadow-emerald-600/20"
                         >
                           <CheckCircle className="w-3 h-3" />
@@ -126,6 +149,34 @@ export const PurchasesTab: React.FC<Props> = ({
           </TableBody>
         </Table>
       </Card>
+
+      <AlertDialog open={Boolean(purchaseToReceive)} onOpenChange={(open) => !open && setPurchaseToReceive(null)}>
+        <AlertDialogContent className="max-w-md text-center sm:text-center">
+          <AlertDialogHeader className="text-center sm:text-center">
+            <AlertDialogTitle className="text-base font-bold">
+              ¿Confirmar Recepción de Factura?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs">
+              ¿Confirmas la recepción física de la factura <span className="text-foreground font-semibold">"{purchaseToReceive?.invoiceNumber}"</span>? Se ingresará el stock de los productos al inventario y se recalculará el Costo Promedio Ponderado (CPP).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="justify-center sm:justify-center mt-4 gap-2">
+            <AlertDialogCancel disabled={isReceiving} onClick={() => setPurchaseToReceive(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isReceiving}
+              onClick={(e) => {
+                e.preventDefault();
+                handleConfirmReceive();
+              }}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
+            >
+              {isReceiving ? 'Procesando...' : 'Sí, Recibir Stock'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

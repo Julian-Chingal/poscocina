@@ -5,9 +5,19 @@ import { PrinterCard } from './PrinterCard';
 import { PrinterModal } from './PrinterModal';
 import { ReceiptPreviewCard } from './ReceiptPreviewCard';
 import { ReceiptSettingsCard } from './ReceiptSettingsCard';
-import { PaperWidth, TaxType } from '../types/settings.types';
+import { PaperWidth, TaxType, PrinterDevice } from '../types/settings.types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Props {
   paperWidth: PaperWidth;
@@ -58,6 +68,20 @@ export const PrintersTab: React.FC<Props> = ({
     testPrint,
   } = useHardwarePrinters();
 
+  const [printerToDelete, setPrinterToDelete] = React.useState<PrinterDevice | null>(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
+  const handleConfirmDelete = async () => {
+    if (!printerToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deletePrinter(printerToDelete.id);
+      setPrinterToDelete(null);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <Card className="p-6 shadow-sm">
@@ -90,7 +114,7 @@ export const PrintersTab: React.FC<Props> = ({
               testResult={testResult}
               onTest={testPrint}
               onEdit={openEditPrinter}
-              onDelete={deletePrinter}
+              onDelete={setPrinterToDelete}
             />
           ))}
           {printers.length === 0 && (
@@ -135,6 +159,34 @@ export const PrintersTab: React.FC<Props> = ({
         onClose={closeModal}
         onSave={savePrinter}
       />
+
+      <AlertDialog open={Boolean(printerToDelete)} onOpenChange={(open) => !open && setPrinterToDelete(null)}>
+        <AlertDialogContent className="max-w-sm text-center sm:text-center">
+          <AlertDialogHeader className="text-center sm:text-center">
+            <AlertDialogTitle className="text-base font-bold">
+              ¿Eliminar Impresora?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs">
+              ¿Deseas eliminar la impresora <span className="text-foreground font-semibold">"{printerToDelete?.name}"</span>? El terminal dejará de enviar comandas o facturas a este dispositivo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="justify-center sm:justify-center mt-4 gap-2">
+            <AlertDialogCancel disabled={isDeleting} onClick={() => setPrinterToDelete(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={(e) => {
+                e.preventDefault();
+                handleConfirmDelete();
+              }}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold"
+            >
+              {isDeleting ? 'Eliminando...' : 'Sí, eliminar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

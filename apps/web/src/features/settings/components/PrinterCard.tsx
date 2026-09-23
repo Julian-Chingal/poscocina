@@ -11,7 +11,7 @@ interface Props {
   testResult: TestPrintResult | null;
   onTest: (p: PrinterDevice) => void;
   onEdit: (p: PrinterDevice) => void;
-  onDelete: (id: string) => void;
+  onDelete: (printer: PrinterDevice) => void;
 }
 
 export const PrinterCard: React.FC<Props> = ({
@@ -113,7 +113,7 @@ export const PrinterCard: React.FC<Props> = ({
             variant="ghost"
             size="icon"
             type="button"
-            onClick={() => onDelete(printer.id)}
+            onClick={() => onDelete(printer)}
             className="h-7 w-7 text-muted-foreground hover:text-destructive rounded-lg transition cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />

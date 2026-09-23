@@ -57,7 +57,6 @@ export const useUserMutations = (venueId: string, onSuccess: () => void) => {
   const handleToggleActive = async (user: UserItem): Promise<void> => {
     try {
       if (user.isActive) {
-        if (!confirm(`¿Está seguro de desactivar al empleado "${user.name}"? No podrá ingresar al sistema.`)) return;
         await usersApi.deleteUser(venueId, user.id);
       } else {
         await usersApi.reactivateUser(venueId, user.id);

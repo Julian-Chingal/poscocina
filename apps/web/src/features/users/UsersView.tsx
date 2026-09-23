@@ -8,12 +8,23 @@ import { UsersGrid } from './components/UsersGrid';
 import { CreateUserModal } from './components/CreateUserModal';
 import { EditUserModal } from './components/EditUserModal';
 import { ResetPinModal } from './components/ResetPinModal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export const UsersView: React.FC<UsersViewProps> = ({ venueId }) => {
   const { currentUser } = useAuthStore();
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
   const [resetPinUser, setResetPinUser] = useState<UserItem | null>(null);
+  const [userToDeactivate, setUserToDeactivate] = useState<UserItem | null>(null);
 
   const {
     users,
@@ -42,6 +53,20 @@ export const UsersView: React.FC<UsersViewProps> = ({ venueId }) => {
   const activeCount = users.filter((u) => u.isActive).length;
   const totalCount = users.length;
   const inactiveCount = users.filter((u) => !u.isActive).length;
+
+  const handleToggleClick = (user: UserItem) => {
+    if (user.isActive) {
+      setUserToDeactivate(user);
+    } else {
+      handleToggleActive(user);
+    }
+  };
+
+  const handleConfirmDeactivate = async () => {
+    if (!userToDeactivate) return;
+    await handleToggleActive(userToDeactivate);
+    setUserToDeactivate(null);
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-200">
@@ -73,7 +98,7 @@ export const UsersView: React.FC<UsersViewProps> = ({ venueId }) => {
           setActionError(null);
           setResetPinUser(user);
         }}
-        onToggleActive={handleToggleActive}
+        onToggleActive={handleToggleClick}
       />
 
       <CreateUserModal
@@ -101,6 +126,34 @@ export const UsersView: React.FC<UsersViewProps> = ({ venueId }) => {
         onClose={() => setResetPinUser(null)}
         onSubmit={handleResetPin}
       />
+
+      <AlertDialog open={Boolean(userToDeactivate)} onOpenChange={(open) => !open && setUserToDeactivate(null)}>
+        <AlertDialogContent className="max-w-sm text-center sm:text-center">
+          <AlertDialogHeader className="text-center sm:text-center">
+            <AlertDialogTitle className="text-base font-bold">
+              ¿Desactivar Empleado?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs">
+              ¿Estás seguro de desactivar al empleado <span className="text-foreground font-semibold">"{userToDeactivate?.name}"</span>? No podrá ingresar al sistema mientras esté inactivo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="justify-center sm:justify-center mt-4 gap-2">
+            <AlertDialogCancel disabled={submitting} onClick={() => setUserToDeactivate(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={submitting}
+              onClick={(e) => {
+                e.preventDefault();
+                handleConfirmDeactivate();
+              }}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold"
+            >
+              {submitting ? 'Desactivando...' : 'Sí, desactivar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
