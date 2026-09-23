@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Store, ChevronDown, Check, Plus } from 'lucide-react';
-import { useAuthStore } from '../../stores/auth.store';
-import { useBrandingStore, VenueItem } from '../../stores/branding.store';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Button } from '../ui/button';
-import { toast } from '../ui/sonner';
-import { cn } from '../../lib/utils';
+import React, { useState, useEffect, useRef } from "react";
+import { Store, ChevronDown, Check, Plus } from "lucide-react";
+import { useAuthStore } from "../../stores/auth.store";
+import { useBrandingStore, VenueItem } from "../../stores/branding.store";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Button } from "../ui/button";
+import { toast } from "../ui/sonner";
+import { cn } from "../../lib/utils";
 
 interface VenueSelectorProps {
   onNavigateSettings?: () => void;
@@ -17,8 +17,12 @@ export const VenueSelector: React.FC<VenueSelectorProps> = ({
   className,
 }) => {
   const { currentUser, venueId, setVenueId } = useAuthStore();
-  const { venues, loadAllVenues, switchVenue, name: fallbackCompanyName } =
-    useBrandingStore();
+  const {
+    venues,
+    loadAllVenues,
+    switchVenue,
+    name: fallbackCompanyName,
+  } = useBrandingStore();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -37,14 +41,14 @@ export const VenueSelector: React.FC<VenueSelectorProps> = ({
         setIsOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const currentVenue: VenueItem = venues.find((v) => v.id === venueId) || {
-    id: venueId || 'default',
-    name: fallbackCompanyName || 'Sede Principal',
-    slug: 'default',
+    id: venueId || "default",
+    name: fallbackCompanyName || "Sede Principal",
+    slug: "default",
   };
 
   const handleSelectVenue = (venue: VenueItem) => {
@@ -57,26 +61,26 @@ export const VenueSelector: React.FC<VenueSelectorProps> = ({
     setIsOpen(false);
     toast.success(`Cambiaste a la sede: ${venue.name}`, {
       description:
-        'Los catálogos, mesas y pedidos se han sincronizado con esta sede.',
+        "Los catálogos, mesas y pedidos se han sincronizado con esta sede.",
     });
   };
 
   const getVenueInitial = (venueName: string) => {
-    return venueName ? venueName.trim().charAt(0).toUpperCase() : 'S';
+    return venueName ? venueName.trim().charAt(0).toUpperCase() : "S";
   };
 
   return (
-    <div className={cn('relative', className)} ref={dropdownRef}>
+    <div className={cn("relative", className)} ref={dropdownRef}>
       {/* Selector Trigger Button */}
       <Button
         variant="ghost"
         onClick={() => setIsOpen((prev) => !prev)}
         title="Cambiar de Sede / Sucursal"
         className={cn(
-          'h-auto flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs transition cursor-pointer select-none',
-          'bg-muted/80 hover:bg-muted border border-border text-foreground hover:text-foreground shadow-2xs',
-          'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary',
-          isOpen && 'bg-muted border-primary/50 text-foreground'
+          "h-auto flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs transition cursor-pointer select-none",
+          "bg-muted/80 hover:bg-muted border border-border text-foreground hover:text-foreground shadow-2xs",
+          "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
+          isOpen && "bg-muted border-primary/50 text-foreground",
         )}
       >
         {/* Active Venue Logo / Avatar */}
@@ -93,14 +97,14 @@ export const VenueSelector: React.FC<VenueSelectorProps> = ({
         </Avatar>
 
         {/* Venue Name */}
-        <span className="font-medium max-w-[130px] truncate text-left">
+        <span className="font-medium max-w-32.5 truncate text-left">
           {currentVenue.name}
         </span>
 
         <ChevronDown
           className={cn(
-            'size-3.5 text-muted-foreground transition-transform duration-200',
-            isOpen && 'rotate-180 text-primary'
+            "size-3.5 text-muted-foreground transition-transform duration-200",
+            isOpen && "rotate-180 text-primary",
           )}
         />
       </Button>
@@ -132,10 +136,10 @@ export const VenueSelector: React.FC<VenueSelectorProps> = ({
                     variant="ghost"
                     onClick={() => handleSelectVenue(v)}
                     className={cn(
-                      'w-full h-auto px-3 py-2 text-left text-xs flex items-center justify-between gap-2 transition cursor-pointer select-none rounded-none',
+                      "w-full h-auto px-3 py-2 text-left text-xs flex items-center justify-between gap-2 transition cursor-pointer select-none rounded-none",
                       isSelected
-                        ? 'bg-primary/10 text-primary font-semibold hover:bg-primary/20'
-                        : 'text-foreground hover:bg-muted hover:text-foreground'
+                        ? "bg-primary/10 text-primary font-semibold hover:bg-primary/20"
+                        : "text-foreground hover:bg-muted hover:text-foreground",
                     )}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -143,24 +147,19 @@ export const VenueSelector: React.FC<VenueSelectorProps> = ({
                       <Avatar
                         size="sm"
                         className={cn(
-                          'size-6 shrink-0 border',
-                          isSelected
-                            ? 'border-primary/50'
-                            : 'border-border'
+                          "size-6 shrink-0 border",
+                          isSelected ? "border-primary/50" : "border-border",
                         )}
                       >
                         {v.settings?.logoUrl && (
-                          <AvatarImage
-                            src={v.settings.logoUrl}
-                            alt={v.name}
-                          />
+                          <AvatarImage src={v.settings.logoUrl} alt={v.name} />
                         )}
                         <AvatarFallback
                           className={cn(
-                            'text-[10px] font-bold',
+                            "text-[10px] font-bold",
                             isSelected
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-muted-foreground'
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground",
                           )}
                         >
                           {getVenueInitial(v.name)}
@@ -188,7 +187,7 @@ export const VenueSelector: React.FC<VenueSelectorProps> = ({
           )}
 
           {/* Super Admin Shortcut to manage venues */}
-          {currentUser?.roleName === 'super_admin' && onNavigateSettings && (
+          {currentUser?.roleName === "super_admin" && onNavigateSettings && (
             <div className="border-t border-border mt-1 pt-1 px-1">
               <Button
                 variant="ghost"
