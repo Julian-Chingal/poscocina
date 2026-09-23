@@ -108,6 +108,25 @@
   }
 }
 
+@layer utilities {
+  .bg-subtle-grid {
+    background-size: 32px 32px;
+    background-image:
+      linear-gradient(to right, hsl(var(--border) / 0.4) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.4) 1px, transparent 1px);
+    mask-image: radial-gradient(
+      ellipse 70% 60% at 50% 25%,
+      black 40%,
+      transparent 100%
+    );
+    -webkit-mask-image: radial-gradient(
+      ellipse 70% 60% at 50% 25%,
+      black 40%,
+      transparent 100%
+    );
+  }
+}
+
 @keyframes dialog-enter {
   from {
     opacity: 0;

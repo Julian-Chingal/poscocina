@@ -1,22 +1,25 @@
-import React from 'react';
-import { Search } from 'lucide-react';
-import { usePermissions } from '@/hooks/usePermissions';
-import { APPS } from '../constants/launcher.constants';
-import { AppTile } from './AppTile';
+import React from "react";
+import { Search } from "lucide-react";
+import { usePermissions } from "@/hooks/usePermissions";
+import { APPS } from "../constants/launcher.constants";
+import { AppTile } from "./AppTile";
 
 interface AppsGridProps {
   searchQuery: string;
   onSelectApp: (appId: string) => void;
 }
 
-export const AppsGrid: React.FC<AppsGridProps> = ({ searchQuery, onSelectApp }) => {
+export const AppsGrid: React.FC<AppsGridProps> = ({
+  searchQuery,
+  onSelectApp,
+}) => {
   const { canAccessModule } = usePermissions();
 
   const filteredApps = APPS.filter(
     (app) =>
       canAccessModule(app.id) &&
       (app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        app.subtitle.toLowerCase().includes(searchQuery.toLowerCase()))
+        app.subtitle.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   if (filteredApps.length === 0) {

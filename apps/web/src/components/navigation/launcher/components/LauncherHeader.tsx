@@ -3,7 +3,8 @@ import { Utensils } from 'lucide-react';
 import { useBrandingStore } from '@/stores/branding.store';
 
 export const LauncherHeader: React.FC = () => {
-  const { name: companyName, settings } = useBrandingStore();
+  const companyName = useBrandingStore((s) => s.name);
+  const settings = useBrandingStore((s) => s.settings);
 
   return (
     <div className="text-center mb-10 z-10 max-w-xl">
