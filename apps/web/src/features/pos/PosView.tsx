@@ -70,6 +70,7 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
             activeOrder={table.activeOrder}
             submitting={table.submitting}
             orderSentSuccess={table.orderSentSuccess}
+            isCashShiftOpen={table.isCashShiftOpen}
             selectedCustomer={crm.selectedCustomer}
             customerSearchQuery={crm.searchQuery}
             customerSearchResults={crm.searchResults}

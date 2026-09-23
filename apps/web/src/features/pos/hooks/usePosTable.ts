@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { posApi } from '../api/pos.api';
 import { TableItem, CartItem, PosOrder } from '../types/pos.types';
-import { usePosSocket } from './usePosSocket';
+import { useShiftStore } from '@/stores/shift.store';
 import { toast } from '@/components/ui/sonner';
 
 export const usePosTable = (
@@ -12,7 +12,7 @@ export const usePosTable = (
   const [currentTable, setCurrentTable] = useState<TableItem | null>(initialTable || null);
   const [allTables, setAllTables] = useState<TableItem[]>([]);
   const [activeOrder, setActiveOrder] = useState<PosOrder | null>(null);
-  const [isCashShiftOpen, setIsCashShiftOpen] = useState<boolean | null>(null);
+  const isCashShiftOpen = useShiftStore((s) => s.isOpen);
   const [submitting, setSubmitting] = useState(false);
   const [orderSentSuccess, setOrderSentSuccess] = useState(false);
 
@@ -22,12 +22,7 @@ export const usePosTable = (
 
   const checkCashShift = useCallback(async () => {
     if (!venueId) return;
-    try {
-      const data = await posApi.getCashShift(venueId);
-      setIsCashShiftOpen(Boolean(data?.open));
-    } catch {
-      setIsCashShiftOpen(false);
-    }
+    await useShiftStore.getState().fetchCurrentShift(venueId);
   }, [venueId]);
 
   const fetchTables = useCallback(async () => {
@@ -53,13 +48,13 @@ export const usePosTable = (
     }
   }, []);
 
-  const handleShiftOpened = useCallback(() => setIsCashShiftOpen(true), []);
-  const handleShiftClosed = useCallback(() => setIsCashShiftOpen(false), []);
-
-  usePosSocket({
-    onShiftOpened: handleShiftOpened,
-    onShiftClosed: handleShiftClosed,
-  });
+  useEffect(() => {
+    if (!venueId) return;
+    const cleanupSocket = useShiftStore.getState().initSocket(venueId);
+    return () => {
+      cleanupSocket();
+    };
+  }, [venueId]);
 
   useEffect(() => {
     checkCashShift();
@@ -76,6 +71,10 @@ export const usePosTable = (
 
   const sendOrder = async (cart: CartItem[], customerId?: string) => {
     if (!cart.length) return false;
+    if (!isCashShiftOpen) {
+      toast.error('Caja cerrada: Debes abrir la caja antes de registrar pedidos o marchar comandas');
+      return false;
+    }
     setSubmitting(true);
     try {
       const itemsPayload = cart.map((item) => ({

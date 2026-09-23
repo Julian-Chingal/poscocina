@@ -10,13 +10,17 @@ export async function billingRoutes(fastify: FastifyInstance) {
     ],
   };
 
+  const authGuard = {
+    preHandler: [fastify.authenticate],
+  };
+
   // 1. Get pending bills
   fastify.get('/api/venues/:venueId/pending-bills', cashierGuard, (req, rep) =>
     billingController.getPendingBills(req, rep)
   );
 
-  // 2. Current cash shift
-  fastify.get('/api/cash-shifts/current/:venueId', cashierGuard, (req, rep) =>
+  // 2. Current cash shift (accessible by any staff member in venue)
+  fastify.get('/api/cash-shifts/current/:venueId', authGuard, (req, rep) =>
     billingController.getCurrentCashShift(req, rep)
   );
 

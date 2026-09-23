@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Wallet } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth.store';
 import { useBrandingStore } from '../../stores/branding.store';
+import { useShiftStore } from '../../stores/shift.store';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
@@ -16,46 +17,32 @@ export const ShiftStatusBadge: React.FC<ShiftStatusBadgeProps> = ({
   className,
 }) => {
   const { venueId } = useAuthStore();
-  const [shiftStatus, setShiftStatus] = useState<{
-    isOpen: boolean;
-    cashierName?: string;
-  }>({ isOpen: false });
+  const isOpen = useShiftStore((s) => s.isOpen);
+  const cashierName = useShiftStore((s) => s.cashierName);
+  const fetchCurrentShift = useShiftStore((s) => s.fetchCurrentShift);
+  const initSocket = useShiftStore((s) => s.initSocket);
 
   useEffect(() => {
     const activeVenue = venueId || useBrandingStore.getState().venueId;
     if (!activeVenue) return;
 
-    const checkShift = async () => {
-      try {
-        const res = await fetch(`/api/cash-shifts/current/${activeVenue}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data?.shift && data.shift.status === 'open') {
-            setShiftStatus({
-              isOpen: true,
-              cashierName: data.shift.openedByName || 'Cajero',
-            });
-            return;
-          }
-        }
-        setShiftStatus({ isOpen: false });
-      } catch {
-        setShiftStatus({ isOpen: false });
-      }
-    };
+    fetchCurrentShift(activeVenue);
+    const cleanupSocket = initSocket(activeVenue);
+    const timer = setInterval(() => fetchCurrentShift(activeVenue), 15000);
 
-    checkShift();
-    const timer = setInterval(checkShift, 20000);
-    return () => clearInterval(timer);
-  }, [venueId]);
+    return () => {
+      cleanupSocket();
+      clearInterval(timer);
+    };
+  }, [venueId, fetchCurrentShift, initSocket]);
 
   return (
     <Button
       variant="ghost"
       onClick={onNavigateShifts}
       title={
-        shiftStatus.isOpen
-          ? `Caja Abierta por ${shiftStatus.cashierName} [F4]`
+        isOpen
+          ? `Caja Abierta por ${cashierName || 'Cajero'} [F4]`
           : 'Caja Cerrada - Clic para abrir turno [F4]'
       }
       className={cn(
@@ -64,12 +51,12 @@ export const ShiftStatusBadge: React.FC<ShiftStatusBadgeProps> = ({
       )}
     >
       <Badge
-        variant={shiftStatus.isOpen ? 'success' : 'warning'}
+        variant={isOpen ? 'success' : 'warning'}
         className="gap-1.5 px-2.5 py-1 text-xs hover:brightness-110"
       >
         <Wallet className="size-3 shrink-0" />
         <span className="truncate max-w-[110px]">
-          {shiftStatus.isOpen ? 'Caja Abierta' : 'Caja Cerrada'}
+          {isOpen ? 'Caja Abierta' : 'Caja Cerrada'}
         </span>
       </Badge>
     </Button>

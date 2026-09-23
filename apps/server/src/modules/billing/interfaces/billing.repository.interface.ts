@@ -9,6 +9,7 @@ export interface CashShiftRecord {
   openedAt: Date;
   closedAt: Date | null;
   notes: string | null;
+  openedByName?: string | null;
 }
 
 export interface SalesByMethodAggregate {

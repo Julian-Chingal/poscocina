@@ -8,8 +8,21 @@ export class CashShiftRepository implements ICashShiftRepository {
 
   async findActiveShiftByVenue(venueId: string, tx = this.database): Promise<CashShiftRecord | null> {
     const [activeShift] = await tx
-      .select()
+      .select({
+        id: schema.cashShifts.id,
+        venueId: schema.cashShifts.venueId,
+        cashierId: schema.cashShifts.cashierId,
+        openingAmount: schema.cashShifts.openingAmount,
+        closingAmount: schema.cashShifts.closingAmount,
+        expectedAmount: schema.cashShifts.expectedAmount,
+        status: schema.cashShifts.status,
+        openedAt: schema.cashShifts.openedAt,
+        closedAt: schema.cashShifts.closedAt,
+        notes: schema.cashShifts.notes,
+        openedByName: schema.users.name,
+      })
       .from(schema.cashShifts)
+      .leftJoin(schema.users, eq(schema.cashShifts.cashierId, schema.users.id))
       .where(and(eq(schema.cashShifts.venueId, venueId), eq(schema.cashShifts.status, 'open')))
       .orderBy(desc(schema.cashShifts.openedAt))
       .limit(1);

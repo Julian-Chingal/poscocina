@@ -1,5 +1,5 @@
 import React from 'react';
-import { Send, Receipt, Sparkles } from 'lucide-react';
+import { Send, Receipt, Sparkles, AlertTriangle } from 'lucide-react';
 import { TableItem } from '../types/pos.types';
 import { Button } from '@/components/ui/button';
 
@@ -12,6 +12,7 @@ interface CartFooterProps {
   activeOrder: any | null;
   submitting: boolean;
   orderSentSuccess: boolean;
+  isCashShiftOpen?: boolean | null;
   onSendOrder: () => void;
   onRequestCheck: () => void;
   onOpenCheckout: () => void;
@@ -26,12 +27,20 @@ export const CartFooter: React.FC<CartFooterProps> = ({
   activeOrder,
   submitting,
   orderSentSuccess,
+  isCashShiftOpen,
   onSendOrder,
   onRequestCheck,
   onOpenCheckout,
 }) => {
   return (
     <div className="pt-3 border-t border-border space-y-2.5">
+      {isCashShiftOpen === false && (
+        <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2 animate-in fade-in">
+          <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+          <span>Caja cerrada: Debes abrir turno de caja [F4] para registrar comandas.</span>
+        </div>
+      )}
+
       <div className="space-y-1 text-xs">
         <div className="flex justify-between text-muted-foreground">
           <span>Subtotal:</span>
@@ -50,8 +59,9 @@ export const CartFooter: React.FC<CartFooterProps> = ({
       <div className="grid grid-cols-2 gap-2 pt-1">
         <Button
           type="button"
-          disabled={cartLength === 0 || submitting}
+          disabled={cartLength === 0 || submitting || isCashShiftOpen === false}
           onClick={onSendOrder}
+          title={isCashShiftOpen === false ? 'Caja cerrada: Abre la caja en F4' : undefined}
           className={`h-10 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition ${
             orderSentSuccess
               ? 'bg-emerald-600 text-white'

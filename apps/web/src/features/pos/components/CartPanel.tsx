@@ -17,6 +17,7 @@ interface Props {
   activeOrder: any | null;
   submitting: boolean;
   orderSentSuccess: boolean;
+  isCashShiftOpen?: boolean | null;
   selectedCustomer: Customer | null;
   customerSearchQuery: string;
   customerSearchResults: Customer[];
@@ -41,6 +42,7 @@ export const CartPanel: React.FC<Props> = ({
   activeOrder,
   submitting,
   orderSentSuccess,
+  isCashShiftOpen,
   selectedCustomer,
   customerSearchQuery,
   customerSearchResults,
@@ -121,6 +123,7 @@ export const CartPanel: React.FC<Props> = ({
       activeOrder={activeOrder}
       submitting={submitting}
       orderSentSuccess={orderSentSuccess}
+      isCashShiftOpen={isCashShiftOpen}
       onSendOrder={onSendOrder}
       onRequestCheck={onRequestCheck}
       onOpenCheckout={onOpenCheckout}

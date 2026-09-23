@@ -19,6 +19,11 @@ export class AppendOrderItemsUseCase {
       throw new BadRequestError('No se pueden añadir ítems a una comanda cerrada o cancelada');
     }
 
+    const activeShift = await this.orderRepo.findActiveShift(order.venueId);
+    if (!activeShift) {
+      throw new BadRequestError('Caja cerrada: Debes abrir la caja antes de añadir o marchar ítems');
+    }
+
     return await db.transaction(async (tx) => {
       let appendedSubtotal = 0;
       for (const item of items) {

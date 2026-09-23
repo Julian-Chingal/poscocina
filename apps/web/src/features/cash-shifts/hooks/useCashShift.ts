@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useAuthStore } from '@/stores/auth.store';
+import { useShiftStore } from '@/stores/shift.store';
 import { cashShiftsApi } from '../api/cash-shifts.api';
 import { ActiveShiftInfo, CloseShiftReportData } from '../types/cash-shifts.types';
 import { toast } from '@/components/ui/sonner';
@@ -17,12 +18,17 @@ export const useCashShift = (venueId: string) => {
     try {
       const data = await cashShiftsApi.getCurrentShift(venueId);
       setShiftData(data || { open: false });
+      useShiftStore.getState().setShiftStatus({
+        isOpen: Boolean(data?.open),
+        shiftId: data?.shift?.id || null,
+        cashierName: (data?.shift as any)?.openedByName || user?.name,
+      });
     } catch (err) {
       console.error('Error fetching cash shift:', err);
     } finally {
       setLoading(false);
     }
-  }, [venueId]);
+  }, [venueId, user?.name]);
 
   useEffect(() => {
     fetchShift();
@@ -45,11 +51,16 @@ export const useCashShift = (venueId: string) => {
 
   const openShift = async (openingAmount: number, notes?: string) => {
     try {
-      await cashShiftsApi.openShift({
+      const res = await cashShiftsApi.openShift({
         venueId,
         cashierId: user?.id,
         openingAmount,
         notes,
+      });
+      useShiftStore.getState().setShiftStatus({
+        isOpen: true,
+        shiftId: res?.id || null,
+        cashierName: user?.name,
       });
       toast.success('Turno de caja abierto exitosamente');
       fetchShift();
@@ -64,6 +75,10 @@ export const useCashShift = (venueId: string) => {
       const report = await cashShiftsApi.closeShift(shiftData.shift.id, {
         closingAmount,
         notes,
+      });
+      useShiftStore.getState().setShiftStatus({
+        isOpen: false,
+        shiftId: null,
       });
       toast.success('Turno de caja cerrado exitosamente');
       setCloseReport(report);

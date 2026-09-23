@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from '../components/ui/sonner';
 import { useAuthStore } from '../stores/auth.store';
 import { useBrandingStore } from '../stores/branding.store';
+import { useShiftStore } from '../stores/shift.store';
 import { onNetworkStatusChange } from '../services/api';
 
 export const useAppBootstrap = () => {
@@ -33,6 +34,7 @@ export const useAppBootstrap = () => {
           if (data?.id) {
             setVenueId(data.id);
             loadBranding(data.id);
+            useShiftStore.getState().fetchCurrentShift(data.id);
             return;
           }
         }
@@ -44,6 +46,7 @@ export const useAppBootstrap = () => {
         if (data?.id) {
           setVenueId(data.id);
           loadBranding(data.id);
+          useShiftStore.getState().fetchCurrentShift(data.id);
         }
       }
     } catch (err) {
