@@ -7,6 +7,7 @@ import {
   smallint,
   integer,
   numeric,
+  real,
   timestamp,
   jsonb,
   serial,
@@ -44,9 +45,44 @@ export const tableStatusEnum = pgEnum('table_status', [
   'blocked',
 ]);
 
-// 1. Venues
+// 0. Companies & Corporate Fiscal Settings (Global)
+export const companies = pgTable('companies', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  legalName: varchar('legal_name', { length: 150 }).notNull(),
+  tradeName: varchar('trade_name', { length: 150 }).notNull(),
+  taxId: varchar('tax_id', { length: 50 }).notNull(),
+  logoUrl: text('logo_url'),
+  primaryColor: varchar('primary_color', { length: 10 }).notNull().default('#ea580c'),
+  phone: varchar('phone', { length: 50 }),
+  email: varchar('email', { length: 150 }),
+  address: text('address'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const companyFiscalSettings = pgTable('company_fiscal_settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }).unique(),
+  regime: varchar('regime', { length: 40 }).notNull().default('SIMPLIFICADO'),
+  taxType: varchar('tax_type', { length: 20 }).notNull().default('INC_8'),
+  taxRate: real('tax_rate').notNull().default(0.08),
+  defaultTipPct: real('default_tip_pct').notNull().default(10),
+  currency: varchar('currency', { length: 10 }).notNull().default('COP'),
+  isInvoiceResolutionEnabled: boolean('is_invoice_resolution_enabled').notNull().default(false),
+  invoicePrefix: varchar('invoice_prefix', { length: 20 }),
+  invoiceResolution: varchar('invoice_resolution', { length: 100 }),
+  invoiceInitialNumber: integer('invoice_initial_number'),
+  invoiceFinalNumber: integer('invoice_final_number'),
+  invoiceResolutionDate: timestamp('invoice_resolution_date', { withTimezone: true }),
+  receiptHeader: text('receipt_header').notNull().default('Sabor tradicional & Alta cocina'),
+  receiptFooter: text('receipt_footer').notNull().default('¡Gracias por su visita!'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// 1. Venues (Branches)
 export const venues = pgTable('venues', {
   id: uuid('id').primaryKey().defaultRandom(),
+  companyId: uuid('company_id').references(() => companies.id, { onDelete: 'set null' }),
   name: varchar('name', { length: 100 }).notNull(),
   address: text('address'),
   timezone: varchar('timezone', { length: 50 }).notNull().default('America/Bogota'),

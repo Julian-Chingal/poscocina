@@ -8,20 +8,24 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
 interface Props {
+  legalName?: string;
   companyName: string;
   logoUrl: string;
   primaryColor: string;
   venueAddress: string;
   phone: string;
+  email?: string;
   onFieldChange: (field: any, val: any) => void;
 }
 
 export const IdentityTab: React.FC<Props> = ({
+  legalName = '',
   companyName,
   logoUrl,
   primaryColor,
   venueAddress,
   phone,
+  email = '',
   onFieldChange,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -36,26 +40,41 @@ export const IdentityTab: React.FC<Props> = ({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-2 space-y-6">
-        <Card className="bg-card border-border p-6 shadow-sm">
+    <div className="w-full min-w-0 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="w-full min-w-0 lg:col-span-2 space-y-6">
+        <Card className="w-full min-w-0 bg-card border-border p-6 shadow-sm">
           <div className="flex items-center space-x-2.5 pb-4 border-b border-border mb-5">
             <Building2 className="w-5 h-5 text-primary" />
-            <h3 className="font-bold text-foreground text-base">Identidad Corporativa</h3>
+            <h3 className="font-bold text-foreground text-base">Identidad Corporativa y Marca (Global)</h3>
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label className="block text-xs font-semibold text-foreground">
-                Nombre Comercial del Restaurante / Empresa
-              </Label>
-              <Input
-                type="text"
-                value={companyName}
-                onChange={(e) => onFieldChange('companyName', e.target.value)}
-                placeholder="Ej. La Brasa Roja Gourmet"
-                className="h-10 text-sm"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="block text-xs font-semibold text-foreground">
+                  Razón Social Legal (Empresa)
+                </Label>
+                <Input
+                  type="text"
+                  value={legalName}
+                  onChange={(e) => onFieldChange('legalName', e.target.value)}
+                  placeholder="Ej. poscocina S.A.S."
+                  className="h-10 text-sm"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="block text-xs font-semibold text-foreground">
+                  Nombre Comercial / Marca (Fantasía)
+                </Label>
+                <Input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => onFieldChange('companyName', e.target.value)}
+                  placeholder="Ej. La Brasa Roja Gourmet"
+                  className="h-10 text-sm"
+                />
+              </div>
             </div>
 
             <div className="space-y-1.5">
@@ -120,9 +139,9 @@ export const IdentityTab: React.FC<Props> = ({
               onColorChange={(color) => onFieldChange('primaryColor', color)}
             />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
               <div className="space-y-1.5">
-                <Label className="block text-xs font-semibold text-foreground">Dirección de la Sede</Label>
+                <Label className="block text-xs font-semibold text-foreground">Dirección Principal</Label>
                 <Input
                   type="text"
                   value={venueAddress}
@@ -131,11 +150,21 @@ export const IdentityTab: React.FC<Props> = ({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="block text-xs font-semibold text-foreground">Teléfono de Contacto</Label>
+                <Label className="block text-xs font-semibold text-foreground">Teléfono Corporativo</Label>
                 <Input
                   type="text"
                   value={phone}
                   onChange={(e) => onFieldChange('phone', e.target.value)}
+                  className="h-10 text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="block text-xs font-semibold text-foreground">Email de Facturación / Contacto</Label>
+                <Input
+                  type="email"
+                  value={email}
+                  placeholder="contacto@empresa.com"
+                  onChange={(e) => onFieldChange('email', e.target.value)}
                   className="h-10 text-sm"
                 />
               </div>

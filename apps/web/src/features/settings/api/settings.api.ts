@@ -54,5 +54,14 @@ export const settingsApi = {
 
   deleteVenue: (venueId: string) =>
     api.delete(`/venues/${venueId}`),
+
+  getCompany: (): Promise<any> =>
+    api.get('/company'),
+
+  updateCompany: (payload: any): Promise<any> =>
+    api.put('/company', payload),
+
+  getCompanyFiscal: (): Promise<any> =>
+    api.get('/company/fiscal'),
 };
 

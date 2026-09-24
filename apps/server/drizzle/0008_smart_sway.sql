@@ -1,0 +1,1 @@
+ALTER TABLE "company_fiscal_settings" ADD COLUMN "is_invoice_resolution_enabled" boolean DEFAULT false NOT NULL;

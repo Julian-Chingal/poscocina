@@ -50,6 +50,20 @@
       "when": 1790190646299,
       "tag": "0006_fancy_clea",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790219929807,
+      "tag": "0007_serious_silk_fever",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790221437094,
+      "tag": "0008_smart_sway",
+      "breakpoints": true
     }
   ]
 }

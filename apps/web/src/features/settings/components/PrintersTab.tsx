@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Printer } from 'lucide-react';
+import { Plus, Printer, Store } from 'lucide-react';
 import { useHardwarePrinters } from '../hooks/useHardwarePrinters';
 import { PrinterCard } from './PrinterCard';
 import { PrinterModal } from './PrinterModal';
@@ -8,6 +8,7 @@ import { ReceiptSettingsCard } from './ReceiptSettingsCard';
 import { PaperWidth, TaxType, PrinterDevice } from '../types/settings.types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Select } from '@/components/common/native-select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,6 +56,9 @@ export const PrintersTab: React.FC<Props> = ({
   onFieldChange,
 }) => {
   const {
+    venues,
+    selectedBranchId,
+    setSelectedBranchId,
     printers,
     isModalOpen,
     editingPrinter,
@@ -83,29 +87,48 @@ export const PrintersTab: React.FC<Props> = ({
   };
 
   return (
-    <div className="space-y-8">
-      <Card className="p-6 shadow-sm">
+    <div className="w-full min-w-0 space-y-8">
+      <Card className="w-full min-w-0 p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-border gap-4 mb-5">
-          <div>
+          <div className="space-y-1">
             <div className="flex items-center space-x-2">
               <Printer className="w-5 h-5 text-primary" />
-              <h3 className="font-bold text-foreground text-base">Dispositivos e Impresoras Térmicas de la Sede</h3>
+              <h3 className="font-bold text-foreground text-base">Dispositivos e Impresoras Térmicas</h3>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Ruteo directo por red TCP (puerto 9100) para comandas en cocina/barra y recibos en caja.
+            <p className="text-xs text-muted-foreground">
+              Cada sede física opera sus propios periféricos en red local TCP o USB.
             </p>
           </div>
-          <Button
-            type="button"
-            onClick={openNewPrinter}
-            className="flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 h-auto rounded-xl text-xs font-bold transition shadow-lg shadow-primary/20"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Nueva Impresora</span>
-          </Button>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center space-x-2 bg-muted/50 px-3 py-1.5 rounded-xl border border-border">
+              <Store className="w-4 h-4 text-primary shrink-0" />
+              <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Sede:</span>
+              <Select
+                value={selectedBranchId}
+                onChange={(e) => setSelectedBranchId(e.target.value)}
+                className="h-8 text-xs font-semibold bg-background py-1"
+              >
+                {venues.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name} {v.isPrimary ? '(Principal)' : ''}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <Button
+              type="button"
+              onClick={openNewPrinter}
+              className="flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 h-auto rounded-xl text-xs font-bold transition shadow-lg shadow-primary/20 shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Nueva Impresora</span>
+            </Button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="w-full min-w-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
           {printers.map((printer) => (
             <PrinterCard
               key={printer.id}
@@ -125,8 +148,8 @@ export const PrintersTab: React.FC<Props> = ({
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
+      <div className="w-full min-w-0 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="w-full min-w-0 lg:col-span-2">
           <ReceiptSettingsCard
             paperWidth={paperWidth}
             autoPrintReceipt={autoPrintReceipt}

@@ -1,9 +1,10 @@
 import React, { useState, Suspense, lazy } from 'react';
+import { Building2, Receipt, Store, Printer, Save, Check } from 'lucide-react';
 import { useBrandingStore } from '@/stores/branding.store';
 import { useSettingsForm } from './hooks/useSettingsForm';
 import { SettingsTab } from './types/settings.types';
-import { SettingsHeader } from './components/SettingsHeader';
-import { SettingsTabsNav } from './components/SettingsTabsNav';
+import { SubNavLayout, SubNavGroup } from '@/components/common/SubNavLayout';
+import { Button } from '@/components/ui/button';
 import { IdentityTab } from './components/IdentityTab';
 import { TaxBillingTab } from './components/TaxBillingTab';
 
@@ -22,28 +23,87 @@ export const SettingsView: React.FC = () => {
   const venues = useBrandingStore((s) => s.venues);
   const { form, setField, setTaxType, saveSettings, saving, savedSuccess } = useSettingsForm();
 
+  const settingsGroups: SubNavGroup[] = [
+    {
+      id: 'global',
+      heading: 'Global (Empresa)',
+      items: [
+        {
+          id: 'identity',
+          label: 'Identidad & Marca',
+          icon: Building2,
+        },
+        {
+          id: 'tax',
+          label: 'Facturación & Impuestos',
+          icon: Receipt,
+        },
+        {
+          id: 'venues',
+          label: 'Gestión de Sedes',
+          icon: Store,
+          badge: venues.length,
+          badgeVariant: 'secondary',
+        },
+      ],
+    },
+    {
+      id: 'local',
+      heading: 'Local (Por Sede)',
+      items: [
+        {
+          id: 'printer',
+          label: 'Impresoras Térmicas ESC/POS',
+          icon: Printer,
+        },
+      ],
+    },
+  ];
+
+  const headerActions = activeTab !== 'venues' ? (
+    <Button
+      type="button"
+      onClick={saveSettings}
+      disabled={saving}
+      className={`flex items-center space-x-2 px-6 py-2.5 h-auto rounded-xl font-bold text-sm transition-all cursor-pointer shadow-lg ${
+        savedSuccess
+          ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+          : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20'
+      }`}
+    >
+      {savedSuccess ? (
+        <>
+          <Check className="w-4 h-4" />
+          <span>¡Guardado con éxito!</span>
+        </>
+      ) : (
+        <>
+          <Save className="w-4 h-4" />
+          <span>{saving ? 'Guardando...' : 'Guardar Cambios'}</span>
+        </>
+      )}
+    </Button>
+  ) : null;
+
   return (
-    <div className="max-w-6xl mx-auto p-6 sm:p-10">
-      <SettingsHeader
-        activeTab={activeTab}
-        saving={saving}
-        savedSuccess={savedSuccess}
-        onSave={saveSettings}
-      />
-
-      <SettingsTabsNav
-        activeTab={activeTab}
-        onSelectTab={setActiveTab}
-        venuesCount={venues.length}
-      />
-
+    <SubNavLayout
+      title="Ajustes del Sistema"
+      subtitle="Configuración fiscal, marca corporativa, tickets ESC/POS y multi-sucursal."
+      category="Personalización & Marca Blanca"
+      headerActions={headerActions}
+      groups={settingsGroups}
+      activeItemId={activeTab}
+      onSelectItem={(id) => setActiveTab(id as SettingsTab)}
+    >
       {activeTab === 'identity' && (
         <IdentityTab
+          legalName={form.legalName}
           companyName={form.companyName}
           logoUrl={form.logoUrl}
           primaryColor={form.primaryColor}
           venueAddress={form.venueAddress}
           phone={form.phone}
+          email={form.email}
           onFieldChange={setField}
         />
       )}
@@ -51,10 +111,17 @@ export const SettingsView: React.FC = () => {
       {activeTab === 'tax' && (
         <TaxBillingTab
           taxId={form.taxId}
+          regime={form.regime}
           taxType={form.taxType}
           taxRate={form.taxRate}
           defaultTipPct={form.defaultTipPct}
           currency={form.currency}
+          isInvoiceResolutionEnabled={form.isInvoiceResolutionEnabled}
+          invoicePrefix={form.invoicePrefix}
+          invoiceResolution={form.invoiceResolution}
+          invoiceInitialNumber={form.invoiceInitialNumber}
+          invoiceFinalNumber={form.invoiceFinalNumber}
+          invoiceResolutionDate={form.invoiceResolutionDate}
           onFieldChange={setField}
           onTaxTypeChange={setTaxType}
         />
@@ -87,7 +154,7 @@ export const SettingsView: React.FC = () => {
           <VenuesTab isActive={activeTab === 'venues'} />
         </Suspense>
       )}
-    </div>
+    </SubNavLayout>
   );
 };
 

@@ -20,6 +20,7 @@ import { reservationsModule } from './modules/reservations/index.js';
 import { customersModule } from './modules/customers/index.js';
 import { analyticsModule } from './modules/analytics/index.js';
 import { venuesModule } from './modules/venues/index.js';
+import { companyModule } from './modules/company/index.js';
 
 export async function buildServer() {
   const server = Fastify({
@@ -86,6 +87,7 @@ export async function buildServer() {
   await server.register(healthModule);
   await server.register(authModule);
   await server.register(venuesModule);
+  await server.register(companyModule);
   await server.register(tablesModule);
   await server.register(catalogModule);
   await server.register(ordersModule);

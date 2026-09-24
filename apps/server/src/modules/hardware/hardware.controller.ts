@@ -24,8 +24,8 @@ export class HardwareController {
   }
 
   async getPrinters(request: FastifyRequest, reply: FastifyReply) {
-    const { venueId } = request.query as { venueId?: string };
-    const targetVenueId = await resolveVenueId(request, venueId);
+    const { venueId, branchId } = request.query as { venueId?: string; branchId?: string };
+    const targetVenueId = await resolveVenueId(request, branchId || venueId);
     const printers = await this.manageUseCase.getPrinters(targetVenueId);
     return reply.send(printers);
   }
@@ -37,7 +37,10 @@ export class HardwareController {
   }
 
   async createPrinter(request: FastifyRequest, reply: FastifyReply) {
-    const printer = await this.manageUseCase.createPrinter(request.body);
+    const body = (request.body || {}) as any;
+    const rawVenueId = body.branchId || body.venueId;
+    const targetVenueId = await resolveVenueId(request, rawVenueId);
+    const printer = await this.manageUseCase.createPrinter({ ...body, venueId: targetVenueId });
     return reply.status(201).send(printer);
   }
 

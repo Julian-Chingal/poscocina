@@ -5,22 +5,41 @@ import { PrinterDevice, PrinterFormData, TestPrintResult } from '../types/settin
 import { toast } from '@/components/ui/sonner';
 
 export const useHardwarePrinters = () => {
-  const venueId = useBrandingStore((s) => s.venueId);
+  const currentVenueId = useBrandingStore((s) => s.venueId);
+  const venues = useBrandingStore((s) => s.venues);
+  const loadAllVenues = useBrandingStore((s) => s.loadAllVenues);
+
+  const [selectedBranchId, setSelectedBranchId] = useState<string>(currentVenueId || '');
   const [printers, setPrinters] = useState<PrinterDevice[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPrinter, setEditingPrinter] = useState<PrinterDevice | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<TestPrintResult | null>(null);
 
+  // Asegurar que las sedes estén cargadas
+  useEffect(() => {
+    if (!venues.length) {
+      loadAllVenues();
+    }
+  }, [venues.length, loadAllVenues]);
+
+  // Si no hay selectedBranchId seleccionado, asignar la sede actual o la primera disponible
+  useEffect(() => {
+    if (!selectedBranchId) {
+      const defaultId = currentVenueId || venues[0]?.id;
+      if (defaultId) setSelectedBranchId(defaultId);
+    }
+  }, [selectedBranchId, currentVenueId, venues]);
+
   const fetchPrinters = useCallback(async () => {
-    if (!venueId) return;
+    if (!selectedBranchId) return;
     try {
-      const data = await settingsApi.getPrinters(venueId);
+      const data = await settingsApi.getPrinters(selectedBranchId);
       setPrinters(data || []);
     } catch {
-      toast.error('Error al cargar lista de impresoras');
+      toast.error('Error al cargar lista de impresoras de la sede');
     }
-  }, [venueId]);
+  }, [selectedBranchId]);
 
   useEffect(() => {
     fetchPrinters();
@@ -37,8 +56,12 @@ export const useHardwarePrinters = () => {
   };
 
   const savePrinter = async (data: PrinterFormData) => {
+    if (!selectedBranchId) {
+      toast.error('Selecciona una sede para registrar la impresora');
+      return;
+    }
     try {
-      await settingsApi.savePrinter(venueId, data, editingPrinter?.id);
+      await settingsApi.savePrinter(selectedBranchId, data, editingPrinter?.id);
       toast.success(editingPrinter ? 'Impresora actualizada' : 'Impresora registrada');
       setIsModalOpen(false);
       fetchPrinters();
@@ -58,14 +81,18 @@ export const useHardwarePrinters = () => {
   };
 
   const testPrint = async (printer: PrinterDevice) => {
+    if (!selectedBranchId) return;
     setTestingId(printer.id);
-    const res = await settingsApi.testPrint(venueId, printer.id);
+    const res = await settingsApi.testPrint(selectedBranchId, printer.id);
     setTestResult(res);
     setTestingId(null);
     setTimeout(() => setTestResult(null), 5000);
   };
 
   return {
+    venues,
+    selectedBranchId,
+    setSelectedBranchId,
     printers,
     isModalOpen,
     editingPrinter,

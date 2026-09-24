@@ -27,14 +27,37 @@ export class ReceiptRepository implements IReceiptRepository {
     if (!order) return null;
 
     const [venue] = await tx
-      .select({ settings: schema.venues.settings })
+      .select({ settings: schema.venues.settings, companyId: schema.venues.companyId })
       .from(schema.venues)
       .where(eq(schema.venues.id, order.venueId))
       .limit(1);
 
+    let [fiscal] = await tx
+      .select()
+      .from(schema.companyFiscalSettings)
+      .where(venue?.companyId ? eq(schema.companyFiscalSettings.companyId, venue.companyId) : sql`1=1`)
+      .limit(1);
+
+    const mergedSettings = {
+      ...(venue?.settings as Record<string, any>),
+      ...(fiscal
+        ? {
+            taxType: fiscal.taxType,
+            taxRate: Number(fiscal.taxRate),
+            defaultTaxRate: Number(fiscal.taxRate),
+            defaultTipPct: Number(fiscal.defaultTipPct),
+            regime: fiscal.regime,
+            receiptHeader: fiscal.receiptHeader,
+            receiptFooter: fiscal.receiptFooter,
+            invoicePrefix: fiscal.invoicePrefix,
+            invoiceResolution: fiscal.invoiceResolution,
+          }
+        : {}),
+    };
+
     return {
       order,
-      venueSettings: (venue?.settings as Record<string, any>) || {},
+      venueSettings: mergedSettings,
     };
   }
 
