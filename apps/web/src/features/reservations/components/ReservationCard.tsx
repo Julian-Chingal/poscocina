@@ -83,11 +83,11 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
   };
 
   return (
-    <Card className="p-5 hover:border-border/80 transition flex flex-col justify-between shadow-sm">
-      <div>
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div>
-            <h4 className="font-bold text-foreground text-base leading-tight">
+    <Card className="w-full min-w-0 h-full p-5 hover:border-border/80 transition flex flex-col justify-between shadow-sm">
+      <div className="w-full min-w-0">
+        <div className="flex items-start justify-between gap-2 mb-3 min-w-0">
+          <div className="min-w-0 flex-1">
+            <h4 className="font-bold text-foreground text-base leading-tight truncate">
               {reservation.customerName}
             </h4>
             {reservation.customer?.loyaltyPoints ? (

@@ -50,38 +50,39 @@ export const PurchasesTab: React.FC<Props> = ({
     }
   };
   return (
-    <div className="space-y-4">
+    <div className="w-full min-w-0 space-y-4">
       <div className="flex justify-end">
         <Button
           type="button"
           onClick={onOpenNewPurchase}
-          className="flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg shadow-primary/20"
+          className="flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg shadow-primary/20 shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Nueva Factura de Compra</span>
         </Button>
       </div>
 
-      <Card className="overflow-hidden shadow-sm">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Factura / Remisión</TableHead>
-              <TableHead>Proveedor</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Total Factura</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      <Card className="w-full min-w-0 overflow-hidden shadow-sm">
+        <div className="w-full min-w-0 overflow-x-auto">
+          <Table className="table-fixed w-full min-w-[700px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[20%]">Factura / Remisión</TableHead>
+                <TableHead className="w-[25%]">Proveedor</TableHead>
+                <TableHead className="w-[15%]">Fecha</TableHead>
+                <TableHead className="w-[15%]">Total Factura</TableHead>
+                <TableHead className="w-[13%]">Estado</TableHead>
+                <TableHead className="w-[12%] text-right">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {purchases.map((purchase) => {
                 const total = parseFloat(purchase.totalAmount || '0');
                 return (
                   <TableRow key={purchase.id}>
-                    <TableCell className="font-bold text-foreground text-sm flex items-center space-x-2">
+                    <TableCell className="font-bold text-foreground text-sm flex items-center space-x-2 truncate">
                       <Receipt className="w-4 h-4 text-primary shrink-0" />
-                      <span>{purchase.invoiceNumber}</span>
+                      <span className="truncate">{purchase.invoiceNumber}</span>
                     </TableCell>
                     <TableCell className="text-foreground">
                       <div className="font-medium">{purchase.supplier?.name || 'Proveedor no disponible'}</div>
@@ -148,6 +149,7 @@ export const PurchasesTab: React.FC<Props> = ({
               )}
           </TableBody>
         </Table>
+        </div>
       </Card>
 
       <AlertDialog open={Boolean(purchaseToReceive)} onOpenChange={(open) => !open && setPurchaseToReceive(null)}>

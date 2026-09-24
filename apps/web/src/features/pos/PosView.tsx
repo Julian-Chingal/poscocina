@@ -36,7 +36,7 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6">
+    <div className="w-full min-w-0 max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
       <PosHeader
         currentTable={table.currentTable}
         allTables={table.allTables}
@@ -45,8 +45,8 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
         onSelectTable={table.setCurrentTable}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
+      <div className="w-full min-w-0 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="w-full min-w-0 lg:col-span-2 space-y-4">
           <CategoryChips
             categories={catalog.categories}
             activeCategoryId={catalog.activeCategoryId}
@@ -60,7 +60,7 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
           />
         </div>
 
-        <div>
+        <div className="w-full min-w-0">
           <CartPanel
             cart={cart.cart}
             subtotal={cart.subtotal}

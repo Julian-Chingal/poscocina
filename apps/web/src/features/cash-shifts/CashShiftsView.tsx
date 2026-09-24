@@ -46,7 +46,7 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 sm:p-10">
+    <div className="w-full min-w-0 max-w-5xl mx-auto p-6 sm:p-10 space-y-6">
       <CashShiftsHeader
         isShiftOpen={shiftData.open}
         onOpenCloseModal={openCloseModal}
@@ -57,7 +57,7 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
       )}
 
       {shiftData.open && shiftData.shift && (
-        <div className="space-y-6">
+        <div className="w-full min-w-0 space-y-6">
           <ShiftStatusBanner
             shift={shiftData.shift}
             onPrintSummary={printSummary}

@@ -37,7 +37,7 @@ export const OfflineView: React.FC<OfflineViewProps> = ({ onRetry }) => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 text-center select-none">
+    <div className="min-h-screen w-full min-w-0 bg-background text-foreground flex flex-col items-center justify-center p-6 text-center select-none">
       <Card className="max-w-md w-full bg-card border-border rounded-3xl p-8 shadow-2xl relative overflow-hidden">
         {/* Animated Glow Accent */}
         <div className="absolute -top-16 -left-16 w-32 h-32 bg-destructive/15 rounded-full blur-3xl pointer-events-none" />

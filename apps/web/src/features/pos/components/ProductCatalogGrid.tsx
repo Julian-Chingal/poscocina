@@ -17,7 +17,7 @@ export const ProductCatalogGrid: React.FC<Props> = ({ products, onAddToCart }) =
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[68vh] overflow-y-auto pr-1">
+    <div className="w-full min-w-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[68vh] overflow-y-auto pr-1 auto-rows-fr">
       {products.map((p) => (
         <ProductCard key={p.id} product={p} onAddToCart={onAddToCart} />
       ))}

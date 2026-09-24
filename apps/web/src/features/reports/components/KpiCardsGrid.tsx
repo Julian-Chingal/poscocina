@@ -11,9 +11,9 @@ interface KpiCardsGridProps {
 
 export const KpiCardsGrid: React.FC<KpiCardsGridProps> = ({ overview, cogsMetrics }) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="w-full min-w-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr">
       {/* Card 1: Ventas Totales */}
-      <Card className="p-5 shadow-sm relative overflow-hidden flex flex-col justify-between">
+      <Card className="w-full min-w-0 p-5 shadow-sm relative overflow-hidden flex flex-col justify-between">
         <div className="flex items-center justify-between text-muted-foreground mb-2">
           <span className="text-xs font-medium uppercase tracking-wider">Ventas Brutas</span>
           <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">

@@ -34,9 +34,9 @@ export const RecipesTab: React.FC<Props> = ({
   const selectedProduct = products.find((p) => p.id === selectedProductId);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="w-full min-w-0 grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Products Column */}
-      <Card className="rounded-2xl shadow-sm">
+      <Card className="w-full min-w-0 rounded-2xl shadow-sm">
         <CardHeader className="p-5 pb-3">
           <CardTitle className="text-sm font-bold text-foreground">Platos & Bebidas</CardTitle>
           <CardDescription className="text-xs text-muted-foreground">
@@ -58,7 +58,7 @@ export const RecipesTab: React.FC<Props> = ({
                 }`}
               >
                 <span className="truncate">{prod.name}</span>
-                <span className="font-mono text-[11px] opacity-75">
+                <span className="font-mono text-[11px] opacity-75 shrink-0">
                   ${parseFloat(prod.price).toLocaleString()}
                 </span>
               </Button>
@@ -68,7 +68,7 @@ export const RecipesTab: React.FC<Props> = ({
       </Card>
 
       {/* Recipe Editor Column */}
-      <Card className="md:col-span-2 rounded-2xl shadow-sm">
+      <Card className="w-full min-w-0 md:col-span-2 rounded-2xl shadow-sm">
         <CardHeader className="p-5 pb-4 border-b border-border flex flex-row items-center justify-between space-y-0">
           <div>
             <CardTitle className="text-sm font-bold text-foreground flex items-center space-x-2">

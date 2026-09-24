@@ -57,7 +57,7 @@ export const TopBarSearch: React.FC<TopBarSearchProps> = ({
     <div
       role="search"
       aria-label="Búsqueda rápida de módulos"
-      className={cn("flex-1 max-w-md hidden md:block", className)}
+      className={cn("w-full max-w-md", className)}
     >
       <div className="relative flex items-center">
         <Search

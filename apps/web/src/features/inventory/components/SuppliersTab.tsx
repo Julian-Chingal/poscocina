@@ -27,9 +27,9 @@ export const SuppliersTab: React.FC<Props> = ({
   onOpenNewSupplier,
 }) => {
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-border">
-        <div className="relative flex-1 max-w-md">
+    <div className="w-full min-w-0 space-y-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-3 border-b border-border">
+        <div className="relative flex-1 sm:max-w-md w-full">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
           <Input
             type="text"
@@ -43,52 +43,54 @@ export const SuppliersTab: React.FC<Props> = ({
         <Button
           type="button"
           onClick={onOpenNewSupplier}
-          className="flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 h-auto rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg shadow-primary/20"
+          className="flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 h-auto rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg shadow-primary/20 shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Nuevo Proveedor</span>
         </Button>
       </div>
 
-      <Card className="overflow-hidden shadow-sm">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Razón Social / Proveedor</TableHead>
-              <TableHead>Documento / NIT</TableHead>
-              <TableHead>Contacto Directo</TableHead>
-              <TableHead>Teléfono & Correo</TableHead>
-              <TableHead>Dirección</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {suppliers.map((sup) => (
-              <TableRow key={sup.id}>
-                <TableCell className="font-bold text-foreground text-sm flex items-center space-x-2">
-                  <Building2 className="w-4 h-4 text-primary shrink-0" />
-                  <span>{sup.name}</span>
-                </TableCell>
-                <TableCell className="font-mono font-medium text-foreground">
-                  <span className="text-muted-foreground text-[10px] mr-1">{sup.documentType}</span>
-                  <span>{sup.documentNumber}</span>
-                </TableCell>
-                <TableCell className="text-muted-foreground">{sup.contactName || '-'}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  <div>{sup.phone || '-'}</div>
-                  <div className="text-[11px] text-muted-foreground/80">{sup.email || ''}</div>
-                </TableCell>
-                <TableCell className="text-muted-foreground text-xs">{sup.address || '-'}</TableCell>
-              </TableRow>
-            ))}
-            {suppliers.length === 0 && (
+      <Card className="w-full min-w-0 overflow-hidden shadow-sm">
+        <div className="w-full min-w-0 overflow-x-auto">
+          <Table className="table-fixed w-full min-w-[700px]">
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="p-8 text-center text-muted-foreground">
-                  No se encontraron proveedores registrados.
-                </TableCell>
+                <TableHead className="w-[26%]">Razón Social / Proveedor</TableHead>
+                <TableHead className="w-[18%]">Documento / NIT</TableHead>
+                <TableHead className="w-[18%]">Contacto Directo</TableHead>
+                <TableHead className="w-[20%]">Teléfono & Correo</TableHead>
+                <TableHead className="w-[18%]">Dirección</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {suppliers.map((sup) => (
+                <TableRow key={sup.id}>
+                  <TableCell className="font-bold text-foreground text-sm flex items-center space-x-2 truncate">
+                    <Building2 className="w-4 h-4 text-primary shrink-0" />
+                    <span className="truncate">{sup.name}</span>
+                  </TableCell>
+                  <TableCell className="font-mono font-medium text-foreground">
+                    <span className="text-muted-foreground text-[10px] mr-1">{sup.documentType}</span>
+                    <span>{sup.documentNumber}</span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground truncate">{sup.contactName || '-'}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    <div className="truncate">{sup.phone || '-'}</div>
+                    <div className="text-[11px] text-muted-foreground/80 truncate">{sup.email || ''}</div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-xs truncate">{sup.address || '-'}</TableCell>
+                </TableRow>
+              ))}
+              {suppliers.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="p-8 text-center text-muted-foreground">
+                    No se encontraron proveedores registrados.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
     </div>
   );

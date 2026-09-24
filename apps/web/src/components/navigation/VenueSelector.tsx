@@ -67,7 +67,7 @@ export const VenueSelector: React.FC<VenueSelectorProps> = ({
       <div
         title={`Sede asignada: ${currentVenue.name}`}
         className={cn(
-          "h-auto flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs select-none",
+          "h-8 flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs select-none min-w-[100px] max-w-[170px]",
           "bg-muted/60 border border-border/80 text-foreground shadow-2xs",
           className
         )}
@@ -83,7 +83,7 @@ export const VenueSelector: React.FC<VenueSelectorProps> = ({
             {getVenueInitial(currentVenue.name)}
           </AvatarFallback>
         </Avatar>
-        <span className="font-medium max-w-36 truncate text-left">
+        <span className="font-medium truncate text-left min-w-0 flex-1">
           {currentVenue.name}
         </span>
       </div>
@@ -98,7 +98,7 @@ export const VenueSelector: React.FC<VenueSelectorProps> = ({
           title="Cambiar de Sede / Sucursal"
           aria-label={`Sede actual: ${currentVenue.name}. Clic para cambiar de sede.`}
           className={cn(
-            "group h-auto flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs transition-all cursor-pointer select-none",
+            "group h-8 flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs transition-all cursor-pointer select-none min-w-[100px] max-w-[170px]",
             "bg-muted/80 hover:bg-muted border border-border text-foreground hover:text-foreground shadow-2xs",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
             "data-[state=open]:bg-muted data-[state=open]:border-primary/50",
@@ -119,7 +119,7 @@ export const VenueSelector: React.FC<VenueSelectorProps> = ({
           </Avatar>
 
           {/* Venue Name */}
-          <span className="font-medium max-w-32.5 truncate text-left">
+          <span className="font-medium truncate text-left min-w-0 flex-1">
             {currentVenue.name}
           </span>
 

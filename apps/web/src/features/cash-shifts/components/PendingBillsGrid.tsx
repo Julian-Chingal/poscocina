@@ -16,7 +16,7 @@ export const PendingBillsGrid: React.FC<Props> = ({
   onSelectBill,
   onRefresh,
 }) => (
-  <Card className="rounded-2xl shadow-sm">
+  <Card className="w-full min-w-0 rounded-2xl shadow-sm">
     <CardHeader className="p-6 pb-4 flex flex-row items-center justify-between space-y-0">
       <div className="flex items-center space-x-2">
         <ReceiptText className="w-5 h-5 text-primary" />
@@ -29,7 +29,7 @@ export const PendingBillsGrid: React.FC<Props> = ({
         size="sm"
         type="button"
         onClick={onRefresh}
-        className="h-8 text-xs px-2.5 py-1"
+        className="h-8 text-xs px-2.5 py-1 shrink-0"
       >
         Actualizar
       </Button>
@@ -42,7 +42,7 @@ export const PendingBillsGrid: React.FC<Props> = ({
           <span>No hay comandas activas pendientes de cobro en este momento.</span>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="w-full min-w-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
           {pendingBills.map((bill) => {
             const isCheckRequested = bill.status === 'check_requested';
             const billTotalNum = parseFloat(bill.total || '0');

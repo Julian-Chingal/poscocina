@@ -148,7 +148,7 @@ export const App: React.FC = () => {
       />
 
       {/* Contenedor interactivo principal */}
-      <main className="relative z-10 flex-1 overflow-auto flex flex-col">
+      <main className="relative z-10 flex-1 overflow-auto flex flex-col w-full min-w-0">
         {!currentUser ? (
           <div className="min-h-[calc(100vh-48px)] flex flex-col items-center justify-center p-6 text-center text-muted-foreground animate-in fade-in duration-200">
             <div className="w-16 h-16 rounded-2xl bg-card/80 backdrop-blur-xs border border-border flex items-center justify-center text-primary mb-4 shadow-xl">

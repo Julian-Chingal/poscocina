@@ -32,7 +32,7 @@ export const UsersGrid: React.FC<UsersGridProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="w-full min-w-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
       {users.map((u) => (
         <UserCard
           key={u.id}

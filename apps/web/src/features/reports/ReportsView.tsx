@@ -41,7 +41,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ venueId }) => {
   } = useAuditLogs(venueId, activeTab);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 text-foreground print:p-0 print:text-black">
+    <div className="w-full min-w-0 max-w-7xl mx-auto p-6 space-y-6 text-foreground print:p-0 print:text-black">
       <ReportsHeader
         period={period}
         onPeriodChange={setPeriod}
@@ -56,14 +56,16 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ venueId }) => {
         <>
           <KpiCardsGrid overview={overview} cogsMetrics={cogsMetrics} />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
+          <div className="w-full min-w-0 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="w-full min-w-0 lg:col-span-2">
               <HourlySalesChart hourly={hourly} />
             </div>
-            <PaymentMethodsBreakdown overview={overview} />
+            <div className="w-full min-w-0">
+              <PaymentMethodsBreakdown overview={overview} />
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="w-full min-w-0 grid grid-cols-1 lg:grid-cols-3 gap-6">
             <TopProductsTable topProducts={topProducts} />
             <KitchenVelocityCard kdsMetrics={kdsMetrics} />
           </div>

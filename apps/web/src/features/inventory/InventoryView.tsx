@@ -30,7 +30,7 @@ export const InventoryView: React.FC<{ venueId: string }> = ({ venueId }) => {
   const recipes = useRecipes(venueId);
 
   return (
-    <div className="max-w-7xl mx-auto p-6 sm:p-10 space-y-6">
+    <div className="w-full min-w-0 max-w-7xl mx-auto p-6 sm:p-10 space-y-6">
       <InventoryHeader activeTab={activeTab} onSelectTab={setActiveTab} />
 
       <Suspense fallback={<div className="p-8 text-center text-xs text-muted-foreground">Cargando sección de inventario...</div>}>

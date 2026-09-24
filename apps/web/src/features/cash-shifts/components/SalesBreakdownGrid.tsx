@@ -18,7 +18,7 @@ export const SalesBreakdownGrid: React.FC<Props> = ({ salesByMethod = [] }) => {
   const transferTotal = parseFloat(transferData?.total || '0');
 
   return (
-    <Card className="rounded-2xl shadow-sm">
+    <Card className="w-full min-w-0 rounded-2xl shadow-sm">
       <CardHeader className="p-6 pb-4">
         <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
           Recaudación Acumulada en el Turno Actual:
@@ -26,7 +26,7 @@ export const SalesBreakdownGrid: React.FC<Props> = ({ salesByMethod = [] }) => {
       </CardHeader>
 
       <CardContent className="p-6 pt-0">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="w-full min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-4 auto-rows-fr">
           <Card className="p-4 bg-muted/40 rounded-xl border border-border flex flex-row items-center space-x-3">
             <div className="p-2.5 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
               <DollarSign className="w-5 h-5" />

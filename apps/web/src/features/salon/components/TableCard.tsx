@@ -57,7 +57,7 @@ export const TableCard: React.FC<Props> = ({
   return (
     <Card
       onClick={() => onSelect(table)}
-      className={`relative flex flex-col justify-between p-6 rounded-2xl border-2 transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-1 ${getStatusColor(
+      className={`w-full h-full min-w-0 relative flex flex-col justify-between p-6 rounded-2xl border-2 transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-1 ${getStatusColor(
         table.status
       )} ${isEditMode ? 'ring-2 ring-amber-500/50 hover:border-amber-400' : ''}`}
     >

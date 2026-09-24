@@ -40,7 +40,7 @@ export const ReservationsView: React.FC<ReservationsViewProps> = ({
   } = useReservationMutations(refresh);
 
   return (
-    <div className="p-6 sm:p-10 max-w-7xl mx-auto">
+    <div className="w-full min-w-0 max-w-7xl mx-auto p-6 sm:p-10 space-y-6">
       <ReservationsHeader
         onOpenNew={() => {
           setErrorMessage(null);

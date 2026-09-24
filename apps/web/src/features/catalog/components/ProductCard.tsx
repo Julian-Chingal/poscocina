@@ -25,7 +25,7 @@ export const ProductCard: React.FC<Props> = ({
 
   return (
     <Card
-      className={`p-5 rounded-2xl border transition-all flex flex-col justify-between shadow-md relative group ${
+      className={`w-full min-w-0 h-full p-5 rounded-2xl border transition-all flex flex-col justify-between shadow-md relative group ${
         product.isAvailable
           ? 'bg-card border-border hover:border-primary/50'
           : 'bg-card/40 border-border opacity-60'

@@ -21,7 +21,7 @@ export const KdsOrderCard: React.FC<KdsOrderCardProps> = ({
 
   return (
     <Card
-      className={`border rounded-2xl overflow-hidden flex flex-col shadow-xl transition-all ${urgency.cardBorder}`}
+      className={`w-full min-w-0 h-full border rounded-2xl overflow-hidden flex flex-col shadow-xl transition-all ${urgency.cardBorder}`}
     >
       {/* Order Header */}
       <CardHeader className="bg-muted/40 px-4 py-3 border-b border-border flex flex-row items-center justify-between space-y-0">

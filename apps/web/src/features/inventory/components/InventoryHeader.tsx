@@ -18,19 +18,19 @@ export const InventoryHeader: React.FC<Props> = ({ activeTab, onSelectTab }) => 
   ];
 
   return (
-    <div className="pb-4 mb-6 border-b border-border space-y-4">
-      <div>
+    <div className="w-full min-w-0 pb-4 mb-6 border-b border-border space-y-4">
+      <div className="w-full min-w-0">
         <div className="flex items-center space-x-2 text-xs font-semibold text-primary uppercase tracking-wider mb-1">
-          <Boxes className="w-3.5 h-3.5" />
-          <span>Cadena de Suministro & Costos</span>
+          <Boxes className="w-3.5 h-3.5 shrink-0" />
+          <span className="truncate">Cadena de Suministro & Costos</span>
         </div>
-        <h2 className="text-2xl font-extrabold text-foreground tracking-tight">Control de Inventarios</h2>
-        <p className="text-sm text-muted-foreground mt-0.5">
+        <h2 className="text-2xl font-extrabold text-foreground tracking-tight truncate">Control de Inventarios</h2>
+        <p className="text-sm text-muted-foreground mt-0.5 truncate">
           Gestión de insumos, escandallos por plato, compras a proveedores y trazabilidad Kardex.
         </p>
       </div>
 
-      <nav className="flex space-x-2 overflow-x-auto pb-1 scrollbar-none">
+      <nav className="flex space-x-2 overflow-x-auto pb-1 scrollbar-none w-full min-w-0">
         {tabs.map(({ id, label, icon: Icon }) => (
           <Button
             key={id}

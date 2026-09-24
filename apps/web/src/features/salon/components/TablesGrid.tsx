@@ -29,7 +29,7 @@ export const TablesGrid: React.FC<Props> = ({
 }) => {
   if (tables.length === 0) {
     return (
-      <div className="bg-muted/40 border border-border rounded-2xl p-12 text-center text-muted-foreground">
+      <div className="w-full min-w-0 bg-muted/40 border border-border rounded-2xl p-12 text-center text-muted-foreground">
         <AlertCircle className="w-10 h-10 mx-auto mb-3 text-muted-foreground/60" />
         <p className="text-base font-semibold text-foreground">No hay mesas configuradas en esta zona.</p>
         {isManager && (
@@ -47,7 +47,7 @@ export const TablesGrid: React.FC<Props> = ({
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+    <div className="w-full min-w-0 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 auto-rows-fr">
       {tables.map((table) => (
         <TableCard
           key={table.id}

@@ -32,7 +32,7 @@ export const AppsGrid: React.FC<AppsGridProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-4xl w-full z-10">
+    <div className="w-full min-w-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-4xl mx-auto z-10 auto-rows-fr">
       {filteredApps.map((app) => (
         <AppTile key={app.id} app={app} onSelect={onSelectApp} />
       ))}

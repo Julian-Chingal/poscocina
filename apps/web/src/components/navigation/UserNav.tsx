@@ -59,21 +59,21 @@ export const UserNav: React.FC<UserNavProps> = ({
           title="Menú de Usuario y Configuración (Ctrl+L para bloquear)"
           aria-label="Menú de Usuario y Configuración"
           className={cn(
-            "group h-auto flex items-center gap-2 p-1 pl-1.5 pr-2 rounded-xl transition-all cursor-pointer select-none text-left",
+            "group h-8 flex items-center gap-2 p-1 pl-1.5 pr-2 rounded-xl transition-all cursor-pointer select-none text-left min-w-[100px] sm:min-w-[130px] max-w-[170px]",
             "border border-transparent hover:border-border hover:bg-muted/70",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
             "data-[state=open]:bg-muted/80 data-[state=open]:border-border",
             className,
           )}
         >
-          <Avatar size="sm" className="size-6 border border-primary/40">
+          <Avatar size="sm" className="size-6 border border-primary/40 shrink-0">
             <AvatarFallback className="bg-primary/20 text-primary font-bold text-xs">
               {initial}
             </AvatarFallback>
           </Avatar>
 
-          <div className="flex flex-col min-w-0 text-left">
-            <span className="font-semibold text-xs text-foreground truncate leading-tight max-w-[85px] sm:max-w-[120px]">
+          <div className="flex flex-col min-w-0 text-left flex-1">
+            <span className="font-semibold text-xs text-foreground truncate leading-tight">
               {currentUser.name}
             </span>
             <span className="text-[9px] sm:text-[10px] text-muted-foreground truncate leading-none mt-0.5">

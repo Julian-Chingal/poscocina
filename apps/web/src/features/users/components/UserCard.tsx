@@ -24,16 +24,16 @@ export const UserCard: React.FC<UserCardProps> = ({
 
   return (
     <Card
-      className={`rounded-3xl p-5 shadow-sm transition flex flex-col justify-between ${
+      className={`w-full min-w-0 h-full rounded-3xl p-5 shadow-sm transition flex flex-col justify-between ${
         user.isActive ? 'border-border hover:border-primary/50' : 'border-border/40 opacity-60 bg-muted/20'
       }`}
     >
-      <div>
+      <div className="w-full min-w-0">
         {/* Header with Avatar & Role */}
-        <div className="flex items-start justify-between gap-3 mb-4">
-          <div className="flex items-center gap-3">
+        <div className="flex items-start justify-between gap-3 mb-4 min-w-0">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <div
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black uppercase ${
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black uppercase shrink-0 ${
                 isManager
                   ? 'bg-primary/20 border border-primary/40 text-primary'
                   : 'bg-muted border border-border text-foreground'
@@ -41,18 +41,18 @@ export const UserCard: React.FC<UserCardProps> = ({
             >
               {user.name.slice(0, 2)}
             </div>
-            <div>
-              <h3 className="font-bold text-sm text-foreground flex items-center gap-1.5">
-                <span>{user.name}</span>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-bold text-sm text-foreground flex items-center gap-1.5 truncate">
+                <span className="truncate">{user.name}</span>
                 {isSelf && (
-                  <Badge variant="outline" className="text-[10px] bg-primary/15 text-primary border-primary/30 font-normal">
+                  <Badge variant="outline" className="text-[10px] bg-primary/15 text-primary border-primary/30 font-normal shrink-0">
                     Tú
                   </Badge>
                 )}
               </h3>
-              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                <Shield className="w-3 h-3 text-primary" />
-                <span>{user.roleLabel}</span>
+              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 truncate">
+                <Shield className="w-3 h-3 text-primary shrink-0" />
+                <span className="truncate">{user.roleLabel}</span>
               </p>
             </div>
           </div>

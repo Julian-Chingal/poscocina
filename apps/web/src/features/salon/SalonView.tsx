@@ -29,7 +29,7 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
 
   if (data.loading && data.tables.length === 0) {
     return (
-      <div className="p-6 sm:p-10 max-w-7xl mx-auto space-y-6">
+      <div className="w-full min-w-0 p-6 sm:p-10 max-w-7xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <Skeleton className="h-8 w-44" />
           <Skeleton className="h-9 w-32 rounded-xl" />
@@ -48,7 +48,7 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
   }
 
   return (
-    <div className="p-6 sm:p-10 max-w-7xl mx-auto">
+    <div className="w-full min-w-0 p-6 sm:p-10 max-w-7xl mx-auto space-y-6">
       <SalonHeader
         isEditMode={isEditMode}
         isManager={isManager}
