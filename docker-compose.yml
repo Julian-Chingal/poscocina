@@ -7,23 +7,28 @@ services:
       POSTGRES_USER: ${DB_USER:-posuser}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-pospassword}
       POSTGRES_DB: ${DB_NAME:-poscocina}
-    ports:
-      - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-posuser} -d ${DB_NAME:-poscocina}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER:-posuser} -d ${DB_NAME:-poscocina}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - poscocina-network
+    # Descomentar si requieres depuración externa directa (ej. DBeaver o PgAdmin desde tu host):
+    # ports:
+    #   - "${DB_PORT:-5432}:5432"
 
   redis:
     image: redis:7-alpine
     container_name: poscocina-redis
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -31,6 +36,64 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - poscocina-network
+
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    container_name: poscocina-server
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOST: 0.0.0.0
+      DATABASE_URL: postgresql://${DB_USER:-posuser}:${DB_PASSWORD:-pospassword}@postgres:5432/${DB_NAME:-poscocina}
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-poscocina_jwt_super_secret_production_key_2026}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-12h}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
+      RUN_SEED: ${RUN_SEED:-false}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@poscocina.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      ADMIN_PIN: ${ADMIN_PIN:-1234}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    expose:
+      - "3000"
+    networks:
+      - poscocina-network
+
+  client:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
+    container_name: poscocina-client
+    restart: unless-stopped
+    ports:
+      - "${CLIENT_PORT:-8080}:80"
+    depends_on:
+      server:
+        condition: service_healthy
+    networks:
+      - poscocina-network
+      # Descomentar en Dokploy si se utiliza la red de Traefik para enrutar dominio:
+      # - dokploy-network
+
+networks:
+  poscocina-network:
+    name: poscocina-network
+    driver: bridge
+  # Descomentar en Dokploy si conectas Traefik directamente:
+  # dokploy-network:
+  #   external: true
 
 volumes:
   postgres_data:
