@@ -1,7 +1,11 @@
+import { eq } from 'drizzle-orm';
 import { FastifyRequest } from 'fastify';
 import { ForbiddenError, NotFoundError } from '../errors/app-error.js';
 import { db } from '../db/index.js';
 import * as schema from '../db/schema.js';
+
+const isUuid = (str?: string): boolean =>
+  Boolean(str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str));
 
 export async function resolveVenueId(request: FastifyRequest, explicitVenueId?: string): Promise<string> {
   const queryVenueId = (request.query as any)?.venueId;
@@ -18,9 +22,20 @@ export async function resolveVenueId(request: FastifyRequest, explicitVenueId?: 
     return user.venueId;
   }
 
-  // If explicit ID given and not 'default', use it
-  if (resolvedExplicit && resolvedExplicit !== 'default') {
+  // If explicit ID given, is valid UUID, and not 'default', use it
+  if (resolvedExplicit && resolvedExplicit !== 'default' && isUuid(resolvedExplicit)) {
     return resolvedExplicit;
+  }
+
+  // Fallback: prefer venue that actually has registered active users
+  const [userWithVenue] = await db
+    .select({ venueId: schema.users.venueId })
+    .from(schema.users)
+    .where(eq(schema.users.isActive, true))
+    .limit(1);
+
+  if (userWithVenue?.venueId) {
+    return userWithVenue.venueId;
   }
 
   // Otherwise fallback to primary venue in database

@@ -51,6 +51,8 @@ export const venues = pgTable('venues', {
   address: text('address'),
   timezone: varchar('timezone', { length: 50 }).notNull().default('America/Bogota'),
   settings: jsonb('settings').notNull().default({}),
+  isActive: boolean('is_active').notNull().default(true),
+  isPrimary: boolean('is_primary').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

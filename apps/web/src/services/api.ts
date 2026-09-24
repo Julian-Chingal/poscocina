@@ -62,9 +62,15 @@ async function request<T = any>(endpoint: string, options: RequestOptions = {}):
   const token = useAuthStore.getState().token;
   const venueId = useAuthStore.getState().venueId;
 
-  const authHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
+  const method = (customConfig.method || 'GET').toUpperCase();
+  const hasBody = customConfig.body !== undefined && customConfig.body !== null;
+  const needsContentType = hasBody || ['POST', 'PUT', 'PATCH'].includes(method);
+
+  const authHeaders: Record<string, string> = {};
+
+  if (needsContentType) {
+    authHeaders['Content-Type'] = 'application/json';
+  }
 
   if (token) {
     authHeaders['Authorization'] = `Bearer ${token}`;

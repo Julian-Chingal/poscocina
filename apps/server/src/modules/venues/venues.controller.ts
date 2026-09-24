@@ -3,13 +3,17 @@ import { venueRepository } from './repositories/venue.repository.js';
 import { ManageVenuesUseCase } from './use-cases/manage-venues.use-case.js';
 import { validate } from '../../utils/validation.util.js';
 import { resolveVenueId } from '../../utils/tenant.util.js';
-import { CreateVenueSchema, UpdateVenueSchema, CreateUserSchema, UpdateUserSchema, ResetPinSchema } from '@poscocina/shared';
+import { CreateVenueSchema, UpdateVenueSchema, ToggleVenueStatusSchema, CreateUserSchema, UpdateUserSchema, ResetPinSchema } from '@poscocina/shared';
 
 export class VenuesController {
   private readonly useCase = new ManageVenuesUseCase(venueRepository);
 
   async listVenues(_request: FastifyRequest, reply: FastifyReply) {
     return reply.send(await this.useCase.listVenues());
+  }
+
+  async listPublicVenues(_request: FastifyRequest, reply: FastifyReply) {
+    return reply.send(await this.useCase.listPublicVenues());
   }
 
   async getFirstVenue(_request: FastifyRequest, reply: FastifyReply) {
@@ -39,6 +43,21 @@ export class VenuesController {
     const updated = await this.useCase.updateVenueSettings(id, data);
     request.server.io?.emit('venue:settings_updated', updated);
     return reply.send(updated);
+  }
+
+  async toggleVenueStatus(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const data = validate(ToggleVenueStatusSchema, request.body);
+    const updated = await this.useCase.toggleVenueStatus(id, data.isActive);
+    request.server.io?.emit('venue:status_changed', updated);
+    return reply.send(updated);
+  }
+
+  async deleteVenue(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const result = await this.useCase.deleteVenue(id);
+    request.server.io?.emit('venue:deleted', { venueId: id });
+    return reply.send(result);
   }
 
   // Staff Handlers

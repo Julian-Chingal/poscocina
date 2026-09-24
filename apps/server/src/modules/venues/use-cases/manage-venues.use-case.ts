@@ -7,6 +7,10 @@ export class ManageVenuesUseCase {
     return await this.repo.listVenues();
   }
 
+  async listPublicVenues() {
+    return await this.repo.listPublicVenues();
+  }
+
   async getFirstVenue() {
     return await this.repo.getFirstVenue();
   }
@@ -25,6 +29,14 @@ export class ManageVenuesUseCase {
 
   async updateVenueSettings(id: string, data: any) {
     return await this.repo.updateVenueSettings(id, data);
+  }
+
+  async toggleVenueStatus(id: string, isActive: boolean) {
+    return await this.repo.toggleVenueStatus(id, isActive);
+  }
+
+  async deleteVenue(id: string) {
+    return await this.repo.deleteVenue(id);
   }
 
   async getRoles() {

@@ -22,4 +22,7 @@ export interface ISessionManager {
   recordFailedAttempt(userId: string): Promise<number>;
   resetFailedAttempts(userId: string): Promise<void>;
   blacklistToken(userId: string, ttlSeconds: number): Promise<void>;
+  lockTerminal(userId: string, ttlSeconds?: number): Promise<void>;
+  unlockTerminal(userId: string): Promise<void>;
+  isTerminalLocked(userId: string): Promise<boolean>;
 }

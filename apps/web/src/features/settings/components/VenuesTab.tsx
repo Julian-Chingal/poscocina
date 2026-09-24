@@ -23,7 +23,12 @@ export const VenuesTab: React.FC<Props> = ({ isActive }) => {
     closeModal,
     handleSwitch,
     createVenue,
+    toggleVenueStatus,
+    deleteVenue,
   } = useVenuesManagement(isActive);
+
+  const isSuperAdmin = currentUser?.roleName === 'super_admin';
+  const canManage = isSuperAdmin || currentUser?.roleName === 'manager';
 
   return (
     <div className="space-y-6">
@@ -35,7 +40,7 @@ export const VenuesTab: React.FC<Props> = ({ isActive }) => {
           </p>
         </div>
 
-        {currentUser?.roleName === 'super_admin' && (
+        {isSuperAdmin && (
           <Button
             type="button"
             onClick={openModal}
@@ -53,8 +58,12 @@ export const VenuesTab: React.FC<Props> = ({ isActive }) => {
             key={v.id}
             venue={v}
             isCurrent={v.id === currentVenueId}
+            canManage={canManage}
+            isSuperAdmin={isSuperAdmin}
             summary={summaries[v.id]?.stats}
             onSwitch={handleSwitch}
+            onToggleStatus={toggleVenueStatus}
+            onDelete={deleteVenue}
           />
         ))}
       </div>

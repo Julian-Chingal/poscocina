@@ -16,3 +16,17 @@ export const UpdateVenueSchema = z.object({
 
 export type CreateVenueInput = z.infer<typeof CreateVenueSchema>;
 export type UpdateVenueInput = z.infer<typeof UpdateVenueSchema>;
+
+export const ToggleVenueStatusSchema = z.object({
+  isActive: z.boolean({ required_error: 'El estado isActive es requerido' }),
+});
+export type ToggleVenueStatusInput = z.infer<typeof ToggleVenueStatusSchema>;
+
+export const PublicVenueSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  isPrimary: z.boolean(),
+  isActive: z.boolean().optional(),
+});
+export type PublicVenue = z.infer<typeof PublicVenueSchema>;
+

@@ -48,4 +48,11 @@ export const settingsApi = {
     api.get(`/venues/${venueId}/summary`),
 
   createVenue: (payload: NewVenuePayload) => api.post('/venues', payload),
+
+  toggleVenueStatus: (venueId: string, isActive: boolean) =>
+    api.patch(`/venues/${venueId}/status`, { isActive }),
+
+  deleteVenue: (venueId: string) =>
+    api.delete(`/venues/${venueId}`),
 };
+

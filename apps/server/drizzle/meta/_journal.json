@@ -36,6 +36,20 @@
       "when": 1789372943313,
       "tag": "0004_nebulous_mikhail_rasputin",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790145259963,
+      "tag": "0005_regular_captain_universe",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790190646299,
+      "tag": "0006_fancy_clea",
+      "breakpoints": true
     }
   ]
 }

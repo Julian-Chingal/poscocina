@@ -60,6 +60,36 @@ export const VenueSelector: React.FC<VenueSelectorProps> = ({
     return venueName ? venueName.trim().charAt(0).toUpperCase() : "S";
   };
 
+  const isSuperAdmin = currentUser?.roleName === 'super_admin';
+
+  if (!isSuperAdmin) {
+    return (
+      <div
+        title={`Sede asignada: ${currentVenue.name}`}
+        className={cn(
+          "h-auto flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs select-none",
+          "bg-muted/60 border border-border/80 text-foreground shadow-2xs",
+          className
+        )}
+      >
+        <Avatar size="sm" className="size-5 border border-border shrink-0">
+          {currentVenue.settings?.logoUrl && (
+            <AvatarImage
+              src={currentVenue.settings.logoUrl}
+              alt={currentVenue.name}
+            />
+          )}
+          <AvatarFallback className="bg-primary/20 text-primary font-bold text-[10px]">
+            {getVenueInitial(currentVenue.name)}
+          </AvatarFallback>
+        </Avatar>
+        <span className="font-medium max-w-36 truncate text-left">
+          {currentVenue.name}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api } from '../services/api';
+import { useAuthStore } from './auth.store';
 
 export interface VenueItem {
   id: string;
@@ -8,6 +9,7 @@ export interface VenueItem {
   address?: string | null;
   phone?: string | null;
   isActive?: boolean;
+  isPrimary?: boolean;
   settings?: VenueSettings;
   createdAt?: string;
 }
@@ -82,7 +84,22 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
 
   switchVenue: async (newVenueId: string) => {
     if (!newVenueId || newVenueId === get().venueId) return;
+
+    // Guardia de seguridad: solo super_admin puede cambiar de sede
+    const authState = useAuthStore.getState();
+    const currentUser = authState.currentUser;
+    if (
+      currentUser &&
+      currentUser.roleName !== 'super_admin' &&
+      currentUser.venueId &&
+      currentUser.venueId !== newVenueId
+    ) {
+      console.warn('Acceso denegado: solo super_admin puede alternar entre sedes');
+      return;
+    }
+
     localStorage.setItem('poscocina_venue_id', newVenueId);
+    authState.setVenueId(newVenueId);
     await get().loadBranding(newVenueId);
   },
 

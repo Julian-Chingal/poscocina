@@ -4,13 +4,26 @@ import { db } from '../../../db/index.js';
 import * as schema from '../../../db/schema.js';
 import { redis } from '../../../config/redis.js';
 import { IVenueRepository } from '../interfaces/venue.repository.interface.js';
-import { NotFoundError, BadRequestError } from '../../../errors/app-error.js';
+import { NotFoundError, BadRequestError, ConflictError } from '../../../errors/app-error.js';
 
 export class VenueRepository implements IVenueRepository {
   constructor(private readonly database = db) {}
 
   async listVenues() {
     return this.database.select().from(schema.venues);
+  }
+
+  async listPublicVenues() {
+    return this.database
+      .select({
+        id: schema.venues.id,
+        name: schema.venues.name,
+        isPrimary: schema.venues.isPrimary,
+        isActive: schema.venues.isActive,
+      })
+      .from(schema.venues)
+      .where(eq(schema.venues.isActive, true))
+      .orderBy(desc(schema.venues.isPrimary), schema.venues.name);
   }
 
   async getFirstVenue() {
@@ -156,6 +169,82 @@ export class VenueRepository implements IVenueRepository {
 
     const [updated] = await this.database.update(schema.venues).set(updateFields).where(eq(schema.venues.id, id)).returning();
     return updated;
+  }
+
+  async toggleVenueStatus(id: string, isActive: boolean) {
+    await this.getVenueById(id);
+    const [updated] = await this.database
+      .update(schema.venues)
+      .set({ isActive })
+      .where(eq(schema.venues.id, id))
+      .returning();
+    return updated;
+  }
+
+  async checkVenueDependencies(id: string) {
+    await this.getVenueById(id);
+
+    const activeOrders = await this.database
+      .select({ id: schema.orders.id })
+      .from(schema.orders)
+      .where(
+        and(
+          eq(schema.orders.venueId, id),
+          inArray(schema.orders.status, ['open', 'sent_to_kitchen', 'partially_ready', 'ready', 'check_requested'])
+        )
+      );
+
+    const openShifts = await this.database
+      .select({ id: schema.cashShifts.id })
+      .from(schema.cashShifts)
+      .where(and(eq(schema.cashShifts.venueId, id), eq(schema.cashShifts.status, 'open')));
+
+    const [activeUsers] = await this.database
+      .select({ count: count() })
+      .from(schema.users)
+      .where(and(eq(schema.users.venueId, id), eq(schema.users.isActive, true)));
+
+    const activeOrdersCount = activeOrders.length;
+    const openShiftsCount = openShifts.length;
+    const activeStaffCount = Number(activeUsers?.count || 0);
+
+    const canDelete = activeOrdersCount === 0 && openShiftsCount === 0;
+
+    return {
+      canDelete,
+      activeOrdersCount,
+      openShiftsCount,
+      activeStaffCount,
+    };
+  }
+
+  async deleteVenue(id: string) {
+    const deps = await this.checkVenueDependencies(id);
+    if (!deps.canDelete) {
+      const reasons: string[] = [];
+      if (deps.activeOrdersCount > 0) {
+        reasons.push(`${deps.activeOrdersCount} comanda(s) activas`);
+      }
+      if (deps.openShiftsCount > 0) {
+        reasons.push('un turno de caja abierto');
+      }
+      throw new ConflictError(
+        `No se puede eliminar la sede: tiene ${reasons.join(' y ')}. Finalice o cierre estas operaciones primero, o desactive la sede.`
+      );
+    }
+
+    // Soft delete: deactivate venue to preserve historical orders and receipts
+    const [deleted] = await this.database
+      .update(schema.venues)
+      .set({ isActive: false })
+      .where(eq(schema.venues.id, id))
+      .returning();
+
+    return {
+      success: true,
+      message: 'Sede desactivada/eliminada exitosamente',
+      venue: deleted,
+    };
   }
 
   async getRoles() {

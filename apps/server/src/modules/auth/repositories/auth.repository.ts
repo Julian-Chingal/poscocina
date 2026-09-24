@@ -1,4 +1,4 @@
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, notInArray, isNotNull } from 'drizzle-orm';
 import { db } from '../../../db/index.js';
 import * as schema from '../../../db/schema.js';
 import { IAuthRepository } from '../interfaces/auth.interface.js';
@@ -6,18 +6,36 @@ import { IAuthRepository } from '../interfaces/auth.interface.js';
 export class AuthRepository implements IAuthRepository {
   constructor(private readonly database = db) {}
 
-  async findVenueUsers(venueId: string) {
-    return await this.database
+  async findVenueUsers(venueId?: string) {
+    const isUuid = (str?: string): boolean =>
+      Boolean(str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str));
+
+    if (!venueId || !isUuid(venueId)) {
+      return [];
+    }
+
+    return this.database
       .select({
         id: schema.users.id,
+        venueId: schema.users.venueId,
         name: schema.users.name,
         roleId: schema.users.roleId,
         roleName: schema.roles.name,
         roleLabel: schema.roles.label,
+        roleHierarchy: schema.roles.hierarchy,
       })
       .from(schema.users)
       .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
-      .where(and(eq(schema.users.venueId, venueId), eq(schema.users.isActive, true)));
+      .innerJoin(schema.venues, eq(schema.users.venueId, schema.venues.id))
+      .where(
+        and(
+          eq(schema.users.venueId, venueId),
+          eq(schema.users.isActive, true),
+          eq(schema.venues.isActive, true),
+          isNotNull(schema.users.pinHash),
+          notInArray(schema.roles.name, ['manager', 'super_admin'])
+        )
+      );
   }
 
   async findUserWithRoleById(userId: string) {
@@ -26,6 +44,8 @@ export class AuthRepository implements IAuthRepository {
         id: schema.users.id,
         name: schema.users.name,
         venueId: schema.users.venueId,
+        venueName: schema.venues.name,
+        venueIsActive: schema.venues.isActive,
         email: schema.users.email,
         pinHash: schema.users.pinHash,
         tokenVersion: schema.users.tokenVersion,
@@ -35,6 +55,7 @@ export class AuthRepository implements IAuthRepository {
       })
       .from(schema.users)
       .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
+      .innerJoin(schema.venues, eq(schema.users.venueId, schema.venues.id))
       .where(eq(schema.users.id, userId))
       .limit(1);
 
@@ -48,6 +69,8 @@ export class AuthRepository implements IAuthRepository {
         name: schema.users.name,
         email: schema.users.email,
         venueId: schema.users.venueId,
+        venueName: schema.venues.name,
+        venueIsActive: schema.venues.isActive,
         passwordHash: schema.users.passwordHash,
         tokenVersion: schema.users.tokenVersion,
         roleName: schema.roles.name,
@@ -56,6 +79,7 @@ export class AuthRepository implements IAuthRepository {
       })
       .from(schema.users)
       .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
+      .innerJoin(schema.venues, eq(schema.users.venueId, schema.venues.id))
       .where(eq(schema.users.email, email.toLowerCase().trim()))
       .limit(1);
 

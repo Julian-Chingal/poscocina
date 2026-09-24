@@ -10,6 +10,9 @@ export class LoginPasswordUseCase {
     const user = await this.authRepo.findUserWithRoleByEmail(email);
     if (!user) throw new UnauthorizedError('Credenciales incorrectas');
     if (!user.isActive) throw new ForbiddenError('Este usuario se encuentra inactivo');
+    if (user.roleName !== 'super_admin' && user.venueIsActive === false) {
+      throw new ForbiddenError('La sede a la que pertenece este usuario se encuentra inactiva.');
+    }
     if (!user.passwordHash) throw new UnauthorizedError('Este usuario no tiene contraseña de acceso configurada');
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);

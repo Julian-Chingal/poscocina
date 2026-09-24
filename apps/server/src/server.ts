@@ -29,6 +29,21 @@ export async function buildServer() {
   // 0. Centralized Error Handling
   await server.register(errorHandlerPlugin);
 
+  // 0.1 Handle application/json gracefully (allow empty bodies on DELETE/GET/HEAD without FST_ERR_CTP_EMPTY_JSON_BODY)
+  server.removeContentTypeParser('application/json');
+  server.addContentTypeParser('application/json', { parseAs: 'string' }, (_req, body: string, done) => {
+    if (!body || (typeof body === 'string' && body.trim() === '')) {
+      done(null, undefined);
+      return;
+    }
+    try {
+      done(null, JSON.parse(body));
+    } catch (err: any) {
+      err.statusCode = 400;
+      done(err, undefined);
+    }
+  });
+
   // 1. Security Headers (Helmet)
   await server.register(helmet, {
     contentSecurityPolicy: false,

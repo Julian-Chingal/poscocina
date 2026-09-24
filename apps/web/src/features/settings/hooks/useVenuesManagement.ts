@@ -57,6 +57,29 @@ export const useVenuesManagement = (isActiveTab: boolean) => {
     }
   };
 
+  const toggleVenueStatus = async (targetId: string, nextStatus: boolean) => {
+    try {
+      await settingsApi.toggleVenueStatus(targetId, nextStatus);
+      toast.success(nextStatus ? 'Sede activada con éxito' : 'Sede desactivada con éxito');
+      await loadAllVenues();
+    } catch (err: any) {
+      toast.error(err?.message || 'Error al cambiar estado de la sede');
+    }
+  };
+
+  const deleteVenue = async (targetId: string) => {
+    try {
+      await settingsApi.deleteVenue(targetId);
+      toast.success('Sede eliminada con éxito');
+      await loadAllVenues();
+    } catch (err: any) {
+      // If 409 Conflict or other, api.ts might have toasted, but ensure user receives clear feedback
+      if (err?.status !== 409) {
+        toast.error(err?.message || 'Error al eliminar la sede');
+      }
+    }
+  };
+
   return {
     venues,
     currentVenueId: venueId,
@@ -68,5 +91,8 @@ export const useVenuesManagement = (isActiveTab: boolean) => {
     closeModal: () => setIsModalOpen(false),
     handleSwitch,
     createVenue,
+    toggleVenueStatus,
+    deleteVenue,
   };
 };
+
