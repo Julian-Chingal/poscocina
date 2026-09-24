@@ -9,13 +9,39 @@ export interface Customer {
   address?: string;
 }
 
+export interface Modifier {
+  id: string;
+  groupId: string;
+  name: string;
+  priceDelta: string | number;
+  isDefault: boolean;
+  isAvailable: boolean;
+  sortOrder: number;
+}
+
+export interface ModifierGroup {
+  id: string;
+  venueId: string;
+  name: string;
+  selectionType: string;
+  isRequired: boolean;
+  minSelections: number;
+  maxSelections?: number | null;
+  sortOrder: number;
+  modifiers: Modifier[];
+}
+
 export interface Product {
   id: string;
   categoryId: string;
   name: string;
   price: string;
   description?: string;
+  imageUrl?: string;
+  isAvailable?: boolean;
+  modifierGroups?: ModifierGroup[];
 }
+
 
 export interface Category {
   id: string;
@@ -60,6 +86,8 @@ export interface PosOrder {
   tableId?: string;
   venueId?: string;
   status?: string;
+  paymentStatus?: 'unpaid' | 'partially_paid' | 'paid' | string;
+  kitchenStatus?: string;
   subtotal?: string | number;
   taxTotal?: string | number;
   total?: string | number;

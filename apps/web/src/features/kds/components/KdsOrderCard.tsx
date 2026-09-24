@@ -41,15 +41,33 @@ export const KdsOrderCard: React.FC<KdsOrderCardProps> = ({
           </div>
         </div>
 
-        {/* Urgency Badge */}
-        <Badge
-          variant="outline"
-          className={`space-x-1 text-xs px-2.5 py-1 font-mono ${urgency.badge}`}
-          title={urgency.label}
-        >
-          <Clock className="w-3.5 h-3.5" />
-          <span>{urgency.elapsedMinutes}m</span>
-        </Badge>
+        <div className="flex items-center space-x-1.5">
+          {order.paymentStatus === 'paid' ? (
+            <Badge
+              variant="outline"
+              className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/40 text-[10px] font-bold tracking-wide uppercase px-2 py-0.5"
+            >
+              Pagado
+            </Badge>
+          ) : (
+            <Badge
+              variant="outline"
+              className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/40 text-[10px] font-bold tracking-wide uppercase px-2 py-0.5"
+            >
+              Por Cobrar
+            </Badge>
+          )}
+
+          {/* Urgency Badge */}
+          <Badge
+            variant="outline"
+            className={`space-x-1 text-xs px-2.5 py-1 font-mono ${urgency.badge}`}
+            title={urgency.label}
+          >
+            <Clock className="w-3.5 h-3.5" />
+            <span>{urgency.elapsedMinutes}m</span>
+          </Badge>
+        </div>
       </CardHeader>
 
       {/* Items List */}

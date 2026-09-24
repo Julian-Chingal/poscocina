@@ -66,23 +66,45 @@ export class SplitEqualUseCase {
       const isCompleted = splitNumber >= totalSplits || totalPaidAcrossSplits >= (orderTotalNum - 0.05);
 
       let updatedInventoryItems: any[] = [];
+      let isTableFreed = false;
+      let tableStatus = 'free';
+
       if (isCompleted) {
-        await this.receiptRepo.markOrderPaid(orderId, { status: 'paid', closedAt: new Date() }, tx);
-        if (order.tableId) {
-          await this.receiptRepo.freeTable(order.tableId, tx);
+        const isDelivered = order.kitchenStatus === 'delivered';
+        const markPaidPayload: Record<string, any> = { paymentStatus: 'paid' };
+
+        if (isDelivered) {
+          markPaidPayload.status = 'paid';
+          markPaidPayload.closedAt = new Date();
+          if (order.tableId) {
+            await this.receiptRepo.freeTable(order.tableId, tx);
+            isTableFreed = true;
+            tableStatus = 'free';
+          }
+        } else if (order.tableId) {
+          await this.receiptRepo.setTableWaitingFood(order.tableId, tx);
+          isTableFreed = false;
+          tableStatus = 'paid_waiting_food';
         }
+
+        await this.receiptRepo.markOrderPaid(orderId, markPaidPayload, tx);
         const orderItems = await tx.select().from(schema.orderItems).where(eq(schema.orderItems.orderId, orderId));
         updatedInventoryItems = await this.receiptRepo.deductInventoryForItems(order.id, orderItems, tx);
+      } else {
+        await this.receiptRepo.markOrderPaid(orderId, { paymentStatus: 'partially_paid' }, tx);
       }
 
       const remainingAmt = Math.max(0, orderTotalNum - totalPaidAcrossSplits);
       return {
         receipt: newReceipt,
+        orderId: order.id,
         splitNumber,
         totalSplits,
         isCompleted,
         isComplete: isCompleted,
-        tableId: isCompleted ? order.tableId : null,
+        isTableFreed,
+        tableStatus,
+        tableId: order.tableId,
         remainingAmount: remainingAmt,
         remainingBalance: remainingAmt,
         updatedInventory: updatedInventoryItems,

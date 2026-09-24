@@ -36,11 +36,28 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
         });
         return;
       }
+      // Explicit response confirming no active shift
       set({ isOpen: false, shiftId: null, cashierName: undefined, loading: false });
-    } catch {
-      set({ isOpen: false, shiftId: null, cashierName: undefined, loading: false });
+    } catch (err: any) {
+      // ⚠️  Do NOT assume the shift is closed when the request fails.
+      // A 429 (rate-limit) or 5xx means we simply don't know the current state.
+      // Only mark closed when the server explicitly confirms there is no shift
+      // (which comes as a normal 200 with { open: false }, handled above).
+      const status: number | undefined = err?.statusCode ?? err?.response?.status ?? err?.status;
+      const isRateLimit = status === 429;
+      const isServerError = status !== undefined && status >= 500;
+
+      if (!isRateLimit && !isServerError) {
+        // 400/401/403/404 from this endpoint → treat as "no shift found"
+        set({ isOpen: false, shiftId: null, cashierName: undefined, loading: false });
+      } else {
+        // Transient failure: preserve last known isOpen state, just stop loading
+        set((prev) => ({ ...prev, loading: false }));
+        console.warn('[ShiftStore] Transient error fetching shift — state preserved:', status ?? 'network error');
+      }
     }
   },
+
 
   initSocket: (venueId?: string) => {
     const socket: Socket = io();

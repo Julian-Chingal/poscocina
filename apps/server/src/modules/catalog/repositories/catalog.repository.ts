@@ -14,15 +14,41 @@ export class CatalogRepository implements ICatalogRepository {
     });
 
     const categoryIds = categories.map((c) => c.id);
-    const products = categoryIds.length > 0
+    const rawProducts = categoryIds.length > 0
       ? await this.database.query.products.findMany({
           where: (products, { inArray }) => inArray(products.categoryId, categoryIds),
+          orderBy: (products, { asc }) => [asc(products.sortOrder)],
           with: {
             category: true,
-            modifierGroups: true,
+            // modifierGroups here resolves to the PIVOT table (productModifierGroups).
+            // We must go one level deeper to get the actual modifierGroup entity.
+            modifierGroups: {
+              with: {
+                modifierGroup: {
+                  with: {
+                    modifiers: {
+                      where: (m, { eq }) => eq(m.isAvailable, true),
+                      orderBy: (m, { asc }) => [asc(m.sortOrder)],
+                    },
+                  },
+                },
+              },
+              orderBy: (pmg, { asc }) => [asc(pmg.sortOrder)],
+            },
           },
         })
       : [];
+
+    // Flatten pivot rows: expose modifierGroups[] with their modifiers directly on each product
+    const products = rawProducts.map(({ modifierGroups: pivotRows, ...product }) => ({
+      ...product,
+      modifierGroups: pivotRows.map((pivot) => ({
+        ...pivot.modifierGroup,
+        // Allow per-product override of isRequired from the pivot
+        isRequired: pivot.isRequired ?? pivot.modifierGroup.isRequired,
+        sortOrder: pivot.sortOrder,
+      })),
+    }));
 
     return { categories, products };
   }

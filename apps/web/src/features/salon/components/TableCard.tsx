@@ -33,6 +33,8 @@ const getStatusColor = (status: TableItem['status']) => {
       return 'bg-amber-500/10 border-amber-500/40 text-foreground hover:border-amber-500/70';
     case 'check_requested':
       return 'bg-purple-500/10 border-purple-500/40 text-foreground hover:border-purple-500/70 animate-pulse';
+    case 'paid_waiting_food':
+      return 'bg-sky-500/10 border-sky-500/50 text-foreground hover:border-sky-500/80 ring-1 ring-sky-500/30';
     case 'reserved':
       return 'bg-blue-500/10 border-blue-500/40 text-foreground hover:border-blue-500/70';
     case 'blocked':
@@ -98,15 +100,15 @@ export const TableCard: React.FC<Props> = ({
           <Users className="w-4 h-4 text-muted-foreground" />
           <span>{table.capacity} comensales</span>
         </div>
-        {table.status === 'occupied' && !isEditMode && (
-          <div className="flex items-center space-x-1 text-amber-500">
+        {(table.status === 'occupied' || table.status === 'paid_waiting_food') && !isEditMode && (
+          <div className={`flex items-center space-x-1 ${table.status === 'paid_waiting_food' ? 'text-sky-500' : 'text-amber-500'}`}>
             <Clock className="w-3.5 h-3.5" />
-            <span>Activa</span>
+            <span>{table.status === 'paid_waiting_food' ? 'Pagada / Cocina' : 'Activa'}</span>
           </div>
         )}
       </div>
 
-      {(table.status === 'occupied' || table.status === 'check_requested') && !isEditMode && (
+      {(table.status === 'occupied' || table.status === 'check_requested' || table.status === 'paid_waiting_food') && !isEditMode && (
         <div
           className="mt-3 pt-2.5 border-t border-border flex items-center justify-between text-xs"
           onClick={(e) => e.stopPropagation()}

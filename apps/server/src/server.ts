@@ -52,10 +52,27 @@ export async function buildServer() {
   });
 
   // 2. Global Rate Limiting
+  // Keyed by authenticated userId (from JWT) so all POS terminals on the same
+  // LAN don't share one counter. Falls back to IP when unauthenticated.
+  // In development the limit is raised significantly so that hot-reload cycles
+  // and debugging don't produce spurious 429 responses.
   await server.register(rateLimit, {
-    max: 200,
+    max: env.NODE_ENV === 'development' ? 1000 : 300,
     timeWindow: '1 minute',
+    keyGenerator: (request) => {
+      // If a JWT is present use the user id, otherwise fall back to IP
+      try {
+        const decoded = request.server.jwt.decode<{ sub: string }>(
+          (request.headers.authorization ?? '').replace('Bearer ', '')
+        );
+        if (decoded?.sub) return `user:${decoded.sub}`;
+      } catch {
+        // JWT missing or invalid — fall through to IP
+      }
+      return request.ip;
+    },
   });
+
 
   // 3. CORS
   await server.register(cors, {

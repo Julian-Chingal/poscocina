@@ -1,7 +1,7 @@
 import { db } from '../../../db/index.js';
 import * as schema from '../../../db/schema.js';
 import { inArray } from 'drizzle-orm';
-import { BadRequestError } from '../../../errors/app-error.js';
+import { BadRequestError, NotFoundError } from '../../../errors/app-error.js';
 import { IOrderRepository, CreateOrderPayload } from '../interfaces/order.repository.interface.js';
 import { auditService } from '../../../utils/audit.service.js';
 
@@ -23,27 +23,37 @@ export class CreateOrderUseCase {
         throw new BadRequestError('Caja cerrada: Debes abrir la caja antes de registrar pedidos');
       }
 
-      let subtotal = 0;
-      for (const item of items) {
-        const qty = item.quantity || 1;
-        let itemTotal = item.unitPrice * qty;
-        if (item.modifiers && item.modifiers.length > 0) {
-          for (const mod of item.modifiers) itemTotal += (mod.priceDelta || 0) * qty;
-        }
-        subtotal += itemTotal;
-      }
-
+      // Resolve product data (price + taxRate) from DB — never trust client-supplied prices
       const productIds = items.map((i) => i.productId);
       const products = await tx.select().from(schema.products).where(inArray(schema.products.id, productIds));
       const productMap = new Map(products.map((p) => [p.id, p]));
 
-      let taxTotal = 0;
+      // Validate all products exist
       for (const item of items) {
-        const prod = productMap.get(item.productId);
-        const rate = prod ? parseFloat(prod.taxRate || '0.08') : 0.08;
-        const qty = item.quantity || 1;
-        taxTotal += item.unitPrice * qty * rate;
+        if (!productMap.has(item.productId)) {
+          throw new NotFoundError(`Producto no encontrado: ${item.productId}`);
+        }
       }
+
+      let subtotal = 0;
+      let taxTotal = 0;
+
+      for (const item of items) {
+        const prod = productMap.get(item.productId)!;
+        // Server-side price resolution: ignore any unitPrice sent by the client
+        const resolvedPrice = parseFloat(prod.price);
+        const rate = parseFloat(prod.taxRate || '0.08');
+        const qty = item.quantity || 1;
+
+        let itemTotal = resolvedPrice * qty;
+        if (item.modifiers && item.modifiers.length > 0) {
+          for (const mod of item.modifiers) itemTotal += (mod.priceDelta || 0) * qty;
+        }
+
+        subtotal += itemTotal;
+        taxTotal += resolvedPrice * qty * rate;
+      }
+
       const total = subtotal + taxTotal;
 
       const order = await this.orderRepo.createOrder({
@@ -53,6 +63,8 @@ export class CreateOrderUseCase {
         waiterId: waiterId || null,
         orderType,
         status: 'sent_to_kitchen',
+        paymentStatus: 'unpaid',
+        kitchenStatus: 'queued',
         guestCount,
         subtotal: subtotal.toFixed(2),
         taxTotal: taxTotal.toFixed(2),
@@ -61,14 +73,15 @@ export class CreateOrderUseCase {
       }, tx);
 
       const itemsToInsert = items.map((item) => {
-        const prod = productMap.get(item.productId);
+        const prod = productMap.get(item.productId)!;
+        const resolvedPrice = parseFloat(prod.price);
         return {
           orderId: order.id,
           productId: item.productId,
           station: prod?.printerStation || 'kitchen',
           status: 'pending',
           quantity: item.quantity || 1,
-          unitPrice: item.unitPrice.toFixed(2),
+          unitPrice: resolvedPrice.toFixed(2),  // Always use DB price
           seatNumber: item.seatNumber || null,
           course: item.course || 1,
           notes: item.notes || null,
@@ -109,3 +122,4 @@ export class CreateOrderUseCase {
     });
   }
 }
+

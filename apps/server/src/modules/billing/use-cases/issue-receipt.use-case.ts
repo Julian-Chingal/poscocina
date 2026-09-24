@@ -69,16 +69,35 @@ export class IssueReceiptUseCase {
 
       await this.receiptRepo.createPayments(newReceipt.id, payments, tx);
 
-      await this.receiptRepo.markOrderPaid(orderId, {
-        status: 'paid',
-        closedAt: new Date(),
+      const isDelivered = order.kitchenStatus === 'delivered';
+      const markPaidPayload: Record<string, any> = {
+        paymentStatus: 'paid',
         discountTotal: discountTotal.toFixed(2),
         notes: discountReason ? `${order.notes || ''} [Desc: ${discountReason}]`.trim() : order.notes,
-      }, tx);
+      };
 
-      if (order.tableId) {
-        await this.receiptRepo.freeTable(order.tableId, tx);
+      let tableStatus = 'free';
+      let isTableFreed = false;
+
+      if (isDelivered) {
+        // Kitchen already delivered everything -> order is closed & table is freed
+        markPaidPayload.status = 'paid';
+        markPaidPayload.closedAt = new Date();
+        if (order.tableId) {
+          await this.receiptRepo.freeTable(order.tableId, tx);
+          isTableFreed = true;
+          tableStatus = 'free';
+        }
+      } else {
+        // Food is still being cooked/served -> table remains active with paid_waiting_food
+        if (order.tableId) {
+          await this.receiptRepo.setTableWaitingFood(order.tableId, tx);
+          isTableFreed = false;
+          tableStatus = 'paid_waiting_food';
+        }
       }
+
+      await this.receiptRepo.markOrderPaid(orderId, markPaidPayload, tx);
 
       const orderItems = await tx.select().from(schema.orderItems).where(eq(schema.orderItems.orderId, orderId));
       const updatedInventory = await this.receiptRepo.deductInventoryForItems(order.id, orderItems, tx);
@@ -97,7 +116,14 @@ export class IssueReceiptUseCase {
         }).catch(() => {});
       }
 
-      return { receipt: newReceipt, tableId: order.tableId, updatedInventory };
+      return {
+        receipt: newReceipt,
+        orderId: order.id,
+        tableId: order.tableId,
+        isTableFreed,
+        tableStatus,
+        updatedInventory,
+      };
     });
   }
 }

@@ -9,19 +9,22 @@ export const CreateOrderItemModifierSchema = z.object({
 export const CreateOrderItemSchema = z.object({
   productId: z.string().uuid(),
   quantity: z.number().int().positive().default(1),
-  unitPrice: z.number().nonnegative(),
+  // unitPrice is optional: the backend resolves it from the products table.
+  // Accepting it from the client would be a price-tampering vector.
+  unitPrice: z.number().nonnegative().optional(),
   notes: z.string().max(255).optional(),
   seatNumber: z.number().int().positive().optional(),
   course: z.number().int().positive().default(1),
   modifiers: z.array(CreateOrderItemModifierSchema).optional().default([]),
 });
 
+
 export const CreateOrderSchema = z.object({
   venueId: z.string().uuid(),
-  tableId: z.string().uuid().optional().nullable(),
-  customerId: z.string().uuid().optional().nullable(),
+  tableId: z.string().uuid().optional().nullable().or(z.literal('').transform(() => undefined)),
+  customerId: z.string().uuid().optional().nullable().or(z.literal('').transform(() => undefined)),
   orderType: z.enum([ORDER_TYPE.DINE_IN, ORDER_TYPE.TAKEOUT, ORDER_TYPE.DELIVERY]).default(ORDER_TYPE.DINE_IN),
-  waiterId: z.string().uuid().optional().nullable(),
+  waiterId: z.string().uuid().optional().nullable().or(z.literal('').transform(() => undefined)),
   guestCount: z.number().int().positive().default(1),
   notes: z.string().max(500).optional(),
   items: z.array(CreateOrderItemSchema).min(1, 'La orden debe contener al menos un producto'),

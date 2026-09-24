@@ -76,10 +76,25 @@ export class OrdersController {
   async updateOrderItemStatus(request: FastifyRequest, reply: FastifyReply) {
     const { id } = request.params as { id: string };
     const { status } = validate(UpdateItemStatusSchema, request.body);
-    const updated = await this.statusUseCase.updateOrderItemStatus(id, status);
+    const result = await this.statusUseCase.updateOrderItemStatus(id, status);
 
-    request.server.io?.emit('order_item:updated', updated);
-    return reply.send(updated);
+    request.server.io?.emit('order_item:updated', result.updatedItem);
+    request.server.io?.emit('order:status_updated', {
+      id: result.orderId,
+      kitchenStatus: result.kitchenStatus,
+      status: result.isOrderFullyClosed ? 'paid' : undefined,
+      closedAt: result.isOrderFullyClosed ? new Date() : undefined,
+    });
+
+    if (result.tableId && result.newTableStatus) {
+      request.server.io?.emit('table:status_changed', {
+        tableId: result.tableId,
+        status: result.newTableStatus,
+        currentOrderId: result.isTableFreed ? null : result.orderId,
+      });
+    }
+
+    return reply.send(result.updatedItem);
   }
 }
 

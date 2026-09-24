@@ -50,8 +50,17 @@ export class BillingController {
     const result = await this.issueReceiptUseCase.execute(request.body as IssueReceiptDTO);
 
     request.server.io?.emit('receipt:issued', result.receipt);
+    request.server.io?.emit('order:status_updated', {
+      id: result.orderId,
+      paymentStatus: 'paid',
+    });
+
     if (result.tableId) {
-      request.server.io?.emit('table:status_changed', { tableId: result.tableId, status: 'free', currentOrderId: null });
+      request.server.io?.emit('table:status_changed', {
+        tableId: result.tableId,
+        status: result.tableStatus,
+        currentOrderId: result.isTableFreed ? null : result.orderId,
+      });
     }
     for (const inv of result.updatedInventory) {
       request.server.io?.emit('inventory:stock_updated', inv);
@@ -64,8 +73,17 @@ export class BillingController {
     const result = await this.splitEqualUseCase.execute(request.body as SplitEqualDTO);
 
     request.server.io?.emit('receipt:issued', result.receipt);
-    if (result.isCompleted && result.tableId) {
-      request.server.io?.emit('table:status_changed', { tableId: result.tableId, status: 'free', currentOrderId: null });
+    request.server.io?.emit('order:status_updated', {
+      id: result.orderId,
+      paymentStatus: result.isCompleted ? 'paid' : 'partially_paid',
+    });
+
+    if (result.tableId) {
+      request.server.io?.emit('table:status_changed', {
+        tableId: result.tableId,
+        status: result.tableStatus,
+        currentOrderId: result.isTableFreed ? null : result.orderId,
+      });
     }
     for (const inv of result.updatedInventory) {
       request.server.io?.emit('inventory:stock_updated', inv);
@@ -79,8 +97,17 @@ export class BillingController {
     const result = await this.splitItemsUseCase.execute(body);
 
     request.server.io?.emit('receipt:issued', result.receipt);
-    if (result.isCompleted && result.tableId) {
-      request.server.io?.emit('table:status_changed', { tableId: result.tableId, status: 'free', currentOrderId: null });
+    request.server.io?.emit('order:status_updated', {
+      id: result.orderId,
+      paymentStatus: result.isCompleted ? 'paid' : 'partially_paid',
+    });
+
+    if (result.tableId) {
+      request.server.io?.emit('table:status_changed', {
+        tableId: result.tableId,
+        status: result.tableStatus,
+        currentOrderId: result.isTableFreed ? null : result.orderId,
+      });
     } else {
       request.server.io?.emit('order:items_updated', { orderId: body.orderId });
     }

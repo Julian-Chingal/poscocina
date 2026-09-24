@@ -37,7 +37,7 @@ export const PosHeader: React.FC<Props> = ({
             <option value="">Para Llevar / Sin Mesa</option>
             {allTables.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.label} ({t.status === 'occupied' ? 'Ocupada' : 'Libre'})
+                {t.label} ({t.status === 'occupied' ? 'Ocupada' : t.status === 'paid_waiting_food' ? 'Pagada (Cocina)' : t.status === 'check_requested' ? 'Cuenta' : 'Libre'})
               </option>
             ))}
           </Select>

@@ -17,6 +17,8 @@ export interface KdsOrder {
   id: string;
   orderNumber?: number | string;
   openedAt: string;
+  paymentStatus?: 'unpaid' | 'partially_paid' | 'paid' | string;
+  kitchenStatus?: string;
   table?: {
     label: string;
   } | null;

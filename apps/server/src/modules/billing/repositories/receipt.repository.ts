@@ -8,10 +8,11 @@ export class ReceiptRepository implements IReceiptRepository {
 
   async findPendingBills(venueId: string) {
     return await this.database.query.orders.findMany({
-      where: (orders, { and, eq, inArray }) =>
+      where: (orders, { and, eq, notInArray }) =>
         and(
           eq(orders.venueId, venueId),
-          inArray(orders.status, ['sent_to_kitchen', 'partially_ready', 'ready', 'check_requested'])
+          eq(orders.paymentStatus, 'unpaid'),
+          notInArray(orders.status, ['cancelled', 'voided', 'paid'])
         ),
       with: {
         table: true,
@@ -126,6 +127,14 @@ export class ReceiptRepository implements IReceiptRepository {
       .set({ status: 'free', currentOrderId: null, updatedAt: new Date() })
       .where(eq(schema.tables.id, tableId));
   }
+
+  async setTableWaitingFood(tableId: string, tx = this.database) {
+    await tx
+      .update(schema.tables)
+      .set({ status: 'paid_waiting_food', updatedAt: new Date() })
+      .where(eq(schema.tables.id, tableId));
+  }
 }
+
 
 export const receiptRepository = new ReceiptRepository();

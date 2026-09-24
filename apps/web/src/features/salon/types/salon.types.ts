@@ -11,7 +11,7 @@ export interface TableItem {
   positionX?: string | number;
   positionY?: string | number;
   shape?: 'rect' | 'circle' | 'square';
-  status: 'free' | 'occupied' | 'check_requested' | 'reserved' | 'blocked';
+  status: 'free' | 'occupied' | 'check_requested' | 'paid_waiting_food' | 'reserved' | 'blocked';
   currentOrderId?: string | null;
 }
 

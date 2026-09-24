@@ -2,11 +2,30 @@ export const TABLE_STATUS = {
   FREE: 'free',
   OCCUPIED: 'occupied',
   CHECK_REQUESTED: 'check_requested',
+  PAID_WAITING_FOOD: 'paid_waiting_food',
   RESERVED: 'reserved',
   BLOCKED: 'blocked',
 } as const;
 
 export type TableStatus = (typeof TABLE_STATUS)[keyof typeof TABLE_STATUS];
+
+export const PAYMENT_STATUS = {
+  UNPAID: 'unpaid',
+  PARTIALLY_PAID: 'partially_paid',
+  PAID: 'paid',
+} as const;
+
+export type PaymentStatus = (typeof PAYMENT_STATUS)[keyof typeof PAYMENT_STATUS];
+
+export const KITCHEN_STATUS = {
+  QUEUED: 'queued',
+  IN_PREPARATION: 'in_preparation',
+  READY: 'ready',
+  DELIVERED: 'delivered',
+  CANCELLED: 'cancelled',
+} as const;
+
+export type KitchenStatus = (typeof KITCHEN_STATUS)[keyof typeof KITCHEN_STATUS];
 
 export const ORDER_STATUS = {
   OPEN: 'open',

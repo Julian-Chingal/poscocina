@@ -35,4 +35,6 @@ export interface IReceiptRepository {
   deductInventoryForItems(orderId: string, items: any[], tx: any): Promise<any[]>;
   markOrderPaid(orderId: string, data: any, tx: any): Promise<void>;
   freeTable(tableId: string, tx: any): Promise<void>;
+  setTableWaitingFood(tableId: string, tx: any): Promise<void>;
 }
+

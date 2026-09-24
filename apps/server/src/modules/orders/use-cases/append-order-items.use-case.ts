@@ -25,49 +25,61 @@ export class AppendOrderItemsUseCase {
     }
 
     return await db.transaction(async (tx) => {
-      let appendedSubtotal = 0;
-      for (const item of items) {
-        const qty = item.quantity || 1;
-        let itemTotal = item.unitPrice * qty;
-        if (item.modifiers && item.modifiers.length > 0) {
-          for (const mod of item.modifiers) itemTotal += (mod.priceDelta || 0) * qty;
-        }
-        appendedSubtotal += itemTotal;
-      }
-
+      // Resolve canonical prices from DB — never trust client-supplied unitPrice
       const productIds = items.map((i) => i.productId);
       const products = await tx.select().from(schema.products).where(inArray(schema.products.id, productIds));
       const productMap = new Map(products.map((p) => [p.id, p]));
 
-      let appendedTax = 0;
       for (const item of items) {
-        const prod = productMap.get(item.productId);
-        const rate = prod ? parseFloat(prod.taxRate || '0.08') : 0.08;
+        if (!productMap.has(item.productId)) {
+          throw new NotFoundError(`Producto no encontrado: ${item.productId}`);
+        }
+      }
+
+      let appendedSubtotal = 0;
+      let appendedTax = 0;
+
+      for (const item of items) {
+        const prod = productMap.get(item.productId)!;
+        const resolvedPrice = parseFloat(prod.price);
+        const rate = parseFloat(prod.taxRate || '0.08');
         const qty = item.quantity || 1;
-        appendedTax += item.unitPrice * qty * rate;
+
+        let itemTotal = resolvedPrice * qty;
+        if (item.modifiers && item.modifiers.length > 0) {
+          for (const mod of item.modifiers) itemTotal += (mod.priceDelta || 0) * qty;
+        }
+
+        appendedSubtotal += itemTotal;
+        appendedTax += resolvedPrice * qty * rate;
       }
 
       const newSubtotal = parseFloat(order.subtotal) + appendedSubtotal;
       const newTaxTotal = parseFloat(order.taxTotal) + appendedTax;
       const newTotal = newSubtotal + newTaxTotal;
 
+      const resetKitchenStatus = order.kitchenStatus === 'delivered' ? 'queued' : order.kitchenStatus;
+      const newPaymentStatus = order.paymentStatus === 'paid' ? 'partially_paid' : order.paymentStatus;
+
       const updatedOrder = await this.orderRepo.updateOrderTotals(
         orderId,
         newSubtotal.toFixed(2),
         newTaxTotal.toFixed(2),
         newTotal.toFixed(2),
+        { kitchenStatus: resetKitchenStatus, paymentStatus: newPaymentStatus },
         tx
       );
 
       const itemsToInsert = items.map((item) => {
-        const prod = productMap.get(item.productId);
+        const prod = productMap.get(item.productId)!;
+        const resolvedPrice = parseFloat(prod.price);
         return {
           orderId,
           productId: item.productId,
           station: prod?.printerStation || 'kitchen',
           status: 'pending',
           quantity: item.quantity || 1,
-          unitPrice: item.unitPrice.toFixed(2),
+          unitPrice: resolvedPrice.toFixed(2),  // Always use DB price
           seatNumber: item.seatNumber || null,
           course: item.course || 1,
           notes: item.notes || null,
@@ -104,3 +116,4 @@ export class AppendOrderItemsUseCase {
     });
   }
 }
+

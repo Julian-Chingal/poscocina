@@ -7,16 +7,18 @@ export type TableStatus =
   | 'free'
   | 'occupied'
   | 'check_requested'
+  | 'paid_waiting_food'
   | 'reserved'
   | 'blocked';
 
 const tableStatusConfig: Record<
   TableStatus,
-  { label: string; variant: 'default' | 'outline' | 'secondary' | 'destructive' }
+  { label: string; variant: 'default' | 'outline' | 'secondary' | 'destructive'; customClass?: string }
 > = {
   free: { label: 'Libre', variant: 'default' },
   occupied: { label: 'Ocupada', variant: 'destructive' },
   check_requested: { label: 'Cuenta Pedida', variant: 'secondary' },
+  paid_waiting_food: { label: 'Pagada (En Cocina)', variant: 'secondary', customClass: 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30' },
   reserved: { label: 'Reservada', variant: 'outline' },
   blocked: { label: 'Bloqueada', variant: 'secondary' },
 };
@@ -32,7 +34,10 @@ export const TableStatusBadge: React.FC<{
     };
 
   return (
-    <Badge variant={config.variant} className={cn('text-[10px] font-semibold', className)}>
+    <Badge
+      variant={config.variant}
+      className={cn('text-[10px] font-semibold', config.customClass, className)}
+    >
       <span className="size-1.5 rounded-full bg-current mr-1 shrink-0" />
       <span>{config.label}</span>
     </Badge>
@@ -115,6 +120,47 @@ export const ItemStatusBadge: React.FC<{
 
   return (
     <Badge variant={config.variant} className={cn('text-[10px] font-semibold', className)}>
+      <span>{config.label}</span>
+    </Badge>
+  );
+};
+
+// 4. Payment Status Badge
+export type PaymentStatus = 'unpaid' | 'partially_paid' | 'paid';
+
+const paymentStatusConfig: Record<
+  PaymentStatus,
+  { label: string; className: string }
+> = {
+  unpaid: {
+    label: 'Por Cobrar',
+    className: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',
+  },
+  partially_paid: {
+    label: 'Abonado',
+    className: 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30',
+  },
+  paid: {
+    label: 'Pagado',
+    className: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+  },
+};
+
+export const PaymentStatusBadge: React.FC<{
+  status?: PaymentStatus | string;
+  className?: string;
+}> = ({ status = 'unpaid', className }) => {
+  const config =
+    paymentStatusConfig[status as PaymentStatus] || {
+      label: status,
+      className: 'bg-muted text-muted-foreground border-border',
+    };
+
+  return (
+    <Badge
+      variant="outline"
+      className={cn('text-[10px] font-bold tracking-wide uppercase', config.className, className)}
+    >
       <span>{config.label}</span>
     </Badge>
   );

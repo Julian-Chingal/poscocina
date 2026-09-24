@@ -82,10 +82,28 @@ export class SplitItemsUseCase {
       const remainingItems = await tx.select().from(schema.orderItems).where(eq(schema.orderItems.orderId, orderId));
       const isCompleted = remainingItems.length === 0;
       let remainingBalance = 0;
+      let isTableFreed = false;
+      let tableStatus = 'free';
 
       if (isCompleted) {
-        await this.receiptRepo.markOrderPaid(orderId, { status: 'paid', closedAt: new Date() }, tx);
-        if (order.tableId) await this.receiptRepo.freeTable(order.tableId, tx);
+        const isDelivered = order.kitchenStatus === 'delivered';
+        const markPaidPayload: Record<string, any> = { paymentStatus: 'paid' };
+
+        if (isDelivered) {
+          markPaidPayload.status = 'paid';
+          markPaidPayload.closedAt = new Date();
+          if (order.tableId) {
+            await this.receiptRepo.freeTable(order.tableId, tx);
+            isTableFreed = true;
+            tableStatus = 'free';
+          }
+        } else if (order.tableId) {
+          await this.receiptRepo.setTableWaitingFood(order.tableId, tx);
+          isTableFreed = false;
+          tableStatus = 'paid_waiting_food';
+        }
+
+        await this.receiptRepo.markOrderPaid(orderId, markPaidPayload, tx);
       } else {
         const newSubtotal = remainingItems.reduce((sum, i) => sum + parseFloat(i.unitPrice) * i.quantity, 0);
         const newTax = newSubtotal * taxRate;
@@ -93,6 +111,7 @@ export class SplitItemsUseCase {
         remainingBalance = newTotal;
 
         await tx.update(schema.orders).set({
+          paymentStatus: 'partially_paid',
           subtotal: newSubtotal.toFixed(2),
           taxTotal: newTax.toFixed(2),
           total: newTotal.toFixed(2),
@@ -101,9 +120,12 @@ export class SplitItemsUseCase {
 
       return {
         receipt: newReceipt,
+        orderId: order.id,
         isCompleted,
         isComplete: isCompleted,
-        tableId: isCompleted ? order.tableId : null,
+        isTableFreed,
+        tableStatus,
+        tableId: order.tableId,
         remainingItemsCount: remainingItems.length,
         remainingBalance,
         remainingAmount: remainingBalance,

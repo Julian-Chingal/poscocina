@@ -190,6 +190,7 @@ export const TableModal: React.FC<Props> = ({
                         <option value="free">Libre</option>
                         <option value="occupied">Ocupada</option>
                         <option value="check_requested">Pidiendo Cuenta</option>
+                        <option value="paid_waiting_food">Pagada (En Cocina)</option>
                         <option value="reserved">Reservada</option>
                         <option value="blocked">Bloqueada</option>
                       </Select>

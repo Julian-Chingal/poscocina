@@ -28,10 +28,11 @@ export class OrderRepository implements IOrderRepository {
 
   async findKdsOrders(venueId: string, station?: string) {
     const rawOrders = await this.database.query.orders.findMany({
-      where: (orders, { and, eq, inArray }) =>
+      where: (orders, { and, eq, notInArray }) =>
         and(
           eq(orders.venueId, venueId),
-          inArray(orders.status, ['sent_to_kitchen', 'partially_ready', 'ready'])
+          notInArray(orders.kitchenStatus, ['delivered', 'cancelled']),
+          notInArray(orders.status, ['cancelled', 'voided'])
         ),
       with: {
         table: true,
@@ -93,10 +94,61 @@ export class OrderRepository implements IOrderRepository {
     return updated;
   }
 
-  async updateOrderTotals(orderId: string, subtotal: string, taxTotal: string, total: string, tx = this.database) {
+  async findOrderItemById(itemId: string, tx = this.database) {
+    const [item] = await tx
+      .select()
+      .from(schema.orderItems)
+      .where(eq(schema.orderItems.id, itemId))
+      .limit(1);
+    return item || null;
+  }
+
+  async findOrderItemsByOrderId(orderId: string, tx = this.database) {
+    return await tx
+      .select()
+      .from(schema.orderItems)
+      .where(eq(schema.orderItems.orderId, orderId));
+  }
+
+  async updateOrderKitchenStatus(
+    orderId: string,
+    kitchenStatus: string,
+    extra?: Record<string, any>,
+    tx = this.database
+  ) {
     const [updated] = await tx
       .update(schema.orders)
-      .set({ subtotal, taxTotal, total })
+      .set({ kitchenStatus, ...(extra || {}) })
+      .where(eq(schema.orders.id, orderId))
+      .returning();
+    return updated;
+  }
+
+  async freeTable(tableId: string, tx = this.database) {
+    await tx
+      .update(schema.tables)
+      .set({ status: 'free', currentOrderId: null, updatedAt: new Date() })
+      .where(eq(schema.tables.id, tableId));
+  }
+
+  async setTableStatus(tableId: string, status: any, tx = this.database) {
+    await tx
+      .update(schema.tables)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(schema.tables.id, tableId));
+  }
+
+  async updateOrderTotals(
+    orderId: string,
+    subtotal: string,
+    taxTotal: string,
+    total: string,
+    extra?: Record<string, any>,
+    tx = this.database
+  ) {
+    const [updated] = await tx
+      .update(schema.orders)
+      .set({ subtotal, taxTotal, total, ...(extra || {}) })
       .where(eq(schema.orders.id, orderId))
       .returning();
     return updated;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { posApi } from '../api/pos.api';
 import { TableItem, CartItem, PosOrder } from '../types/pos.types';
 import { useShiftStore } from '@/stores/shift.store';
@@ -16,6 +16,13 @@ export const usePosTable = (
   const [submitting, setSubmitting] = useState(false);
   const [orderSentSuccess, setOrderSentSuccess] = useState(false);
 
+  // Stable ref so fetchTables can read the latest currentTable without
+  // adding it as a dependency (which caused the infinite loop).
+  const currentTableRef = useRef<TableItem | null>(currentTable);
+  useEffect(() => {
+    currentTableRef.current = currentTable;
+  }, [currentTable]);
+
   useEffect(() => {
     if (initialTable) setCurrentTable(initialTable);
   }, [initialTable]);
@@ -25,19 +32,21 @@ export const usePosTable = (
     await useShiftStore.getState().fetchCurrentShift(venueId);
   }, [venueId]);
 
+  // ✅ currentTable removed from deps — read via ref instead to avoid the loop.
   const fetchTables = useCallback(async () => {
     if (!venueId) return;
     try {
       const data = await posApi.getTables(venueId);
       setAllTables(data || []);
-      if (currentTable) {
-        const updated = data.find((t) => t.id === currentTable.id);
+      const latestTable = currentTableRef.current;
+      if (latestTable) {
+        const updated = data.find((t) => t.id === latestTable.id);
         if (updated) setCurrentTable(updated);
       }
     } catch (err) {
       console.error('Error fetching tables:', err);
     }
-  }, [venueId, currentTable]);
+  }, [venueId]); // venueId only — no currentTable!
 
   const fetchActiveOrder = useCallback(async (orderId: string) => {
     try {
@@ -56,10 +65,16 @@ export const usePosTable = (
     };
   }, [venueId]);
 
+  // ✅ Both callbacks now have stable identities (only depend on venueId),
+  // so this effect runs exactly once when venueId is available.
   useEffect(() => {
     checkCashShift();
     fetchTables();
   }, [checkCashShift, fetchTables]);
+
+  // Load the active order whenever the selected table's order changes.
+  // currentTable?.currentOrderId is a primitive (string | undefined), so it is
+  // safe as a useEffect dependency — no new object reference per render.
 
   useEffect(() => {
     if (currentTable?.currentOrderId) {
@@ -68,6 +83,7 @@ export const usePosTable = (
       setActiveOrder(null);
     }
   }, [currentTable?.currentOrderId, fetchActiveOrder]);
+
 
   const sendOrder = async (cart: CartItem[], customerId?: string) => {
     if (!cart.length) return false;
@@ -80,8 +96,9 @@ export const usePosTable = (
       const itemsPayload = cart.map((item) => ({
         productId: item.product.id,
         quantity: item.quantity,
+        unitPrice: parseFloat(item.product.price) || 0,
         notes: item.notes || undefined,
-        modifiers: item.modifiers,
+        modifiers: item.modifiers || [],
       }));
 
       if (activeOrder?.id) {
@@ -89,9 +106,9 @@ export const usePosTable = (
       } else {
         await posApi.createOrder({
           venueId,
-          tableId: currentTable?.id,
-          waiterId: userId,
-          customerId,
+          tableId: currentTable?.id || undefined,
+          waiterId: userId || undefined,
+          customerId: customerId || undefined,
           items: itemsPayload,
         });
       }

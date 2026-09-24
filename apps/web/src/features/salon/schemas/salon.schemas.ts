@@ -11,7 +11,7 @@ export const TableSchema = z.object({
   floorPlanId: z.string(),
   capacity: z.number().min(1, 'Capacidad mínima 1').max(30, 'Capacidad máxima 30'),
   shape: z.enum(['rect', 'circle', 'square']),
-  status: z.enum(['free', 'occupied', 'check_requested', 'reserved', 'blocked']),
+  status: z.enum(['free', 'occupied', 'check_requested', 'paid_waiting_food', 'reserved', 'blocked']),
 });
 
 export type TableFormValues = z.infer<typeof TableSchema>;

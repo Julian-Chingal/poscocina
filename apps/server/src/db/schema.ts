@@ -41,6 +41,7 @@ export const tableStatusEnum = pgEnum('table_status', [
   'free',
   'occupied',
   'check_requested',
+  'paid_waiting_food',
   'reserved',
   'blocked',
 ]);
@@ -241,6 +242,8 @@ export const orders = pgTable('orders', {
   customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
   orderType: varchar('order_type', { length: 20 }).notNull().default('dine_in'),
   status: orderStatusEnum('status').notNull().default('open'),
+  paymentStatus: varchar('payment_status', { length: 30 }).notNull().default('unpaid'),
+  kitchenStatus: varchar('kitchen_status', { length: 30 }).notNull().default('queued'),
   waiterId: uuid('waiter_id').references(() => users.id, { onDelete: 'set null' }),
   guestCount: smallint('guest_count').default(1),
   notes: text('notes'),
@@ -427,6 +430,25 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   category: one(categories, { fields: [products.categoryId], references: [categories.id] }),
   modifierGroups: many(productModifierGroups),
 }));
+
+// ⚠️ These two relations are REQUIRED so Drizzle can navigate the N:M bridge.
+// Without them the query throws "not enough information to infer relation".
+export const modifierGroupsRelations = relations(modifierGroups, ({ one, many }) => ({
+  venue: one(venues, { fields: [modifierGroups.venueId], references: [venues.id] }),
+  modifiers: many(modifiers),
+  products: many(productModifierGroups),
+}));
+
+export const modifiersRelations = relations(modifiers, ({ one }) => ({
+  modifierGroup: one(modifierGroups, { fields: [modifiers.groupId], references: [modifierGroups.id] }),
+}));
+
+export const productModifierGroupsRelations = relations(productModifierGroups, ({ one }) => ({
+  product: one(products, { fields: [productModifierGroups.productId], references: [products.id] }),
+  modifierGroup: one(modifierGroups, { fields: [productModifierGroups.groupId], references: [modifierGroups.id] }),
+}));
+
+
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
   venue: one(venues, { fields: [orders.venueId], references: [venues.id] }),
