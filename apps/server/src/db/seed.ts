@@ -5,9 +5,10 @@ import * as schema from './schema.js';
 import { ROLES, ROLE_HIERARCHY } from '@poscocina/shared';
 
 async function seed() {
-  console.log('🌱 Seeding database...');
+  console.log('🌱 Inicializando semilla base del sistema...');
 
-  // 1. Roles
+  // 1. Roles del Sistema (RBAC)
+  console.log('  -> Configurando roles de usuario...');
   const rolesToInsert = [
     { name: ROLES.SUPER_ADMIN, label: 'Super Administrador', hierarchy: ROLE_HIERARCHY.super_admin },
     { name: ROLES.MANAGER, label: 'Gerente de Local', hierarchy: ROLE_HIERARCHY.manager },
@@ -30,21 +31,59 @@ async function seed() {
   const allRoles = await db.select().from(schema.roles);
   const roleMap = Object.fromEntries(allRoles.map((r) => [r.name, r.id]));
 
-  // 2. Default Venue
+  // 2. Entidad Corporativa y Configuración Fiscal Base
+  console.log('  -> Verificando entidad corporativa...');
+  let [company] = await db.select().from(schema.companies).limit(1);
+  if (!company) {
+    const [newCompany] = await db
+      .insert(schema.companies)
+      .values({
+        legalName: 'poscocina S.A.S.',
+        tradeName: 'poscocina',
+        taxId: '900.123.456-7',
+        primaryColor: '#ea580c',
+        email: 'contacto@poscocina.com',
+        phone: '+57 300 123 4567',
+        address: 'Sede Principal',
+      })
+      .returning();
+    company = newCompany;
+
+    await db
+      .insert(schema.companyFiscalSettings)
+      .values({
+        companyId: company.id,
+        regime: 'SIMPLIFICADO',
+        taxType: 'INC_8',
+        taxRate: 0.08,
+        defaultTipPct: 10,
+        currency: 'COP',
+        isInvoiceResolutionEnabled: false,
+        receiptHeader: 'Sabor tradicional & Alta cocina',
+        receiptFooter: '¡Gracias por su visita!',
+      })
+      .onConflictDoNothing();
+  }
+
+  // 3. Venue Único Inicial (Completamente vacío, sin mesas ni zonas)
+  console.log('  -> Verificando local/venue principal...');
   let [venue] = await db.select().from(schema.venues).limit(1);
   if (!venue) {
     const [newVenue] = await db
       .insert(schema.venues)
       .values({
-        name: 'Restaurante Demo Poscocina',
-        address: 'Calle 100 # 15-20, Bogotá',
+        companyId: company?.id ?? null,
+        name: 'Sede Principal',
+        address: 'Calle Principal # 1-01',
         timezone: 'America/Bogota',
+        isPrimary: true,
+        isActive: true,
         settings: {
           currency: 'COP',
           tax_rate: 0.08,
           defaultTaxType: 'INC',
           defaultTaxRate: 0.08,
-          defaultTipPct: 0,
+          defaultTipPct: 10,
           cashier_max_discount_pct: 10,
         },
       })
@@ -52,185 +91,44 @@ async function seed() {
     venue = newVenue;
   }
 
-  // 3. Demo Users
-  const pin1234 = await bcrypt.hash('1234', 10);
-  const pin1111 = await bcrypt.hash('1111', 10);
-  const pin2222 = await bcrypt.hash('2222', 10);
-  const pwdAdmin = await bcrypt.hash('admin123', 10);
+  // 4. Usuario Único Administrador (Super Admin)
+  console.log('  -> Configurando usuario administrador...');
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@poscocina.com';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const adminPin = process.env.ADMIN_PIN || '1234';
 
-  const demoUsers = [
-    {
-      venueId: venue.id,
-      name: 'Administrador Demo',
-      email: 'admin@poscocina.com',
-      passwordHash: pwdAdmin,
-      pinHash: pin1234,
-      roleId: roleMap[ROLES.SUPER_ADMIN],
-    },
-    {
-      venueId: venue.id,
-      name: 'Carlos Gerente',
-      email: 'gerente@poscocina.com',
-      passwordHash: pwdAdmin,
-      pinHash: pin1234,
-      roleId: roleMap[ROLES.MANAGER],
-    },
-    {
-      venueId: venue.id,
-      name: 'Ana Cajera',
-      email: 'caja@poscocina.com',
-      pinHash: pin1111,
-      roleId: roleMap[ROLES.CASHIER],
-    },
-    {
-      venueId: venue.id,
-      name: 'Juan Mesero',
-      email: 'mesero1@poscocina.com',
-      pinHash: pin2222,
-      roleId: roleMap[ROLES.WAITER],
-    },
-    {
-      venueId: venue.id,
-      name: 'KDS Estación Principal',
-      roleId: roleMap[ROLES.KDS_DISPLAY],
-    },
-  ];
+  const passwordHash = await bcrypt.hash(adminPassword, 10);
+  const pinHash = await bcrypt.hash(adminPin, 10);
 
-  for (const u of demoUsers) {
-    await db.insert(schema.users).values(u).onConflictDoNothing();
-  }
-
-  // 4. Floor Plan & Tables
-  let [floorPlan] = await db
+  const [existingAdmin] = await db
     .select()
-    .from(schema.floorPlans)
-    .where(eq(schema.floorPlans.venueId, venue.id))
+    .from(schema.users)
+    .where(eq(schema.users.email, adminEmail))
     .limit(1);
 
-  if (!floorPlan) {
-    const [newPlan] = await db
-      .insert(schema.floorPlans)
-      .values({
-        venueId: venue.id,
-        name: 'Salón Principal',
-      })
-      .returning();
-    floorPlan = newPlan;
-
-    const demoTables = [
-      { floorPlanId: floorPlan.id, label: 'Mesa 1', capacity: 4, positionX: '100', positionY: '100' },
-      { floorPlanId: floorPlan.id, label: 'Mesa 2', capacity: 4, positionX: '250', positionY: '100' },
-      { floorPlanId: floorPlan.id, label: 'Mesa 3', capacity: 2, positionX: '100', positionY: '250' },
-      { floorPlanId: floorPlan.id, label: 'Mesa 4', capacity: 6, positionX: '250', positionY: '250' },
-      { floorPlanId: floorPlan.id, label: 'Barra 1', capacity: 1, positionX: '400', positionY: '100' },
-    ];
-
-    for (const t of demoTables) {
-      await db.insert(schema.tables).values(t);
-    }
-  }
-
-  // 5. Categories & Products
-  const [catBebidas] = await db
-    .insert(schema.categories)
-    .values({ venueId: venue.id, name: 'Bebidas', color: '#3b82f6', printerStation: 'bar' })
-    .onConflictDoNothing()
-    .returning();
-
-  const [catFuertes] = await db
-    .insert(schema.categories)
-    .values({ venueId: venue.id, name: 'Platos Fuertes', color: '#ef4444', printerStation: 'kitchen' })
-    .onConflictDoNothing()
-    .returning();
-
-  let burger: any = null;
-  if (catFuertes) {
-    const [createdBurger] = await db
-      .insert(schema.products)
-      .values({
-        categoryId: catFuertes.id,
-        name: 'Hamburguesa Clásica',
-        description: 'Carne de res 180g, queso cheddar, lechuga y tomate en pan brioche',
-        price: '28000.00',
-        printerStation: 'kitchen',
-      })
-      .returning();
-    burger = createdBurger;
-
-    // Modifier Group: Punto de cocción
-    const [modGroupCoccion] = await db
-      .insert(schema.modifierGroups)
-      .values({
-        venueId: venue.id,
-        name: 'Término de cocción',
-        selectionType: 'single',
-        isRequired: true,
-      })
-      .returning();
-
-    await db.insert(schema.modifiers).values([
-      { groupId: modGroupCoccion.id, name: 'Término Medio (3/4)', priceDelta: '0.00', isDefault: true },
-      { groupId: modGroupCoccion.id, name: 'Bien Cocido', priceDelta: '0.00' },
-    ]);
-
-    await db.insert(schema.productModifierGroups).values({
-      productId: burger.id,
-      groupId: modGroupCoccion.id,
-      isRequired: true,
+  if (!existingAdmin) {
+    await db.insert(schema.users).values({
+      venueId: venue.id,
+      name: 'Administrador',
+      email: adminEmail,
+      passwordHash,
+      pinHash,
+      roleId: roleMap[ROLES.SUPER_ADMIN],
+      isActive: true,
+      tokenVersion: 1,
     });
+    console.log(`  ✅ Usuario Administrador creado: ${adminEmail}`);
+    console.log(`     - Contraseña inicial: ${adminPassword}`);
+    console.log(`     - PIN inicial: ${adminPin}`);
+  } else {
+    console.log(`  ℹ️ Usuario Administrador ya existente: ${adminEmail}`);
   }
 
-    // 6. Demo Inventory Items & Recipes
-    const [insumoCarne] = await db
-      .insert(schema.inventoryItems)
-      .values({
-        venueId: venue.id,
-        name: 'Carne Molida de Res 80/20',
-        unit: 'g',
-        currentStock: '15000.0000', // 15 kg
-        alertThreshold: '2000.0000', // Alerta en 2 kg
-        costPerUnit: '0.0350', // $35 por gramo
-      })
-      .returning();
-
-    const [insumoPan] = await db
-      .insert(schema.inventoryItems)
-      .values({
-        venueId: venue.id,
-        name: 'Pan Brioche Artesanal',
-        unit: 'unit',
-        currentStock: '80.0000', // 80 panes
-        alertThreshold: '15.0000',
-        costPerUnit: '1200.0000',
-      })
-      .returning();
-
-    const [insumoQueso] = await db
-      .insert(schema.inventoryItems)
-      .values({
-        venueId: venue.id,
-        name: 'Queso Cheddar Tajado',
-        unit: 'g',
-        currentStock: '4000.0000', // 4 kg
-        alertThreshold: '500.0000',
-        costPerUnit: '0.0400',
-      })
-      .returning();
-
-    // Hamburguesa Clásica Recipe
-    if (burger && insumoCarne && insumoPan && insumoQueso) {
-      await db.insert(schema.productRecipes).values([
-        { productId: burger.id, inventoryItemId: insumoCarne.id, quantity: '180.0000' }, // 180g carne
-        { productId: burger.id, inventoryItemId: insumoPan.id, quantity: '1.0000' },      // 1 pan
-        { productId: burger.id, inventoryItemId: insumoQueso.id, quantity: '30.0000' },   // 30g queso
-      ]);
-    }
-
-    console.log('✅ Seed completed successfully!');
+  console.log('✅ Semilla completada exitosamente: Sistema listo con un Venue vacío y cuenta Administrador.');
   await queryClient.end();
 }
 
 seed().catch((err) => {
-  console.error('❌ Seed failed:', err);
+  console.error('❌ Error ejecutando la semilla:', err);
   process.exit(1);
 });
