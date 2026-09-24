@@ -31,6 +31,19 @@ export class RedisSessionManager implements ISessionManager {
   async blacklistToken(userId: string, ttlSeconds = 86400): Promise<void> {
     await redis.setex(`token_blacklist:${userId}`, ttlSeconds, 'revoked');
   }
+
+  async lockTerminal(userId: string, ttlSeconds = 86400): Promise<void> {
+    await redis.setex(`terminal_lock:${userId}`, ttlSeconds, 'locked');
+  }
+
+  async unlockTerminal(userId: string): Promise<void> {
+    await redis.del(`terminal_lock:${userId}`);
+  }
+
+  async isTerminalLocked(userId: string): Promise<boolean> {
+    const val = await redis.get(`terminal_lock:${userId}`);
+    return Boolean(val);
+  }
 }
 
 export const sessionManager = new RedisSessionManager();

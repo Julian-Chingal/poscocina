@@ -53,6 +53,20 @@ export const authPlugin = fp(async (fastify: FastifyInstance) => {
         });
       }
 
+      // Check if terminal is locked in Redis
+      const isLockExempt = request.url.includes('/api/auth/logout') || request.url.includes('/api/auth/terminal/lock');
+      if (!isLockExempt) {
+        const { sessionManager } = await import('../modules/auth/repositories/session-manager.repository.js');
+        const isTerminalLocked = await sessionManager.isTerminalLocked(decoded.sub);
+        if (isTerminalLocked) {
+          return reply.status(423).send({
+            statusCode: 423,
+            error: 'Locked',
+            message: 'La terminal se encuentra bloqueada. Requiere desbloqueo para continuar.',
+          });
+        }
+      }
+
       request.user = decoded;
     } catch (err) {
       // Audit failed attempt

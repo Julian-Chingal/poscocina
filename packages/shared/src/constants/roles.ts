@@ -17,3 +17,12 @@ export const ROLE_HIERARCHY: Record<RoleName, number> = {
   kitchen: 20,
   kds_display: 10,
 };
+
+export const PIN_RESTRICTED_HIERARCHY = 80;
+export const PIN_ALLOWED_ROLES: RoleName[] = [
+  ROLES.CASHIER,
+  ROLES.WAITER,
+  ROLES.KITCHEN,
+  ROLES.KDS_DISPLAY,
+];
+

@@ -72,11 +72,11 @@ export const UserNav: React.FC<UserNavProps> = ({
             </AvatarFallback>
           </Avatar>
 
-          <div className="hidden sm:flex flex-col min-w-0 text-left">
-            <span className="font-semibold text-xs text-foreground truncate leading-tight max-w-[120px]">
+          <div className="flex flex-col min-w-0 text-left">
+            <span className="font-semibold text-xs text-foreground truncate leading-tight max-w-[85px] sm:max-w-[120px]">
               {currentUser.name}
             </span>
-            <span className="text-[10px] text-muted-foreground truncate leading-none mt-0.5">
+            <span className="text-[9px] sm:text-[10px] text-muted-foreground truncate leading-none mt-0.5">
               {currentUser.roleLabel || currentUser.roleName}
             </span>
           </div>

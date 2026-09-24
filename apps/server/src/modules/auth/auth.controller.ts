@@ -49,7 +49,16 @@ export class AuthController {
       { sub: user.id, venueId: user.venueId, name: user.name, role: user.role, hierarchy: user.hierarchy, tokenVersion: user.tokenVersion },
       { expiresIn }
     );
+    await sessionManager.unlockTerminal(user.id);
     return reply.send({ token, user });
+  }
+
+  async lockTerminal(request: FastifyRequest, reply: FastifyReply) {
+    if (!request.user?.sub) {
+      return reply.status(401).send({ statusCode: 401, error: 'Unauthorized', message: 'No autenticado' });
+    }
+    await sessionManager.lockTerminal(request.user.sub);
+    return reply.send({ success: true, message: 'Terminal bloqueada exitosamente' });
   }
 
   async getMe(request: FastifyRequest, reply: FastifyReply) {
@@ -63,6 +72,7 @@ export class AuthController {
   async logout(request: FastifyRequest, reply: FastifyReply) {
     if (request.user?.sub) {
       await this.overrideUseCase.logout(request.user.sub);
+      await sessionManager.unlockTerminal(request.user.sub);
     }
     return reply.send({ success: true, message: 'Sesión finalizada exitosamente' });
   }

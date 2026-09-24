@@ -1,5 +1,5 @@
 import React from "react";
-import { UtensilsCrossed, LayoutGrid } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BrandLinkProps {
@@ -29,8 +29,12 @@ export const BrandLink: React.FC<BrandLinkProps> = ({
     >
       {/* Brand Icon Badge */}
       <div className="relative shrink-0 flex items-center justify-center">
-        <div className="size-7 rounded-lg flex items-center justify-center text-xs font-bold text-primary-foreground shadow-xs transition-transform group-hover:scale-105 bg-primary">
-          <UtensilsCrossed className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+        <div className="size-7 rounded-lg overflow-hidden flex items-center justify-center shadow-xs transition-transform group-hover:scale-105 bg-background border border-border">
+          <img
+            src="/logo.png" // Cambia "logo.png" por el nombre exacto de tu archivo en public/
+            alt="Logo PosCocina"
+            className="size-full object-contain p-0.5"
+          />
         </div>
         <span
           className="absolute -bottom-0.5 -right-0.5 size-2 bg-emerald-500 rounded-full ring-2 ring-background animate-pulse"

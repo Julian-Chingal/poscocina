@@ -118,7 +118,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               ? "Salir de Pantalla Completa"
               : "Modo Quiosco Pantalla Completa"
           }
-          className="size-8 text-muted-foreground hover:text-foreground cursor-pointer"
+          className="hidden sm:inline-flex size-8 text-muted-foreground hover:text-foreground cursor-pointer"
         >
           {isFullscreen ? (
             <Minimize2 className="size-4 shrink-0" strokeWidth={2} />

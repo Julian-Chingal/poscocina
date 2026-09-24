@@ -3,7 +3,7 @@ import { TopBar } from "./components/TopBar";
 import { AppLauncherView } from "./components/navigation/launcher";
 import { ViewLoadingFallback } from "./components/ViewLoadingFallback";
 import { OfflineView } from "./features/shared";
-import { PinPadModal } from "./features/auth";
+import { LockScreen } from "./features/auth";
 import { Toaster } from "./components/ui/sonner";
 import { useAuthStore } from "./stores/auth.store";
 import { usePermissions } from "./hooks/usePermissions";
@@ -36,7 +36,6 @@ export const App: React.FC = () => {
   const venueId = useAuthStore((s) => s.venueId);
   const isLocked = useAuthStore((s) => s.isLocked);
   const currentUser = useAuthStore((s) => s.currentUser);
-  const unlockScreen = useAuthStore((s) => s.unlockScreen);
 
   const { canAccessModule } = usePermissions();
   const { isApiOnline, checkHealthAndBootstrap } = useAppBootstrap();
@@ -170,18 +169,8 @@ export const App: React.FC = () => {
         )}
       </main>
 
-      {/* Modal de Desbloqueo / PIN */}
-      {isLocked && (
-        <PinPadModal
-          isOpen={isLocked}
-          isMandatoryLock={!currentUser}
-          onClose={() => {
-            if (currentUser) {
-              unlockScreen();
-            }
-          }}
-        />
-      )}
+      {/* Pantalla Bloqueante de Terminal / PIN */}
+      {isLocked && <LockScreen />}
     </div>
   );
 };

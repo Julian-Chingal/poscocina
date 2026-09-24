@@ -49,6 +49,9 @@ export async function authRoutes(fastify: FastifyInstance) {
   // 5. Current authenticated user profile
   fastify.get('/api/auth/me', { preHandler: [fastify.authenticate] }, (req, rep) => authController.getMe(req, rep));
 
-  // 6. Logout
+  // 6. Lock terminal session
+  fastify.post('/api/auth/terminal/lock', { preHandler: [fastify.authenticate] }, (req, rep) => authController.lockTerminal(req, rep));
+
+  // 7. Logout
   fastify.post('/api/auth/logout', { preHandler: [fastify.authenticate] }, (req, rep) => authController.logout(req, rep));
 }
