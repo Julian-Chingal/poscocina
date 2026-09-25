@@ -76,7 +76,6 @@ export class AppendOrderItemsUseCase {
         return {
           orderId,
           productId: item.productId,
-          station: prod?.printerStation || 'kitchen',
           status: 'pending',
           quantity: item.quantity || 1,
           unitPrice: resolvedPrice.toFixed(2),  // Always use DB price

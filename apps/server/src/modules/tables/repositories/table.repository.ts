@@ -20,35 +20,40 @@ export class TableRepository implements ITableRepository {
   }
 
   async findTablesWithActiveOrders(venueId: string) {
-    const plans = await this.database.query.floorPlans.findMany({
-      where: (p, { eq }) => eq(p.venueId, venueId),
-      with: {
-        tables: {
-          with: {
-            orders: {
-              where: (o, { inArray }) => inArray(o.status, ['open', 'sent_to_kitchen', 'partially_ready', 'ready', 'check_requested']),
-              with: {
-                items: { with: { product: true } },
-                waiter: { columns: { id: true, name: true } },
+    try {
+      const plans = await this.database.query.floorPlans.findMany({
+        where: (p, { eq }) => eq(p.venueId, venueId),
+        with: {
+          tables: {
+            with: {
+              orders: {
+                where: (o, { inArray }) => inArray(o.status, ['open', 'sent_to_kitchen', 'partially_ready', 'ready', 'check_requested']),
+                with: {
+                  items: { with: { product: true } },
+                  waiter: { columns: { id: true, name: true } },
+                },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    const allTables: any[] = [];
-    for (const plan of plans) {
-      for (const t of plan.tables) {
-        const activeOrder = t.orders?.[0] || null;
-        allTables.push({
-          ...t,
-          floorPlan: { id: plan.id, name: plan.name },
-          currentOrder: activeOrder,
-        });
+      const allTables: any[] = [];
+      for (const plan of plans) {
+        for (const t of (plan.tables || [])) {
+          const activeOrder = t.orders?.[0] || null;
+          allTables.push({
+            ...t,
+            floorPlan: { id: plan.id, name: plan.name },
+            currentOrder: activeOrder,
+          });
+        }
       }
+      return allTables.sort((a, b) => (a.label || '').localeCompare(b.label || ''));
+    } catch (err: any) {
+      console.error('❌ [TableRepository.findTablesWithActiveOrders] Error querying database:', err);
+      throw err;
     }
-    return allTables.sort((a, b) => a.label.localeCompare(b.label));
   }
 
   async findTableById(id: string) {

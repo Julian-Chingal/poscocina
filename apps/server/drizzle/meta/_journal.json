@@ -64,6 +64,13 @@
       "when": 1790221437094,
       "tag": "0008_smart_sway",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790304568197,
+      "tag": "0009_chilly_havok",
+      "breakpoints": true
     }
   ]
 }
