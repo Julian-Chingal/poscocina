@@ -13,6 +13,12 @@ export const useTableMutations = (
   const [showFloorPlanModal, setShowFloorPlanModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [floorPlanError, setFloorPlanError] = useState<string | null>(null);
+
+  const openCreateFloorPlan = () => {
+    setFloorPlanError(null);
+    setShowFloorPlanModal(true);
+  };
 
   const openCreateTable = () => {
     setEditingTable(null);
@@ -95,6 +101,7 @@ export const useTableMutations = (
     if (!name.trim()) return;
     try {
       setSubmitting(true);
+      setFloorPlanError(null);
       const created = await salonApi.createFloorPlan(venueId, name.trim());
       setShowFloorPlanModal(false);
       toast.success('Zona creada exitosamente');
@@ -102,6 +109,7 @@ export const useTableMutations = (
       return created;
     } catch (err: any) {
       const msg = err.data?.message || err.message || 'Error al crear zona';
+      setFloorPlanError(msg);
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -115,9 +123,12 @@ export const useTableMutations = (
     showFloorPlanModal,
     submitting,
     formError,
+    floorPlanError,
     setShowTableModal,
     setDeleteTarget,
     setShowFloorPlanModal,
+    setFloorPlanError,
+    openCreateFloorPlan,
     openCreateTable,
     openEditTable,
     saveTable,

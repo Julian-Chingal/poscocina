@@ -239,6 +239,10 @@ export const ProductModal: React.FC<Props> = ({
                           min="0"
                           placeholder="15"
                           className="pl-8"
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            field.onChange(val === '' ? 0 : Math.max(0, parseInt(val, 10) || 0));
+                          }}
                         />
                       </div>
                     </FormControl>

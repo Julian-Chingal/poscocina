@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Layers } from 'lucide-react';
@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 interface Props {
   isOpen: boolean;
   submitting: boolean;
+  formError?: string | null;
   onClose: () => void;
   onSubmit: (name: string) => Promise<any>;
 }
@@ -31,6 +32,7 @@ interface Props {
 export const FloorPlanModal: React.FC<Props> = ({
   isOpen,
   submitting,
+  formError,
   onClose,
   onSubmit,
 }) => {
@@ -41,9 +43,14 @@ export const FloorPlanModal: React.FC<Props> = ({
     },
   });
 
+  useEffect(() => {
+    if (isOpen) {
+      form.reset({ name: '' });
+    }
+  }, [isOpen, form]);
+
   const handleSubmit = form.handleSubmit(async (values) => {
     await onSubmit(values.name);
-    form.reset({ name: '' });
   });
 
   return (
@@ -55,6 +62,12 @@ export const FloorPlanModal: React.FC<Props> = ({
             <span>Nueva Zona o Salón</span>
           </DialogTitle>
         </DialogHeader>
+
+        {formError && (
+          <div className="mb-4 p-3 rounded-xl bg-destructive/15 border border-destructive/30 text-destructive text-xs">
+            {formError}
+          </div>
+        )}
 
         <Form {...form}>
           <form onSubmit={handleSubmit} className="space-y-4">

@@ -8,6 +8,7 @@ interface Props {
   tables: TableItem[];
   activeFloorPlanId: string;
   isEditMode: boolean;
+  isManager?: boolean;
   onSelectFloorPlan: (id: string) => void;
   onOpenNewFloorPlan: () => void;
 }
@@ -17,10 +18,26 @@ export const FloorPlansBar: React.FC<Props> = ({
   tables,
   activeFloorPlanId,
   isEditMode,
+  isManager = false,
   onSelectFloorPlan,
   onOpenNewFloorPlan,
 }) => {
-  if (floorPlans.length === 0) return null;
+  if (floorPlans.length === 0) {
+    if (!isManager) return null;
+    return (
+      <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6">
+        <Button
+          variant="outline"
+          type="button"
+          onClick={onOpenNewFloorPlan}
+          className="flex items-center space-x-1.5 px-3.5 h-9 rounded-xl text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 shadow-sm"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Crear Primer Salón / Zona</span>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center space-x-2 overflow-x-auto pb-4 mb-6">
@@ -53,12 +70,12 @@ export const FloorPlansBar: React.FC<Props> = ({
         </Button>
       ))}
 
-      {isEditMode && (
+      {(isEditMode || isManager) && (
         <Button
           variant="ghost"
           type="button"
           onClick={onOpenNewFloorPlan}
-          className="flex items-center space-x-1 px-3 h-9 rounded-xl text-xs font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 whitespace-nowrap"
+          className="flex items-center space-x-1 px-3 h-9 rounded-xl text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 whitespace-nowrap"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Nueva Zona</span>

@@ -52,8 +52,10 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
       <SalonHeader
         isEditMode={isEditMode}
         isManager={isManager}
+        hasFloorPlans={data.floorPlans.length > 0}
         onToggleEditMode={() => setIsEditMode(!isEditMode)}
         onOpenCreateTable={mutations.openCreateTable}
+        onOpenNewFloorPlan={mutations.openCreateFloorPlan}
       />
 
       <FloorPlansBar
@@ -61,16 +63,19 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
         tables={data.tables}
         activeFloorPlanId={data.activeFloorPlanId}
         isEditMode={isEditMode}
+        isManager={isManager}
         onSelectFloorPlan={data.setActiveFloorPlanId}
-        onOpenNewFloorPlan={() => mutations.setShowFloorPlanModal(true)}
+        onOpenNewFloorPlan={mutations.openCreateFloorPlan}
       />
 
       <TablesGrid
         tables={data.filteredTables}
+        hasFloorPlans={data.floorPlans.length > 0}
         isEditMode={isEditMode}
         isManager={isManager}
         onSelectTable={onSelectTable}
         onOpenCreateTable={mutations.openCreateTable}
+        onOpenNewFloorPlan={mutations.openCreateFloorPlan}
         onEditTable={mutations.openEditTable}
         onDeleteTable={mutations.setDeleteTarget}
         onStartTransfer={(t) => {
@@ -92,12 +97,14 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
         submitting={mutations.submitting}
         formError={mutations.formError}
         onClose={() => mutations.setShowTableModal(false)}
+        onOpenNewFloorPlan={mutations.openCreateFloorPlan}
         onSubmit={mutations.saveTable}
       />
 
       <FloorPlanModal
         isOpen={mutations.showFloorPlanModal}
         submitting={mutations.submitting}
+        formError={mutations.floorPlanError}
         onClose={() => mutations.setShowFloorPlanModal(false)}
         onSubmit={async (name) => {
           const created = await mutations.createFloorPlan(name);

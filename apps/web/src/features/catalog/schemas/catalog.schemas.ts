@@ -21,7 +21,7 @@ export const ProductSchema = z.object({
   taxRate: z.number(),
   printerStation: z.string(),
   description: z.string(),
-  prepTimeMin: z.number().min(0),
+  prepTimeMin: z.number().min(0, 'El tiempo debe ser mayor o igual a 0'),
   trackInventory: z.boolean(),
   isAvailable: z.boolean(),
 });

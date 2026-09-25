@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Users } from 'lucide-react';
+import { Users, AlertCircle, Plus } from 'lucide-react';
 import { TableItem, FloorPlanItem } from '../types/salon.types';
 import { TableSchema, TableFormValues } from '../schemas/salon.schemas';
 import {
@@ -32,6 +32,7 @@ interface Props {
   submitting: boolean;
   formError?: string | null;
   onClose: () => void;
+  onOpenNewFloorPlan?: () => void;
   onSubmit: (formData: TableFormValues) => Promise<void>;
 }
 
@@ -44,6 +45,7 @@ export const TableModal: React.FC<Props> = ({
   submitting,
   formError,
   onClose,
+  onOpenNewFloorPlan,
   onSubmit,
 }) => {
   const defaultPlanId =
@@ -116,13 +118,54 @@ export const TableModal: React.FC<Props> = ({
               )}
             />
 
+            {!editingTable && floorPlans.length === 0 && (
+              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 space-y-2.5">
+                <div className="flex items-center space-x-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-500" />
+                  <p className="text-sm font-semibold">No hay ningún salón o zona creado</p>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Para poder crear y ubicar una mesa, primero debes crear al menos un salón (por ejemplo: "Salón Principal", "Terraza", "Piso 1").
+                </p>
+                {onOpenNewFloorPlan && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      onClose();
+                      onOpenNewFloorPlan();
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs h-8 px-3 rounded-lg"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" />
+                    <span>Crear un Salón Ahora</span>
+                  </Button>
+                )}
+              </div>
+            )}
+
             {!editingTable && floorPlans.length > 0 && (
               <FormField
                 control={form.control}
                 name="floorPlanId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Zona o Salón *</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>Zona o Salón *</FormLabel>
+                      {onOpenNewFloorPlan && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onClose();
+                            onOpenNewFloorPlan();
+                          }}
+                          className="text-xs text-emerald-500 hover:text-emerald-400 hover:underline inline-flex items-center gap-1 font-medium"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>Nueva Zona</span>
+                        </button>
+                      )}
+                    </div>
                     <FormControl>
                       <Select {...field}>
                         {floorPlans.map((plan) => (
@@ -207,7 +250,7 @@ export const TableModal: React.FC<Props> = ({
               </Button>
               <Button
                 type="submit"
-                disabled={submitting || form.formState.isSubmitting}
+                disabled={submitting || form.formState.isSubmitting || (!editingTable && floorPlans.length === 0)}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
               >
                 {submitting ? 'Guardando...' : 'Guardar Mesa'}

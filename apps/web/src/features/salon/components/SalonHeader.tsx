@@ -6,15 +6,19 @@ import { Badge } from '@/components/ui/badge';
 interface Props {
   isEditMode: boolean;
   isManager: boolean;
+  hasFloorPlans?: boolean;
   onToggleEditMode: () => void;
   onOpenCreateTable: () => void;
+  onOpenNewFloorPlan?: () => void;
 }
 
 export const SalonHeader: React.FC<Props> = ({
   isEditMode,
   isManager,
+  hasFloorPlans = true,
   onToggleEditMode,
   onOpenCreateTable,
+  onOpenNewFloorPlan,
 }) => {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 mb-6 border-b border-border gap-4">
@@ -29,7 +33,7 @@ export const SalonHeader: React.FC<Props> = ({
         </h2>
         <p className="text-muted-foreground text-sm mt-0.5">
           {isEditMode
-            ? 'Agrega, edita capacidades o elimina mesas de la sala.'
+            ? 'Agrega zonas, edita capacidades o elimina mesas de la sala.'
             : 'Supervisa el estado de las mesas en tiempo real y asigna comandas.'}
         </p>
       </div>
@@ -58,29 +62,54 @@ export const SalonHeader: React.FC<Props> = ({
         {/* Manager Controls */}
         {isManager && (
           <div className="flex items-center space-x-2">
-            <Button
-              variant={isEditMode ? 'default' : 'ghost'}
-              type="button"
-              onClick={onToggleEditMode}
-              className={`flex items-center space-x-1.5 text-xs font-semibold px-3.5 h-9 rounded-xl border transition ${
-                isEditMode
-                  ? 'bg-amber-600 border-amber-500 text-white shadow-lg shadow-amber-600/20 hover:bg-amber-500'
-                  : 'bg-card border-border text-foreground hover:bg-muted'
-              }`}
-            >
-              <Settings2 className="w-3.5 h-3.5" />
-              <span>{isEditMode ? 'Finalizar Edición' : 'Editar Salón'}</span>
-            </Button>
-
-            {isEditMode && (
+            {!hasFloorPlans && onOpenNewFloorPlan ? (
               <Button
                 type="button"
-                onClick={onOpenCreateTable}
+                onClick={onOpenNewFloorPlan}
                 className="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3.5 h-9 rounded-xl shadow transition"
               >
                 <Plus className="w-4 h-4" />
-                <span>Nueva Mesa</span>
+                <span>Nuevo Salón</span>
               </Button>
+            ) : (
+              <>
+                <Button
+                  variant={isEditMode ? 'default' : 'ghost'}
+                  type="button"
+                  onClick={onToggleEditMode}
+                  className={`flex items-center space-x-1.5 text-xs font-semibold px-3.5 h-9 rounded-xl border transition ${
+                    isEditMode
+                      ? 'bg-amber-600 border-amber-500 text-white shadow-lg shadow-amber-600/20 hover:bg-amber-500'
+                      : 'bg-card border-border text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <Settings2 className="w-3.5 h-3.5" />
+                  <span>{isEditMode ? 'Finalizar Edición' : 'Editar Salón'}</span>
+                </Button>
+
+                {isEditMode && onOpenNewFloorPlan && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onOpenNewFloorPlan}
+                    className="flex items-center space-x-1.5 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 text-xs font-semibold px-3 h-9 rounded-xl shadow-sm transition"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Nueva Zona</span>
+                  </Button>
+                )}
+
+                {isEditMode && (
+                  <Button
+                    type="button"
+                    onClick={onOpenCreateTable}
+                    className="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3.5 h-9 rounded-xl shadow transition"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Nueva Mesa</span>
+                  </Button>
+                )}
+              </>
             )}
           </div>
         )}
