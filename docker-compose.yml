@@ -91,9 +91,6 @@ networks:
   poscocina-network:
     name: poscocina-network
     driver: bridge
-  # Descomentar en Dokploy si conectas Traefik directamente:
-  # dokploy-network:
-  #   external: true
 
 volumes:
   postgres_data:
