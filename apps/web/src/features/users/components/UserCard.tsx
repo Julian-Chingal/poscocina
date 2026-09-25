@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, KeyRound, Edit2, XCircle, CheckCircle } from 'lucide-react';
+import { Shield, KeyRound, Edit2, XCircle, CheckCircle, KeySquare } from 'lucide-react';
 import { UserItem } from '../types/users.types';
 import { Button } from '@/components/ui/button';
 import { Card, CardFooter } from '@/components/ui/card';
@@ -8,16 +8,20 @@ import { Badge } from '@/components/ui/badge';
 interface UserCardProps {
   user: UserItem;
   isSelf: boolean;
+  isSuperAdmin: boolean;
   onEdit: (user: UserItem) => void;
   onResetPin: (user: UserItem) => void;
+  onChangePassword: (user: UserItem) => void;
   onToggleActive: (user: UserItem) => void;
 }
 
 export const UserCard: React.FC<UserCardProps> = ({
   user,
   isSelf,
+  isSuperAdmin,
   onEdit,
   onResetPin,
+  onChangePassword,
   onToggleActive,
 }) => {
   const isManager = user.roleHierarchy >= 80;
@@ -109,6 +113,18 @@ export const UserCard: React.FC<UserCardProps> = ({
           >
             <KeyRound className="w-3.5 h-3.5" />
           </Button>
+
+          {isSuperAdmin && user.email && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onChangePassword(user)}
+              title="Cambiar contraseña"
+              className="h-8 w-8 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition cursor-pointer"
+            >
+              <KeySquare className="w-3.5 h-3.5" />
+            </Button>
+          )}
         </div>
 
         {!isSelf && (

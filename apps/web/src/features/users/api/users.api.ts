@@ -19,6 +19,9 @@ export const usersApi = {
   updateUser: (venueId: string, userId: string, payload: UpdateUserPayload): Promise<UserItem> =>
     api.patch(`/venues/${venueId}/users/${userId}`, payload),
 
+  resetPassword: (venueId: string, userId: string, newPassword: string): Promise<UserItem> =>
+    api.patch(`/venues/${venueId}/users/${userId}`, { password: newPassword }),
+
   resetPin: (venueId: string, userId: string, newPin: string): Promise<void> =>
     api.post(`/venues/${venueId}/users/${userId}/reset-pin`, { newPin }),
 

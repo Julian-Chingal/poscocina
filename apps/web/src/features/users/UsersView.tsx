@@ -8,6 +8,7 @@ import { UsersGrid } from './components/UsersGrid';
 import { CreateUserModal } from './components/CreateUserModal';
 import { EditUserModal } from './components/EditUserModal';
 import { ResetPinModal } from './components/ResetPinModal';
+import { ChangePasswordModal } from './components/ChangePasswordModal';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,9 +22,12 @@ import {
 
 export const UsersView: React.FC<UsersViewProps> = ({ venueId }) => {
   const { currentUser } = useAuthStore();
+  const isSuperAdmin = currentUser?.roleName === 'super_admin';
+
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
   const [resetPinUser, setResetPinUser] = useState<UserItem | null>(null);
+  const [changePasswordUser, setChangePasswordUser] = useState<UserItem | null>(null);
   const [userToDeactivate, setUserToDeactivate] = useState<UserItem | null>(null);
 
   const {
@@ -47,6 +51,7 @@ export const UsersView: React.FC<UsersViewProps> = ({ venueId }) => {
     handleCreateUser,
     handleUpdateUser,
     handleResetPin,
+    handleResetPassword,
     handleToggleActive,
   } = useUserMutations(venueId, loadData);
 
@@ -90,6 +95,7 @@ export const UsersView: React.FC<UsersViewProps> = ({ venueId }) => {
         loading={loading}
         users={filteredUsers}
         currentUserId={currentUser?.id}
+        isSuperAdmin={isSuperAdmin}
         onEdit={(user) => {
           setActionError(null);
           setEditingUser(user);
@@ -97,6 +103,10 @@ export const UsersView: React.FC<UsersViewProps> = ({ venueId }) => {
         onResetPin={(user) => {
           setActionError(null);
           setResetPinUser(user);
+        }}
+        onChangePassword={(user) => {
+          setActionError(null);
+          setChangePasswordUser(user);
         }}
         onToggleActive={handleToggleClick}
       />
@@ -125,6 +135,14 @@ export const UsersView: React.FC<UsersViewProps> = ({ venueId }) => {
         actionError={actionError}
         onClose={() => setResetPinUser(null)}
         onSubmit={handleResetPin}
+      />
+
+      <ChangePasswordModal
+        user={changePasswordUser}
+        submitting={submitting}
+        actionError={actionError}
+        onClose={() => setChangePasswordUser(null)}
+        onSubmit={handleResetPassword}
       />
 
       <AlertDialog open={Boolean(userToDeactivate)} onOpenChange={(open) => !open && setUserToDeactivate(null)}>

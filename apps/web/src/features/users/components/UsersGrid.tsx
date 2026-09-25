@@ -6,8 +6,10 @@ interface UsersGridProps {
   loading: boolean;
   users: UserItem[];
   currentUserId?: string;
+  isSuperAdmin: boolean;
   onEdit: (user: UserItem) => void;
   onResetPin: (user: UserItem) => void;
+  onChangePassword: (user: UserItem) => void;
   onToggleActive: (user: UserItem) => void;
 }
 
@@ -15,8 +17,10 @@ export const UsersGrid: React.FC<UsersGridProps> = ({
   loading,
   users,
   currentUserId,
+  isSuperAdmin,
   onEdit,
   onResetPin,
+  onChangePassword,
   onToggleActive,
 }) => {
   if (loading) {
@@ -38,8 +42,10 @@ export const UsersGrid: React.FC<UsersGridProps> = ({
           key={u.id}
           user={u}
           isSelf={currentUserId === u.id}
+          isSuperAdmin={isSuperAdmin}
           onEdit={onEdit}
           onResetPin={onResetPin}
+          onChangePassword={onChangePassword}
           onToggleActive={onToggleActive}
         />
       ))}

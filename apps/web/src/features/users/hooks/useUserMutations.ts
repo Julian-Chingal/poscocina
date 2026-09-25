@@ -54,6 +54,22 @@ export const useUserMutations = (venueId: string, onSuccess: () => void) => {
     }
   };
 
+  const handleResetPassword = async (userId: string, newPassword: string, userName: string): Promise<boolean> => {
+    setActionError(null);
+    setSubmitting(true);
+    try {
+      await usersApi.resetPassword(venueId, userId, newPassword);
+      setActionSuccess(`Contraseña de ${userName} actualizada correctamente`);
+      onSuccess();
+      return true;
+    } catch (err: any) {
+      setActionError(err.message || 'Error al cambiar la contraseña');
+      return false;
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleToggleActive = async (user: UserItem): Promise<void> => {
     try {
       if (user.isActive) {
@@ -76,6 +92,7 @@ export const useUserMutations = (venueId: string, onSuccess: () => void) => {
     handleCreateUser,
     handleUpdateUser,
     handleResetPin,
+    handleResetPassword,
     handleToggleActive,
   };
 };
