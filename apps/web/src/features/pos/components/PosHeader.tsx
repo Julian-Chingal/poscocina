@@ -1,7 +1,13 @@
 import React from 'react';
 import { Users, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { TableItem } from '../types/pos.types';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 
 interface Props {
@@ -9,8 +15,16 @@ interface Props {
   allTables: TableItem[];
   isCashShiftOpen: boolean | null;
   waiterName?: string;
-  onSelectTable: (table: TableItem) => void;
+  onSelectTable: (table: TableItem | null) => void;
 }
+
+const TABLE_STATUS_LABEL: Record<string, string> = {
+  occupied: 'Ocupada',
+  paid_waiting_food: 'Pagada (Cocina)',
+  check_requested: 'Cuenta',
+};
+
+const TAKEOUT_VALUE = '__takeout__';
 
 export const PosHeader: React.FC<Props> = ({
   currentTable,
@@ -27,19 +41,27 @@ export const PosHeader: React.FC<Props> = ({
         <div className="flex items-center space-x-1">
           <span className="text-xs text-muted-foreground font-medium">Mesa:</span>
           <Select
-            value={currentTable?.id || ''}
-            onChange={(e) => {
-              const found = allTables.find((t) => t.id === e.target.value);
-              if (found) onSelectTable(found);
+            value={currentTable?.id || TAKEOUT_VALUE}
+            onValueChange={(value) => {
+              if (value === TAKEOUT_VALUE) {
+                onSelectTable(null);
+              } else {
+                const found = allTables.find((t) => t.id === value);
+                if (found) onSelectTable(found);
+              }
             }}
-            className="h-8 text-xs font-bold"
           >
-            <option value="">Para Llevar / Sin Mesa</option>
-            {allTables.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.label} ({t.status === 'occupied' ? 'Ocupada' : t.status === 'paid_waiting_food' ? 'Pagada (Cocina)' : t.status === 'check_requested' ? 'Cuenta' : 'Libre'})
-              </option>
-            ))}
+            <SelectTrigger className="h-8 text-xs font-bold border-none bg-transparent shadow-none focus:ring-0 px-1 w-auto min-w-[130px]">
+              <SelectValue placeholder="Para Llevar / Sin Mesa" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={TAKEOUT_VALUE}>Para Llevar / Sin Mesa</SelectItem>
+              {allTables.map((t) => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.label} ({TABLE_STATUS_LABEL[t.status] ?? 'Libre'})
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
         </div>
       </div>
