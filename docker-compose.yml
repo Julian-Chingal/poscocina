@@ -19,7 +19,10 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - poscocina-network
+      poscocina-network:
+        aliases:
+          - poscocina-postgres
+          - postgres
     # Descomentar si requieres depuración externa directa (ej. DBeaver o PgAdmin desde tu host):
     # ports:
     #   - "${DB_PORT:-5432}:5432"
@@ -37,7 +40,10 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - poscocina-network
+      poscocina-network:
+        aliases:
+          - poscocina-redis
+          - redis
 
   server:
     build:
@@ -49,8 +55,10 @@ services:
       NODE_ENV: production
       PORT: 3000
       HOST: 0.0.0.0
-      DATABASE_URL: postgresql://${DB_USER:-posuser}:${DB_PASSWORD:-pospassword}@postgres:5432/${DB_NAME:-poscocina}
-      REDIS_URL: redis://redis:6379
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${DB_USER:-posuser}:${DB_PASSWORD:-pospassword}@postgres:5432/${DB_NAME:-poscocina}}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
       JWT_SECRET: ${JWT_SECRET:-poscocina_jwt_super_secret_production_key_2026}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-12h}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
@@ -67,7 +75,10 @@ services:
     expose:
       - "3000"
     networks:
-      - poscocina-network
+      poscocina-network:
+        aliases:
+          - poscocina-server
+          - server
 
   client:
     build:
@@ -83,7 +94,10 @@ services:
       server:
         condition: service_healthy
     networks:
-      - poscocina-network
+      poscocina-network:
+        aliases:
+          - poscocina-client
+          - client
       # Descomentar en Dokploy si se utiliza la red de Traefik para enrutar dominio:
       # - dokploy-network
 
