@@ -29,8 +29,18 @@ export async function ordersRoutes(fastify: FastifyInstance) {
     ordersController.getKdsOrders(req, rep)
   );
 
-  // 6. Update KDS item status
+  // 6. Update KDS item status (forward or rollback)
   fastify.patch('/api/order-items/:id/status', { preHandler: [fastify.authenticate] }, (req, rep) =>
     ordersController.updateOrderItemStatus(req, rep)
+  );
+
+  // 7. Hot modification of order item (change product, notes, modifiers, quantity)
+  fastify.patch('/api/order-items/:id', staffGuard, (req, rep) =>
+    ordersController.modifyOrderItem(req, rep)
+  );
+
+  // 8. Hot removal of order item
+  fastify.delete('/api/order-items/:id', staffGuard, (req, rep) =>
+    ordersController.deleteOrderItem(req, rep)
   );
 }

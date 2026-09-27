@@ -5,19 +5,28 @@ import { getUrgencyStyles } from '../utils/urgency.utils';
 import { KdsItemCard } from './KdsItemCard';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-
 interface KdsOrderCardProps {
   order: KdsOrder;
   currentTime: number;
   onNextStatus: (item: KdsItem) => void;
+  onUndoStatus?: (item: KdsItem) => void;
+  showDelivered?: boolean;
 }
 
 export const KdsOrderCard: React.FC<KdsOrderCardProps> = ({
   order,
   currentTime,
   onNextStatus,
+  onUndoStatus,
+  showDelivered = false,
 }) => {
-  const urgency = getUrgencyStyles(order.openedAt, currentTime);
+  // Use earliest sentAt if available, fallback to openedAt for FIFO accuracy
+  const itemTimes = order.items
+    .map((it) => (it.sentAt ? new Date(it.sentAt).getTime() : null))
+    .filter(Boolean) as number[];
+
+  const earliestKitchenTimestamp = itemTimes.length > 0 ? Math.min(...itemTimes) : new Date(order.openedAt).getTime();
+  const urgency = getUrgencyStyles(new Date(earliestKitchenTimestamp).toISOString(), currentTime);
 
   return (
     <Card
@@ -77,6 +86,8 @@ export const KdsOrderCard: React.FC<KdsOrderCardProps> = ({
             key={item.id}
             item={item}
             onNextStatus={onNextStatus}
+            onUndoStatus={onUndoStatus}
+            showDelivered={showDelivered}
           />
         ))}
       </CardContent>

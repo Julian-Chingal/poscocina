@@ -60,3 +60,16 @@ export const UpdateOrderStatusSchema = z.object({
 
 export type UpdateOrderStatusInput = z.infer<typeof UpdateOrderStatusSchema>;
 
+export const ModifyOrderItemSchema = z.object({
+  productId: z.string().uuid().optional(),
+  quantity: z.number().int().positive().optional(),
+  notes: z.string().max(255).optional().nullable(),
+  seatNumber: z.number().int().positive().optional().nullable(),
+  course: z.number().int().positive().optional(),
+  modifiers: z.array(CreateOrderItemModifierSchema).optional(),
+  kitchenApproved: z.boolean().optional().default(false),
+  source: z.enum(['pos', 'kds']).optional().default('pos'),
+});
+
+export type ModifyOrderItemInput = z.infer<typeof ModifyOrderItemSchema>;
+

@@ -26,14 +26,34 @@ export class OrderRepository implements IOrderRepository {
     });
   }
 
-  async findKdsOrders(venueId: string, station?: string) {
+  async findKdsOrders(venueId: string, station?: string, includeRecentCompleted = false) {
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+
     const rawOrders = await this.database.query.orders.findMany({
-      where: (orders, { and, eq, notInArray }) =>
-        and(
+      where: (orders, { and, or, eq, notInArray, gte }) => {
+        const baseFilter = and(
           eq(orders.venueId, venueId),
-          notInArray(orders.kitchenStatus, ['delivered', 'cancelled']),
           notInArray(orders.status, ['cancelled', 'voided'])
-        ),
+        );
+
+        if (includeRecentCompleted) {
+          return and(
+            baseFilter,
+            or(
+              notInArray(orders.kitchenStatus, ['delivered', 'cancelled']),
+              and(
+                eq(orders.kitchenStatus, 'delivered'),
+                gte(orders.closedAt, tenMinutesAgo)
+              )
+            )
+          );
+        }
+
+        return and(
+          baseFilter,
+          notInArray(orders.kitchenStatus, ['delivered', 'cancelled'])
+        );
+      },
       with: {
         table: true,
         waiter: { columns: { id: true, name: true } },
@@ -41,17 +61,30 @@ export class OrderRepository implements IOrderRepository {
           with: { product: true, modifiers: true },
         },
       },
-      orderBy: (orders, { asc }) => [asc(orders.openedAt)],
     });
 
-    if (!station) return rawOrders;
+    const filtered = !station
+      ? rawOrders
+      : rawOrders
+          .map((ord) => ({
+            ...ord,
+            items: ord.items.filter((item: any) => item.product?.printerStation === station),
+          }))
+          .filter((ord) => ord.items.length > 0);
 
-    return rawOrders
-      .map((ord) => ({
-        ...ord,
-        items: ord.items.filter((item: any) => item.product?.printerStation === station),
-      }))
-      .filter((ord) => ord.items.length > 0);
+    // FIFO (First In, First Out) strict sorting by the earliest sentAt / openedAt
+    return filtered.sort((a, b) => {
+      const getEarliestTime = (ord: any) => {
+        const times = ord.items
+          .map((it: any) => (it.sentAt ? new Date(it.sentAt).getTime() : null))
+          .filter(Boolean);
+        if (times.length > 0) {
+          return Math.min(...times);
+        }
+        return new Date(ord.openedAt).getTime();
+      };
+      return getEarliestTime(a) - getEarliestTime(b);
+    });
   }
 
   async createOrder(data: any, tx = this.database) {
@@ -85,13 +118,30 @@ export class OrderRepository implements IOrderRepository {
     return updated;
   }
 
-  async updateOrderItemStatus(itemId: string, status: any) {
-    const [updated] = await this.database
+  async updateOrderItemStatus(itemId: string, status: any, extra?: Record<string, any>, tx = this.database) {
+    const [updated] = await tx
       .update(schema.orderItems)
-      .set({ status })
+      .set({ status, ...(extra || {}) })
       .where(eq(schema.orderItems.id, itemId))
       .returning();
     return updated;
+  }
+
+  async updateOrderItemData(itemId: string, data: Record<string, any>, tx = this.database) {
+    const [updated] = await tx
+      .update(schema.orderItems)
+      .set(data)
+      .where(eq(schema.orderItems.id, itemId))
+      .returning();
+    return updated;
+  }
+
+  async deleteOrderItem(itemId: string, tx = this.database) {
+    await tx.delete(schema.orderItems).where(eq(schema.orderItems.id, itemId));
+  }
+
+  async deleteItemModifiers(itemId: string, tx = this.database) {
+    await tx.delete(schema.orderItemModifiers).where(eq(schema.orderItemModifiers.orderItemId, itemId));
   }
 
   async findOrderItemById(itemId: string, tx = this.database) {
@@ -101,6 +151,22 @@ export class OrderRepository implements IOrderRepository {
       .where(eq(schema.orderItems.id, itemId))
       .limit(1);
     return item || null;
+  }
+
+  async findOrderItemWithOrder(itemId: string, tx = this.database) {
+    return await this.database.query.orderItems.findFirst({
+      where: (orderItems, { eq }) => eq(orderItems.id, itemId),
+      with: {
+        product: true,
+        modifiers: { with: { modifier: true } },
+        order: {
+          with: {
+            table: true,
+            waiter: { columns: { id: true, name: true } },
+          },
+        },
+      },
+    });
   }
 
   async findOrderItemsByOrderId(orderId: string, tx = this.database) {

@@ -40,4 +40,10 @@ export const posApi = {
 
   openDrawer: (venueId: string) =>
     api.post('/hardware/open-drawer', { venueId }),
+
+  modifyOrderItem: (itemId: string, data: any) =>
+    api.patch(`/order-items/${itemId}`, data),
+
+  deleteOrderItem: (itemId: string, kitchenApproved = false) =>
+    api.delete(`/order-items/${itemId}?kitchenApproved=${kitchenApproved}`),
 };

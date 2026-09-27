@@ -84,6 +84,7 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
             onSelectCustomer={crm.selectCustomer}
             onClearCustomer={crm.clearCustomer}
             onOpenCreateCustomerModal={() => crm.setShowCreateModal(true)}
+            onRefreshOrder={table.refreshOrder}
           />
         </div>
       </div>

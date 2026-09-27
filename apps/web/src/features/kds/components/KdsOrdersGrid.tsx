@@ -9,6 +9,7 @@ interface KdsOrdersGridProps {
   activeStation: StationFilter;
   currentTime: number;
   onNextStatus: (item: KdsItem) => void;
+  onUndoStatus?: (item: KdsItem) => void;
 }
 
 export const KdsOrdersGrid: React.FC<KdsOrdersGridProps> = ({
@@ -16,15 +17,22 @@ export const KdsOrdersGrid: React.FC<KdsOrdersGridProps> = ({
   activeStation,
   currentTime,
   onNextStatus,
+  onUndoStatus,
 }) => {
+  const isHistory = activeStation === 'history';
+
   if (orders.length === 0) {
     const stationLabel = STATIONS.find((s) => s.id === activeStation)?.label.toLowerCase() || '';
     return (
       <div className="bg-muted/40 border border-border rounded-3xl p-16 text-center text-muted-foreground">
         <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-emerald-500/80" />
-        <p className="text-lg font-bold text-foreground">¡Estación al día!</p>
+        <p className="text-lg font-bold text-foreground">
+          {isHistory ? 'Sin comandas en historial reciente' : '¡Estación al día!'}
+        </p>
         <p className="text-xs text-muted-foreground/80 mt-1">
-          No hay comandas pendientes en {stationLabel}.
+          {isHistory
+            ? 'No hay comandas despachadas en los últimos 10 minutos.'
+            : `No hay comandas pendientes en ${stationLabel}.`}
         </p>
       </div>
     );
@@ -38,6 +46,8 @@ export const KdsOrdersGrid: React.FC<KdsOrdersGridProps> = ({
           order={order}
           currentTime={currentTime}
           onNextStatus={onNextStatus}
+          onUndoStatus={onUndoStatus}
+          showDelivered={isHistory}
         />
       ))}
     </div>

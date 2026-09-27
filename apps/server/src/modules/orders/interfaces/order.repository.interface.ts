@@ -22,15 +22,19 @@ export interface CreateOrderPayload {
 export interface IOrderRepository {
   findActiveShift(venueId: string, tx?: any): Promise<any>;
   findOrderById(orderId: string, tx?: any): Promise<any>;
-  findKdsOrders(venueId: string, station?: string): Promise<any[]>;
+  findKdsOrders(venueId: string, station?: string, includeRecentCompleted?: boolean): Promise<any[]>;
   createOrder(data: any, tx?: any): Promise<any>;
   insertOrderItems(items: any[], tx?: any): Promise<any[]>;
   insertItemModifiers(modifiers: any[], tx?: any): Promise<void>;
   updateTableOccupied(tableId: string, orderId: string, tx?: any): Promise<void>;
   updateOrderStatus(orderId: string, status: any): Promise<any>;
-  updateOrderItemStatus(itemId: string, status: any): Promise<any>;
+  updateOrderItemStatus(itemId: string, status: any, extra?: Record<string, any>, tx?: any): Promise<any>;
+  updateOrderItemData(itemId: string, data: Record<string, any>, tx?: any): Promise<any>;
+  deleteOrderItem(itemId: string, tx?: any): Promise<void>;
+  deleteItemModifiers(itemId: string, tx?: any): Promise<void>;
   updateOrderTotals(orderId: string, subtotal: string, taxTotal: string, total: string, extra?: Record<string, any>, tx?: any): Promise<any>;
   findOrderItemById(itemId: string, tx?: any): Promise<any>;
+  findOrderItemWithOrder(itemId: string, tx?: any): Promise<any>;
   findOrderItemsByOrderId(orderId: string, tx?: any): Promise<any[]>;
   updateOrderKitchenStatus(orderId: string, kitchenStatus: string, extra?: Record<string, any>, tx?: any): Promise<any>;
   freeTable(tableId: string, tx?: any): Promise<void>;

@@ -9,13 +9,17 @@ export const KdsView: React.FC<KdsViewProps> = ({ venueId }) => {
   const {
     orders,
     loading,
+    isSyncing,
+    isConnected,
     activeStation,
     setActiveStation,
     currentTime,
     handleNextStatus,
+    handleUndoStatus,
+    refreshOrders,
   } = useKdsData(venueId);
 
-  if (loading) {
+  if (loading && orders.length === 0) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-muted-foreground animate-spin text-3xl">⏳</div>
@@ -25,7 +29,12 @@ export const KdsView: React.FC<KdsViewProps> = ({ venueId }) => {
 
   return (
     <div className="w-full min-w-0 max-w-7xl mx-auto p-6 space-y-6">
-      <KdsHeader activeCount={orders.length} />
+      <KdsHeader
+        activeCount={orders.length}
+        isConnected={isConnected}
+        isSyncing={isSyncing}
+        onRefresh={refreshOrders}
+      />
 
       <KdsStationTabs
         activeStation={activeStation}
@@ -37,6 +46,7 @@ export const KdsView: React.FC<KdsViewProps> = ({ venueId }) => {
         activeStation={activeStation}
         currentTime={currentTime}
         onNextStatus={handleNextStatus}
+        onUndoStatus={handleUndoStatus}
       />
     </div>
   );

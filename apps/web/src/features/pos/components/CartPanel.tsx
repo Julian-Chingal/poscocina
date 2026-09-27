@@ -4,6 +4,7 @@ import { CartItem, Customer, TableItem } from '../types/pos.types';
 import { CartItemRow } from './CartItemRow';
 import { CustomerSelectDropdown } from './CustomerSelectDropdown';
 import { CartFooter } from './CartFooter';
+import { ActiveOrderItemsList } from './ActiveOrderItemsList';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +32,7 @@ interface Props {
   onSelectCustomer: (c: Customer) => void;
   onClearCustomer: () => void;
   onOpenCreateCustomerModal: () => void;
+  onRefreshOrder?: () => void;
 }
 
 export const CartPanel: React.FC<Props> = ({
@@ -56,6 +58,7 @@ export const CartPanel: React.FC<Props> = ({
   onSelectCustomer,
   onClearCustomer,
   onOpenCreateCustomerModal,
+  onRefreshOrder,
 }) => (
   <Card className="p-4 flex flex-col justify-between h-[80vh] shadow-sm">
     <div className="space-y-3 overflow-hidden flex flex-col flex-1">
@@ -106,10 +109,15 @@ export const CartPanel: React.FC<Props> = ({
         ))}
 
         {cart.length === 0 && (
-          <Card className="h-44 flex flex-col items-center justify-center text-center text-muted-foreground text-xs border border-dashed border-border bg-transparent p-4">
-            <ShoppingCart className="w-6 h-6 mb-2 opacity-40" />
-            <span>Selecciona productos del catálogo para armar la comanda.</span>
+          <Card className="h-28 flex flex-col items-center justify-center text-center text-muted-foreground text-xs border border-dashed border-border bg-transparent p-4">
+            <ShoppingCart className="w-5 h-5 mb-1.5 opacity-40" />
+            <span>Selecciona productos del catálogo para añadir a la comanda.</span>
           </Card>
+        )}
+
+        {/* Existing order items sent to kitchen */}
+        {activeOrder && onRefreshOrder && (
+          <ActiveOrderItemsList order={activeOrder} onRefreshOrder={onRefreshOrder} />
         )}
       </div>
     </div>
