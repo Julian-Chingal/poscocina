@@ -1,5 +1,4 @@
-import React from 'react';
-import { Settings2, Plus } from 'lucide-react';
+import { Settings2, Plus, Map as MapIcon, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -7,6 +6,8 @@ interface Props {
   isEditMode: boolean;
   isManager: boolean;
   hasFloorPlans?: boolean;
+  viewMode: 'canvas' | 'grid';
+  onToggleViewMode: (mode: 'canvas' | 'grid') => void;
   onToggleEditMode: () => void;
   onOpenCreateTable: () => void;
   onOpenNewFloorPlan?: () => void;
@@ -16,6 +17,8 @@ export const SalonHeader: React.FC<Props> = ({
   isEditMode,
   isManager,
   hasFloorPlans = true,
+  viewMode,
+  onToggleViewMode,
   onToggleEditMode,
   onOpenCreateTable,
   onOpenNewFloorPlan,
@@ -57,6 +60,38 @@ export const SalonHeader: React.FC<Props> = ({
             <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
             <span className="text-muted-foreground">Reservada</span>
           </div>
+        </div>
+
+        {/* View Mode Toggle: Canvas / Grid */}
+        <div className="flex items-center bg-muted/60 p-0.5 rounded-xl border border-border">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onToggleViewMode('canvas')}
+            className={`h-8 px-2.5 rounded-lg text-xs font-semibold transition-all ${
+              viewMode === 'canvas'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <MapIcon className="w-3.5 h-3.5 mr-1 text-primary" />
+            <span className="hidden sm:inline">Plano Visual</span>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onToggleViewMode('grid')}
+            className={`h-8 px-2.5 rounded-lg text-xs font-semibold transition-all ${
+              viewMode === 'grid'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <LayoutGrid className="w-3.5 h-3.5 mr-1" />
+            <span className="hidden sm:inline">Tarjetas</span>
+          </Button>
         </div>
 
         {/* Manager Controls */}

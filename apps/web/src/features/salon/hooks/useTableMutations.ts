@@ -116,6 +116,42 @@ export const useTableMutations = (
     }
   };
 
+  const saveFloorPlanDesign = async (
+    floorPlanId: string,
+    layout: any,
+    tablePositions?: Array<{ id: string; positionX: number; positionY: number; shape?: string; capacity?: number; label?: string }>
+  ) => {
+    try {
+      setSubmitting(true);
+      await salonApi.updateFloorPlan(floorPlanId, { layout });
+      if (tablePositions && tablePositions.length > 0) {
+        await salonApi.batchUpdateTables(tablePositions);
+      }
+      toast.success('Diseño y distribución guardados correctamente');
+      onSuccess();
+    } catch (err: any) {
+      const msg = err.data?.message || err.message || 'Error al guardar diseño del salón';
+      toast.error(msg);
+      throw err;
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const deleteFloorPlan = async (floorPlanId: string) => {
+    try {
+      setSubmitting(true);
+      await salonApi.deleteFloorPlan(floorPlanId);
+      toast.success('Salón eliminado correctamente');
+      onSuccess();
+    } catch (err: any) {
+      const msg = err.data?.message || err.message || 'Error al eliminar salón';
+      toast.error(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return {
     showTableModal,
     editingTable,
@@ -134,5 +170,7 @@ export const useTableMutations = (
     saveTable,
     confirmDeleteTable,
     createFloorPlan,
+    saveFloorPlanDesign,
+    deleteFloorPlan,
   };
 };

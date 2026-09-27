@@ -103,6 +103,12 @@ export class VenueRepository implements IVenueRepository {
         receiptHeader: 'Sabor tradicional & Alta cocina',
         receiptFooter: '¡Gracias por su visita!',
         primaryColor: '#ea580c',
+        phone: data.phone || data.settings?.phone || '',
+        slug: data.slug || data.settings?.slug || '',
+        city: data.city || data.settings?.city || '',
+        managerName: data.managerName || data.settings?.managerName || '',
+        openingHours: data.openingHours || data.settings?.openingHours || '',
+        notes: data.notes || data.settings?.notes || '',
         ...(data.settings || {}),
       };
 
@@ -161,10 +167,20 @@ export class VenueRepository implements IVenueRepository {
 
   async updateVenueSettings(id: string, data: any) {
     const existing = await this.getVenueById(id);
-    const mergedSettings = { ...((existing.settings as Record<string, unknown>) || {}), ...(data.settings || {}) };
+    const existingSettings = (existing.settings as Record<string, unknown>) || {};
+    const mergedSettings = {
+      ...existingSettings,
+      ...(data.phone !== undefined ? { phone: data.phone } : {}),
+      ...(data.slug !== undefined ? { slug: data.slug } : {}),
+      ...(data.city !== undefined ? { city: data.city } : {}),
+      ...(data.managerName !== undefined ? { managerName: data.managerName } : {}),
+      ...(data.openingHours !== undefined ? { openingHours: data.openingHours } : {}),
+      ...(data.notes !== undefined ? { notes: data.notes } : {}),
+      ...(data.settings || {}),
+    };
     const updateFields: Record<string, unknown> = { settings: mergedSettings };
     if (data.name) updateFields.name = data.name;
-    if (data.address) updateFields.address = data.address;
+    if (data.address !== undefined) updateFields.address = data.address;
     if (data.timezone) updateFields.timezone = data.timezone;
 
     const [updated] = await this.database.update(schema.venues).set(updateFields).where(eq(schema.venues.id, id)).returning();

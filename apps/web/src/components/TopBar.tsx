@@ -7,32 +7,26 @@ import { ShiftStatusBadge } from "./navigation/ShiftStatusBadge";
 import { UserNav } from "./navigation/UserNav";
 import { TopBarSearch } from "./navigation/TopBarSearch";
 import { ThemeToggle } from "./navigation/ThemeToggle";
+import { BreadcrumbNav } from "./navigation/BreadcrumbNav";
 import { Button } from "./ui/button";
+import { cn } from "@/lib/utils";
 
 interface TopBarProps {
   currentView: string;
   onNavigate: (view: string) => void;
+  onBack: () => void;
+  canGoBack?: boolean;
+  previousViewTitle?: string;
   searchQuery: string;
   onSearchChange: (q: string) => void;
 }
 
-const VIEW_TITLES: Record<string, string> = {
-  home: "Aplicaciones",
-  salon: "Salón y Mesas (F1)",
-  reservations: "Reservas de Mesas",
-  pos: "Punto de Venta (F2)",
-  kds: "Cocina KDS (F3)",
-  catalog: "Menú y Catálogo",
-  inventory: "Inventario y Recetas",
-  shifts: "Caja y Turnos (F4)",
-  reports: "Reportes y Métricas",
-  users: "Gestión de Empleados & Roles",
-  settings: "Ajustes y Personalización de Empresa",
-};
-
 export const TopBar: React.FC<TopBarProps> = ({
   currentView,
   onNavigate,
+  onBack,
+  canGoBack = true,
+  previousViewTitle,
   searchQuery,
   onSearchChange,
 }) => {
@@ -65,39 +59,36 @@ export const TopBar: React.FC<TopBarProps> = ({
   };
 
   return (
-    <header className="h-12 bg-card/90 backdrop-blur-md border-b border-border flex justify-between md:grid md:grid-cols-[1fr_minmax(0,28rem)_1fr] items-center px-3 sm:px-4 text-foreground select-none shadow-xs z-30 sticky top-0 gap-3 transition-colors w-full min-w-0">
-      {/* Left section: Brand & Venue */}
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0 justify-start overflow-hidden">
+    <header className="h-14 bg-card/90 backdrop-blur-xl border-b border-border/80 flex items-center justify-between px-2.5 sm:px-4 text-foreground select-none shadow-2xs z-30 sticky top-0 gap-2 sm:gap-3 transition-colors w-full min-w-0">
+      {/* Left section: Brand, Venue & Breadcrumb Navigation with Back button */}
+      <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 justify-start overflow-hidden flex-1 sm:flex-initial">
         <BrandLink isHome={isHome} onNavigate={onNavigate} />
         <VenueSelector onNavigateSettings={() => onNavigate("settings")} />
 
         {!isHome && (
-          <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground border-l border-border pl-3 min-w-0">
-            <button
-              type="button"
-              onClick={() => onNavigate("home")}
-              title="Volver a Aplicaciones"
-              aria-label="Volver a Aplicaciones"
-              className="text-xs text-muted-foreground hover:text-foreground cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-sm py-0.5 px-1 shrink-0"
-            >
-              Apps
-            </button>
-            <span className="text-muted-foreground/60 shrink-0" aria-hidden="true">/</span>
-            <span className="font-semibold text-foreground truncate max-w-[160px] xl:max-w-[240px]">
-              {VIEW_TITLES[currentView] || currentView}
-            </span>
-          </div>
+          <BreadcrumbNav
+            currentView={currentView}
+            onNavigate={onNavigate}
+            onBack={onBack}
+            canGoBack={canGoBack}
+            previousViewTitle={previousViewTitle}
+          />
         )}
       </div>
 
       {/* Center section: Quick Search with Debouncing & Transition */}
-      <div className="hidden md:flex items-center justify-center min-w-0 w-full">
+      <div
+        className={cn(
+          "items-center justify-center min-w-0 flex-1 max-w-xs xl:max-w-md mx-2",
+          isHome ? "hidden sm:flex" : "hidden lg:flex"
+        )}
+      >
         <TopBarSearch
           searchQuery={searchQuery}
           onSearchChange={onSearchChange}
           isHome={isHome}
           onNavigateHome={() => onNavigate("home")}
-          className="w-full max-w-md"
+          className="w-full"
         />
       </div>
 

@@ -23,6 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/common/native-select';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 
 interface EditUserModalProps {
   user: UserItem | null;
@@ -142,6 +143,29 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
                     <Input {...field} type="email" />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="isActive"
+              render={({ field }) => (
+                <FormItem className="flex items-center justify-between rounded-xl border border-border bg-muted/20 p-3 shadow-2xs">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-sm font-semibold text-foreground">
+                      Estado Activo
+                    </FormLabel>
+                    <p className="text-xs text-muted-foreground">
+                      Permite al usuario operar terminales e iniciar sesión.
+                    </p>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />

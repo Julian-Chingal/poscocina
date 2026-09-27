@@ -1,5 +1,5 @@
 import React, { useState, Suspense, lazy } from 'react';
-import { Building2, Receipt, Store, Printer, Save, Check } from 'lucide-react';
+import { Building2, Receipt, Store, Printer, Save, Check, Type } from 'lucide-react';
 import { useBrandingStore } from '@/stores/branding.store';
 import { useSettingsForm } from './hooks/useSettingsForm';
 import { SettingsTab } from './types/settings.types';
@@ -7,6 +7,7 @@ import { SubNavLayout, SubNavGroup } from '@/components/common/SubNavLayout';
 import { Button } from '@/components/ui/button';
 import { IdentityTab } from './components/IdentityTab';
 import { TaxBillingTab } from './components/TaxBillingTab';
+import { AppearanceTab } from './components/AppearanceTab';
 
 const PrintersTab = lazy(() => import('./components/PrintersTab'));
 const VenuesTab = lazy(() => import('./components/VenuesTab'));
@@ -21,7 +22,7 @@ const TabSkeleton: React.FC = () => (
 export const SettingsView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('identity');
   const venues = useBrandingStore((s) => s.venues);
-  const { form, setField, setTaxType, saveSettings, saving, savedSuccess } = useSettingsForm();
+  const { form, setField, setTaxType, saveSettings, saveReceiptFormat, saving, savedSuccess } = useSettingsForm();
 
   const settingsGroups: SubNavGroup[] = [
     {
@@ -49,8 +50,13 @@ export const SettingsView: React.FC = () => {
     },
     {
       id: 'local',
-      heading: 'Local (Por Sede)',
+      heading: 'Local (Por Dispositivo)',
       items: [
+        {
+          id: 'appearance',
+          label: 'Tipografía & Pantalla',
+          icon: Type,
+        },
         {
           id: 'printer',
           label: 'Impresoras Térmicas ESC/POS',
@@ -60,7 +66,7 @@ export const SettingsView: React.FC = () => {
     },
   ];
 
-  const headerActions = activeTab !== 'venues' ? (
+  const headerActions = activeTab !== 'venues' && activeTab !== 'appearance' ? (
     <Button
       type="button"
       onClick={saveSettings}
@@ -99,11 +105,22 @@ export const SettingsView: React.FC = () => {
         <IdentityTab
           legalName={form.legalName}
           companyName={form.companyName}
+          slogan={form.slogan}
           logoUrl={form.logoUrl}
           primaryColor={form.primaryColor}
+          secondaryColor={form.secondaryColor}
+          borderRadius={form.borderRadius}
           venueAddress={form.venueAddress}
           phone={form.phone}
           email={form.email}
+          taxId={form.taxId}
+          currency={form.currency}
+          paperWidth={form.paperWidth}
+          receiptHeader={form.receiptHeader}
+          receiptFooter={form.receiptFooter}
+          showLogoOnReceipt={form.showLogoOnReceipt}
+          showQrOnReceipt={form.showQrOnReceipt}
+          qrUrl={form.qrUrl}
           onFieldChange={setField}
         />
       )}
@@ -111,6 +128,12 @@ export const SettingsView: React.FC = () => {
       {activeTab === 'tax' && (
         <TaxBillingTab
           taxId={form.taxId}
+          companyName={form.companyName}
+          legalName={form.legalName}
+          logoUrl={form.logoUrl}
+          primaryColor={form.primaryColor}
+          venueAddress={form.venueAddress}
+          phone={form.phone}
           regime={form.regime}
           taxType={form.taxType}
           taxRate={form.taxRate}
@@ -137,6 +160,7 @@ export const SettingsView: React.FC = () => {
             logoUrl={form.logoUrl}
             primaryColor={form.primaryColor}
             companyName={form.companyName}
+            legalName={form.legalName}
             taxId={form.taxId}
             venueAddress={form.venueAddress}
             phone={form.phone}
@@ -144,7 +168,20 @@ export const SettingsView: React.FC = () => {
             taxRate={form.taxRate}
             defaultTipPct={form.defaultTipPct}
             currency={form.currency}
+            showLogoOnReceipt={form.showLogoOnReceipt}
+            showQrOnReceipt={form.showQrOnReceipt}
+            showWaiterOnReceipt={form.showWaiterOnReceipt}
+            showTaxBreakdown={form.showTaxBreakdown}
+            showResolutionOnReceipt={form.showResolutionOnReceipt}
+            isInvoiceResolutionEnabled={form.isInvoiceResolutionEnabled}
+            invoicePrefix={form.invoicePrefix}
+            invoiceResolution={form.invoiceResolution}
+            invoiceInitialNumber={form.invoiceInitialNumber}
+            invoiceFinalNumber={form.invoiceFinalNumber}
+            invoiceResolutionDate={form.invoiceResolutionDate}
             onFieldChange={setField}
+            onSaveFormat={saveReceiptFormat}
+            savingFormat={saving}
           />
         </Suspense>
       )}
@@ -154,6 +191,8 @@ export const SettingsView: React.FC = () => {
           <VenuesTab isActive={activeTab === 'venues'} />
         </Suspense>
       )}
+
+      {activeTab === 'appearance' && <AppearanceTab />}
     </SubNavLayout>
   );
 };

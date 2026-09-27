@@ -65,8 +65,8 @@ export const NewVenueModal: React.FC<Props> = ({
     onSubmit({
       name: values.name.trim(),
       slug: values.slug.trim(),
-      address: values.address.trim(),
-      phone: values.phone.trim(),
+      address: values.address?.trim() || '',
+      phone: values.phone?.trim() || '',
     });
     form.reset();
   });

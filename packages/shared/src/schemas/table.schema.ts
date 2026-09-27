@@ -25,7 +25,28 @@ export const UpdateTableSchema = z.object({
   status: z.enum(['free', 'occupied', 'check_requested', 'reserved', 'blocked']).optional(),
 });
 
+export const UpdateFloorPlanSchema = z.object({
+  name: z.string().min(2, 'El nombre del salón o planta es obligatorio').optional(),
+  layout: z.record(z.any()).optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const BatchUpdateTablePositionsSchema = z.object({
+  tables: z.array(
+    z.object({
+      id: z.string().uuid(),
+      positionX: z.number(),
+      positionY: z.number(),
+      shape: z.enum(['rect', 'circle', 'square']).optional(),
+      capacity: z.number().int().min(1).optional(),
+      label: z.string().min(1).optional(),
+    })
+  ),
+});
+
 export type CreateFloorPlanInput = z.infer<typeof CreateFloorPlanSchema>;
+export type UpdateFloorPlanInput = z.infer<typeof UpdateFloorPlanSchema>;
+export type BatchUpdateTablePositionsInput = z.infer<typeof BatchUpdateTablePositionsSchema>;
 export type CreateTableInput = z.infer<typeof CreateTableSchema>;
 export type UpdateTableInput = z.infer<typeof UpdateTableSchema>;
 

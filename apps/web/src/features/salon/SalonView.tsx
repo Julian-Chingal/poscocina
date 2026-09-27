@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SalonViewProps } from './types/salon.types';
@@ -8,6 +8,7 @@ import { useTableOperations } from './hooks/useTableOperations';
 import { SalonHeader } from './components/SalonHeader';
 import { FloorPlansBar } from './components/FloorPlansBar';
 import { TablesGrid } from './components/TablesGrid';
+import { FloorPlanCanvas } from './components/FloorPlanCanvas';
 import { TableModal } from './components/TableModal';
 import { FloorPlanModal } from './components/FloorPlanModal';
 import { DeleteTableModal } from './components/DeleteTableModal';
@@ -17,6 +18,7 @@ import { MergeTablesModal } from './components/MergeTablesModal';
 export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) => {
   const { currentUser } = useAuthStore();
   const [isEditMode, setIsEditMode] = useState(false);
+  const [viewMode, setViewMode] = useState<'canvas' | 'grid'>('canvas');
 
   const isManager =
     currentUser?.roleName === 'manager' ||
@@ -26,6 +28,19 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
   const data = useSalonData(venueId);
   const mutations = useTableMutations(venueId, data.refreshData);
   const operations = useTableOperations(data.tables, data.floorPlans, data.refreshData);
+
+  // Active floor plan for canvas design
+  const activePlan =
+    data.floorPlans.find((p) => p.id === data.activeFloorPlanId) ||
+    data.floorPlans[0] ||
+    null;
+
+  // Auto-select first floor plan if in edit mode and on 'all'
+  useEffect(() => {
+    if (isEditMode && data.activeFloorPlanId === 'all' && data.floorPlans.length > 0) {
+      data.setActiveFloorPlanId(data.floorPlans[0].id);
+    }
+  }, [isEditMode, data.activeFloorPlanId, data.floorPlans]);
 
   if (data.loading && data.tables.length === 0) {
     return (
@@ -53,6 +68,8 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
         isEditMode={isEditMode}
         isManager={isManager}
         hasFloorPlans={data.floorPlans.length > 0}
+        viewMode={viewMode}
+        onToggleViewMode={setViewMode}
         onToggleEditMode={() => setIsEditMode(!isEditMode)}
         onOpenCreateTable={mutations.openCreateTable}
         onOpenNewFloorPlan={mutations.openCreateFloorPlan}
@@ -68,25 +85,47 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
         onOpenNewFloorPlan={mutations.openCreateFloorPlan}
       />
 
-      <TablesGrid
-        tables={data.filteredTables}
-        hasFloorPlans={data.floorPlans.length > 0}
-        isEditMode={isEditMode}
-        isManager={isManager}
-        onSelectTable={onSelectTable}
-        onOpenCreateTable={mutations.openCreateTable}
-        onOpenNewFloorPlan={mutations.openCreateFloorPlan}
-        onEditTable={mutations.openEditTable}
-        onDeleteTable={mutations.setDeleteTarget}
-        onStartTransfer={(t) => {
-          operations.setTransferSourceTable(t);
-          operations.setSelectedTargetTableId('');
-        }}
-        onStartMerge={(t) => {
-          operations.setMergeSourceTable(t);
-          operations.setSelectedTargetTableId('');
-        }}
-      />
+      {viewMode === 'canvas' ? (
+        <FloorPlanCanvas
+          floorPlan={activePlan}
+          tables={data.filteredTables}
+          isEditMode={isEditMode}
+          isManager={isManager}
+          onSelectTable={onSelectTable}
+          onEditTable={mutations.openEditTable}
+          onDeleteTable={mutations.setDeleteTarget}
+          onOpenCreateTable={mutations.openCreateTable}
+          onSaveLayout={mutations.saveFloorPlanDesign}
+          onStartTransfer={(t) => {
+            operations.setTransferSourceTable(t);
+            operations.setSelectedTargetTableId('');
+          }}
+          onStartMerge={(t) => {
+            operations.setMergeSourceTable(t);
+            operations.setSelectedTargetTableId('');
+          }}
+        />
+      ) : (
+        <TablesGrid
+          tables={data.filteredTables}
+          hasFloorPlans={data.floorPlans.length > 0}
+          isEditMode={isEditMode}
+          isManager={isManager}
+          onSelectTable={onSelectTable}
+          onOpenCreateTable={mutations.openCreateTable}
+          onOpenNewFloorPlan={mutations.openCreateFloorPlan}
+          onEditTable={mutations.openEditTable}
+          onDeleteTable={mutations.setDeleteTarget}
+          onStartTransfer={(t) => {
+            operations.setTransferSourceTable(t);
+            operations.setSelectedTargetTableId('');
+          }}
+          onStartMerge={(t) => {
+            operations.setMergeSourceTable(t);
+            operations.setSelectedTargetTableId('');
+          }}
+        />
+      )}
 
       <TableModal
         isOpen={mutations.showTableModal}

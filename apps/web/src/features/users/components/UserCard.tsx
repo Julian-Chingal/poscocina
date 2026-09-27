@@ -1,7 +1,8 @@
 import React from 'react';
-import { Shield, KeyRound, Edit2, XCircle, CheckCircle, KeySquare } from 'lucide-react';
+import { Shield, KeyRound, Edit2, KeySquare } from 'lucide-react';
 import { UserItem } from '../types/users.types';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Card, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -128,27 +129,16 @@ export const UserCard: React.FC<UserCardProps> = ({
         </div>
 
         {!isSelf && (
-          <Button
-            variant="ghost"
-            onClick={() => onToggleActive(user)}
-            className={`px-3 py-1.5 h-auto rounded-xl font-semibold transition cursor-pointer flex items-center gap-1 text-[11px] ${
-              user.isActive
-                ? 'bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/20'
-                : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-            }`}
-          >
-            {user.isActive ? (
-              <>
-                <XCircle className="w-3.5 h-3.5" />
-                <span>Desactivar</span>
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-3.5 h-3.5" />
-                <span>Reactivar</span>
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-2 bg-muted/30 px-2 py-1 rounded-xl border border-border/60">
+            <span className="text-[11px] font-medium text-muted-foreground">
+              {user.isActive ? 'Activo' : 'Inactivo'}
+            </span>
+            <Switch
+              checked={user.isActive}
+              onCheckedChange={() => onToggleActive(user)}
+              aria-label={user.isActive ? 'Desactivar usuario' : 'Activar usuario'}
+            />
+          </div>
         )}
       </CardFooter>
     </Card>

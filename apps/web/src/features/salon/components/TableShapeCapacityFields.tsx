@@ -1,7 +1,13 @@
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface Props {
   capacity: number;
@@ -33,12 +39,16 @@ export const TableShapeCapacityFields: React.FC<Props> = ({
       <Label className="mb-1.5 block">Forma Geométrica</Label>
       <Select
         value={shape}
-        onChange={(e) => onShapeChange(e.target.value as 'rect' | 'circle' | 'square')}
-        className="h-10 rounded-xl"
+        onValueChange={(val) => onShapeChange(val as 'rect' | 'circle' | 'square')}
       >
-        <option value="rect">Rectangular</option>
-        <option value="square">Cuadrada</option>
-        <option value="circle">Redonda</option>
+        <SelectTrigger className="h-10 rounded-xl w-full">
+          <SelectValue placeholder="Seleccionar forma" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="rect">Rectangular</SelectItem>
+          <SelectItem value="square">Cuadrada</SelectItem>
+          <SelectItem value="circle">Redonda</SelectItem>
+        </SelectContent>
       </Select>
     </div>
   </div>

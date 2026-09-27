@@ -4,6 +4,12 @@ export const CreateVenueSchema = z.object({
   name: z.string().min(2, 'El nombre de la sede debe tener al menos 2 caracteres'),
   address: z.string().optional(),
   timezone: z.string().default('America/Bogota'),
+  phone: z.string().optional(),
+  slug: z.string().optional(),
+  city: z.string().optional(),
+  managerName: z.string().optional(),
+  openingHours: z.string().optional(),
+  notes: z.string().optional(),
   settings: z.record(z.unknown()).optional(),
 });
 
@@ -11,6 +17,12 @@ export const UpdateVenueSchema = z.object({
   name: z.string().min(2, 'El nombre de la sede debe tener al menos 2 caracteres').optional(),
   address: z.string().optional(),
   timezone: z.string().optional(),
+  phone: z.string().optional(),
+  slug: z.string().optional(),
+  city: z.string().optional(),
+  managerName: z.string().optional(),
+  openingHours: z.string().optional(),
+  notes: z.string().optional(),
   settings: z.record(z.unknown()).optional(),
 });
 

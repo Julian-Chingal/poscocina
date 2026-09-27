@@ -3,6 +3,20 @@ import { toast } from '../components/ui/sonner';
 import { useAuthStore } from '../stores/auth.store';
 import { usePermissions } from './usePermissions';
 
+const VIEW_NAMES: Record<string, string> = {
+  home: 'Aplicaciones',
+  salon: 'Salón y Mesas',
+  reservations: 'Reservas de Mesas',
+  pos: 'Punto de Venta',
+  kds: 'Cocina KDS',
+  catalog: 'Menú y Catálogo',
+  inventory: 'Inventario y Recetas',
+  shifts: 'Caja y Turnos',
+  reports: 'Reportes y Métricas',
+  users: 'Gestión de Empleados',
+  settings: 'Ajustes del Sistema',
+};
+
 const getViewFromHash = (): string => {
   if (typeof window === 'undefined') return 'home';
   const hash = window.location.hash.replace(/^#\/?/, '').trim();
@@ -11,6 +25,11 @@ const getViewFromHash = (): string => {
 
 export const useHashRouter = () => {
   const [currentView, setCurrentView] = useState<string>(getViewFromHash);
+  const [history, setHistory] = useState<string[]>(() => {
+    const initial = getViewFromHash();
+    return initial === 'home' ? ['home'] : ['home', initial];
+  });
+
   // Atomic selector to avoid re-renders on unrelated auth state changes
   const currentUser = useAuthStore((s) => s.currentUser);
   const { canAccessModule } = usePermissions();
@@ -28,9 +47,12 @@ export const useHashRouter = () => {
 
   const handleNavigate = useCallback(
     (view: string) => {
+      if (view === currentView) return;
+
       if (view === 'home') {
         setCurrentView('home');
         syncHashToView('home');
+        setHistory((prev) => (prev[prev.length - 1] === 'home' ? prev : [...prev, 'home']));
         return;
       }
 
@@ -49,9 +71,26 @@ export const useHashRouter = () => {
 
       setCurrentView(view);
       syncHashToView(view);
+      setHistory((prev) => (prev[prev.length - 1] === view ? prev : [...prev, view]));
     },
-    [currentUser, canAccessModule, syncHashToView]
+    [currentView, currentUser, canAccessModule, syncHashToView]
   );
+
+  const handleBack = useCallback(() => {
+    setHistory((prev) => {
+      if (prev.length > 1) {
+        const nextHistory = prev.slice(0, -1);
+        const previousView = nextHistory[nextHistory.length - 1];
+        setCurrentView(previousView);
+        syncHashToView(previousView);
+        return nextHistory;
+      } else {
+        setCurrentView('home');
+        syncHashToView('home');
+        return ['home'];
+      }
+    });
+  }, [syncHashToView]);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -64,6 +103,12 @@ export const useHashRouter = () => {
       const targetView = getViewFromHash();
       if (targetView === 'home') {
         setCurrentView('home');
+        setHistory((prev) => {
+          if (prev.length > 1 && prev[prev.length - 2] === 'home') {
+            return prev.slice(0, -1);
+          }
+          return prev[prev.length - 1] === 'home' ? prev : [...prev, 'home'];
+        });
         return;
       }
 
@@ -86,6 +131,12 @@ export const useHashRouter = () => {
       }
 
       setCurrentView(targetView);
+      setHistory((prev) => {
+        if (prev.length > 1 && prev[prev.length - 2] === targetView) {
+          return prev.slice(0, -1);
+        }
+        return prev[prev.length - 1] === targetView ? prev : [...prev, targetView];
+      });
     };
 
     window.addEventListener('hashchange', handleHashChange);
@@ -106,8 +157,16 @@ export const useHashRouter = () => {
     }
   }, [currentView, currentUser, canAccessModule, syncHashToView]);
 
+  const canGoBack = currentView !== 'home';
+  const previousViewId = history.length > 1 ? history[history.length - 2] : 'home';
+  const previousViewTitle = VIEW_NAMES[previousViewId] || previousViewId;
+
   return {
     currentView,
     handleNavigate,
+    handleBack,
+    canGoBack,
+    previousViewTitle,
+    history,
   };
 };

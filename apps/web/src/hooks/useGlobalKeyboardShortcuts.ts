@@ -1,7 +1,10 @@
 import { useEffect } from 'react';
 import { useAuthStore } from '../stores/auth.store';
 
-export const useGlobalKeyboardShortcuts = (onNavigate: (view: string) => void) => {
+export const useGlobalKeyboardShortcuts = (
+  onNavigate: (view: string) => void,
+  onBack?: () => void
+) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Protect modal interactions (e.g. PIN Pad, confirmation dialogs, prompt dialogs)
@@ -34,7 +37,16 @@ export const useGlobalKeyboardShortcuts = (onNavigate: (view: string) => void) =
       } else if (e.key === 'Escape') {
         if (!isInput) {
           e.preventDefault();
-          onNavigate('home');
+          if (onBack) {
+            onBack();
+          } else {
+            onNavigate('home');
+          }
+        }
+      } else if (e.altKey && e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (onBack) {
+          onBack();
         }
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
         e.preventDefault();
@@ -44,5 +56,5 @@ export const useGlobalKeyboardShortcuts = (onNavigate: (view: string) => void) =
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onNavigate]);
+  }, [onNavigate, onBack]);
 };

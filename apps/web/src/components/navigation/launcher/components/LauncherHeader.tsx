@@ -17,9 +17,9 @@ export const LauncherHeader: React.FC = () => {
           />
         ) : (
           <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center text-primary-foreground shadow-md bg-primary"
+            className="w-12 h-12 rounded-2xl flex items-center justify-center text-primary-foreground shadow-md shadow-primary/20 bg-primary group transition-all duration-300 hover:scale-105 hover:rotate-6 cursor-default"
           >
-            <Utensils className="w-6 h-6" />
+            <Utensils className="w-6 h-6 transition-transform duration-300 group-hover:rotate-12" />
           </div>
         )}
         <h1 className="text-3xl font-extrabold text-foreground tracking-tight">

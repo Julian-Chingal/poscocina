@@ -24,39 +24,70 @@ export const CartItemRow: React.FC<Props> = ({
   const lineTotal = (unitPrice + modsDelta) * item.quantity;
 
   return (
-    <Card className="p-2.5 bg-muted/30 rounded-xl border border-border space-y-2">
-      <div className="flex items-start justify-between">
-        <div className="flex-1 pr-2">
-          <h5 className="text-xs font-bold text-foreground leading-snug">{item.product.name}</h5>
-          <span className="text-[10px] font-mono text-muted-foreground">
+    <Card className="p-3 bg-muted/25 hover:bg-muted/40 rounded-xl border border-border/70 space-y-2.5 transition-all">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <h5 className="text-xs sm:text-sm font-bold text-foreground leading-snug truncate">
+            {item.product.name}
+          </h5>
+          <span className="text-[11px] font-mono tabular-nums text-muted-foreground">
             ${(unitPrice + modsDelta).toLocaleString()} c/u
           </span>
+
+          {item.modifiers && item.modifiers.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {item.modifiers.map((mod, mIdx) => {
+                const modName =
+                  mod.name ||
+                  item.product.modifierGroups
+                    ?.flatMap((g) => g.modifiers || [])
+                    .find((m) => m.id === mod.modifierId)?.name ||
+                  'Adición';
+                return (
+                  <span
+                    key={`${mod.modifierId}-${mIdx}`}
+                    className="inline-flex items-center text-[10px] bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded-md font-medium"
+                  >
+                    +{modName}
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
-        <span className="text-xs font-black font-mono text-primary">
+        <span className="text-xs sm:text-sm font-extrabold font-mono tabular-nums text-primary shrink-0">
           ${lineTotal.toLocaleString()}
         </span>
       </div>
 
-      <div className="flex items-center justify-between pt-1 border-t border-border/60">
-        <div className="flex items-center space-x-1">
+      <div className="flex items-center justify-between pt-1.5 border-t border-border/50">
+        <div className="flex items-center space-x-1.5">
           <Button
-            variant="ghost"
+            variant="secondary"
             size="icon"
             type="button"
             onClick={() => onUpdateQuantity(index, -1)}
-            className="h-6 w-6 rounded bg-muted hover:bg-muted/80 text-foreground p-0"
+            aria-label="Disminuir cantidad"
+            className="size-7 sm:size-8 rounded-lg text-foreground hover:bg-muted active:scale-95 transition-transform"
           >
-            {item.quantity === 1 ? <Trash2 className="w-3 h-3 text-destructive" /> : <Minus className="w-3 h-3" />}
+            {item.quantity === 1 ? (
+              <Trash2 className="size-3.5 text-destructive" strokeWidth={2} />
+            ) : (
+              <Minus className="size-3.5" strokeWidth={2.5} />
+            )}
           </Button>
-          <span className="w-6 text-center text-xs font-bold text-foreground font-mono">{item.quantity}</span>
+          <span className="w-7 text-center text-xs sm:text-sm font-bold text-foreground font-mono tabular-nums select-none">
+            {item.quantity}
+          </span>
           <Button
-            variant="ghost"
+            variant="secondary"
             size="icon"
             type="button"
             onClick={() => onUpdateQuantity(index, 1)}
-            className="h-6 w-6 rounded bg-muted hover:bg-muted/80 text-foreground p-0"
+            aria-label="Aumentar cantidad"
+            className="size-7 sm:size-8 rounded-lg text-foreground hover:bg-muted active:scale-95 transition-transform"
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="size-3.5" strokeWidth={2.5} />
           </Button>
         </div>
 
@@ -65,22 +96,25 @@ export const CartItemRow: React.FC<Props> = ({
           size="sm"
           type="button"
           onClick={() => setShowNotesInput(!showNotesInput)}
-          className={`h-6 px-1 text-[10px] flex items-center space-x-1 ${
-            item.notes ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground'
+          className={`h-7 px-2 text-[11px] rounded-lg flex items-center gap-1.5 transition-colors ${
+            item.notes
+              ? 'text-primary font-bold bg-primary/10'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
           }`}
         >
-          <FileText className="w-3 h-3" />
-          <span>{item.notes ? 'Ver nota' : 'Nota'}</span>
+          <FileText className="size-3" />
+          <span>{item.notes ? 'Editar nota' : '+ Nota'}</span>
         </Button>
       </div>
 
       {showNotesInput && (
         <Input
           type="text"
-          placeholder="Nota para cocina (ej. sin cebolla)"
+          placeholder="Nota para cocina (ej. sin cebolla, término medio)..."
           value={item.notes}
           onChange={(e) => onUpdateNotes(index, e.target.value)}
-          className="h-7 text-[11px] rounded-lg bg-background"
+          className="h-8 text-xs rounded-lg bg-background border-border/80 focus-visible:ring-primary shadow-2xs"
+          autoFocus
         />
       )}
     </Card>

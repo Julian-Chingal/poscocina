@@ -11,10 +11,14 @@ export async function tablesRoutes(fastify: FastifyInstance) {
   // Floor Plans
   fastify.get('/api/venues/:venueId/floor-plans', staffGuard, (req, rep) => tablesController.getFloorPlans(req, rep));
   fastify.post('/api/venues/:venueId/floor-plans', managerGuard, (req, rep) => tablesController.createFloorPlan(req, rep));
+  fastify.patch('/api/venues/:venueId/floor-plans/:id', managerGuard, (req, rep) => tablesController.updateFloorPlan(req, rep));
+  fastify.patch('/api/floor-plans/:id', managerGuard, (req, rep) => tablesController.updateFloorPlan(req, rep));
+  fastify.delete('/api/floor-plans/:id', managerGuard, (req, rep) => tablesController.deleteFloorPlan(req, rep));
 
   // Tables
   fastify.get('/api/venues/:venueId/tables', staffGuard, (req, rep) => tablesController.getVenueTables(req, rep));
   fastify.post('/api/tables', managerGuard, (req, rep) => tablesController.createTable(req, rep));
+  fastify.patch('/api/tables/batch-positions', managerGuard, (req, rep) => tablesController.batchUpdateTablePositions(req, rep));
   fastify.patch('/api/tables/:id', managerGuard, (req, rep) => tablesController.updateTable(req, rep));
   fastify.delete('/api/tables/:id', managerGuard, (req, rep) => tablesController.deleteTable(req, rep));
 

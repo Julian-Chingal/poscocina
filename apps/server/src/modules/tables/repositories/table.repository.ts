@@ -19,6 +19,44 @@ export class TableRepository implements ITableRepository {
     return plan;
   }
 
+  async updateFloorPlan(id: string, data: any) {
+    const [plan] = await this.database
+      .update(schema.floorPlans)
+      .set(data)
+      .where(eq(schema.floorPlans.id, id))
+      .returning();
+    return plan;
+  }
+
+  async deleteFloorPlan(id: string): Promise<void> {
+    await this.database.delete(schema.floorPlans).where(eq(schema.floorPlans.id, id));
+  }
+
+  async batchUpdateTablePositions(
+    updates: Array<{ id: string; positionX?: number; positionY?: number; shape?: string; capacity?: number; label?: string }>
+  ) {
+    const results: any[] = [];
+    await this.database.transaction(async (tx) => {
+      for (const item of updates) {
+        const { id, positionX, positionY, ...rest } = item;
+        const updatePayload: any = {
+          ...rest,
+          updatedAt: new Date(),
+        };
+        if (positionX !== undefined) updatePayload.positionX = String(positionX);
+        if (positionY !== undefined) updatePayload.positionY = String(positionY);
+
+        const [updated] = await tx
+          .update(schema.tables)
+          .set(updatePayload)
+          .where(eq(schema.tables.id, id))
+          .returning();
+        if (updated) results.push(updated);
+      }
+    });
+    return results;
+  }
+
   async findTablesWithActiveOrders(venueId: string) {
     try {
       const plans = await this.database.query.floorPlans.findMany({

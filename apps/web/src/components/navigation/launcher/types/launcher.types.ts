@@ -5,6 +5,7 @@ export interface AppItem {
   name: string;
   subtitle: string;
   icon: React.ElementType;
+  icon3d?: string;
   gradient: string;
   badge?: string;
   badgeColor?: string;

@@ -8,7 +8,13 @@ import { ReceiptSettingsCard } from './ReceiptSettingsCard';
 import { PaperWidth, TaxType, PrinterDevice } from '../types/settings.types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +34,7 @@ interface Props {
   logoUrl: string;
   primaryColor: string;
   companyName: string;
+  legalName?: string;
   taxId: string;
   venueAddress: string;
   phone: string;
@@ -35,7 +42,20 @@ interface Props {
   taxRate: string;
   defaultTipPct: string;
   currency: string;
+  showLogoOnReceipt?: boolean;
+  showQrOnReceipt?: boolean;
+  showWaiterOnReceipt?: boolean;
+  showTaxBreakdown?: boolean;
+  showResolutionOnReceipt?: boolean;
+  isInvoiceResolutionEnabled?: boolean;
+  invoicePrefix?: string;
+  invoiceResolution?: string;
+  invoiceInitialNumber?: string;
+  invoiceFinalNumber?: string;
+  invoiceResolutionDate?: string;
   onFieldChange: (field: any, val: any) => void;
+  onSaveFormat?: () => void;
+  savingFormat?: boolean;
 }
 
 export const PrintersTab: React.FC<Props> = ({
@@ -46,6 +66,7 @@ export const PrintersTab: React.FC<Props> = ({
   logoUrl,
   primaryColor,
   companyName,
+  legalName,
   taxId,
   venueAddress,
   phone,
@@ -53,7 +74,20 @@ export const PrintersTab: React.FC<Props> = ({
   taxRate,
   defaultTipPct,
   currency,
+  showLogoOnReceipt,
+  showQrOnReceipt,
+  showWaiterOnReceipt,
+  showTaxBreakdown,
+  showResolutionOnReceipt,
+  isInvoiceResolutionEnabled,
+  invoicePrefix,
+  invoiceResolution,
+  invoiceInitialNumber,
+  invoiceFinalNumber,
+  invoiceResolutionDate,
   onFieldChange,
+  onSaveFormat,
+  savingFormat,
 }) => {
   const {
     venues,
@@ -64,6 +98,9 @@ export const PrintersTab: React.FC<Props> = ({
     editingPrinter,
     testingId,
     testResult,
+    tabletCashierPrinterId,
+    tabletKitchenPrinterId,
+    setTabletDefaultPrinter,
     openNewPrinter,
     openEditPrinter,
     closeModal,
@@ -96,31 +133,35 @@ export const PrintersTab: React.FC<Props> = ({
               <h3 className="font-bold text-foreground text-base">Dispositivos e Impresoras Térmicas</h3>
             </div>
             <p className="text-xs text-muted-foreground">
-              Cada sede física opera sus propios periféricos en red local TCP o USB.
+              Cada sede física opera sus propios periféricos en red local TCP (cable UTP puerto 9100), Bluetooth o USB.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center space-x-2 bg-muted/50 px-3 py-1.5 rounded-xl border border-border">
+            <div className="flex items-center space-x-2 bg-muted/40 px-3 py-1.5 rounded-xl border border-border/80">
               <Store className="w-4 h-4 text-primary shrink-0" />
-              <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Sede:</span>
+              <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">Sede:</span>
               <Select
                 value={selectedBranchId}
-                onChange={(e) => setSelectedBranchId(e.target.value)}
-                className="h-8 text-xs font-semibold bg-background py-1"
+                onValueChange={(val) => setSelectedBranchId(val)}
               >
-                {venues.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.name} {v.isPrimary ? '(Principal)' : ''}
-                  </option>
-                ))}
+                <SelectTrigger className="h-8 text-xs font-bold bg-background min-w-[190px] rounded-lg border-border/80">
+                  <SelectValue placeholder="Seleccionar Sede..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {venues.map((v) => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {v.name} {v.isPrimary ? '⭐ (Principal)' : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
 
             <Button
               type="button"
               onClick={openNewPrinter}
-              className="flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 h-auto rounded-xl text-xs font-bold transition shadow-lg shadow-primary/20 shrink-0"
+              className="flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 h-auto rounded-xl text-xs font-bold transition shadow-lg shadow-primary/20 shrink-0 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Nueva Impresora</span>
@@ -135,14 +176,37 @@ export const PrintersTab: React.FC<Props> = ({
               printer={printer}
               isTesting={testingId === printer.id}
               testResult={testResult}
+              isTabletDefault={printer.id === tabletCashierPrinterId || printer.id === tabletKitchenPrinterId}
+              onToggleTabletDefault={(p) => setTabletDefaultPrinter(p.id, p.station === 'cashier' ? 'cashier' : 'kitchen')}
               onTest={testPrint}
               onEdit={openEditPrinter}
               onDelete={setPrinterToDelete}
             />
           ))}
           {printers.length === 0 && (
-            <Card className="col-span-full p-8 text-center text-muted-foreground text-xs border border-dashed border-border bg-transparent">
-              No hay impresoras térmicas configuradas para esta sede.
+            <Card className="col-span-full p-8 text-center border border-dashed border-border/80 bg-muted/10 rounded-2xl flex flex-col items-center justify-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                <Printer className="w-6 h-6" />
+              </div>
+              <div className="max-w-md">
+                <h4 className="font-bold text-sm text-foreground">Sin impresoras térmicas en esta sede</h4>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  Conecta terminales de impresión ESC/POS de 80mm o 58mm por cable de red UTP (puerto 9100), Bluetooth o adaptador USB directo para comandas y facturas.
+                </p>
+              </div>
+              <Button
+                type="button"
+                onClick={openNewPrinter}
+                className="mt-2 text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-md bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Agregar Primera Impresora</span>
+              </Button>
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-[11px] text-muted-foreground">
+                <span className="px-2.5 py-1 rounded-lg bg-card border border-border/70 font-medium">🔌 Cable UTP (Puerto 9100)</span>
+                <span className="px-2.5 py-1 rounded-lg bg-card border border-border/70 font-medium">📶 Bluetooth Inalámbrico</span>
+                <span className="px-2.5 py-1 rounded-lg bg-card border border-border/70 font-medium">⚡ Cable USB Directo</span>
+              </div>
             </Card>
           )}
         </div>
@@ -155,7 +219,14 @@ export const PrintersTab: React.FC<Props> = ({
             autoPrintReceipt={autoPrintReceipt}
             receiptHeader={receiptHeader}
             receiptFooter={receiptFooter}
+            showLogoOnReceipt={showLogoOnReceipt}
+            showQrOnReceipt={showQrOnReceipt}
+            showWaiterOnReceipt={showWaiterOnReceipt}
+            showTaxBreakdown={showTaxBreakdown}
+            showResolutionOnReceipt={showResolutionOnReceipt}
             onFieldChange={onFieldChange}
+            onSaveFormat={onSaveFormat}
+            saving={savingFormat}
           />
         </div>
 
@@ -164,6 +235,7 @@ export const PrintersTab: React.FC<Props> = ({
           logoUrl={logoUrl}
           primaryColor={primaryColor}
           companyName={companyName}
+          legalName={legalName}
           taxId={taxId}
           venueAddress={venueAddress}
           phone={phone}
@@ -173,6 +245,17 @@ export const PrintersTab: React.FC<Props> = ({
           taxRate={taxRate}
           defaultTipPct={defaultTipPct}
           currency={currency}
+          showLogoOnReceipt={showLogoOnReceipt}
+          showQrOnReceipt={showQrOnReceipt}
+          showWaiterOnReceipt={showWaiterOnReceipt}
+          showTaxBreakdown={showTaxBreakdown}
+          showResolutionOnReceipt={showResolutionOnReceipt}
+          isInvoiceResolutionEnabled={isInvoiceResolutionEnabled}
+          invoicePrefix={invoicePrefix}
+          invoiceResolution={invoiceResolution}
+          invoiceInitialNumber={invoiceInitialNumber}
+          invoiceFinalNumber={invoiceFinalNumber}
+          invoiceResolutionDate={invoiceResolutionDate}
         />
       </div>
 

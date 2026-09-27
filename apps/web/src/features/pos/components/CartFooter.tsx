@@ -41,18 +41,18 @@ export const CartFooter: React.FC<CartFooterProps> = ({
         </div>
       )}
 
-      <div className="space-y-1 text-xs">
+      <div className="space-y-1.5 text-xs bg-muted/40 p-3 rounded-xl border border-border/60">
         <div className="flex justify-between text-muted-foreground">
           <span>Subtotal:</span>
-          <span className="font-mono text-foreground">${subtotal.toLocaleString()}</span>
+          <span className="font-mono tabular-nums font-medium text-foreground">${subtotal.toLocaleString()}</span>
         </div>
         <div className="flex justify-between text-muted-foreground">
-          <span>Impuestos:</span>
-          <span className="font-mono text-foreground">${taxTotal.toLocaleString()}</span>
+          <span>Impuestos (INC/IVA):</span>
+          <span className="font-mono tabular-nums font-medium text-foreground">${taxTotal.toLocaleString()}</span>
         </div>
-        <div className="flex justify-between font-extrabold text-sm text-foreground pt-1 border-t border-border">
-          <span>Total Comanda:</span>
-          <span className="font-mono text-primary">${total.toLocaleString()}</span>
+        <div className="flex justify-between items-baseline font-bold text-sm text-foreground pt-2 border-t border-border/70">
+          <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Total a Pagar</span>
+          <span className="font-mono tabular-nums text-lg font-black text-primary">${total.toLocaleString()}</span>
         </div>
       </div>
 
@@ -62,23 +62,23 @@ export const CartFooter: React.FC<CartFooterProps> = ({
           disabled={cartLength === 0 || submitting || isCashShiftOpen === false}
           onClick={onSendOrder}
           title={isCashShiftOpen === false ? 'Caja cerrada: Abre la caja en F4' : undefined}
-          className={`h-10 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition ${
+          className={`h-11 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.98] ${
             orderSentSuccess
-              ? 'bg-emerald-600 text-white'
-              : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+              ? 'bg-emerald-600 text-white shadow-emerald-600/25'
+              : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/25'
           }`}
         >
-          <Send className="w-3.5 h-3.5" />
-          <span>{submitting ? 'Marchando...' : orderSentSuccess ? '¡Enviada!' : 'Marchar'}</span>
+          <Send className="size-4 shrink-0" strokeWidth={2.2} />
+          <span>{submitting ? 'Marchando...' : orderSentSuccess ? '¡Enviada!' : 'Marchar Comanda'}</span>
         </Button>
 
         {activeOrder ? (
           <Button
             type="button"
             onClick={onOpenCheckout}
-            className="h-10 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition shadow-lg shadow-emerald-600/20"
+            className="h-11 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-600/25 active:scale-[0.98]"
           >
-            <Receipt className="w-3.5 h-3.5" />
+            <Receipt className="size-4 shrink-0" strokeWidth={2.2} />
             <span>Cobrar Cuenta</span>
           </Button>
         ) : (
@@ -87,10 +87,10 @@ export const CartFooter: React.FC<CartFooterProps> = ({
             type="button"
             disabled={!currentTable}
             onClick={onRequestCheck}
-            className="h-10 px-3 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition disabled:opacity-50"
+            className="h-11 px-3 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 active:scale-[0.98]"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Pedir Cuenta</span>
+            <Sparkles className="size-4 text-amber-500 shrink-0" strokeWidth={2} />
+            <span>Pedir Pre-cuenta</span>
           </Button>
         )}
       </div>

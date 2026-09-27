@@ -24,47 +24,47 @@ export const KdsOrderCard: React.FC<KdsOrderCardProps> = ({
       className={`w-full min-w-0 h-full border rounded-2xl overflow-hidden flex flex-col shadow-xl transition-all ${urgency.cardBorder}`}
     >
       {/* Order Header */}
-      <CardHeader className="bg-muted/40 px-4 py-3 border-b border-border flex flex-row items-center justify-between space-y-0">
-        <div>
-          <div className="flex items-center space-x-2">
-            <span className="text-base font-black text-foreground">
+      <CardHeader className="bg-muted/50 px-4 py-3 border-b border-border/80 flex flex-row items-center justify-between space-y-0 gap-2">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-base sm:text-lg font-black text-foreground tracking-tight truncate">
               {order.table?.label || 'Para Llevar'}
             </span>
             {order.orderNumber && (
-              <span className="text-xs font-mono text-muted-foreground">
+              <span className="text-xs font-mono font-bold bg-background/80 border border-border/80 text-foreground px-2 py-0.5 rounded-lg shadow-2xs">
                 #{order.orderNumber}
               </span>
             )}
           </div>
-          <div className="text-[11px] text-muted-foreground mt-0.5">
-            Mesero: <span className="text-foreground font-medium">{order.waiter?.name || 'Caja'}</span>
+          <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
+            Mesero: <span className="text-foreground font-semibold">{order.waiter?.name || 'Caja'}</span>
           </div>
         </div>
 
-        <div className="flex items-center space-x-1.5">
+        <div className="flex items-center gap-2 shrink-0">
           {order.paymentStatus === 'paid' ? (
             <Badge
               variant="outline"
-              className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/40 text-[10px] font-bold tracking-wide uppercase px-2 py-0.5"
+              className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/40 text-[10px] font-extrabold tracking-wider uppercase px-2 py-0.5 shadow-2xs"
             >
               Pagado
             </Badge>
           ) : (
             <Badge
               variant="outline"
-              className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/40 text-[10px] font-bold tracking-wide uppercase px-2 py-0.5"
+              className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/40 text-[10px] font-extrabold tracking-wider uppercase px-2 py-0.5 shadow-2xs"
             >
               Por Cobrar
             </Badge>
           )}
 
-          {/* Urgency Badge */}
+          {/* Urgency Badge with tabular timer */}
           <Badge
             variant="outline"
-            className={`space-x-1 text-xs px-2.5 py-1 font-mono ${urgency.badge}`}
+            className={`gap-1.5 text-xs px-2.5 py-1 font-mono tabular-nums shadow-2xs ${urgency.badge}`}
             title={urgency.label}
           >
-            <Clock className="w-3.5 h-3.5" />
+            <Clock className="size-3.5 shrink-0" strokeWidth={2.2} />
             <span>{urgency.elapsedMinutes}m</span>
           </Badge>
         </div>

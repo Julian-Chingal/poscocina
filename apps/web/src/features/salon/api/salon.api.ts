@@ -20,6 +20,15 @@ export const salonApi = {
   createFloorPlan: (venueId: string, name: string): Promise<FloorPlanItem> =>
     api.post(`/venues/${venueId}/floor-plans`, { name }),
 
+  updateFloorPlan: (floorPlanId: string, payload: { name?: string; layout?: any }): Promise<FloorPlanItem> =>
+    api.patch(`/floor-plans/${floorPlanId}`, payload),
+
+  deleteFloorPlan: (floorPlanId: string): Promise<void> =>
+    api.delete(`/floor-plans/${floorPlanId}`),
+
+  batchUpdateTables: (tables: Array<{ id: string; positionX: number; positionY: number; shape?: string; capacity?: number; label?: string }>): Promise<any> =>
+    api.patch('/tables/batch-positions', { tables }),
+
   transferTable: (sourceTableId: string, targetTableId: string): Promise<any> =>
     api.post('/tables/transfer', { sourceTableId, targetTableId }),
 

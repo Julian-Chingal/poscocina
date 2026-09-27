@@ -1,8 +1,8 @@
 import { VenueItem } from '@/stores/branding.store';
 
-export type SettingsTab = 'identity' | 'tax' | 'printer' | 'venues';
+export type SettingsTab = 'identity' | 'tax' | 'printer' | 'venues' | 'appearance';
 export type PrinterStation = 'cashier' | 'kitchen' | 'bar' | 'dessert' | 'expediter';
-export type PrinterConnectionType = 'network_tcp' | 'browser_raw' | 'disabled';
+export type PrinterConnectionType = 'network_tcp' | 'bluetooth' | 'usb_direct' | 'browser_raw' | 'disabled';
 export type TaxType = 'INC_8' | 'IVA_19' | 'EXENTO';
 export type PaperWidth = 58 | 80;
 
@@ -45,4 +45,21 @@ export interface NewVenuePayload {
   slug: string;
   address?: string;
   phone?: string;
+  city?: string;
+  managerName?: string;
+  openingHours?: string;
+  notes?: string;
+  timezone?: string;
+}
+
+export interface UpdateVenuePayload {
+  name?: string;
+  slug?: string;
+  address?: string;
+  phone?: string;
+  city?: string;
+  managerName?: string;
+  openingHours?: string;
+  notes?: string;
+  timezone?: string;
 }

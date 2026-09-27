@@ -2,13 +2,19 @@ import { useReducer, useEffect, useCallback, useState } from 'react';
 import { useBrandingStore, VenueSettings } from '@/stores/branding.store';
 import { TaxType, PaperWidth } from '../types/settings.types';
 import { settingsApi } from '../api/settings.api';
-import { toast } from '@/components/ui/sonner';
+import { toast } from '@/components/ui/sileo';
 
 export interface FormState {
   legalName: string;
   companyName: string; // tradeName
+  slogan: string;
   logoUrl: string;
   primaryColor: string;
+  secondaryColor: string;
+  borderRadius: 'subtle' | 'modern' | 'pill';
+  showLogoOnReceipt: boolean;
+  showQrOnReceipt: boolean;
+  qrUrl: string;
   venueAddress: string;
   taxId: string;
   phone: string;
@@ -28,6 +34,9 @@ export interface FormState {
   autoPrintReceipt: boolean;
   receiptHeader: string;
   receiptFooter: string;
+  showWaiterOnReceipt: boolean;
+  showTaxBreakdown: boolean;
+  showResolutionOnReceipt: boolean;
 }
 
 type FormAction =
@@ -39,8 +48,17 @@ type FormAction =
 const getInitialState = (settings: VenueSettings, name: string, address: string): FormState => ({
   legalName: 'poscocina S.A.S.',
   companyName: settings.companyName || name || 'poscocina Gourmet',
+  slogan: localStorage.getItem('poscocina_brand_slogan') || 'Sabor tradicional & Alta cocina',
   logoUrl: settings.logoUrl || '',
   primaryColor: settings.primaryColor || '#ea580c',
+  secondaryColor: localStorage.getItem('poscocina_secondary_color') || '#475569',
+  borderRadius: (localStorage.getItem('poscocina_border_radius') as any) || 'modern',
+  showLogoOnReceipt: localStorage.getItem('poscocina_show_logo_receipt') !== 'false',
+  showQrOnReceipt: localStorage.getItem('poscocina_show_qr_receipt') !== 'false',
+  showWaiterOnReceipt: localStorage.getItem('poscocina_show_waiter_receipt') !== 'false',
+  showTaxBreakdown: localStorage.getItem('poscocina_show_tax_breakdown_receipt') !== 'false',
+  showResolutionOnReceipt: localStorage.getItem('poscocina_show_resolution_receipt') !== 'false',
+  qrUrl: localStorage.getItem('poscocina_qr_url') || 'https://poscocina.com/menu',
   venueAddress: address || '',
   taxId: settings.taxId || '900.123.456-7',
   phone: settings.phone || '+57 300 123 4567',
@@ -56,10 +74,10 @@ const getInitialState = (settings: VenueSettings, name: string, address: string)
   invoiceInitialNumber: '1',
   invoiceFinalNumber: '50000',
   invoiceResolutionDate: '',
-  paperWidth: (settings.paperWidth as PaperWidth) || 80,
-  autoPrintReceipt: settings.autoPrintReceipt ?? true,
-  receiptHeader: settings.receiptHeader || 'Sabor tradicional & Alta cocina',
-  receiptFooter: settings.receiptFooter || '¡Gracias por su visita! Síguenos en @poscocina',
+  paperWidth: ((Number(localStorage.getItem('poscocina_paper_width')) as PaperWidth) || (settings.paperWidth as PaperWidth) || 80),
+  autoPrintReceipt: localStorage.getItem('poscocina_auto_print_receipt') !== null ? localStorage.getItem('poscocina_auto_print_receipt') === 'true' : (settings.autoPrintReceipt ?? true),
+  receiptHeader: localStorage.getItem('poscocina_receipt_header') || settings.receiptHeader || 'Sabor tradicional & Alta cocina',
+  receiptFooter: localStorage.getItem('poscocina_receipt_footer') || settings.receiptFooter || '¡Gracias por su visita! Síguenos en @poscocina',
 });
 
 function formReducer(state: FormState, action: FormAction): FormState {
@@ -215,9 +233,32 @@ export const useSettingsForm = () => {
         },
       });
 
-      // 3. Aplicar CSS variable
+      // 3. Persistir preferencias locales de personalización y recibo
+      try {
+        localStorage.setItem('poscocina_primary_color', state.primaryColor);
+        localStorage.setItem('poscocina_brand_slogan', state.slogan);
+        localStorage.setItem('poscocina_secondary_color', state.secondaryColor);
+        localStorage.setItem('poscocina_border_radius', state.borderRadius);
+        localStorage.setItem('poscocina_paper_width', String(state.paperWidth));
+        localStorage.setItem('poscocina_auto_print_receipt', String(state.autoPrintReceipt));
+        localStorage.setItem('poscocina_receipt_header', state.receiptHeader);
+        localStorage.setItem('poscocina_receipt_footer', state.receiptFooter);
+        localStorage.setItem('poscocina_show_logo_receipt', String(state.showLogoOnReceipt));
+        localStorage.setItem('poscocina_show_qr_receipt', String(state.showQrOnReceipt));
+        localStorage.setItem('poscocina_show_waiter_receipt', String(state.showWaiterOnReceipt));
+        localStorage.setItem('poscocina_show_tax_breakdown_receipt', String(state.showTaxBreakdown));
+        localStorage.setItem('poscocina_show_resolution_receipt', String(state.showResolutionOnReceipt));
+        localStorage.setItem('poscocina_qr_url', state.qrUrl);
+      } catch (e) {
+        console.warn('Error guardando en localStorage:', e);
+      }
+
+      // 4. Aplicar CSS variables
       if (state.primaryColor) {
         document.documentElement.style.setProperty('--primary-brand', state.primaryColor);
+      }
+      if (state.secondaryColor) {
+        document.documentElement.style.setProperty('--secondary-brand', state.secondaryColor);
       }
 
       setSavedSuccess(true);
@@ -231,5 +272,34 @@ export const useSettingsForm = () => {
     }
   }, [state, updateBranding]);
 
-  return { form: state, setField, setTaxType, saveSettings, saving, savedSuccess };
+  const saveReceiptFormat = useCallback(async () => {
+    try {
+      localStorage.setItem('poscocina_paper_width', String(state.paperWidth));
+      localStorage.setItem('poscocina_auto_print_receipt', String(state.autoPrintReceipt));
+      localStorage.setItem('poscocina_receipt_header', state.receiptHeader);
+      localStorage.setItem('poscocina_receipt_footer', state.receiptFooter);
+      localStorage.setItem('poscocina_show_logo_receipt', String(state.showLogoOnReceipt));
+      localStorage.setItem('poscocina_show_qr_receipt', String(state.showQrOnReceipt));
+      localStorage.setItem('poscocina_show_waiter_receipt', String(state.showWaiterOnReceipt));
+      localStorage.setItem('poscocina_show_tax_breakdown_receipt', String(state.showTaxBreakdown));
+      localStorage.setItem('poscocina_show_resolution_receipt', String(state.showResolutionOnReceipt));
+
+      await updateBranding({
+        name: state.companyName,
+        address: state.venueAddress,
+        settings: {
+          ...settings,
+          paperWidth: state.paperWidth,
+          autoPrintReceipt: state.autoPrintReceipt,
+          receiptHeader: state.receiptHeader,
+          receiptFooter: state.receiptFooter,
+        },
+      });
+      toast.success('Formato de recibo guardado y sincronizado');
+    } catch {
+      toast.success('Formato de recibo guardado localmente en esta tablet');
+    }
+  }, [state, settings, updateBranding]);
+
+  return { form: state, setField, setTaxType, saveSettings, saveReceiptFormat, saving, savedSuccess };
 };

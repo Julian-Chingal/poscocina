@@ -13,6 +13,19 @@ export class ManageTablesUseCase {
     return await this.tableRepo.createFloorPlan(venueId, data);
   }
 
+  async updateFloorPlan(id: string, data: any) {
+    return await this.tableRepo.updateFloorPlan(id, data);
+  }
+
+  async deleteFloorPlan(id: string) {
+    await this.tableRepo.deleteFloorPlan(id);
+    return { success: true };
+  }
+
+  async batchUpdateTablePositions(tables: Array<any>) {
+    return await this.tableRepo.batchUpdateTablePositions(tables);
+  }
+
   async getVenueTables(venueId: string) {
     return await this.tableRepo.findTablesWithActiveOrders(venueId);
   }

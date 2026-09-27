@@ -8,7 +8,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -75,15 +81,19 @@ export const TransferTableModal: React.FC<Props> = ({
             <Label className="mb-1.5 block">Filtrar por Zona o Salón:</Label>
             <Select
               value={targetZone}
-              onChange={(e) => onZoneChange(e.target.value)}
-              className="h-10 rounded-xl mb-3"
+              onValueChange={onZoneChange}
             >
-              <option value="all">Todas las Zonas ({floorPlans.length})</option>
-              {floorPlans.map((plan) => (
-                <option key={plan.id} value={plan.id}>
-                  {plan.name}
-                </option>
-              ))}
+              <SelectTrigger className="h-10 rounded-xl mb-3 w-full">
+                <SelectValue placeholder="Todas las Zonas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las Zonas ({floorPlans.length})</SelectItem>
+                {floorPlans.map((plan) => (
+                  <SelectItem key={plan.id} value={plan.id}>
+                    {plan.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
 
@@ -97,18 +107,21 @@ export const TransferTableModal: React.FC<Props> = ({
               <Label className="mb-1.5 block">Selecciona la Mesa Destino (Libre):</Label>
               <Select
                 value={selectedTargetTableId}
-                onChange={(e) => onTargetTableChange(e.target.value)}
-                className="h-10 rounded-xl"
+                onValueChange={onTargetTableChange}
               >
-                <option value="">-- Elige una mesa libre --</option>
-                {freeTables.map((t) => {
-                  const plan = floorPlans.find((p) => p.id === t.floorPlanId);
-                  return (
-                    <option key={t.id} value={t.id}>
-                      [{plan ? plan.name : 'Zona'}] {t.label} (Cap: {t.capacity} personas)
-                    </option>
-                  );
-                })}
+                <SelectTrigger className="h-10 rounded-xl w-full">
+                  <SelectValue placeholder="-- Elige una mesa libre --" />
+                </SelectTrigger>
+                <SelectContent>
+                  {freeTables.map((t) => {
+                    const plan = floorPlans.find((p) => p.id === t.floorPlanId);
+                    return (
+                      <SelectItem key={t.id} value={t.id}>
+                        [{plan ? plan.name : 'Zona'}] {t.label} (Cap: {t.capacity} personas)
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
               </Select>
             </div>
           )}

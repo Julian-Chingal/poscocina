@@ -36,6 +36,10 @@ export const useSalonData = (venueId: string) => {
     socket.on('table:updated', (updated: TableItem) => {
       setTables((prev) => prev.map((t) => (t.id === updated.id ? { ...t, ...updated } : t)));
     });
+    socket.on('tables:batch_updated', (batch: TableItem[]) => {
+      const map = new Map(batch.map((b) => [b.id, b]));
+      setTables((prev) => prev.map((t) => (map.has(t.id) ? { ...t, ...map.get(t.id) } : t)));
+    });
     socket.on('table:deleted', ({ id }: { id: string }) => {
       setTables((prev) => prev.filter((t) => t.id !== id));
     });
@@ -43,6 +47,12 @@ export const useSalonData = (venueId: string) => {
       setTables((prev) =>
         prev.map((t) => (t.id === payload.tableId ? { ...t, status: payload.status } : t))
       );
+    });
+    socket.on('floor_plan:updated', (updated: FloorPlanItem) => {
+      setFloorPlans((prev) => prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
+    });
+    socket.on('floor_plan:deleted', ({ id }: { id: string }) => {
+      setFloorPlans((prev) => prev.filter((p) => p.id !== id));
     });
 
     return () => {

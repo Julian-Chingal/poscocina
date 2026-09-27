@@ -53,7 +53,7 @@ export interface CartItem {
   product: Product;
   quantity: number;
   notes: string;
-  modifiers: Array<{ modifierId: string; priceDelta: number }>;
+  modifiers: Array<{ modifierId: string; priceDelta: number; name?: string }>;
 }
 
 export interface TableItem {

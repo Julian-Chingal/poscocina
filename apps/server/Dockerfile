@@ -57,7 +57,7 @@ COPY --chown=node:node --from=builder /app/apps/server/drizzle ./drizzle
 
 # Copiar script de arranque / migraciones
 COPY --chown=node:node apps/server/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Usuario sin privilegios
 USER node

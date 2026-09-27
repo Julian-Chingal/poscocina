@@ -1,14 +1,17 @@
 import React from 'react';
-import { Wifi, Play, Edit2, Trash2, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Play, Edit2, Trash2, CheckCircle2, AlertTriangle, Cable, Bluetooth, Usb, Globe, Star } from 'lucide-react';
 import { PrinterDevice, TestPrintResult } from '../types/settings.types';
 import { STATION_LABELS } from '../constants/settings.constants';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardFooter } from '@/components/ui/card';
 
 interface Props {
   printer: PrinterDevice;
   isTesting: boolean;
   testResult: TestPrintResult | null;
+  isTabletDefault?: boolean;
+  onToggleTabletDefault?: (p: PrinterDevice) => void;
   onTest: (p: PrinterDevice) => void;
   onEdit: (p: PrinterDevice) => void;
   onDelete: (printer: PrinterDevice) => void;
@@ -18,51 +21,90 @@ export const PrinterCard: React.FC<Props> = ({
   printer,
   isTesting,
   testResult,
+  isTabletDefault,
+  onToggleTabletDefault,
   onTest,
   onEdit,
   onDelete,
 }) => {
   const result = testResult?.id === printer.id ? testResult : null;
 
+  const renderConnectionBadge = () => {
+    switch (printer.connectionType) {
+      case 'network_tcp':
+        return (
+          <div className="flex items-center space-x-1.5 text-xs text-primary font-mono">
+            <Cable className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">UTP: {printer.ipAddress || 'Sin IP'}:{printer.port}</span>
+          </div>
+        );
+      case 'bluetooth':
+        return (
+          <div className="flex items-center space-x-1.5 text-xs text-blue-600 dark:text-blue-400 font-mono">
+            <Bluetooth className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">BT: {printer.ipAddress || 'Dispositivo Vinculado'}</span>
+          </div>
+        );
+      case 'usb_direct':
+        return (
+          <div className="flex items-center space-x-1.5 text-xs text-amber-600 dark:text-amber-400 font-mono">
+            <Usb className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">USB: {printer.ipAddress || 'OTG Directo'}</span>
+          </div>
+        );
+      case 'browser_raw':
+      default:
+        return (
+          <div className="flex items-center space-x-1.5 text-xs text-muted-foreground font-mono">
+            <Globe className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Navegador Web / Spooler</span>
+          </div>
+        );
+    }
+  };
+
   return (
-    <Card className="p-4 flex flex-col justify-between space-y-3 relative group">
+    <Card className={`p-4 flex flex-col justify-between space-y-3 relative group transition-all ${
+      isTabletDefault ? 'border-primary/60 ring-1 ring-primary/30 shadow-xs' : 'border-border'
+    }`}>
       <div>
-        <div className="flex items-start justify-between">
-          <div>
-            <h4 className="font-bold text-foreground text-sm">{printer.name}</h4>
-            <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 mt-1 rounded-md bg-primary/15 border border-primary/30 text-primary">
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h4 className="font-bold text-foreground text-sm">{printer.name}</h4>
+              {isTabletDefault && (
+                <Badge variant="default" className="text-[9px] px-1.5 py-0 h-4 bg-primary text-primary-foreground font-bold flex items-center gap-0.5">
+                  <Star className="w-2.5 h-2.5 fill-current" />
+                  Esta Tablet
+                </Badge>
+              )}
+            </div>
+            <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-primary/15 border border-primary/30 text-primary">
               {STATION_LABELS[printer.station] || printer.station}
             </span>
           </div>
-          <span className="text-[10px] font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded border border-border">
+          <span className="text-[10px] font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded border border-border shrink-0">
             {printer.paperWidth}mm
           </span>
         </div>
 
-        <div className="mt-3 space-y-1.5 text-xs text-muted-foreground font-mono">
-          <div className="flex items-center space-x-1.5">
-            <Wifi className="w-3.5 h-3.5 text-muted-foreground/70" />
-            <span>
-              {printer.connectionType === 'network_tcp'
-                ? `TCP: ${printer.ipAddress || 'Sin IP'}:${printer.port}`
-                : 'Navegador Web / USB'}
-            </span>
-          </div>
+        <div className="mt-3 space-y-1.5">
+          {renderConnectionBadge()}
         </div>
 
         <div className="mt-3 flex flex-wrap gap-1 text-[10px]">
           {printer.autoPrintOnOrder && (
-            <span className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded">
+            <span className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded font-medium">
               Comandas Auto
             </span>
           )}
           {printer.autoPrintOnPayment && (
-            <span className="bg-blue-500/15 border border-blue-500/30 text-blue-700 dark:text-blue-400 px-1.5 py-0.5 rounded">
+            <span className="bg-blue-500/15 border border-blue-500/30 text-blue-700 dark:text-blue-400 px-1.5 py-0.5 rounded font-medium">
               Facturas Auto
             </span>
           )}
           {printer.openDrawerOnPrint && (
-            <span className="bg-purple-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-400 px-1.5 py-0.5 rounded">
+            <span className="bg-purple-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-400 px-1.5 py-0.5 rounded font-medium">
               Pulso Gaveta
             </span>
           )}
@@ -86,7 +128,7 @@ export const PrinterCard: React.FC<Props> = ({
         </div>
       )}
 
-      <CardFooter className="p-0 flex items-center justify-between pt-3 border-t border-border mt-0">
+      <CardFooter className="p-0 flex items-center justify-between pt-3 border-t border-border mt-0 gap-1.5">
         <Button
           type="button"
           variant="outline"
@@ -100,6 +142,20 @@ export const PrinterCard: React.FC<Props> = ({
         </Button>
 
         <div className="flex items-center space-x-1">
+          {onToggleTabletDefault && (
+            <Button
+              variant={isTabletDefault ? 'default' : 'ghost'}
+              size="icon"
+              type="button"
+              onClick={() => onToggleTabletDefault(printer)}
+              title={isTabletDefault ? 'Impresora predeterminada de esta tablet (clic para desvincular)' : 'Fijar como predeterminada de esta tablet'}
+              className={`h-7 w-7 rounded-lg transition cursor-pointer ${
+                isTabletDefault ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'text-muted-foreground hover:text-amber-500'
+              }`}
+            >
+              <Star className={`w-3.5 h-3.5 ${isTabletDefault ? 'fill-current' : ''}`} />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"

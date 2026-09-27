@@ -10,6 +10,8 @@ export const PrinterStationEnum = z.enum([
 
 export const PrinterConnectionTypeEnum = z.enum([
   'network_tcp',
+  'bluetooth',
+  'usb_direct',
   'browser_raw',
   'disabled',
 ]);

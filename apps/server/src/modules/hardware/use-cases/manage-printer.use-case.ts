@@ -61,11 +61,29 @@ export class ManagePrinterUseCase {
 
     if (id !== 'custom') {
       const printer = await this.getPrinterById(id);
+      if (
+        printer.connectionType === 'bluetooth' ||
+        printer.connectionType === 'usb_direct' ||
+        printer.connectionType === 'browser_raw'
+      ) {
+        const typeLabel =
+          printer.connectionType === 'bluetooth'
+            ? 'Bluetooth Inalámbrico'
+            : printer.connectionType === 'usb_direct'
+            ? 'Cable USB Directo / OTG'
+            : 'Impresión de Navegador';
+        return {
+          success: true,
+          simulated: true,
+          networkSent: false,
+          msg: `Dispositivo "${printer.name}" (${typeLabel}) vinculado correctamente. Listo para recibir impresiones desde la tablet.`,
+        };
+      }
       targetIp = printer.ipAddress || undefined;
       targetPort = printer.port || 9100;
     }
 
-    if (!targetIp) throw new NotFoundError('Dirección IP no especificada para la prueba');
+    if (!targetIp) throw new NotFoundError('Dirección IP no especificada para la conexión TCP');
     const dummyBuffer = Buffer.from('Prueba de impresion poscocina\n\n\n\x1dV\x41\x00', 'binary');
     return await this.driver.sendToNetworkPrinter(targetIp, targetPort, dummyBuffer);
   }

@@ -16,23 +16,28 @@ export const ProductCard: React.FC<Props> = React.memo(({ product, onAddToCart }
       variant="ghost"
       type="button"
       onClick={() => onAddToCart(product)}
-      className="h-auto bg-card hover:bg-muted/60 border border-border hover:border-primary/60 rounded-2xl p-3.5 text-left flex flex-col justify-between space-y-2 transition-all cursor-pointer shadow-sm group active:scale-[0.98] w-full items-stretch whitespace-normal"
+      className="h-auto bg-card hover:bg-card border border-border/80 hover:border-primary/50 rounded-2xl p-3.5 text-left flex flex-col justify-between space-y-2.5 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md hover:-translate-y-0.5 group active:scale-[0.97] w-full items-stretch whitespace-normal select-none"
     >
-      <div>
-        <h4 className="text-xs font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2">
+      <div className="space-y-1">
+        <h4 className="text-xs sm:text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
           {product.name}
         </h4>
         {product.description && (
-          <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 font-normal">{product.description}</p>
+          <p className="text-[11px] text-muted-foreground line-clamp-2 font-normal leading-relaxed">
+            {product.description}
+          </p>
         )}
       </div>
 
-      <div className="flex items-center justify-between pt-2 border-t border-border/60 w-full">
-        <span className="text-xs font-black font-mono text-primary">
-          ${priceNum.toLocaleString()}
-        </span>
-        <span className="p-1 rounded-lg bg-primary/15 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition">
-          <Plus className="w-3.5 h-3.5" />
+      <div className="flex items-center justify-between pt-2.5 border-t border-border/60 w-full mt-auto">
+        <div className="flex items-baseline gap-0.5">
+          <span className="text-[11px] font-semibold text-primary/80">$</span>
+          <span className="text-sm font-extrabold font-mono tabular-nums text-foreground group-hover:text-primary transition-colors">
+            {priceNum.toLocaleString()}
+          </span>
+        </div>
+        <span className="p-1.5 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-105 transition-all duration-150 shadow-2xs">
+          <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
         </span>
       </div>
     </Button>

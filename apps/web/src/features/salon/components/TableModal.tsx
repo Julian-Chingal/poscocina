@@ -20,7 +20,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 
 interface Props {
@@ -166,15 +172,23 @@ export const TableModal: React.FC<Props> = ({
                         </button>
                       )}
                     </div>
-                    <FormControl>
-                      <Select {...field}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Seleccionar zona o salón" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
                         {floorPlans.map((plan) => (
-                          <option key={plan.id} value={plan.id}>
+                          <SelectItem key={plan.id} value={plan.id}>
                             {plan.name}
-                          </option>
+                          </SelectItem>
                         ))}
-                      </Select>
-                    </FormControl>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -208,13 +222,21 @@ export const TableModal: React.FC<Props> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Forma Visual</FormLabel>
-                    <FormControl>
-                      <Select {...field}>
-                        <option value="rect">Rectangular</option>
-                        <option value="square">Cuadrada</option>
-                        <option value="circle">Redonda</option>
-                      </Select>
-                    </FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Seleccionar forma" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="rect">Rectangular</SelectItem>
+                        <SelectItem value="square">Cuadrada</SelectItem>
+                        <SelectItem value="circle">Redonda</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -228,16 +250,24 @@ export const TableModal: React.FC<Props> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Estado Operativo</FormLabel>
-                    <FormControl>
-                      <Select {...field}>
-                        <option value="free">Libre</option>
-                        <option value="occupied">Ocupada</option>
-                        <option value="check_requested">Pidiendo Cuenta</option>
-                        <option value="paid_waiting_food">Pagada (En Cocina)</option>
-                        <option value="reserved">Reservada</option>
-                        <option value="blocked">Bloqueada</option>
-                      </Select>
-                    </FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Seleccionar estado" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="free">Libre</SelectItem>
+                        <SelectItem value="occupied">Ocupada</SelectItem>
+                        <SelectItem value="check_requested">Pidiendo Cuenta</SelectItem>
+                        <SelectItem value="paid_waiting_food">Pagada (En Cocina)</SelectItem>
+                        <SelectItem value="reserved">Reservada</SelectItem>
+                        <SelectItem value="blocked">Bloqueada</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

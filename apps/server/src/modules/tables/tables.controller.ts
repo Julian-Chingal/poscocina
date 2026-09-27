@@ -6,6 +6,8 @@ import { validate } from '../../utils/validation.util.js';
 import { BadRequestError } from '../../errors/app-error.js';
 import {
   CreateFloorPlanSchema,
+  UpdateFloorPlanSchema,
+  BatchUpdateTablePositionsSchema,
   CreateTableSchema,
   UpdateTableSchema,
   TableTransferSchema,
@@ -28,6 +30,28 @@ export class TablesController {
     const data = validate(CreateFloorPlanSchema, request.body);
     const plan = await this.useCase.createFloorPlan(targetVenueId, data);
     return reply.status(201).send(plan);
+  }
+
+  async updateFloorPlan(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const data = validate(UpdateFloorPlanSchema, request.body);
+    const updated = await this.useCase.updateFloorPlan(id, data);
+    request.server.io?.emit('floor_plan:updated', updated);
+    return reply.send(updated);
+  }
+
+  async deleteFloorPlan(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const result = await this.useCase.deleteFloorPlan(id);
+    request.server.io?.emit('floor_plan:deleted', { id });
+    return reply.send(result);
+  }
+
+  async batchUpdateTablePositions(request: FastifyRequest, reply: FastifyReply) {
+    const data = validate(BatchUpdateTablePositionsSchema, request.body);
+    const updatedTables = await this.useCase.batchUpdateTablePositions(data.tables);
+    request.server.io?.emit('tables:batch_updated', updatedTables);
+    return reply.send(updatedTables);
   }
 
   async getVenueTables(request: FastifyRequest, reply: FastifyReply) {

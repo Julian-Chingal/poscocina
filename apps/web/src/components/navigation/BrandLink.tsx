@@ -43,7 +43,7 @@ export const BrandLink: React.FC<BrandLinkProps> = ({
       </div>
 
       {/* Brand Name & Action caption */}
-      <div className="flex flex-col min-w-0">
+      <div className={cn("flex flex-col min-w-0", !isHome && "hidden md:flex")}>
         <span className="font-bold text-xs sm:text-sm text-foreground tracking-tight truncate leading-tight group-hover:text-primary transition-colors">
           PosCocina
         </span>

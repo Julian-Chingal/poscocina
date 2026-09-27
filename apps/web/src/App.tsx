@@ -4,7 +4,7 @@ import { AppLauncherView } from "./components/navigation/launcher";
 import { ViewLoadingFallback } from "./components/ViewLoadingFallback";
 import { OfflineView } from "./features/shared";
 import { LockScreen } from "./features/auth";
-import { Toaster } from "./components/ui/sonner";
+import { Toaster } from "./components/ui/sileo";
 import { useAuthStore } from "./stores/auth.store";
 import { usePermissions } from "./hooks/usePermissions";
 import { useAppBootstrap } from "./hooks/useAppBootstrap";
@@ -39,9 +39,15 @@ export const App: React.FC = () => {
 
   const { canAccessModule } = usePermissions();
   const { isApiOnline, checkHealthAndBootstrap } = useAppBootstrap();
-  const { currentView, handleNavigate } = useHashRouter();
+  const {
+    currentView,
+    handleNavigate,
+    handleBack,
+    canGoBack,
+    previousViewTitle,
+  } = useHashRouter();
 
-  useGlobalKeyboardShortcuts(handleNavigate);
+  useGlobalKeyboardShortcuts(handleNavigate, handleBack);
   useAppSocketEvents(() => handleNavigate("home"));
 
   const handleSelectTable = (table: TableItem) => {
@@ -57,7 +63,7 @@ export const App: React.FC = () => {
   if (!isApiOnline) {
     return (
       <>
-        <Toaster />
+        <Toaster position="bottom-right" />
         <OfflineView onRetry={checkHealthAndBootstrap} />
       </>
     );
@@ -137,12 +143,15 @@ export const App: React.FC = () => {
         className="pointer-events-none fixed inset-0 z-0 bg-subtle-grid"
       />
 
-      <Toaster />
+      <Toaster position="bottom-right" />
 
       {/* Header fijo */}
       <TopBar
         currentView={currentView}
         onNavigate={handleNavigate}
+        onBack={handleBack}
+        canGoBack={canGoBack}
+        previousViewTitle={previousViewTitle}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />

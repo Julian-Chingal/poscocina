@@ -5,6 +5,7 @@ import {
   TestPrintResult,
   VenueSummaryData,
   NewVenuePayload,
+  UpdateVenuePayload,
 } from '../types/settings.types';
 
 export const settingsApi = {
@@ -48,6 +49,9 @@ export const settingsApi = {
     api.get(`/venues/${venueId}/summary`),
 
   createVenue: (payload: NewVenuePayload) => api.post('/venues', payload),
+
+  updateVenue: (venueId: string, payload: UpdateVenuePayload) =>
+    api.patch(`/venues/${venueId}/settings`, payload),
 
   toggleVenueStatus: (venueId: string, isActive: boolean) =>
     api.patch(`/venues/${venueId}/status`, { isActive }),

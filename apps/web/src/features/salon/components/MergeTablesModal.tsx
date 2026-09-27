@@ -8,7 +8,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -74,15 +80,18 @@ export const MergeTablesModal: React.FC<Props> = ({
               <Label className="mb-1.5 block">Selecciona la Mesa Destino Principal:</Label>
               <Select
                 value={selectedTargetTableId}
-                onChange={(e) => onTargetTableChange(e.target.value)}
-                className="h-10 rounded-xl"
+                onValueChange={onTargetTableChange}
               >
-                <option value="">-- Elige la mesa receptora --</option>
-                {occupiedTables.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.label} (Orden activa)
-                  </option>
-                ))}
+                <SelectTrigger className="h-10 rounded-xl w-full">
+                  <SelectValue placeholder="-- Elige la mesa receptora --" />
+                </SelectTrigger>
+                <SelectContent>
+                  {occupiedTables.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.label} (Orden activa)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
 

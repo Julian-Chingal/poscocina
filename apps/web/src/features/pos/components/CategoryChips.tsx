@@ -21,26 +21,35 @@ export const CategoryChips: React.FC<Props> = ({
 }) => (
   <div className="space-y-3 mb-4">
     <div className="relative">
-      <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-2.5 pointer-events-none" />
+      <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-3 pointer-events-none" />
       <Input
         type="text"
-        placeholder="Buscar plato o bebida..."
+        placeholder="Buscar plato, bebida o ingrediente..."
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="pl-10 h-10 rounded-xl"
+        className="pl-10 h-10 rounded-xl bg-card border-border/80 focus-visible:ring-primary shadow-2xs text-sm"
       />
+      {searchQuery && (
+        <button
+          type="button"
+          onClick={() => onSearchChange('')}
+          className="absolute right-3 top-2.5 text-xs text-muted-foreground hover:text-foreground p-0.5 rounded cursor-pointer"
+        >
+          ✕
+        </button>
+      )}
     </div>
 
-    <div className="flex space-x-2 overflow-x-auto pb-1 scrollbar-none">
+    <div className="flex space-x-2 overflow-x-auto pb-1.5 scrollbar-none custom-scrollbar">
       <Button
-        variant={activeCategoryId === 'all' ? 'default' : 'ghost'}
+        variant={activeCategoryId === 'all' ? 'default' : 'secondary'}
         size="sm"
         type="button"
         onClick={() => onSelectCategory('all')}
-        className={`px-3.5 h-8 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+        className={`px-4 h-9 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer ${
           activeCategoryId === 'all'
-            ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow'
-            : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+            ? 'shadow-xs shadow-primary/25'
+            : 'hover:bg-muted text-muted-foreground hover:text-foreground'
         }`}
       >
         Todos
@@ -48,17 +57,24 @@ export const CategoryChips: React.FC<Props> = ({
       {categories.map((c) => (
         <Button
           key={c.id}
-          variant={activeCategoryId === c.id ? 'default' : 'ghost'}
+          variant={activeCategoryId === c.id ? 'default' : 'secondary'}
           size="sm"
           type="button"
           onClick={() => onSelectCategory(c.id)}
-          className={`px-3.5 h-8 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+          className={`px-4 h-9 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 gap-2 cursor-pointer ${
             activeCategoryId === c.id
-              ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow'
-              : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+              ? 'shadow-xs shadow-primary/25'
+              : 'hover:bg-muted text-muted-foreground hover:text-foreground'
           }`}
         >
-          {c.name}
+          {c.color && (
+            <span
+              className="size-2 rounded-full shrink-0 ring-1 ring-black/10 dark:ring-white/20"
+              style={{ backgroundColor: c.color }}
+              aria-hidden="true"
+            />
+          )}
+          <span>{c.name}</span>
         </Button>
       ))}
     </div>
