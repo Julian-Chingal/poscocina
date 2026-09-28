@@ -57,10 +57,12 @@ export class PrintKitchenTicketUseCase {
         station,
         printerId: printer?.id,
         printerName: printer?.name || 'Virtual / Fallback',
+        connectionType: printer?.connectionType || 'network_tcp',
         paperWidth,
         networkSent,
         networkError,
         asciiPreview,
+        rawEscposBase64: escposBuffer.toString('base64'),
       });
     }
 

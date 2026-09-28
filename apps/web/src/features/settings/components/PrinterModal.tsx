@@ -115,16 +115,9 @@ export const PrinterModal: React.FC<Props> = ({
   useEffect(() => {
     if (isOpen && connectionType === 'usb_direct') {
       loadUsbDevices();
-      const unsub = usbPrinterService.listenDeviceEvents(
-        (connectedDev) => {
-          loadUsbDevices();
-          toast.success(`Impresora USB conectada: ${connectedDev.name}`);
-        },
-        (disconnectedDev) => {
-          loadUsbDevices();
-          toast.warning(`Dispositivo USB desconectado: ${disconnectedDev.name}`);
-        }
-      );
+      const unsub = usbPrinterService.subscribe(() => {
+        loadUsbDevices();
+      });
       return unsub;
     }
   }, [isOpen, connectionType, loadUsbDevices]);

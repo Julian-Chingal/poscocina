@@ -62,10 +62,12 @@ export class PrintReceiptUseCase {
     return {
       printerId: cashierPrinter?.id,
       printerName: cashierPrinter?.name || 'Caja Virtual',
+      connectionType: cashierPrinter?.connectionType || 'network_tcp',
       paperWidth,
       networkSent,
       networkError,
       asciiPreview,
+      rawEscposBase64: escposBuffer.toString('base64'),
     };
   }
 }

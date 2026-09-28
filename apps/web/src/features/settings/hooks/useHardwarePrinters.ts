@@ -30,28 +30,17 @@ export const useHardwarePrinters = () => {
 
   useEffect(() => {
     refreshUsbDevices();
-    const unsub = usbPrinterService.listenDeviceEvents(
-      () => refreshUsbDevices(),
-      () => refreshUsbDevices()
-    );
+    const unsub = usbPrinterService.subscribe(() => {
+      refreshUsbDevices();
+    });
     return unsub;
   }, [refreshUsbDevices]);
 
   const checkUsbConnected = useCallback(
     (printer: PrinterDevice): boolean => {
-      if (printer.connectionType !== 'usb_direct') return true;
-      if (!connectedUsbDevices.length) return false;
-      const addr = (printer.ipAddress || '').toLowerCase();
-      return connectedUsbDevices.some(
-        (dev) =>
-          (addr &&
-            addr.includes(dev.vendorIdHex.toLowerCase()) &&
-            addr.includes(dev.productIdHex.toLowerCase())) ||
-          (dev.name && addr.includes(dev.name.toLowerCase())) ||
-          (printer.name && dev.name.toLowerCase().includes(printer.name.toLowerCase()))
-      );
+      return usbPrinterService.isPrinterConnected(printer);
     },
-    [connectedUsbDevices]
+    []
   );
 
   // Asegurar que las sedes estén cargadas
@@ -147,6 +136,7 @@ export const useHardwarePrinters = () => {
       if (data.isTabletDefault && saved?.id) {
         setTabletDefaultPrinter(saved.id, data.station === 'cashier' ? 'cashier' : 'kitchen');
       }
+      await refreshUsbDevices();
       toast.success(editingPrinter ? 'Impresora actualizada' : 'Impresora registrada');
       setIsModalOpen(false);
       fetchPrinters();

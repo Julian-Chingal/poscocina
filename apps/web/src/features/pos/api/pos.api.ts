@@ -1,5 +1,6 @@
 import { api } from '@/services/api';
 import { Customer, TableItem } from '../types/pos.types';
+import { usbPrinterService } from '@/services/usb-printer.service';
 
 export const posApi = {
   getCatalog: (venueId: string) => api.get(`/venues/${venueId}/catalog`),
@@ -35,8 +36,39 @@ export const posApi = {
 
   processPayment: (payload: any) => api.post('/receipts', payload),
 
-  printReceipt: (receiptId: string) =>
-    api.post('/hardware/print-receipt', { receiptId }),
+  printReceipt: async (receiptId: string) => {
+    const res: any = await api.post('/hardware/print-receipt', { receiptId });
+    if (res?.rawEscposBase64) {
+      usbPrinterService.printRawEscpos(res.rawEscposBase64, res.printerName, res.paperWidth || '80').catch((err) => {
+        console.warn('Error al imprimir comprobante USB:', err);
+      });
+    }
+    return res;
+  },
+
+  printKitchen: async (orderId: string, specificStation?: string, isAppend?: boolean) => {
+    const res: any = await api.post('/hardware/print-kitchen', { orderId, specificStation, isAppend });
+    if (Array.isArray(res)) {
+      for (const item of res) {
+        if (item?.rawEscposBase64) {
+          usbPrinterService.printRawEscpos(item.rawEscposBase64, item.printerName, item.paperWidth || '80').catch((err) => {
+            console.warn('Error al imprimir comanda USB:', err);
+          });
+        }
+      }
+    }
+    return res;
+  },
+
+  printPreCheck: async (orderId: string) => {
+    const res: any = await api.post('/hardware/print-precheck', { orderId });
+    if (res?.rawEscposBase64) {
+      usbPrinterService.printRawEscpos(res.rawEscposBase64, res.printerName, res.paperWidth || '80').catch((err) => {
+        console.warn('Error al imprimir pre-cuenta USB:', err);
+      });
+    }
+    return res;
+  },
 
   openDrawer: (venueId: string) =>
     api.post('/hardware/open-drawer', { venueId }),

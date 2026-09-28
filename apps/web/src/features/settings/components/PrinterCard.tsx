@@ -47,12 +47,13 @@ export const PrinterCard: React.FC<Props> = ({
             <span className="truncate">BT: {printer.ipAddress || 'Dispositivo Vinculado'}</span>
           </div>
         );
-      case 'usb_direct':
+      case 'usb_direct': {
+        const cleanUsbLabel = (printer.ipAddress || 'OTG Directo').replace(/^(?:USB:\s*)+/i, '');
         return (
           <div className="flex items-center justify-between text-xs text-amber-600 dark:text-amber-400 font-mono">
             <div className="flex items-center space-x-1.5 truncate">
               <Usb className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">USB: {printer.ipAddress || 'OTG Directo'}</span>
+              <span className="truncate">USB: {cleanUsbLabel}</span>
             </div>
             {isUsbConnected !== undefined && (
               <span
@@ -72,6 +73,7 @@ export const PrinterCard: React.FC<Props> = ({
             )}
           </div>
         );
+      }
       case 'browser_raw':
       default:
         return (

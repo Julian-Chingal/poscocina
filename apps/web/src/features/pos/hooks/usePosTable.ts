@@ -102,10 +102,11 @@ export const usePosTable = (
         modifiers: item.modifiers || [],
       }));
 
+      let orderId = activeOrder?.id;
       if (activeOrder?.id) {
         await posApi.appendOrderItems(activeOrder.id, itemsPayload);
       } else {
-        await posApi.createOrder({
+        const created: any = await posApi.createOrder({
           venueId,
           tableId: currentTable?.id || undefined,
           waiterId: userId || undefined,
@@ -113,6 +114,11 @@ export const usePosTable = (
           guestName: !currentTable && guestName.trim() ? guestName.trim() : undefined,
           items: itemsPayload,
         });
+        orderId = created?.order?.id || created?.id;
+      }
+
+      if (orderId) {
+        posApi.printKitchen(orderId, undefined, Boolean(activeOrder?.id)).catch(() => {});
       }
 
       setGuestName('');
@@ -133,7 +139,8 @@ export const usePosTable = (
     if (!activeOrder?.id) return;
     try {
       await posApi.requestCheck(activeOrder.id);
-      toast.success('Pre-cuenta solicitada. Notificación enviada a caja.');
+      posApi.printPreCheck(activeOrder.id).catch(() => {});
+      toast.success('Pre-cuenta solicitada. Notificación e impresión enviada.');
       fetchTables();
     } catch (err: any) {
       toast.error(err.message || 'Error al pedir la cuenta');

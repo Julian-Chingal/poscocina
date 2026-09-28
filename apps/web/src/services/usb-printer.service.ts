@@ -1,6 +1,6 @@
 /**
- * Servicio para gestión, sincronización y comunicación con impresoras USB y USB-OTG
- * utilizando WebUSB API y Web Serial API en el navegador / tablet.
+ * Servicio robusto para gestión, sincronización, persistencia en memoria
+ * y transmisión física con impresoras USB y USB-OTG mediante WebUSB y Web Serial.
  */
 
 export interface UsbDeviceItem {
@@ -30,6 +30,141 @@ export interface UsbTestResult {
 }
 
 class UsbPrinterService {
+  // Caché persistente en memoria para mantener referencias vivas a dispositivos USB
+  private rawUsbDevices: Map<string, any> = new Map();
+  private knownDevices: UsbDeviceItem[] = [];
+  private listeners: Set<() => void> = new Set();
+  private isPolling = false;
+  private _pollIntervalId: any = null;
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      this.initAutoPolling();
+    }
+  }
+
+  /**
+   * Suscribe un componente a cambios de conexión/desconexión USB en tiempo real
+   */
+  subscribe(callback: () => void): () => void {
+    this.listeners.add(callback);
+    return () => {
+      this.listeners.delete(callback);
+    };
+  }
+
+  private notifyListeners() {
+    this.listeners.forEach((cb) => {
+      try {
+        cb();
+      } catch (e) {
+        console.warn('Error en listener de UsbPrinterService:', e);
+      }
+    });
+  }
+
+  /**
+   * Inicializa el monitoreo continuo para mantener el estado de conexión
+   */
+  private initAutoPolling() {
+    if (this.isPolling) return;
+    this.isPolling = true;
+
+    // Ejecutar chequeo inicial
+    this.refreshDevicesList();
+
+    // Re-chequeo periódico cada 2.5 segundos
+    this._pollIntervalId = setInterval(() => {
+      this.refreshDevicesList();
+    }, 2500);
+
+    // Eventos nativos WebUSB
+    if (typeof navigator !== 'undefined' && 'usb' in navigator) {
+      try {
+        (navigator as any).usb.addEventListener('connect', (e: any) => {
+          this.registerRawDevice(e.device);
+          this.refreshDevicesList();
+        });
+        (navigator as any).usb.addEventListener('disconnect', (e: any) => {
+          this.unregisterRawDevice(e.device);
+          this.refreshDevicesList();
+        });
+      } catch (err) {
+        console.warn('Aviso al enlazar eventos connect/disconnect WebUSB:', err);
+      }
+    }
+
+    // Re-chequeo al enfocar la ventana
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', () => {
+        this.refreshDevicesList();
+      });
+    }
+  }
+
+  stopAutoPolling() {
+    if (this._pollIntervalId) {
+      clearInterval(this._pollIntervalId);
+      this._pollIntervalId = null;
+      this.isPolling = false;
+    }
+  }
+
+  private registerRawDevice(device: any) {
+    if (!device) return;
+    const key = `usb_${device.vendorId}_${device.productId}`;
+    this.rawUsbDevices.set(key, device);
+  }
+
+  private unregisterRawDevice(device: any) {
+    if (!device) return;
+    const key = `usb_${device.vendorId}_${device.productId}`;
+    this.rawUsbDevices.delete(key);
+  }
+
+  /**
+   * Refresca la lista de dispositivos autorizados y conectados
+   */
+  async refreshDevicesList(): Promise<UsbDeviceItem[]> {
+    const list: UsbDeviceItem[] = [];
+
+    // 1. WebUSB
+    if (typeof navigator !== 'undefined' && 'usb' in navigator) {
+      try {
+        const devices = await (navigator as any).usb.getDevices();
+        for (const dev of devices) {
+          this.registerRawDevice(dev);
+          list.push(this.formatWebUsbDevice(dev, true));
+        }
+      } catch (err) {
+        console.warn('Error leyendo WebUSB devices:', err);
+      }
+    }
+
+    // 2. Web Serial
+    if (typeof navigator !== 'undefined' && 'serial' in navigator) {
+      try {
+        const ports = await (navigator as any).serial.getPorts();
+        for (const port of ports) {
+          list.push(this.formatSerialPort(port, true));
+        }
+      } catch (err) {
+        console.warn('Error leyendo WebSerial ports:', err);
+      }
+    }
+
+    // Comparar si hubo cambios en la lista
+    const oldKeys = this.knownDevices.map((d) => d.id).join(',');
+    const newKeys = list.map((d) => d.id).join(',');
+    this.knownDevices = list;
+
+    if (oldKeys !== newKeys) {
+      this.notifyListeners();
+    }
+
+    return list;
+  }
+
   /**
    * Verifica compatibilidad de APIs en el navegador actual
    */
@@ -49,33 +184,22 @@ class UsbPrinterService {
    * Obtiene la lista de dispositivos USB previamente vinculados y autorizados
    */
   async getPairedDevices(): Promise<UsbDeviceItem[]> {
-    const list: UsbDeviceItem[] = [];
+    return await this.refreshDevicesList();
+  }
 
-    // 1. WebUSB
-    if (typeof navigator !== 'undefined' && 'usb' in navigator) {
-      try {
-        const devices = await (navigator as any).usb.getDevices();
-        for (const dev of devices) {
-          list.push(this.formatWebUsbDevice(dev, true));
-        }
-      } catch (err) {
-        console.warn('Error al leer dispositivos WebUSB vinculados:', err);
-      }
-    }
+  /**
+   * Determina si una impresora registrada está físicamente conectada y lista
+   */
+  isPrinterConnected(printer: { ipAddress?: string; name?: string; connectionType?: string }): boolean {
+    if (printer.connectionType !== 'usb_direct') return true;
+    if (this.knownDevices.length === 0) return false;
 
-    // 2. Web Serial
-    if (typeof navigator !== 'undefined' && 'serial' in navigator) {
-      try {
-        const ports = await (navigator as any).serial.getPorts();
-        for (const port of ports) {
-          list.push(this.formatSerialPort(port, true));
-        }
-      } catch (err) {
-        console.warn('Error al leer puertos WebSerial vinculados:', err);
-      }
-    }
+    // Si solo hay una impresora USB conectada al dispositivo, es esa!
+    if (this.knownDevices.length === 1) return true;
 
-    return list;
+    // Buscar coincidencia por VID/PID o nombre
+    const target = this.matchDeviceByIdentifier(printer.ipAddress || printer.name || '', this.knownDevices);
+    return target !== null && target.isConnected;
   }
 
   /**
@@ -88,9 +212,11 @@ class UsbPrinterService {
       );
     }
 
-    // Al pasar filtros vacíos [], el navegador muestra todos los dispositivos USB conectados físicamente
     const device = await (navigator as any).usb.requestDevice({ filters: [] });
-    return this.formatWebUsbDevice(device, true);
+    this.registerRawDevice(device);
+    const item = this.formatWebUsbDevice(device, true);
+    await this.refreshDevicesList();
+    return item;
   }
 
   /**
@@ -102,7 +228,9 @@ class UsbPrinterService {
     }
 
     const port = await (navigator as any).serial.requestPort();
-    return this.formatSerialPort(port, true);
+    const item = this.formatSerialPort(port, true);
+    await this.refreshDevicesList();
+    return item;
   }
 
   /**
@@ -119,17 +247,25 @@ class UsbPrinterService {
         targetDevice = deviceOrId;
       }
 
-      if (!targetDevice || !targetDevice.rawDevice) {
+      if (!targetDevice) {
         return {
           success: false,
           message: 'Impresora USB no encontrada o no está conectada físicamente al puerto USB / OTG.',
         };
       }
 
+      const raw = targetDevice.rawDevice || this.resolveRawDevice(targetDevice);
+      if (!raw) {
+        return {
+          success: false,
+          message: 'No se pudo obtener el canal de comunicación con la impresora USB.',
+        };
+      }
+
       if (targetDevice.type === 'webusb') {
-        return await this.testWebUsbDevice(targetDevice.rawDevice, targetDevice);
+        return await this.testWebUsbDevice(raw, targetDevice);
       } else {
-        return await this.testWebSerialDevice(targetDevice.rawDevice, targetDevice);
+        return await this.testWebSerialDevice(raw, targetDevice);
       }
     } catch (err: any) {
       return {
@@ -158,19 +294,27 @@ class UsbPrinterService {
         targetDevice = deviceOrId;
       }
 
-      if (!targetDevice || !targetDevice.rawDevice) {
+      if (!targetDevice) {
         return {
           success: false,
           message: 'No se encontró la impresora USB conectada para imprimir el ticket de prueba.',
         };
       }
 
+      const raw = targetDevice.rawDevice || this.resolveRawDevice(targetDevice);
+      if (!raw) {
+        return {
+          success: false,
+          message: 'El controlador USB no tiene acceso activo a la impresora.',
+        };
+      }
+
       const testBuffer = this.generateEscPosTestTicket(printerName, targetDevice, paperWidth);
 
       if (targetDevice.type === 'webusb') {
-        return await this.sendBufferToWebUsb(targetDevice.rawDevice, testBuffer, targetDevice);
+        return await this.sendBufferToWebUsb(raw, testBuffer, targetDevice);
       } else {
-        return await this.sendBufferToWebSerial(targetDevice.rawDevice, testBuffer, targetDevice);
+        return await this.sendBufferToWebSerial(raw, testBuffer, targetDevice);
       }
     } catch (err: any) {
       return {
@@ -181,46 +325,186 @@ class UsbPrinterService {
   }
 
   /**
-   * Escucha eventos de conexión y desconexión física de cables USB en tiempo real
+   * Imprime un buffer binario ESC/POS crudo (enviado desde el backend en Base64 o Uint8Array)
    */
-  listenDeviceEvents(
-    onConnect?: (device: UsbDeviceItem) => void,
-    onDisconnect?: (device: UsbDeviceItem) => void
-  ): () => void {
-    if (typeof navigator === 'undefined' || !('usb' in navigator)) {
-      return () => {};
-    }
-
-    const connectHandler = (event: any) => {
-      const item = this.formatWebUsbDevice(event.device, true);
-      onConnect?.(item);
-    };
-
-    const disconnectHandler = (event: any) => {
-      const item = this.formatWebUsbDevice(event.device, false);
-      onDisconnect?.(item);
-    };
-
+  async printRawEscpos(
+    base64OrBuffer: string | Uint8Array,
+    deviceOrIdentifier?: UsbDeviceItem | string,
+    _paperWidth: '58' | '80' = '80'
+  ): Promise<UsbTestResult> {
     try {
-      (navigator as any).usb.addEventListener('connect', connectHandler);
-      (navigator as any).usb.addEventListener('disconnect', disconnectHandler);
-    } catch (err) {
-      console.warn('No se pudieron registrar listeners de WebUSB:', err);
+      let buffer: Uint8Array;
+      if (typeof base64OrBuffer === 'string') {
+        const binaryStr = atob(base64OrBuffer);
+        buffer = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) {
+          buffer[i] = binaryStr.charCodeAt(i);
+        }
+      } else {
+        buffer = base64OrBuffer;
+      }
+
+      const paired = await this.getPairedDevices();
+      let targetDevice: UsbDeviceItem | null = null;
+
+      if (deviceOrIdentifier) {
+        targetDevice =
+          typeof deviceOrIdentifier === 'string'
+            ? this.matchDeviceByIdentifier(deviceOrIdentifier, paired)
+            : deviceOrIdentifier;
+      }
+
+      if (!targetDevice && paired.length > 0) {
+        targetDevice = paired[0];
+      }
+
+      if (!targetDevice) {
+        return {
+          success: false,
+          message: 'No hay ninguna impresora USB conectada y autorizada para imprimir.',
+        };
+      }
+
+      const raw = targetDevice.rawDevice || this.resolveRawDevice(targetDevice);
+      if (!raw) {
+        return {
+          success: false,
+          message: 'No se pudo obtener el canal de datos USB de la impresora.',
+        };
+      }
+
+      if (targetDevice.type === 'webusb') {
+        return await this.sendBufferToWebUsb(raw, buffer, targetDevice);
+      } else {
+        return await this.sendBufferToWebSerial(raw, buffer, targetDevice);
+      }
+    } catch (err: any) {
+      return {
+        success: false,
+        message: `Error de impresión ESC/POS: ${err?.message || 'Fallo general'}`,
+      };
+    }
+  }
+
+  /**
+   * Imprime físicamente el comprobante simulado (Factura, Pre-cuenta o Comanda)
+   * desde la vista de previsualización térmica
+   */
+  async printSimulationReceipt(options: {
+    mode: 'invoice' | 'precheck' | 'kitchen';
+    paperWidth: '58' | '80';
+    companyName?: string;
+    taxId?: string;
+    venueAddress?: string;
+    phone?: string;
+    receiptHeader?: string;
+    receiptFooter?: string;
+    printerIdentifier?: string;
+  }): Promise<UsbTestResult> {
+    const {
+      mode,
+      paperWidth,
+      companyName = 'Mi Restaurante',
+      taxId = 'NIT: 900.123.456-7',
+      venueAddress = 'Sede Principal',
+      phone = 'Tel: +57 300 123 4567',
+      receiptHeader = 'Experiencias sensoriales y autor',
+      receiptFooter = '¡Gracias por su visita!',
+      printerIdentifier,
+    } = options;
+
+    const width = paperWidth === '58' ? 32 : 42;
+    const divider = '-'.repeat(width) + '\n';
+    const ESC = '\x1B';
+    const GS = '\x1D';
+
+    let raw = `${ESC}@`; // Initialize
+
+    if (mode === 'kitchen') {
+      raw += `${ESC}a\x01`; // Center
+      raw += `${GS}!\x11`; // Double size
+      raw += `*** COCINA CALIENTE ***\n`;
+      raw += `${GS}!\x00`;
+      raw += divider;
+      raw += `${ESC}a\x00`; // Left
+      raw += `MESA: M-04       MESERO: Carlos M.\n`;
+      raw += `ORDEN: #ORD-7890 HORA: ${new Date().toLocaleTimeString('es-CO')}\n`;
+      raw += divider;
+      raw += `${GS}!\x11${ESC}E\x011x Lomo al Trapo 300g\n${GS}!\x00${ESC}E\x00`;
+      raw += `   >> Termino 3/4, salsa aparte\n`;
+      raw += `${GS}!\x11${ESC}E\x012x Copa Vino Tinto\n${GS}!\x00${ESC}E\x00`;
+      raw += `${GS}!\x11${ESC}E\x011x Volcan de Chocolate\n${GS}!\x00${ESC}E\x00`;
+      raw += divider;
+      raw += `OBSERVACION: Cliente en terraza\n`;
+      raw += divider;
+    } else if (mode === 'precheck') {
+      raw += `${ESC}a\x01`;
+      raw += `${GS}!\x11${ESC}E\x01*** PRE-CUENTA ***\n${GS}!\x00${ESC}E\x00`;
+      raw += `${companyName}\n`;
+      raw += `DOCUMENTO NO VALIDO COMO FACTURA\n`;
+      raw += divider;
+      raw += `${ESC}a\x00`;
+      raw += `Mesa: M-04       Atiende: Carlos M.\n`;
+      raw += divider;
+      raw += `1x Lomo al Trapo 300g     $38.000\n`;
+      raw += `2x Copa Vino Tinto         $28.000\n`;
+      raw += `1x Volcan de Chocolate     $12.000\n`;
+      raw += divider;
+      raw += `${ESC}a\x02`; // Right
+      raw += `SUBTOTAL: $78.000\n`;
+      raw += `IMPUESTOS (INC 8%): $6.240\n`;
+      raw += `${ESC}E\x01SUBTOTAL CUENTA: $84.240\n${ESC}E\x00`;
+      raw += `PROPINA SUGERIDA (10%): $7.800\n`;
+      raw += `${GS}!\x11${ESC}E\x01TOTAL CON PROPINA: $92.040\n${GS}!\x00${ESC}E\x00`;
+      raw += divider;
+      raw += `${ESC}a\x01`;
+      raw += `La propina es voluntaria.\nGracias por su preferencia.\n`;
+    } else {
+      // mode === 'invoice'
+      raw += `${ESC}a\x01`;
+      raw += `${GS}!\x11${ESC}E\x01${companyName}\n${GS}!\x00${ESC}E\x00`;
+      raw += `${taxId}\n`;
+      raw += `${venueAddress}\n`;
+      raw += `${phone}\n`;
+      if (receiptHeader) raw += `"${receiptHeader}"\n`;
+      raw += divider;
+      raw += `${ESC}a\x00`;
+      raw += `FACTURA: #POS-00452  MESA: M-04\n`;
+      raw += `Fecha: ${new Date().toLocaleDateString('es-CO')}  Caja: 01\n`;
+      raw += `Cliente: Consumidor Final\n`;
+      raw += divider;
+      raw += `1x Lomo al Trapo 300g     $38.000\n`;
+      raw += `2x Copa Vino Tinto         $28.000\n`;
+      raw += `1x Volcan de Chocolate     $12.000\n`;
+      raw += divider;
+      raw += `${ESC}a\x02`;
+      raw += `Subtotal Neto: $72.222\n`;
+      raw += `Impuesto (8%): $5.778\n`;
+      raw += `Propina Voluntaria: $7.800\n`;
+      raw += `${GS}!\x11${ESC}E\x01TOTAL A PAGAR: $85.800\n${GS}!\x00${ESC}E\x00`;
+      raw += divider;
+      raw += `${ESC}a\x00`;
+      raw += `Forma de Pago: Efectivo\n`;
+      raw += `Recibido:      $100.000\n`;
+      raw += `Cambio:        $14.200\n`;
+      raw += divider;
+      raw += `${ESC}a\x01`;
+      raw += `${receiptFooter}\n`;
+      raw += `poscocina POS • Impreso en ${paperWidth}mm\n`;
     }
 
-    return () => {
-      try {
-        (navigator as any).usb.removeEventListener('connect', connectHandler);
-        (navigator as any).usb.removeEventListener('disconnect', disconnectHandler);
-      } catch {}
-    };
+    raw += '\n\n\n\n';
+    raw += `${GS}V\x41\x03`; // Cut
+
+    const buffer = new TextEncoder().encode(raw);
+    return await this.printRawEscpos(buffer, printerIdentifier, paperWidth);
   }
 
   /**
    * Genera el identificador legible para almacenar en la base de datos (campo ipAddress)
    */
   formatIdentifier(device: UsbDeviceItem): string {
-    const cleanName = device.name || 'Impresora POS USB';
+    const cleanName = (device.name || 'Impresora POS USB').replace(/^(?:USB:\s*)+/i, '').trim();
     return `USB: ${cleanName} (VID:${device.vendorIdHex} PID:${device.productIdHex}${
       device.serialNumber ? ` SN:${device.serialNumber}` : ''
     })`;
@@ -228,13 +512,20 @@ class UsbPrinterService {
 
   // --- MÉTODOS INTERNOS PRIVADOS ---
 
+  private resolveRawDevice(item: UsbDeviceItem): any {
+    if (item.rawDevice) return item.rawDevice;
+    const key = `usb_${item.vendorId}_${item.productId}`;
+    return this.rawUsbDevices.get(key) || null;
+  }
+
   private formatWebUsbDevice(device: any, isConnected: boolean): UsbDeviceItem {
     const vidHex = `0x${(device.vendorId || 0).toString(16).padStart(4, '0').toUpperCase()}`;
     const pidHex = `0x${(device.productId || 0).toString(16).padStart(4, '0').toUpperCase()}`;
-    const name = device.productName || `Impresora USB (${vidHex}:${pidHex})`;
+    const cleanProductName = (device.productName || '').replace(/^(?:USB:\s*)+/i, '').trim();
+    const name = cleanProductName || `Impresora USB (${vidHex}:${pidHex})`;
 
     return {
-      id: `usb_${device.vendorId}_${device.productId}_${device.serialNumber || 'default'}`,
+      id: `usb_${device.vendorId}_${device.productId}`,
       name,
       manufacturer: device.manufacturerName || 'Dispositivo USB',
       vendorId: device.vendorId,
@@ -272,10 +563,26 @@ class UsbPrinterService {
   }
 
   private matchDeviceByIdentifier(identifier: string, devices: UsbDeviceItem[]): UsbDeviceItem | null {
-    if (!identifier || devices.length === 0) return null;
+    if (devices.length === 0) return null;
+
+    // Si solo hay un dispositivo USB conectado, asumimos que es el objetivo
+    if (devices.length === 1) return devices[0];
+    if (!identifier) return devices[0];
+
     const lower = identifier.toLowerCase();
 
-    // 1. Coincidencia exacta por VID y PID
+    // 1. Extraer VID y PID numéricos mediante Regex
+    const vidMatch = lower.match(/vid[:=]?\s*(?:0x)?([0-9a-f]+)/i);
+    const pidMatch = lower.match(/pid[:=]?\s*(?:0x)?([0-9a-f]+)/i);
+
+    if (vidMatch && pidMatch) {
+      const vidNum = parseInt(vidMatch[1], 16);
+      const pidNum = parseInt(pidMatch[1], 16);
+      const exactMatch = devices.find((d) => d.vendorId === vidNum && d.productId === pidNum);
+      if (exactMatch) return exactMatch;
+    }
+
+    // 2. Coincidencia por subcadenas VID/PID
     for (const d of devices) {
       if (
         lower.includes(d.vendorIdHex.toLowerCase()) &&
@@ -285,14 +592,14 @@ class UsbPrinterService {
       }
     }
 
-    // 2. Coincidencia por nombre de producto
+    // 3. Coincidencia por nombre de modelo
     for (const d of devices) {
       if (d.name && lower.includes(d.name.toLowerCase())) {
         return d;
       }
     }
 
-    // 3. Fallback: primer dispositivo USB conectado
+    // Fallback: primer dispositivo
     return devices[0] || null;
   }
 
@@ -306,18 +613,16 @@ class UsbPrinterService {
         await dev.selectConfiguration(1);
       }
 
-      // Buscar endpoint OUT para transmisión
       const { outEndpoint, interfaceNum } = this.findOutEndpoint(dev);
 
       if (outEndpoint !== null) {
         try {
           await dev.claimInterface(interfaceNum);
-          // Enviar comando ESC @ (Initialize Printer)
           const escInit = new Uint8Array([0x1b, 0x40]);
           await dev.transferOut(outEndpoint, escInit);
           await dev.releaseInterface(interfaceNum);
         } catch (claimErr: any) {
-          console.warn('Aviso al reclamar interfaz USB (el dispositivo respondió apertura):', claimErr);
+          console.warn('Aviso al reclamar interfaz USB:', claimErr);
         }
       }
 
@@ -398,7 +703,7 @@ class UsbPrinterService {
 
       return {
         success: true,
-        message: `Ticket de prueba impreso físicamente con éxito en "${item.name}" vía cable USB.`,
+        message: `Impresión física completada con éxito en "${item.name}" vía cable USB.`,
         device: item,
       };
     } catch (err: any) {
@@ -423,7 +728,7 @@ class UsbPrinterService {
 
       return {
         success: true,
-        message: `Ticket de prueba impreso físicamente con éxito en "${item.name}" vía serie USB.`,
+        message: `Impresión física completada con éxito en "${item.name}" vía serie USB.`,
         device: item,
       };
     } catch (err: any) {

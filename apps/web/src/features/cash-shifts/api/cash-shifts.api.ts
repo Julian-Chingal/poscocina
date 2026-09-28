@@ -5,6 +5,7 @@ import {
   CloseShiftReportData,
   PaymentMethod,
 } from '../types/cash-shifts.types';
+import { usbPrinterService } from '@/services/usb-printer.service';
 
 export const cashShiftsApi = {
   getCurrentShift: (venueId: string): Promise<ActiveShiftInfo> =>
@@ -33,11 +34,25 @@ export const cashShiftsApi = {
     }>;
   }) => api.post('/receipts', payload),
 
-  printShiftSummary: (shiftId: string) =>
-    api.post('/hardware/print-shift-summary', { shiftId }),
+  printShiftSummary: async (shiftId: string) => {
+    const res: any = await api.post('/hardware/print-shift-summary', { shiftId });
+    if (res?.rawEscposBase64) {
+      usbPrinterService.printRawEscpos(res.rawEscposBase64, res.printerName, res.paperWidth || '80').catch((err) => {
+        console.warn('Error al imprimir cierre de caja USB:', err);
+      });
+    }
+    return res;
+  },
 
-  printReceipt: (receiptId: string) =>
-    api.post('/hardware/print-receipt', { receiptId }),
+  printReceipt: async (receiptId: string) => {
+    const res: any = await api.post('/hardware/print-receipt', { receiptId });
+    if (res?.rawEscposBase64) {
+      usbPrinterService.printRawEscpos(res.rawEscposBase64, res.printerName, res.paperWidth || '80').catch((err) => {
+        console.warn('Error al imprimir comprobante USB:', err);
+      });
+    }
+    return res;
+  },
 
   openDrawer: (venueId: string) =>
     api.post('/hardware/open-drawer', { venueId }),

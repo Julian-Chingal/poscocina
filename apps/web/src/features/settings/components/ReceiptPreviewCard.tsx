@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Printer, UtensilsCrossed, Play, QrCode, FileText, ChefHat, Receipt } from 'lucide-react';
 import { PaperWidth, TaxType } from '../types/settings.types';
+import { usbPrinterService } from '@/services/usb-printer.service';
 import {
   Card,
   CardHeader,
@@ -70,18 +71,43 @@ export const ReceiptPreviewCard: React.FC<Props> = ({
   invoiceResolutionDate = '2026-01-15',
 }) => {
   const [mode, setMode] = useState<PreviewMode>('invoice');
+  const [isPrintingSim, setIsPrintingSim] = useState(false);
 
-  const handleTestPrint = () => {
+  const is58 = paperWidth === 58;
+
+  const handleTestPrint = async () => {
     const modeLabel =
       mode === 'invoice'
         ? 'Factura de Venta'
         : mode === 'precheck'
         ? 'Pre-cuenta de Mesa'
         : 'Comanda de Cocina';
-    toast.success(`Enviando ${modeLabel} a la impresora (${paperWidth}mm)...`);
-  };
 
-  const is58 = paperWidth === 58;
+    setIsPrintingSim(true);
+    try {
+      const res = await usbPrinterService.printSimulationReceipt({
+        mode,
+        paperWidth: is58 ? '58' : '80',
+        companyName,
+        taxId,
+        venueAddress,
+        phone,
+        receiptHeader,
+        receiptFooter,
+      });
+
+      if (res.success) {
+        toast.success(`¡${modeLabel} impresa físicamente con éxito por cable USB!`);
+      } else {
+        toast.info(`${res.message} Mostrando diálogo nativo del sistema...`);
+        window.print();
+      }
+    } catch (err: any) {
+      toast.error(`Error al imprimir simulación: ${err?.message || 'Error general'}`);
+    } finally {
+      setIsPrintingSim(false);
+    }
+  };
 
   return (
     <Card className="shadow-sm border-border bg-card flex flex-col justify-between">
@@ -500,11 +526,16 @@ export const ReceiptPreviewCard: React.FC<Props> = ({
             <Button
               type="button"
               variant="outline"
+              disabled={isPrintingSim}
               onClick={handleTestPrint}
               className="w-full text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-xs border-border hover:bg-muted"
             >
-              <Play className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Simular Impresión de {mode === 'invoice' ? 'Factura' : mode === 'precheck' ? 'Pre-cuenta' : 'Comanda'}</span>
+              <Play className={`w-3.5 h-3.5 text-emerald-500 ${isPrintingSim ? 'animate-spin' : ''}`} />
+              <span>
+                {isPrintingSim
+                  ? 'Imprimiendo en dispositivo...'
+                  : `Simular Impresión de ${mode === 'invoice' ? 'Factura' : mode === 'precheck' ? 'Pre-cuenta' : 'Comanda'}`}
+              </span>
             </Button>
           </div>
         </CardContent>
