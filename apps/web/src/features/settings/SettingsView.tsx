@@ -22,7 +22,7 @@ const TabSkeleton: React.FC = () => (
 export const SettingsView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('identity');
   const venues = useBrandingStore((s) => s.venues);
-  const { form, setField, setTaxType, saveSettings, saveReceiptFormat, saving, savedSuccess } = useSettingsForm();
+  const { form, setField, setTaxType, saveSettings, saving, savedSuccess } = useSettingsForm();
 
   const settingsGroups: SubNavGroup[] = [
     {

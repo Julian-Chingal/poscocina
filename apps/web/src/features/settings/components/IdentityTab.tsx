@@ -11,8 +11,6 @@ import {
   Phone,
   Mail,
   Palette,
-  Receipt,
-  QrCode,
   FileCheck2,
   Quote,
   Sparkles,
@@ -24,7 +22,6 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
