@@ -62,22 +62,8 @@ export const SalonHeader: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* View Mode Toggle: Canvas / Grid */}
+        {/* View Mode Toggle: Grid / Canvas */}
         <div className="flex items-center bg-muted/60 p-0.5 rounded-xl border border-border">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onToggleViewMode('canvas')}
-            className={`h-8 px-2.5 rounded-lg text-xs font-semibold transition-all ${
-              viewMode === 'canvas'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <MapIcon className="w-3.5 h-3.5 mr-1 text-primary" />
-            <span className="hidden sm:inline">Plano Visual</span>
-          </Button>
           <Button
             type="button"
             variant="ghost"
@@ -89,8 +75,22 @@ export const SalonHeader: React.FC<Props> = ({
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <LayoutGrid className="w-3.5 h-3.5 mr-1" />
+            <LayoutGrid className={`w-3.5 h-3.5 mr-1 ${viewMode === 'grid' ? 'text-primary' : ''}`} />
             <span className="hidden sm:inline">Tarjetas</span>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onToggleViewMode('canvas')}
+            className={`h-8 px-2.5 rounded-lg text-xs font-semibold transition-all ${
+              viewMode === 'canvas'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <MapIcon className={`w-3.5 h-3.5 mr-1 ${viewMode === 'canvas' ? 'text-primary' : ''}`} />
+            <span className="hidden sm:inline">Plano Visual</span>
           </Button>
         </div>
 

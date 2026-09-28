@@ -11,6 +11,7 @@ interface Props {
   isTesting: boolean;
   testResult: TestPrintResult | null;
   isTabletDefault?: boolean;
+  isUsbConnected?: boolean;
   onToggleTabletDefault?: (p: PrinterDevice) => void;
   onTest: (p: PrinterDevice) => void;
   onEdit: (p: PrinterDevice) => void;
@@ -22,6 +23,7 @@ export const PrinterCard: React.FC<Props> = ({
   isTesting,
   testResult,
   isTabletDefault,
+  isUsbConnected,
   onToggleTabletDefault,
   onTest,
   onEdit,
@@ -47,9 +49,27 @@ export const PrinterCard: React.FC<Props> = ({
         );
       case 'usb_direct':
         return (
-          <div className="flex items-center space-x-1.5 text-xs text-amber-600 dark:text-amber-400 font-mono">
-            <Usb className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">USB: {printer.ipAddress || 'OTG Directo'}</span>
+          <div className="flex items-center justify-between text-xs text-amber-600 dark:text-amber-400 font-mono">
+            <div className="flex items-center space-x-1.5 truncate">
+              <Usb className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">USB: {printer.ipAddress || 'OTG Directo'}</span>
+            </div>
+            {isUsbConnected !== undefined && (
+              <span
+                className={`ml-2 inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 ${
+                  isUsbConnected
+                    ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                    : 'bg-muted text-muted-foreground border border-border'
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    isUsbConnected ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground'
+                  }`}
+                />
+                {isUsbConnected ? 'Conectada' : 'Desconectada'}
+              </span>
+            )}
           </div>
         );
       case 'browser_raw':

@@ -18,7 +18,7 @@ import { MergeTablesModal } from './components/MergeTablesModal';
 export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) => {
   const { currentUser } = useAuthStore();
   const [isEditMode, setIsEditMode] = useState(false);
-  const [viewMode, setViewMode] = useState<'canvas' | 'grid'>('canvas');
+  const [viewMode, setViewMode] = useState<'canvas' | 'grid'>('grid');
 
   const isManager =
     currentUser?.roleName === 'manager' ||

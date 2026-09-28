@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useBrandingStore } from '@/stores/branding.store';
 import { settingsApi } from '../api/settings.api';
 import { PrinterDevice, PrinterFormData, TestPrintResult } from '../types/settings.types';
+import { usbPrinterService, UsbDeviceItem } from '@/services/usb-printer.service';
 import { toast } from '@/components/ui/sileo';
 
 export const useHardwarePrinters = () => {
@@ -15,6 +16,43 @@ export const useHardwarePrinters = () => {
   const [editingPrinter, setEditingPrinter] = useState<PrinterDevice | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<TestPrintResult | null>(null);
+  const [connectedUsbDevices, setConnectedUsbDevices] = useState<UsbDeviceItem[]>([]);
+
+  // Sincronizar dispositivos USB conectados físicamente a la tablet
+  const refreshUsbDevices = useCallback(async () => {
+    try {
+      const list = await usbPrinterService.getPairedDevices();
+      setConnectedUsbDevices(list);
+    } catch {
+      setConnectedUsbDevices([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshUsbDevices();
+    const unsub = usbPrinterService.listenDeviceEvents(
+      () => refreshUsbDevices(),
+      () => refreshUsbDevices()
+    );
+    return unsub;
+  }, [refreshUsbDevices]);
+
+  const checkUsbConnected = useCallback(
+    (printer: PrinterDevice): boolean => {
+      if (printer.connectionType !== 'usb_direct') return true;
+      if (!connectedUsbDevices.length) return false;
+      const addr = (printer.ipAddress || '').toLowerCase();
+      return connectedUsbDevices.some(
+        (dev) =>
+          (addr &&
+            addr.includes(dev.vendorIdHex.toLowerCase()) &&
+            addr.includes(dev.productIdHex.toLowerCase())) ||
+          (dev.name && addr.includes(dev.name.toLowerCase())) ||
+          (printer.name && dev.name.toLowerCase().includes(printer.name.toLowerCase()))
+      );
+    },
+    [connectedUsbDevices]
+  );
 
   // Asegurar que las sedes estén cargadas
   useEffect(() => {
@@ -138,6 +176,43 @@ export const useHardwarePrinters = () => {
   const testPrint = async (printer: PrinterDevice) => {
     if (!selectedBranchId) return;
     setTestingId(printer.id);
+
+    // Si la impresora es USB directa / OTG, intentar enviar la prueba física directamente desde la tablet
+    if (printer.connectionType === 'usb_direct') {
+      try {
+        const usbResult = await usbPrinterService.printTestTicket(
+          printer.ipAddress || printer.name,
+          printer.name,
+          (printer.paperWidth as any) || '80'
+        );
+
+        if (usbResult.success) {
+          setTestResult({
+            id: printer.id,
+            success: true,
+            msg: 'Ticket de prueba impreso físicamente por cable USB OTG',
+          });
+          toast.success(usbResult.message);
+          setTestingId(null);
+          setTimeout(() => setTestResult(null), 6000);
+          return;
+        } else {
+          setTestResult({
+            id: printer.id,
+            success: false,
+            msg: usbResult.message,
+          });
+          toast.error(usbResult.message);
+          setTestingId(null);
+          setTimeout(() => setTestResult(null), 6000);
+          return;
+        }
+      } catch (err: any) {
+        console.warn('Error en prueba física USB:', err);
+      }
+    }
+
+    // Para red TCP u otras conexiones, enviar a través de API backend
     const res = await settingsApi.testPrint(selectedBranchId, printer.id);
     setTestResult(res);
     setTestingId(null);
@@ -153,6 +228,9 @@ export const useHardwarePrinters = () => {
     editingPrinter,
     testingId,
     testResult,
+    connectedUsbDevices,
+    checkUsbConnected,
+    refreshUsbDevices,
     tabletCashierPrinterId,
     tabletKitchenPrinterId,
     setTabletDefaultPrinter,

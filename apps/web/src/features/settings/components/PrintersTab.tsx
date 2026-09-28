@@ -98,6 +98,7 @@ export const PrintersTab: React.FC<Props> = ({
     editingPrinter,
     testingId,
     testResult,
+    checkUsbConnected,
     tabletCashierPrinterId,
     tabletKitchenPrinterId,
     setTabletDefaultPrinter,
@@ -177,6 +178,7 @@ export const PrintersTab: React.FC<Props> = ({
               isTesting={testingId === printer.id}
               testResult={testResult}
               isTabletDefault={printer.id === tabletCashierPrinterId || printer.id === tabletKitchenPrinterId}
+              isUsbConnected={printer.connectionType === 'usb_direct' ? checkUsbConnected(printer) : undefined}
               onToggleTabletDefault={(p) => setTabletDefaultPrinter(p.id, p.station === 'cashier' ? 'cashier' : 'kitchen')}
               onTest={testPrint}
               onEdit={openEditPrinter}

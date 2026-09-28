@@ -67,7 +67,7 @@ export class ModifyOrderItemUseCase {
       if (input.modifiers !== undefined) {
         await this.orderRepo.deleteItemModifiers(itemId, tx);
         if (input.modifiers.length > 0) {
-          const modifiersToInsert = input.modifiers.map((mod) => ({
+          const modifiersToInsert = input.modifiers.map((mod: any) => ({
             orderItemId: itemId,
             modifierId: mod.modifierId,
             priceDelta: (mod.priceDelta || 0).toFixed(2),

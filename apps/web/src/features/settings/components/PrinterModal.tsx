@@ -1,9 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Printer, Bluetooth, Cable, Usb, Globe, Tablet, Search } from 'lucide-react';
+import {
+  Printer,
+  Bluetooth,
+  Cable,
+  Usb,
+  Globe,
+  Tablet,
+  Search,
+  RefreshCw,
+  CheckCircle2,
+  AlertTriangle,
+  Check,
+  Sparkles,
+} from 'lucide-react';
 import { PrinterDevice, PrinterFormData } from '../types/settings.types';
 import { PrinterSchema, PrinterFormValues } from '../schemas/settings.schemas';
+import { usbPrinterService, UsbDeviceItem, UsbTestResult } from '@/services/usb-printer.service';
 import {
   Dialog,
   DialogContent,
@@ -46,6 +60,14 @@ export const PrinterModal: React.FC<Props> = ({
   onSave,
 }) => {
   const [isScanningBt, setIsScanningBt] = useState(false);
+  const [usbDevices, setUsbDevices] = useState<UsbDeviceItem[]>([]);
+  const [isScanningUsb, setIsScanningUsb] = useState(false);
+  const [isTestingUsb, setIsTestingUsb] = useState(false);
+  const [isPrintingUsbTest, setIsPrintingUsbTest] = useState(false);
+  const [usbTestResult, setUsbTestResult] = useState<UsbTestResult | null>(null);
+  const [selectedUsbId, setSelectedUsbId] = useState<string | null>(null);
+
+  const usbSupportInfo = usbPrinterService.isSupported();
 
   const form = useForm<PrinterFormValues, any, PrinterFormValues>({
     resolver: zodResolver(PrinterSchema) as any,
@@ -63,7 +85,52 @@ export const PrinterModal: React.FC<Props> = ({
     },
   });
 
+  const connectionType = form.watch('connectionType');
+
+  // Cargar lista de dispositivos USB vinculados y autorizados
+  const loadUsbDevices = useCallback(async () => {
+    try {
+      const list = await usbPrinterService.getPairedDevices();
+      setUsbDevices(list);
+
+      const currentIp = form.getValues('ipAddress') || '';
+      if (currentIp && list.length > 0) {
+        const matched =
+          list.find(
+            (d) =>
+              currentIp.toLowerCase().includes(d.vendorIdHex.toLowerCase()) &&
+              currentIp.toLowerCase().includes(d.productIdHex.toLowerCase())
+          ) ||
+          list.find((d) => d.name && currentIp.toLowerCase().includes(d.name.toLowerCase()));
+        if (matched) {
+          setSelectedUsbId(matched.id);
+        }
+      }
+    } catch (err) {
+      console.warn('Error al cargar dispositivos USB vinculados:', err);
+    }
+  }, [form]);
+
+  // Monitorear conexión y desconexión en tiempo real del cable USB
   useEffect(() => {
+    if (isOpen && connectionType === 'usb_direct') {
+      loadUsbDevices();
+      const unsub = usbPrinterService.listenDeviceEvents(
+        (connectedDev) => {
+          loadUsbDevices();
+          toast.success(`Impresora USB conectada: ${connectedDev.name}`);
+        },
+        (disconnectedDev) => {
+          loadUsbDevices();
+          toast.warning(`Dispositivo USB desconectado: ${disconnectedDev.name}`);
+        }
+      );
+      return unsub;
+    }
+  }, [isOpen, connectionType, loadUsbDevices]);
+
+  useEffect(() => {
+    setUsbTestResult(null);
     if (editingPrinter) {
       form.reset({
         name: editingPrinter.name,
@@ -90,6 +157,7 @@ export const PrinterModal: React.FC<Props> = ({
         openDrawerOnPrint: false,
         isTabletDefault: true,
       });
+      setSelectedUsbId(null);
     }
   }, [editingPrinter, isOpen, form]);
 
@@ -120,6 +188,115 @@ export const PrinterModal: React.FC<Props> = ({
     }
   };
 
+  const handleScanUsb = async () => {
+    try {
+      setIsScanningUsb(true);
+      const device = await usbPrinterService.requestUsbDevice();
+      setUsbDevices((prev) => {
+        const exists = prev.some((d) => d.id === device.id);
+        return exists ? prev.map((d) => (d.id === device.id ? device : d)) : [device, ...prev];
+      });
+      setSelectedUsbId(device.id);
+
+      const identifier = usbPrinterService.formatIdentifier(device);
+      form.setValue('ipAddress', identifier);
+
+      const currentName = form.getValues('name');
+      if (!currentName || currentName.startsWith('Nueva') || currentName.includes('POS USB')) {
+        form.setValue('name', device.name);
+      }
+
+      toast.success(`Dispositivo USB "${device.name}" vinculado`);
+
+      // Verificar conectividad de inmediato
+      setIsTestingUsb(true);
+      const testRes = await usbPrinterService.testConnection(device);
+      setUsbTestResult(testRes);
+    } catch (err: any) {
+      if (err?.name !== 'NotFoundError' && !err?.message?.includes('No device selected')) {
+        toast.error(err?.message || 'Error al conectar con dispositivo USB');
+      } else {
+        toast.info('Búsqueda cancelada o no se seleccionó dispositivo');
+      }
+    } finally {
+      setIsScanningUsb(false);
+      setIsTestingUsb(false);
+    }
+  };
+
+  const handleScanSerial = async () => {
+    try {
+      setIsScanningUsb(true);
+      const device = await usbPrinterService.requestSerialDevice();
+      setUsbDevices((prev) => [device, ...prev.filter((d) => d.id !== device.id)]);
+      setSelectedUsbId(device.id);
+      const identifier = usbPrinterService.formatIdentifier(device);
+      form.setValue('ipAddress', identifier);
+      if (!form.getValues('name')) {
+        form.setValue('name', device.name);
+      }
+      toast.success(`Puerto serie USB "${device.name}" seleccionado`);
+    } catch (err: any) {
+      if (err?.name !== 'NotFoundError') {
+        toast.error(err?.message || 'Error al seleccionar puerto serie USB');
+      }
+    } finally {
+      setIsScanningUsb(false);
+    }
+  };
+
+  const handleSelectUsbDevice = (device: UsbDeviceItem) => {
+    setSelectedUsbId(device.id);
+    const identifier = usbPrinterService.formatIdentifier(device);
+    form.setValue('ipAddress', identifier);
+    if (!form.getValues('name')) {
+      form.setValue('name', device.name);
+    }
+    setUsbTestResult(null);
+  };
+
+  const handleTestUsbConnection = async () => {
+    const currentIp = form.getValues('ipAddress');
+    if (!currentIp && !selectedUsbId) {
+      toast.error('Primero selecciona o detecta una impresora USB');
+      return;
+    }
+    setIsTestingUsb(true);
+    const selectedDevice = usbDevices.find((d) => d.id === selectedUsbId);
+    const res = await usbPrinterService.testConnection(selectedDevice || currentIp || '');
+    setUsbTestResult(res);
+    if (res.success) {
+      toast.success(res.message);
+    } else {
+      toast.error(res.message);
+    }
+    setIsTestingUsb(false);
+  };
+
+  const handlePrintUsbTestTicket = async () => {
+    const currentIp = form.getValues('ipAddress');
+    if (!currentIp && !selectedUsbId) {
+      toast.error('Primero selecciona o detecta una impresora USB');
+      return;
+    }
+    setIsPrintingUsbTest(true);
+    const selectedDevice = usbDevices.find((d) => d.id === selectedUsbId);
+    const printerName = form.getValues('name') || 'Impresora Térmica USB';
+    const paperWidth = (form.getValues('paperWidth') as any) || '80';
+    const res = await usbPrinterService.printTestTicket(
+      selectedDevice || currentIp || '',
+      printerName,
+      paperWidth
+    );
+    setUsbTestResult(res);
+    if (res.success) {
+      toast.success(res.message);
+    } else {
+      toast.error(res.message);
+    }
+    setIsPrintingUsbTest(false);
+  };
+
   const handleSubmit = form.handleSubmit((values: PrinterFormValues) => {
     onSave({
       name: values.name,
@@ -134,8 +311,6 @@ export const PrinterModal: React.FC<Props> = ({
       isTabletDefault: values.isTabletDefault,
     });
   });
-
-  const connectionType = form.watch('connectionType');
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -348,18 +523,232 @@ export const PrinterModal: React.FC<Props> = ({
               )}
 
               {connectionType === 'usb_direct' && (
-                <div className="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-2">
-                  <div className="flex items-start gap-2">
-                    <Usb className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                    <div>
-                      <span className="text-xs font-bold text-foreground block">
-                        Cable USB Directo / Adaptador OTG
-                      </span>
-                      <span className="text-[11px] text-muted-foreground leading-snug block">
-                        Impresora conectada físicamente al puerto USB o USB-C de la tablet mediante adaptador OTG.
-                      </span>
+                <div className="p-4 rounded-xl border border-amber-500/25 bg-amber-500/5 space-y-3.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2">
+                      <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 mt-0.5">
+                        <Usb className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-foreground block">
+                          Cable USB Directo / Adaptador OTG
+                        </span>
+                        <span className="text-[11px] text-muted-foreground leading-snug block">
+                          Impresora conectada físicamente al puerto USB o USB-C de la tablet / computador.
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={loadUsbDevices}
+                        title="Refrescar lista de dispositivos conectados"
+                        className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-foreground cursor-pointer"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleScanUsb}
+                        disabled={isScanningUsb}
+                        className="h-7 px-2.5 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Search className="w-3.5 h-3.5" />
+                        <span>{isScanningUsb ? 'Buscando...' : 'Detectar Impresora USB'}</span>
+                      </Button>
                     </div>
                   </div>
+
+                  {/* Advertencia si el entorno no soporta WebUSB directamente */}
+                  {!usbSupportInfo.webUsb && (
+                    <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-[11px] flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-semibold block">Detección WebUSB no disponible en este entorno:</span>
+                        <span>
+                          Para detección automática nativa, utiliza Google Chrome o Microsoft Edge en Android o PC con HTTPS o localhost. Puedes ingresar el identificador manualmente abajo.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Listado de dispositivos USB detectados / conectados */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                        Dispositivos USB Conectados ({usbDevices.length})
+                      </span>
+                      {usbSupportInfo.webSerial && (
+                        <button
+                          type="button"
+                          onClick={handleScanSerial}
+                          className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>Buscar por Puerto Serie (CH340/COM)</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {usbDevices.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-2">
+                        {usbDevices.map((dev) => {
+                          const isSelected =
+                            selectedUsbId === dev.id ||
+                            (form.watch('ipAddress')?.toLowerCase().includes(dev.vendorIdHex.toLowerCase()) &&
+                              form.watch('ipAddress')?.toLowerCase().includes(dev.productIdHex.toLowerCase()));
+
+                          return (
+                            <div
+                              key={dev.id}
+                              onClick={() => handleSelectUsbDevice(dev)}
+                              className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                                isSelected
+                                  ? 'border-amber-500/60 bg-amber-500/10 ring-1 ring-amber-500/30 shadow-xs'
+                                  : 'border-border/80 bg-background/80 hover:bg-muted/40'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div
+                                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                    isSelected
+                                      ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                                      : 'bg-muted text-muted-foreground'
+                                  }`}
+                                >
+                                  <Printer className="w-4 h-4" />
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold text-foreground truncate block">
+                                      {dev.name}
+                                    </span>
+                                    {dev.isConnected ? (
+                                      <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold shrink-0">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                        Conectado
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground font-semibold shrink-0">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
+                                        Desconectado
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-mono mt-0.5">
+                                    <span>{dev.manufacturer}</span>
+                                    <span>•</span>
+                                    <span>VID: {dev.vendorIdHex}</span>
+                                    <span>PID: {dev.productIdHex}</span>
+                                    {dev.type === 'webserial' && (
+                                      <span className="text-primary font-semibold">[Serie COM]</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                {isSelected ? (
+                                  <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                    <Check className="w-3 h-3" />
+                                    Seleccionada
+                                  </span>
+                                ) : (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-xs px-2 rounded-lg cursor-pointer"
+                                  >
+                                    Seleccionar
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="p-3.5 rounded-xl border border-dashed border-border/80 bg-background/50 text-center space-y-2">
+                        <p className="text-xs text-muted-foreground">
+                          No se han detectado impresoras USB vinculadas todavía en este navegador.
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleScanUsb}
+                          disabled={isScanningUsb}
+                          className="text-xs font-semibold h-8 rounded-lg border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 cursor-pointer"
+                        >
+                          <Search className="w-3.5 h-3.5 mr-1.5" />
+                          <span>Buscar y Conectar Impresora USB</span>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Panel de Confirmación y Prueba de Conexión en Tiempo Real */}
+                  <div className="p-3 rounded-xl bg-background border border-border/80 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                        Confirmación de Conexión USB
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={isTestingUsb || !form.watch('ipAddress')}
+                          onClick={handleTestUsbConnection}
+                          className="h-7 text-xs font-semibold rounded-lg flex items-center gap-1 cursor-pointer border-border hover:bg-muted"
+                        >
+                          <RefreshCw className={`w-3 h-3 ${isTestingUsb ? 'animate-spin' : ''}`} />
+                          <span>{isTestingUsb ? 'Verificando...' : 'Probar Conexión'}</span>
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={isPrintingUsbTest || !form.watch('ipAddress')}
+                          onClick={handlePrintUsbTestTicket}
+                          className="h-7 text-xs font-bold rounded-lg flex items-center gap-1 cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground"
+                        >
+                          <Printer className={`w-3 h-3 ${isPrintingUsbTest ? 'animate-pulse' : ''}`} />
+                          <span>{isPrintingUsbTest ? 'Imprimiendo...' : 'Imprimir Test Físico'}</span>
+                        </Button>
+                      </div>
+                    </div>
+
+                    {usbTestResult ? (
+                      <div
+                        className={`p-2.5 rounded-lg text-xs flex items-start gap-2 ${
+                          usbTestResult.success
+                            ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30'
+                            : 'bg-destructive/10 text-destructive border border-destructive/30'
+                        }`}
+                      >
+                        {usbTestResult.success ? (
+                          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+                        ) : (
+                          <AlertTriangle className="w-4 h-4 shrink-0 text-destructive mt-0.5" />
+                        )}
+                        <span className="leading-snug">{usbTestResult.message}</span>
+                      </div>
+                    ) : (
+                      <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-amber-500/60 shrink-0" />
+                        <span>
+                          Haz clic en "Probar Conexión" o "Imprimir Test Físico" para confirmar que la impresora responde al cable USB / OTG.
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Campo de identificador USB editable / autogenerado */}
                   <FormField
                     control={form.control}
                     name="ipAddress"
@@ -367,8 +756,15 @@ export const PrinterModal: React.FC<Props> = ({
                       <FormItem>
                         <FormLabel className="text-xs">Identificador o Puerto USB:</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Ej. USB001 o Impresora POS USB" className="text-xs h-9 bg-background" />
+                          <Input
+                            {...field}
+                            placeholder="Ej. USB: Xprinter POS-80 (VID:0x0416 PID:0x5011)"
+                            className="text-xs h-9 bg-background font-mono"
+                          />
                         </FormControl>
+                        <FormDescription className="text-[10px] text-muted-foreground">
+                          Se autocompleta al seleccionar la impresora USB. Puedes editarlo si requieres un alias personalizado.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
