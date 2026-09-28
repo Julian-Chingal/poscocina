@@ -152,37 +152,7 @@ export const SettingsView: React.FC = () => {
 
       {activeTab === 'printer' && (
         <Suspense fallback={<TabSkeleton />}>
-          <PrintersTab
-            paperWidth={form.paperWidth}
-            autoPrintReceipt={form.autoPrintReceipt}
-            receiptHeader={form.receiptHeader}
-            receiptFooter={form.receiptFooter}
-            logoUrl={form.logoUrl}
-            primaryColor={form.primaryColor}
-            companyName={form.companyName}
-            legalName={form.legalName}
-            taxId={form.taxId}
-            venueAddress={form.venueAddress}
-            phone={form.phone}
-            taxType={form.taxType}
-            taxRate={form.taxRate}
-            defaultTipPct={form.defaultTipPct}
-            currency={form.currency}
-            showLogoOnReceipt={form.showLogoOnReceipt}
-            showQrOnReceipt={form.showQrOnReceipt}
-            showWaiterOnReceipt={form.showWaiterOnReceipt}
-            showTaxBreakdown={form.showTaxBreakdown}
-            showResolutionOnReceipt={form.showResolutionOnReceipt}
-            isInvoiceResolutionEnabled={form.isInvoiceResolutionEnabled}
-            invoicePrefix={form.invoicePrefix}
-            invoiceResolution={form.invoiceResolution}
-            invoiceInitialNumber={form.invoiceInitialNumber}
-            invoiceFinalNumber={form.invoiceFinalNumber}
-            invoiceResolutionDate={form.invoiceResolutionDate}
-            onFieldChange={setField}
-            onSaveFormat={saveReceiptFormat}
-            savingFormat={saving}
-          />
+          <PrintersTab />
         </Suspense>
       )}
 

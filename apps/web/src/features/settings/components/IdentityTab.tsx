@@ -15,7 +15,8 @@ import {
   QrCode,
   FileCheck2,
   Quote,
-  Sparkles
+  Sparkles,
+  Printer
 } from 'lucide-react';
 import { IdentityPreviewCard } from './IdentityPreviewCard';
 import { ColorPickerSection, GastronomicThemePreset } from './ColorPickerSection';
@@ -125,7 +126,7 @@ export const IdentityTab: React.FC<Props> = ({
             </div>
 
             <Tabs value={activeStudioTab} onValueChange={setActiveStudioTab} className="w-full">
-              <TabsList className="grid grid-cols-4 w-full h-10 p-1 bg-muted/60 rounded-xl mb-3">
+              <TabsList className="grid grid-cols-3 w-full h-10 p-1 bg-muted/60 rounded-xl mb-3">
                 <TabsTrigger
                   value="business"
                   className="flex items-center justify-center gap-1.5 text-xs font-semibold py-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-xs"
@@ -151,15 +152,6 @@ export const IdentityTab: React.FC<Props> = ({
                   <ImageIcon className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Logotipo & Medios</span>
                   <span className="sm:hidden">Logo</span>
-                </TabsTrigger>
-
-                <TabsTrigger
-                  value="receipt"
-                  className="flex items-center justify-center gap-1.5 text-xs font-semibold py-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-xs"
-                >
-                  <Receipt className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Ticket & QR</span>
-                  <span className="sm:hidden">Ticket</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -458,134 +450,23 @@ export const IdentityTab: React.FC<Props> = ({
                   </div>
                 </div>
 
-                {/* Printing Rules for Logo */}
+                {/* Nota de impresión térmica centralizada en la APK */}
                 <div className="pt-4 border-t border-border/60">
-                  <div className="flex items-center justify-between p-3 rounded-xl border border-border/80 bg-background">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="showLogoOnReceipt" className="text-xs font-bold text-foreground cursor-pointer block">
-                        Imprimir logotipo en tickets de caja
-                      </Label>
-                      <span className="text-[11px] text-muted-foreground block">
-                        Convierte el logotipo a mapa de bits monocromático de alta densidad para impresoras térmicas.
-                      </span>
+                  <div className="flex items-center justify-between p-3.5 rounded-xl border border-border/80 bg-muted/20 text-xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
+                        <Printer className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-bold text-foreground block truncate">
+                          Logotipo e Ícono de Recibos Térmicos
+                        </span>
+                        <span className="text-[11px] text-muted-foreground block">
+                          La selección de imagen, escala y activación del logo en comprobantes impresos es gestionada de manera exclusiva por la APK local <strong className="text-foreground">Zogui Print Bridge</strong>.
+                        </span>
+                      </div>
                     </div>
-                    <Switch
-                      id="showLogoOnReceipt"
-                      checked={showLogoOnReceipt}
-                      onCheckedChange={(checked) => onFieldChange('showLogoOnReceipt', checked)}
-                    />
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* ======================================================== */}
-            {/* SUB-PANEL 4: TICKETS, CÓDIGO QR Y FORMATOS               */}
-            {/* ======================================================== */}
-            {activeStudioTab === 'receipt' && (
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-1">
-                    Personalización de Tickets ESC/POS
-                  </h4>
-                  <p className="text-xs text-muted-foreground">
-                    Modifica los mensajes de bienvenida, despedida y códigos QR impresos en las comandas.
-                  </p>
-                </div>
-
-                {/* Ancho de papel */}
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-foreground">Ancho de Impresora Térmica</Label>
-                  <div className="grid grid-cols-2 gap-3 max-w-xs">
-                    {[
-                      { width: 80, label: '80 mm (Estándar)', desc: '48 columnas' },
-                      { width: 58, label: '58 mm (Compacto)', desc: '32 columnas' },
-                    ].map((w) => (
-                      <button
-                        key={w.width}
-                        type="button"
-                        onClick={() => onFieldChange('paperWidth', w.width)}
-                        className={cn(
-                          'p-2.5 rounded-xl border text-center transition-all cursor-pointer',
-                          paperWidth === w.width
-                            ? 'border-primary bg-primary/10 text-primary font-bold ring-2 ring-primary/20'
-                            : 'border-border/80 bg-background text-muted-foreground hover:text-foreground'
-                        )}
-                      >
-                        <span className="text-xs block font-bold">{w.label}</span>
-                        <span className="text-[10px] text-muted-foreground block">{w.desc}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Encabezado y Pie */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-foreground">Encabezado del Ticket</Label>
-                    <Input
-                      type="text"
-                      value={receiptHeader}
-                      onChange={(e) => onFieldChange('receiptHeader', e.target.value)}
-                      placeholder="Ej. ¡Bienvenidos a la mejor mesa!"
-                      className="h-10 text-sm bg-background"
-                    />
-                    <span className="text-[10px] text-muted-foreground block">
-                      Aparece justo debajo del logotipo.
-                    </span>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-foreground">Pie de Página del Ticket</Label>
-                    <Input
-                      type="text"
-                      value={receiptFooter}
-                      onChange={(e) => onFieldChange('receiptFooter', e.target.value)}
-                      placeholder="Ej. ¡Gracias por su visita! Síguenos en @poscocina"
-                      className="h-10 text-sm bg-background"
-                    />
-                    <span className="text-[10px] text-muted-foreground block">
-                      Mensaje de agradecimiento o redes sociales.
-                    </span>
-                  </div>
-                </div>
-
-                {/* Generador de Código QR en Ticket */}
-                <div className="pt-4 border-t border-border/60 space-y-4">
-                  <div className="flex items-center justify-between p-3 rounded-xl border border-border/80 bg-background">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="showQrOnReceipt" className="text-xs font-bold text-foreground cursor-pointer flex items-center gap-2">
-                        <QrCode className="w-4 h-4 text-primary" />
-                        Imprimir Código QR al pie del ticket
-                      </Label>
-                      <span className="text-[11px] text-muted-foreground block">
-                        Permite a los comensales escanear con su teléfono para ver menú, calificar o pagar digitalmente.
-                      </span>
-                    </div>
-                    <Switch
-                      id="showQrOnReceipt"
-                      checked={showQrOnReceipt}
-                      onCheckedChange={(checked) => onFieldChange('showQrOnReceipt', checked)}
-                    />
-                  </div>
-
-                  {showQrOnReceipt && (
-                    <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-2">
-                      <Label className="text-xs font-semibold text-foreground">
-                        Enlace o URL de Destino del Código QR
-                      </Label>
-                      <Input
-                        type="url"
-                        value={qrUrl}
-                        onChange={(e) => onFieldChange('qrUrl', e.target.value)}
-                        placeholder="https://poscocina.com/menu-digital"
-                        className="h-10 text-xs font-mono bg-background"
-                      />
-                      <p className="text-[10.5px] text-muted-foreground">
-                        Se generará automáticamente una matriz QR nítida al pie de cada recibo impreso.
-                      </p>
-                    </div>
-                  )}
                 </div>
               </div>
             )}

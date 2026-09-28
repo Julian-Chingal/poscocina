@@ -1,14 +1,13 @@
 import React from 'react';
-import { Plus, Printer, Store, Smartphone } from 'lucide-react';
+import { Plus, Printer, Store, Smartphone, Receipt, CheckCircle2 } from 'lucide-react';
 import { useHardwarePrinters } from '../hooks/useHardwarePrinters';
 import { localBridgePrinterService } from '@/services/local-bridge-printer.service';
 import { PrinterCard } from './PrinterCard';
 import { PrinterModal } from './PrinterModal';
-import { ReceiptPreviewCard } from './ReceiptPreviewCard';
-import { ReceiptSettingsCard } from './ReceiptSettingsCard';
 import { PaperWidth, TaxType, PrinterDevice } from '../types/settings.types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { toast } from '@/components/ui/sileo';
 import {
   Select,
   SelectContent,
@@ -28,21 +27,21 @@ import {
 } from '@/components/ui/alert-dialog';
 
 interface Props {
-  paperWidth: PaperWidth;
-  autoPrintReceipt: boolean;
-  receiptHeader: string;
-  receiptFooter: string;
-  logoUrl: string;
-  primaryColor: string;
-  companyName: string;
+  paperWidth?: PaperWidth;
+  autoPrintReceipt?: boolean;
+  receiptHeader?: string;
+  receiptFooter?: string;
+  logoUrl?: string;
+  primaryColor?: string;
+  companyName?: string;
   legalName?: string;
-  taxId: string;
-  venueAddress: string;
-  phone: string;
-  taxType: TaxType;
-  taxRate: string;
-  defaultTipPct: string;
-  currency: string;
+  taxId?: string;
+  venueAddress?: string;
+  phone?: string;
+  taxType?: TaxType;
+  taxRate?: string;
+  defaultTipPct?: string;
+  currency?: string;
   showLogoOnReceipt?: boolean;
   showQrOnReceipt?: boolean;
   showWaiterOnReceipt?: boolean;
@@ -54,42 +53,12 @@ interface Props {
   invoiceInitialNumber?: string;
   invoiceFinalNumber?: string;
   invoiceResolutionDate?: string;
-  onFieldChange: (field: any, val: any) => void;
+  onFieldChange?: (field: any, val: any) => void;
   onSaveFormat?: () => void;
   savingFormat?: boolean;
 }
 
-export const PrintersTab: React.FC<Props> = ({
-  paperWidth,
-  autoPrintReceipt,
-  receiptHeader,
-  receiptFooter,
-  logoUrl,
-  primaryColor,
-  companyName,
-  legalName,
-  taxId,
-  venueAddress,
-  phone,
-  taxType,
-  taxRate,
-  defaultTipPct,
-  currency,
-  showLogoOnReceipt,
-  showQrOnReceipt,
-  showWaiterOnReceipt,
-  showTaxBreakdown,
-  showResolutionOnReceipt,
-  isInvoiceResolutionEnabled,
-  invoicePrefix,
-  invoiceResolution,
-  invoiceInitialNumber,
-  invoiceFinalNumber,
-  invoiceResolutionDate,
-  onFieldChange,
-  onSaveFormat,
-  savingFormat,
-}) => {
+export const PrintersTab: React.FC<Props> = () => {
   const {
     venues,
     selectedBranchId,
@@ -115,6 +84,7 @@ export const PrintersTab: React.FC<Props> = ({
   const [printerToDelete, setPrinterToDelete] = React.useState<PrinterDevice | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isApkOnline, setIsApkOnline] = React.useState<boolean | null>(null);
+  const [isTestingApk, setIsTestingApk] = React.useState(false);
 
   React.useEffect(() => {
     let mounted = true;
@@ -141,8 +111,29 @@ export const PrintersTab: React.FC<Props> = ({
     }
   };
 
+  const handleTestFromApk = async () => {
+    setIsTestingApk(true);
+    try {
+      const online = await localBridgePrinterService.isOnline(true);
+      setIsApkOnline(online);
+      if (online) {
+        const res = await localBridgePrinterService.testPrint();
+        if (res.success) {
+          toast.success(res.message || 'Ticket de prueba impreso físicamente por la APK');
+        } else {
+          toast.error(res.error || 'Error al imprimir prueba desde la APK');
+        }
+      } else {
+        toast.error('La APK Zogui Print Bridge no está respondiendo en el puerto 8080');
+      }
+    } finally {
+      setIsTestingApk(false);
+    }
+  };
+
   return (
     <div className="w-full min-w-0 space-y-8">
+      {/* 1. Gestión de Dispositivos e Impresoras */}
       <Card className="w-full min-w-0 p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-border gap-4 mb-5">
           <div className="space-y-1">
@@ -250,52 +241,49 @@ export const PrintersTab: React.FC<Props> = ({
         </div>
       </Card>
 
-      <div className="w-full min-w-0 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="w-full min-w-0 lg:col-span-2">
-          <ReceiptSettingsCard
-            paperWidth={paperWidth}
-            autoPrintReceipt={autoPrintReceipt}
-            receiptHeader={receiptHeader}
-            receiptFooter={receiptFooter}
-            showLogoOnReceipt={showLogoOnReceipt}
-            showQrOnReceipt={showQrOnReceipt}
-            showWaiterOnReceipt={showWaiterOnReceipt}
-            showTaxBreakdown={showTaxBreakdown}
-            showResolutionOnReceipt={showResolutionOnReceipt}
-            onFieldChange={onFieldChange}
-            onSaveFormat={onSaveFormat}
-            saving={savingFormat}
-          />
-        </div>
+      {/* 2. Centralización Exclusiva de Recibos en la APK */}
+      <Card className="w-full min-w-0 p-6 shadow-sm border-border bg-card">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-2xl bg-primary/10 text-primary shrink-0 mt-0.5">
+              <Receipt className="w-6 h-6" />
+            </div>
+            <div className="space-y-1.5 max-w-2xl">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="text-base font-bold text-foreground">
+                  Configuración de Recibos Centralizada en la APK
+                </h4>
+                <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                  Control Exclusivo por Dispositivo
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                El <strong className="text-foreground">ancho de papel (58mm / 80mm)</strong>, la <strong className="text-foreground">familia de fuentes ESC/POS (Fuente A / Fuente B)</strong>, el <strong className="text-foreground">tamaño del texto</strong>, el <strong className="text-foreground">logotipo o ícono monocromático</strong>, el corte automático y los textos de encabezado/pie de ticket son gestionados de manera 100% autónoma y exclusiva por la aplicación nativa <strong className="text-foreground">Zogui Print Bridge (APK)</strong> instalada en este terminal.
+              </p>
+              <div className="flex flex-wrap items-center gap-2 pt-2 text-[11px] text-muted-foreground">
+                <span className="px-2.5 py-1 rounded-lg bg-muted/60 border border-border/60 font-medium">📄 Papel Térmico (58mm / 80mm)</span>
+                <span className="px-2.5 py-1 rounded-lg bg-muted/60 border border-border/60 font-medium">🔤 Fuentes ESC/POS (Fuente A / B)</span>
+                <span className="px-2.5 py-1 rounded-lg bg-muted/60 border border-border/60 font-medium">🖼️ Ícono / Logo Raster Monocromático</span>
+                <span className="px-2.5 py-1 rounded-lg bg-muted/60 border border-border/60 font-medium">✂️ Auto-corte & Cajón Monedero</span>
+              </div>
+            </div>
+          </div>
 
-        <ReceiptPreviewCard
-          paperWidth={paperWidth}
-          logoUrl={logoUrl}
-          primaryColor={primaryColor}
-          companyName={companyName}
-          legalName={legalName}
-          taxId={taxId}
-          venueAddress={venueAddress}
-          phone={phone}
-          receiptHeader={receiptHeader}
-          receiptFooter={receiptFooter}
-          taxType={taxType}
-          taxRate={taxRate}
-          defaultTipPct={defaultTipPct}
-          currency={currency}
-          showLogoOnReceipt={showLogoOnReceipt}
-          showQrOnReceipt={showQrOnReceipt}
-          showWaiterOnReceipt={showWaiterOnReceipt}
-          showTaxBreakdown={showTaxBreakdown}
-          showResolutionOnReceipt={showResolutionOnReceipt}
-          isInvoiceResolutionEnabled={isInvoiceResolutionEnabled}
-          invoicePrefix={invoicePrefix}
-          invoiceResolution={invoiceResolution}
-          invoiceInitialNumber={invoiceInitialNumber}
-          invoiceFinalNumber={invoiceFinalNumber}
-          invoiceResolutionDate={invoiceResolutionDate}
-        />
-      </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isTestingApk}
+              onClick={handleTestFromApk}
+              className="text-xs font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer h-10 px-4 border-border/80 hover:bg-primary/5 hover:border-primary/40 transition"
+            >
+              <Printer className="w-4 h-4 text-primary" />
+              <span>{isTestingApk ? 'Enviando prueba...' : 'Imprimir Prueba desde APK'}</span>
+            </Button>
+          </div>
+        </div>
+      </Card>
 
       <PrinterModal
         isOpen={isModalOpen}
