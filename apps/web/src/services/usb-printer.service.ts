@@ -2,6 +2,7 @@
  * Servicio robusto para gestión, sincronización, persistencia en memoria
  * y transmisión física con impresoras USB y USB-OTG mediante WebUSB y Web Serial.
  */
+import { localBridgePrinterService } from './local-bridge-printer.service';
 
 export interface UsbDeviceItem {
   id: string;
@@ -127,6 +128,27 @@ class UsbPrinterService {
    */
   async refreshDevicesList(): Promise<UsbDeviceItem[]> {
     const list: UsbDeviceItem[] = [];
+
+    // 0. Controlador nativo Flutter (Zogui Print Bridge)
+    try {
+      if (await localBridgePrinterService.isOnline()) {
+        const bridgePrinters = await localBridgePrinterService.getPrinters();
+        for (const bp of bridgePrinters) {
+          list.push({
+            id: bp.name,
+            name: bp.name,
+            manufacturer: bp.driverName || 'Controlador Nativo',
+            vendorIdHex: '0x0000',
+            productIdHex: '0x0000',
+            type: 'webusb',
+            isConnected: bp.isOnline,
+            rawDevice: { bridge: true, name: bp.name },
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Aviso leyendo impresoras del puente local Flutter:', e);
+    }
 
     // 1. WebUSB
     if (typeof navigator !== 'undefined' && 'usb' in navigator) {
@@ -286,6 +308,20 @@ class UsbPrinterService {
     promptIfNoDevice = true
   ): Promise<UsbTestResult> {
     try {
+      // 0. Si el controlador nativo Flutter está activo, enviar directamente
+      try {
+        if (await localBridgePrinterService.isOnline()) {
+          const targetName = printerName || (typeof deviceOrId === 'string' ? deviceOrId : deviceOrId?.name);
+          const bridgeRes = await localBridgePrinterService.testPrint(targetName);
+          if (bridgeRes.success) {
+            return {
+              success: true,
+              message: bridgeRes.message || 'Ticket de prueba impreso físicamente vía Zogui Print Bridge',
+            };
+          }
+        }
+      } catch (_) {}
+
       let paired = await this.getPairedDevices();
       let targetDevice: UsbDeviceItem | null = null;
 
@@ -343,6 +379,24 @@ class UsbPrinterService {
     promptIfNoDevice = false
   ): Promise<UsbTestResult> {
     try {
+      // 0. Si el controlador nativo Flutter está activo, enviar directamente
+      try {
+        if (await localBridgePrinterService.isOnline()) {
+          const targetName = typeof deviceOrIdentifier === 'string' ? deviceOrIdentifier : deviceOrIdentifier?.name;
+          const bridgeRes = await localBridgePrinterService.print({
+            printer: targetName,
+            data: base64OrBuffer,
+            cut: true,
+          });
+          if (bridgeRes.success) {
+            return {
+              success: true,
+              message: bridgeRes.message || 'Impreso vía Zogui Print Bridge',
+            };
+          }
+        }
+      } catch (_) {}
+
       let buffer: Uint8Array;
       if (typeof base64OrBuffer === 'string') {
         const binaryStr = atob(base64OrBuffer);
