@@ -39,7 +39,7 @@ export type EditVenueFormValues = z.infer<typeof EditVenueSchema>;
 export const PrinterSchema = z.object({
   name: z.string().trim().min(2, 'El nombre de la impresora es obligatorio'),
   station: z.enum(['kitchen', 'bar', 'dessert', 'cashier', 'expediter']),
-  connectionType: z.enum(['network_tcp', 'bluetooth', 'usb_direct', 'browser_raw', 'disabled']),
+  connectionType: z.enum(['network_tcp', 'bluetooth', 'usb_direct', 'browser_raw', 'disabled', 'zogui_bridge']),
   ipAddress: z.string().optional(),
   port: z.number().min(1).max(65535),
   paperWidth: z.enum(['80', '58']),

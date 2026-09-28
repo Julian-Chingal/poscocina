@@ -3,7 +3,7 @@ export interface PrinterRecord {
   venueId: string;
   name: string;
   station: 'kitchen' | 'bar' | 'dessert' | 'cashier';
-  connectionType: 'network_tcp' | 'usb_raw' | 'usb_direct' | 'bluetooth' | 'browser_raw' | 'serial' | 'system_spooler';
+  connectionType: 'network_tcp' | 'usb_raw' | 'usb_direct' | 'bluetooth' | 'browser_raw' | 'serial' | 'system_spooler' | 'zogui_bridge';
   ipAddress: string | null;
   port: number;
   paperWidth: '58' | '80';

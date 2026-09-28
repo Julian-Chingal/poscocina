@@ -46,6 +46,25 @@ class LocalBridgePrinterService {
     return this.isConnected;
   }
 
+  get url(): string {
+    return this.bridgeUrl;
+  }
+
+  get host(): string {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('poscocina_bridge_host') || '127.0.0.1';
+    }
+    return '127.0.0.1';
+  }
+
+  get port(): number {
+    if (typeof window !== 'undefined') {
+      const p = localStorage.getItem('poscocina_bridge_port');
+      return p ? parseInt(p, 10) : 8080;
+    }
+    return 8080;
+  }
+
   constructor() {
     if (typeof window !== 'undefined') {
       const savedHost = localStorage.getItem('poscocina_bridge_host');

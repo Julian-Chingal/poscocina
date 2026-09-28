@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Edit2, Trash2, CheckCircle2, AlertTriangle, Cable, Bluetooth, Usb, Globe, Star } from 'lucide-react';
+import { Play, Edit2, Trash2, CheckCircle2, AlertTriangle, Cable, Bluetooth, Usb, Globe, Star, Smartphone } from 'lucide-react';
 import { PrinterDevice, TestPrintResult } from '../types/settings.types';
 import { STATION_LABELS } from '../constants/settings.constants';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,13 @@ export const PrinterCard: React.FC<Props> = ({
 
   const renderConnectionBadge = () => {
     switch (printer.connectionType) {
+      case 'zogui_bridge':
+        return (
+          <div className="flex items-center space-x-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-mono">
+            <Smartphone className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">APK: {printer.ipAddress || 'Predeterminada'}</span>
+          </div>
+        );
       case 'network_tcp':
         return (
           <div className="flex items-center space-x-1.5 text-xs text-primary font-mono">

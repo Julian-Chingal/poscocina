@@ -2,7 +2,7 @@ import { VenueItem } from '@/stores/branding.store';
 
 export type SettingsTab = 'identity' | 'tax' | 'printer' | 'venues' | 'appearance';
 export type PrinterStation = 'cashier' | 'kitchen' | 'bar' | 'dessert' | 'expediter';
-export type PrinterConnectionType = 'network_tcp' | 'bluetooth' | 'usb_direct' | 'browser_raw' | 'disabled';
+export type PrinterConnectionType = 'network_tcp' | 'bluetooth' | 'usb_direct' | 'browser_raw' | 'disabled' | 'zogui_bridge';
 export type TaxType = 'INC_8' | 'IVA_19' | 'EXENTO';
 export type PaperWidth = 58 | 80;
 

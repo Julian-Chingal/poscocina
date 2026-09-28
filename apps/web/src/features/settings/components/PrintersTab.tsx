@@ -1,6 +1,7 @@
 import React from 'react';
-import { Plus, Printer, Store } from 'lucide-react';
+import { Plus, Printer, Store, Smartphone } from 'lucide-react';
 import { useHardwarePrinters } from '../hooks/useHardwarePrinters';
+import { localBridgePrinterService } from '@/services/local-bridge-printer.service';
 import { PrinterCard } from './PrinterCard';
 import { PrinterModal } from './PrinterModal';
 import { ReceiptPreviewCard } from './ReceiptPreviewCard';
@@ -113,6 +114,21 @@ export const PrintersTab: React.FC<Props> = ({
 
   const [printerToDelete, setPrinterToDelete] = React.useState<PrinterDevice | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isApkOnline, setIsApkOnline] = React.useState<boolean | null>(null);
+
+  React.useEffect(() => {
+    let mounted = true;
+    const checkStatus = async () => {
+      const online = await localBridgePrinterService.isOnline();
+      if (mounted) setIsApkOnline(online);
+    };
+    checkStatus();
+    const interval = setInterval(checkStatus, 4000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const handleConfirmDelete = async () => {
     if (!printerToDelete) return;
@@ -130,12 +146,29 @@ export const PrintersTab: React.FC<Props> = ({
       <Card className="w-full min-w-0 p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-border gap-4 mb-5">
           <div className="space-y-1">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 flex-wrap gap-y-1">
               <Printer className="w-5 h-5 text-primary" />
               <h3 className="font-bold text-foreground text-base">Dispositivos e Impresoras Térmicas</h3>
+              {isApkOnline !== null && (
+                <span
+                  className={`inline-flex items-center gap-1.5 text-[10.5px] font-bold px-2 py-0.5 rounded-full ${
+                    isApkOnline
+                      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                      : 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30'
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      isApkOnline ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                    }`}
+                  />
+                  <Smartphone className="w-3 h-3 shrink-0" />
+                  {isApkOnline ? 'APK Zogui Bridge Conectada' : 'APK no detectada'}
+                </span>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Cada sede física opera sus propios periféricos en red local TCP (cable UTP puerto 9100), Bluetooth o USB.
+              Sincroniza tus terminales térmicas con la APK nativa (Zogui Print Bridge) para imprimir directamente por USB, Bluetooth o Red sin límites del navegador.
             </p>
           </div>
 
@@ -195,7 +228,7 @@ export const PrintersTab: React.FC<Props> = ({
               <div className="max-w-md">
                 <h4 className="font-bold text-sm text-foreground">Sin impresoras térmicas en esta sede</h4>
                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  Conecta terminales de impresión ESC/POS de 80mm o 58mm por cable de red UTP (puerto 9100), Bluetooth o adaptador USB directo para comandas y facturas.
+                  Haz clic en "Nueva Impresora" para sincronizar tus impresoras de cocina o caja directamente con la aplicación local Zogui Print Bridge (APK).
                 </p>
               </div>
               <Button
@@ -207,9 +240,10 @@ export const PrintersTab: React.FC<Props> = ({
                 <span>Agregar Primera Impresora</span>
               </Button>
               <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-[11px] text-muted-foreground">
-                <span className="px-2.5 py-1 rounded-lg bg-card border border-border/70 font-medium">🔌 Cable UTP (Puerto 9100)</span>
-                <span className="px-2.5 py-1 rounded-lg bg-card border border-border/70 font-medium">📶 Bluetooth Inalámbrico</span>
-                <span className="px-2.5 py-1 rounded-lg bg-card border border-border/70 font-medium">⚡ Cable USB Directo</span>
+                <span className="px-2.5 py-1 rounded-lg bg-card border border-border/70 font-medium">📱 Sincronización APK</span>
+                <span className="px-2.5 py-1 rounded-lg bg-card border border-border/70 font-medium">⚡ Conexión USB OTG</span>
+                <span className="px-2.5 py-1 rounded-lg bg-card border border-border/70 font-medium">📶 Bluetooth SPP</span>
+                <span className="px-2.5 py-1 rounded-lg bg-card border border-border/70 font-medium">🔌 Red IP (TCP)</span>
               </div>
             </Card>
           )}

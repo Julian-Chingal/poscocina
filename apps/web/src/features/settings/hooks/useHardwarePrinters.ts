@@ -3,6 +3,7 @@ import { useBrandingStore } from '@/stores/branding.store';
 import { settingsApi } from '../api/settings.api';
 import { PrinterDevice, PrinterFormData, TestPrintResult } from '../types/settings.types';
 import { usbPrinterService, UsbDeviceItem } from '@/services/usb-printer.service';
+import { localBridgePrinterService } from '@/services/local-bridge-printer.service';
 import { toast } from '@/components/ui/sileo';
 
 export const useHardwarePrinters = () => {
@@ -199,7 +200,40 @@ export const useHardwarePrinters = () => {
     if (!selectedBranchId) return;
     setTestingId(printer.id);
 
-    // Si la impresora es USB directa / OTG, intentar enviar la prueba física directamente desde la tablet
+    // 0. Si la impresora está sincronizada con la APK Zogui Print Bridge (o es local USB), probar directamente vía APK
+    if (printer.connectionType === 'zogui_bridge' || printer.connectionType === 'usb_direct') {
+      try {
+        if (await localBridgePrinterService.isOnline()) {
+          const targetName = printer.ipAddress || printer.name;
+          const bridgeRes = await localBridgePrinterService.testPrint(targetName);
+          if (bridgeRes.success) {
+            setTestResult({
+              id: printer.id,
+              success: true,
+              msg: bridgeRes.message || 'Ticket de prueba impreso físicamente por la APK',
+            });
+            toast.success(bridgeRes.message || 'Ticket impreso en la APK');
+            setTestingId(null);
+            setTimeout(() => setTestResult(null), 6000);
+            return;
+          } else {
+            setTestResult({
+              id: printer.id,
+              success: false,
+              msg: bridgeRes.error || bridgeRes.message || 'Error al imprimir prueba en la APK',
+            });
+            toast.error(bridgeRes.error || 'Error con la APK');
+            setTestingId(null);
+            setTimeout(() => setTestResult(null), 6000);
+            return;
+          }
+        }
+      } catch (err: any) {
+        console.warn('Error en prueba física con la APK:', err);
+      }
+    }
+
+    // 1. Si la impresora es USB directa / OTG vía navegador (WebUSB), intentar prueba física
     if (printer.connectionType === 'usb_direct') {
       try {
         const usbResult = await usbPrinterService.printTestTicket(
