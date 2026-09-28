@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/sonner';
 import { posApi } from '../api/pos.api';
+import { ManagerPinAuthModal } from './ManagerPinAuthModal';
 
 interface ActiveOrderItemsListProps {
   order: any;
@@ -14,6 +15,7 @@ interface ActiveOrderItemsListProps {
 
 export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ order, onRefreshOrder }) => {
   const [editingItem, setEditingItem] = useState<any | null>(null);
+  const [itemToVoid, setItemToVoid] = useState<any | null>(null);
   const [newNotes, setNewNotes] = useState<string>('');
   const [newQuantity, setNewQuantity] = useState<number>(1);
   const [isConsultingKitchen, setIsConsultingKitchen] = useState<boolean>(false);
@@ -93,18 +95,18 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
     }
   };
 
-  const handleDeleteItem = async (item: any) => {
-    const isAdvanced = ['in_preparation', 'ready', 'delivered'].includes(item.status);
-    if (isAdvanced) {
-      const confirmKitchen = window.confirm(
-        `El ítem "${item.product?.name}" ya está en ${item.status}. ¿Se consultó y autorizó con cocina eliminarlo?`
-      );
-      if (!confirmKitchen) return;
-    }
+  const handleDeleteItem = (item: any) => {
+    setItemToVoid(item);
+  };
+
+  const handleAuthorizedVoid = async (authInfo: { managerId: string; managerName: string; reason: string }) => {
+    if (!itemToVoid) return;
+    const isAdvanced = ['in_preparation', 'ready', 'delivered'].includes(itemToVoid.status);
 
     try {
-      await posApi.deleteOrderItem(item.id, isAdvanced);
-      toast.success('Ítem eliminado de la comanda');
+      await posApi.deleteOrderItem(itemToVoid.id, isAdvanced);
+      toast.success(`Ítem eliminado. Autorizado por: ${authInfo.managerName}`);
+      setItemToVoid(null);
       onRefreshOrder();
     } catch (err: any) {
       if (err.statusCode === 409 || err.response?.status === 409) {
@@ -240,6 +242,15 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Manager PIN Authorization Modal */}
+      <ManagerPinAuthModal
+        isOpen={Boolean(itemToVoid)}
+        item={itemToVoid}
+        venueId={order?.venueId}
+        onClose={() => setItemToVoid(null)}
+        onSuccess={handleAuthorizedVoid}
+      />
     </div>
   );
 };

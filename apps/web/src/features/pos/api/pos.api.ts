@@ -46,4 +46,12 @@ export const posApi = {
 
   deleteOrderItem: (itemId: string, kitchenApproved = false) =>
     api.delete(`/order-items/${itemId}?kitchenApproved=${kitchenApproved}`),
+
+  managerOverride: (payload: {
+    venueId: string;
+    managerPin: string;
+    action: string;
+    reason: string;
+  }): Promise<{ authorized: boolean; managerId: string; managerName: string; action: string }> =>
+    api.post('/auth/manager-override', payload),
 };
