@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense } from "react";
+import React, { useState, useCallback, lazy, Suspense } from "react";
 import { TopBar } from "./components/TopBar";
 import { AppLauncherView } from "./components/navigation/launcher";
 import { ViewLoadingFallback } from "./components/ViewLoadingFallback";
@@ -47,8 +47,12 @@ export const App: React.FC = () => {
     previousViewTitle,
   } = useHashRouter();
 
+  const handleNavigateHome = useCallback(() => {
+    handleNavigate("home");
+  }, [handleNavigate]);
+
   useGlobalKeyboardShortcuts(handleNavigate, handleBack);
-  useAppSocketEvents(() => handleNavigate("home"));
+  useAppSocketEvents(handleNavigateHome);
 
   const handleSelectTable = (table: TableItem) => {
     setSelectedTable(table);

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { toast } from '../components/ui/sonner';
 import { useAuthStore } from '../stores/auth.store';
@@ -9,6 +9,9 @@ export const useAppSocketEvents = (onNavigateHome: () => void) => {
   const venueId = useAuthStore((s) => s.venueId);
   const logout = useAuthStore((s) => s.logout);
   const loadBranding = useBrandingStore((s) => s.loadBranding);
+
+  const onNavigateHomeRef = useRef(onNavigateHome);
+  onNavigateHomeRef.current = onNavigateHome;
 
   useEffect(() => {
     const socket = io();
@@ -24,7 +27,7 @@ export const useAppSocketEvents = (onNavigateHome: () => void) => {
       if (current && current.id === payload.userId) {
         toast.error('Tu cuenta ha sido desactivada. Comunícate con un administrador.');
         logout();
-        onNavigateHome();
+        onNavigateHomeRef.current();
       }
     };
 
@@ -37,5 +40,5 @@ export const useAppSocketEvents = (onNavigateHome: () => void) => {
       socket.off('user:deactivated', handleUserDeactivated);
       socket.disconnect();
     };
-  }, [venueId, loadBranding, logout, onNavigateHome]);
+  }, [venueId, loadBranding, logout]);
 };

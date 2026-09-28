@@ -33,6 +33,7 @@ import {
   FormMessage,
   FormDescription,
 } from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -353,9 +354,9 @@ export const PrinterModal: React.FC<Props> = ({
 
                   {/* Selector de Impresoras detectadas por la APK */}
                   <div className="space-y-1.5 pt-1">
-                    <FormLabel className="text-xs font-bold text-foreground">
+                    <Label className="text-xs font-bold text-foreground">
                       Impresora Vinculada en la APK: *
-                    </FormLabel>
+                    </Label>
                     <Select
                       value={form.watch('ipAddress') || '__default__'}
                       onValueChange={(val) => {

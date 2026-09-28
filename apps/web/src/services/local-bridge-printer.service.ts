@@ -125,7 +125,7 @@ class LocalBridgePrinterService {
       return isOk;
     } catch {
       this.cachedOnlineStatus = false;
-      this.checkCacheTimeout = now + 2000;
+      this.checkCacheTimeout = now + 10000; // Cachear estado offline por 10s para evitar flood en consola
       return false;
     }
   }
