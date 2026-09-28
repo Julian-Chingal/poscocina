@@ -48,23 +48,36 @@ class LocalBridgePrinterService {
 
   constructor() {
     if (typeof window !== 'undefined') {
+      const savedHost = localStorage.getItem('poscocina_bridge_host');
       const savedPort = localStorage.getItem('poscocina_bridge_port');
-      if (savedPort) {
+      if (savedHost) {
+        this.setHost(savedHost, savedPort ? parseInt(savedPort, 10) : 8080);
+      } else if (savedPort) {
         this.setPort(parseInt(savedPort, 10));
       }
     }
   }
 
   /**
-   * Configura el puerto del controlador local si difiere de 8080
+   * Configura el host / IP del controlador (por defecto 127.0.0.1 o IP de red local)
    */
-  setPort(port: number) {
-    this.bridgeUrl = `http://127.0.0.1:${port}`;
-    this.wsUrl = `ws://127.0.0.1:${port}/ws`;
+  setHost(host: string, port = 8080) {
+    const cleanHost = host.replace(/^https?:\/\//, '').replace(/\/.*$/, '').split(':')[0] || '127.0.0.1';
+    this.bridgeUrl = `http://${cleanHost}:${port}`;
+    this.wsUrl = `ws://${cleanHost}:${port}/ws`;
     if (typeof window !== 'undefined') {
+      localStorage.setItem('poscocina_bridge_host', cleanHost);
       localStorage.setItem('poscocina_bridge_port', port.toString());
     }
     this.cachedOnlineStatus = null;
+  }
+
+  /**
+   * Configura el puerto del controlador local si difiere de 8080
+   */
+  setPort(port: number) {
+    const currentHost = (typeof window !== 'undefined' && localStorage.getItem('poscocina_bridge_host')) || '127.0.0.1';
+    this.setHost(currentHost, port);
   }
 
   /**
