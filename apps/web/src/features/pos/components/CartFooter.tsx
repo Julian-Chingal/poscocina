@@ -50,9 +50,24 @@ export const CartFooter: React.FC<CartFooterProps> = ({
           <span>Impuestos (INC/IVA):</span>
           <span className="font-mono tabular-nums font-medium text-foreground">${taxTotal.toLocaleString()}</span>
         </div>
+        {Number(activeOrder?.totalPaid || 0) > 0 && (
+          <div className="flex justify-between text-muted-foreground pt-1 border-t border-dashed border-border/60">
+            <span>Abonado previamente:</span>
+            <span className="font-mono tabular-nums font-semibold text-emerald-600 dark:text-emerald-400">
+              -${Number(activeOrder.totalPaid).toLocaleString()}
+            </span>
+          </div>
+        )}
         <div className="flex justify-between items-baseline font-bold text-sm text-foreground pt-2 border-t border-border/70">
-          <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Total a Pagar</span>
-          <span className="font-mono tabular-nums text-lg font-black text-primary">${total.toLocaleString()}</span>
+          <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+            {Number(activeOrder?.totalPaid || 0) > 0 ? 'Saldo a Cobrar' : 'Total a Pagar'}
+          </span>
+          <span className="font-mono tabular-nums text-lg font-black text-primary">
+            ${(Number(activeOrder?.totalPaid || 0) > 0 && cartLength === 0 && activeOrder?.pendingBalance !== undefined
+              ? Number(activeOrder.pendingBalance)
+              : total
+            ).toLocaleString()}
+          </span>
         </div>
       </div>
 

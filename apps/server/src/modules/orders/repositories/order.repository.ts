@@ -16,14 +16,34 @@ export class OrderRepository implements IOrderRepository {
   }
 
   async findOrderById(orderId: string, tx = this.database) {
-    return await this.database.query.orders.findFirst({
+    const order = await this.database.query.orders.findFirst({
       where: (orders, { eq }) => eq(orders.id, orderId),
       with: {
         table: true,
         waiter: { columns: { id: true, name: true } },
-        items: { with: { product: true, modifiers: true } },
+        items: {
+          with: {
+            product: true,
+            modifiers: { with: { modifier: true } },
+          },
+        },
+        receipts: { with: { payments: true } },
       },
     });
+
+    if (!order) return null;
+
+    const totalPaid = (order.receipts || []).reduce((acc: number, r: any) => {
+      return acc + parseFloat(r.total || '0');
+    }, 0);
+    const orderTotal = parseFloat(order.total || '0');
+    const pendingBalance = Math.max(0, orderTotal - totalPaid);
+
+    return {
+      ...order,
+      totalPaid: totalPaid.toFixed(2),
+      pendingBalance: pendingBalance.toFixed(2),
+    };
   }
 
   async findKdsOrders(venueId: string, station?: string, includeRecentCompleted = false) {

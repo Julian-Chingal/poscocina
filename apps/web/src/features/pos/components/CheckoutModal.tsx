@@ -71,6 +71,9 @@ export const CheckoutModal: React.FC<Props> = ({
   onDiscountReasonChange,
   onProcessPayment,
 }) => {
+  const totalPaid = parseFloat(order?.totalPaid || '0');
+  const hasPriorPayments = totalPaid > 0.009;
+
   const { baseSubtotal, discountAmount, baseTax, tipAmount, finalTotal } = useMemo(() => {
     if (!order) {
       return { baseSubtotal: 0, discountAmount: 0, baseTax: 0, tipAmount: 0, finalTotal: 0 };
@@ -85,8 +88,15 @@ export const CheckoutModal: React.FC<Props> = ({
     }
 
     const subAfterDiscount = Math.max(0, sub - disc);
-    const tip = (subAfterDiscount * tipPct) / 100;
-    let total = subAfterDiscount + tax + tip;
+    const pendingBalance =
+      order.pendingBalance !== undefined
+        ? parseFloat(order.pendingBalance)
+        : Math.max(0, subAfterDiscount + tax - totalPaid);
+
+    const baseForPay = hasPriorPayments ? pendingBalance : subAfterDiscount + tax;
+    const tipBase = hasPriorPayments ? pendingBalance : subAfterDiscount;
+    const tip = (tipBase * tipPct) / 100;
+    let total = baseForPay + tip;
 
     if (checkoutMode === 'equal' && equalSplitCount > 0) {
       total = total / equalSplitCount;
@@ -99,7 +109,7 @@ export const CheckoutModal: React.FC<Props> = ({
       tipAmount: tip,
       finalTotal: total,
     };
-  }, [order, applyDiscount, discountValue, discountType, tipPct, checkoutMode, equalSplitCount]);
+  }, [order, applyDiscount, discountValue, discountType, tipPct, checkoutMode, equalSplitCount, hasPriorPayments, totalPaid]);
 
   if (!isOpen || !order) return null;
 
@@ -114,7 +124,9 @@ export const CheckoutModal: React.FC<Props> = ({
             <Sparkles className="w-3.5 h-3.5" />
             <span>Facturación POS</span>
           </div>
-          <DialogTitle className="text-xl font-black">Cobro de Orden</DialogTitle>
+          <DialogTitle className="text-xl font-black">
+            {hasPriorPayments ? 'Cobro de Saldo Pendiente' : 'Cobro de Orden'}
+          </DialogTitle>
           <DialogDescription>
             Orden #{order.orderNumber || order.id?.slice(0, 6)}{' '}
             {customer && `• Cliente: ${customer.name}`}
@@ -127,6 +139,7 @@ export const CheckoutModal: React.FC<Props> = ({
           baseTax={baseTax}
           tipPct={tipPct}
           finalTotal={finalTotal}
+          totalPaid={totalPaid}
           checkoutMode={checkoutMode}
           equalSplitCount={equalSplitCount}
           onTipPctChange={onTipPctChange}

@@ -10,6 +10,7 @@ interface CheckoutSummaryProps {
   baseTax: number;
   tipPct: number;
   finalTotal: number;
+  totalPaid?: number;
   checkoutMode: SplitMode;
   equalSplitCount: number;
   onTipPctChange: (pct: number) => void;
@@ -21,14 +22,17 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
   baseTax,
   tipPct,
   finalTotal,
+  totalPaid = 0,
   checkoutMode,
   equalSplitCount,
   onTipPctChange,
 }) => {
+  const hasPriorPayments = totalPaid > 0.009;
+
   return (
     <Card className="p-3.5 bg-muted/40 rounded-2xl border-border mb-4 space-y-1.5 text-xs">
       <div className="flex justify-between text-muted-foreground">
-        <span>Subtotal:</span>
+        <span>Subtotal Alimentos/Bebidas:</span>
         <span className="font-mono text-foreground">${baseSubtotal.toLocaleString()}</span>
       </div>
       {discountAmount > 0 && (
@@ -41,6 +45,14 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
         <span>Impuestos:</span>
         <span className="font-mono text-foreground">${baseTax.toLocaleString()}</span>
       </div>
+
+      {hasPriorPayments && (
+        <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold">
+          <span>(-) Abonos / Pagos Previos:</span>
+          <span className="font-mono">-${totalPaid.toLocaleString()}</span>
+        </div>
+      )}
+
       <div className="flex justify-between text-muted-foreground items-center">
         <span>Propina:</span>
         <div className="flex space-x-1">
@@ -62,7 +74,13 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
       </div>
       <Separator className="my-1" />
       <div className="flex justify-between text-base font-extrabold text-foreground">
-        <span>{checkoutMode === 'equal' ? `Parte (1 de ${equalSplitCount}):` : 'Total a Pagar:'}</span>
+        <span>
+          {checkoutMode === 'equal'
+            ? `Parte (1 de ${equalSplitCount}):`
+            : hasPriorPayments
+            ? 'Saldo Pendiente a Cobrar:'
+            : 'Total a Pagar:'}
+        </span>
         <span className="font-mono text-primary">${finalTotal.toLocaleString()}</span>
       </div>
     </Card>
