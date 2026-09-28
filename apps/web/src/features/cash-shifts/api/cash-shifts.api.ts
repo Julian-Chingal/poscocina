@@ -37,7 +37,7 @@ export const cashShiftsApi = {
   printShiftSummary: async (shiftId: string) => {
     const res: any = await api.post('/hardware/print-shift-summary', { shiftId });
     if (res?.rawEscposBase64) {
-      usbPrinterService.printRawEscpos(res.rawEscposBase64, res.printerName, res.paperWidth || '80').catch((err) => {
+      usbPrinterService.printRawEscpos(res.rawEscposBase64, res.ipAddress || res.printerName, res.paperWidth || '80').catch((err) => {
         console.warn('Error al imprimir cierre de caja USB:', err);
       });
     }
@@ -47,7 +47,7 @@ export const cashShiftsApi = {
   printReceipt: async (receiptId: string) => {
     const res: any = await api.post('/hardware/print-receipt', { receiptId });
     if (res?.rawEscposBase64) {
-      usbPrinterService.printRawEscpos(res.rawEscposBase64, res.printerName, res.paperWidth || '80').catch((err) => {
+      usbPrinterService.printRawEscpos(res.rawEscposBase64, res.ipAddress || res.printerName, res.paperWidth || '80').catch((err) => {
         console.warn('Error al imprimir comprobante USB:', err);
       });
     }

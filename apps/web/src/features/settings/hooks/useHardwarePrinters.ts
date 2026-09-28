@@ -40,7 +40,7 @@ export const useHardwarePrinters = () => {
     (printer: PrinterDevice): boolean => {
       return usbPrinterService.isPrinterConnected(printer);
     },
-    []
+    [connectedUsbDevices]
   );
 
   // Asegurar que las sedes estén cargadas
@@ -163,6 +163,38 @@ export const useHardwarePrinters = () => {
     }
   };
 
+  const connectUsbPrinter = async (printer: PrinterDevice) => {
+    try {
+      const device = await usbPrinterService.requestUsbDevice();
+      await refreshUsbDevices();
+      toast.success(`¡Impresora USB "${device.name}" vinculada con éxito!`);
+
+      const identifier = usbPrinterService.formatIdentifier(device);
+      if (selectedBranchId && printer.ipAddress !== identifier) {
+        await settingsApi.savePrinter(
+          selectedBranchId,
+          {
+            name: printer.name || device.name,
+            station: printer.station,
+            connectionType: 'usb_direct',
+            ipAddress: identifier,
+            port: printer.port || 9100,
+            paperWidth: printer.paperWidth || '80',
+            autoPrintOnOrder: printer.autoPrintOnOrder ?? true,
+            autoPrintOnPayment: printer.autoPrintOnPayment ?? false,
+            openDrawerOnPrint: printer.openDrawerOnPrint ?? false,
+          },
+          printer.id
+        );
+        fetchPrinters();
+      }
+    } catch (err: any) {
+      if (err?.name !== 'NotFoundError') {
+        toast.error(`Aviso: ${err?.message || 'No se seleccionó dispositivo'}`);
+      }
+    }
+  };
+
   const testPrint = async (printer: PrinterDevice) => {
     if (!selectedBranchId) return;
     setTestingId(printer.id);
@@ -173,7 +205,8 @@ export const useHardwarePrinters = () => {
         const usbResult = await usbPrinterService.printTestTicket(
           printer.ipAddress || printer.name,
           printer.name,
-          (printer.paperWidth as any) || '80'
+          (printer.paperWidth as any) || '80',
+          true
         );
 
         if (usbResult.success) {
@@ -220,6 +253,7 @@ export const useHardwarePrinters = () => {
     testResult,
     connectedUsbDevices,
     checkUsbConnected,
+    connectUsbPrinter,
     refreshUsbDevices,
     tabletCashierPrinterId,
     tabletKitchenPrinterId,

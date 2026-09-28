@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Printer, UtensilsCrossed, Play, QrCode, FileText, ChefHat, Receipt } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Printer, UtensilsCrossed, Play, QrCode, FileText, ChefHat, Receipt, Usb, Globe } from 'lucide-react';
 import { PaperWidth, TaxType } from '../types/settings.types';
 import { usbPrinterService } from '@/services/usb-printer.service';
+import { printThermalReceiptIframe, generateSimulationReceiptHtml } from '@/utils/thermal-receipt-printer';
 import {
   Card,
   CardHeader,
@@ -72,17 +73,35 @@ export const ReceiptPreviewCard: React.FC<Props> = ({
 }) => {
   const [mode, setMode] = useState<PreviewMode>('invoice');
   const [isPrintingSim, setIsPrintingSim] = useState(false);
+  const [isPrintingBrowser, setIsPrintingBrowser] = useState(false);
+  const [usbConnected, setUsbConnected] = useState(false);
+  const [usbDeviceName, setUsbDeviceName] = useState<string>('');
 
   const is58 = paperWidth === 58;
 
-  const handleTestPrint = async () => {
-    const modeLabel =
-      mode === 'invoice'
-        ? 'Factura de Venta'
-        : mode === 'precheck'
-        ? 'Pre-cuenta de Mesa'
-        : 'Comanda de Cocina';
+  useEffect(() => {
+    const updateUsbStatus = async () => {
+      try {
+        const list = await usbPrinterService.getPairedDevices();
+        setUsbConnected(list.length > 0);
+        setUsbDeviceName(list[0]?.name || '');
+      } catch {
+        setUsbConnected(false);
+      }
+    };
+    updateUsbStatus();
+    return usbPrinterService.subscribe(updateUsbStatus);
+  }, []);
 
+  const getModeLabel = () =>
+    mode === 'invoice'
+      ? 'Factura de Venta'
+      : mode === 'precheck'
+      ? 'Pre-cuenta de Mesa'
+      : 'Comanda de Cocina';
+
+  const handleUsbPrint = async () => {
+    const modeLabel = getModeLabel();
     setIsPrintingSim(true);
     try {
       const res = await usbPrinterService.printSimulationReceipt({
@@ -94,18 +113,78 @@ export const ReceiptPreviewCard: React.FC<Props> = ({
         phone,
         receiptHeader,
         receiptFooter,
+        promptIfNoDevice: true,
       });
 
       if (res.success) {
         toast.success(`¡${modeLabel} impresa físicamente con éxito por cable USB!`);
       } else {
-        toast.info(`${res.message} Mostrando diálogo nativo del sistema...`);
-        window.print();
+        toast.error(res.message);
       }
     } catch (err: any) {
-      toast.error(`Error al imprimir simulación: ${err?.message || 'Error general'}`);
+      toast.error(`Error al imprimir por USB: ${err?.message || 'Fallo general'}`);
     } finally {
       setIsPrintingSim(false);
+    }
+  };
+
+  const handleBrowserThermalPrint = async () => {
+    const modeLabel = getModeLabel();
+    setIsPrintingBrowser(true);
+    try {
+      const ticketHtml = generateSimulationReceiptHtml({
+        mode,
+        paperWidth: is58 ? '58' : '80',
+        companyName,
+        legalName,
+        taxId,
+        venueAddress,
+        phone,
+        receiptHeader,
+        receiptFooter,
+        taxType,
+        taxRate,
+        defaultTipPct,
+        currency,
+        logoUrl,
+        showLogoOnReceipt,
+        showQrOnReceipt,
+        showWaiterOnReceipt,
+        showTaxBreakdown,
+        showResolutionOnReceipt,
+        isInvoiceResolutionEnabled,
+        invoicePrefix,
+        invoiceResolution,
+        invoiceInitialNumber,
+        invoiceFinalNumber,
+        invoiceResolutionDate,
+      });
+
+      toast.info(`Abriendo tirilla térmica de ${modeLabel}...`);
+      await printThermalReceiptIframe(ticketHtml, is58 ? '58' : '80');
+    } catch (err: any) {
+      toast.error(`Error al imprimir recibo: ${err?.message || 'Fallo general'}`);
+    } finally {
+      setIsPrintingBrowser(false);
+    }
+  };
+
+  const handleMainPrint = async () => {
+    if (usbConnected) {
+      await handleUsbPrint();
+    } else {
+      await handleBrowserThermalPrint();
+    }
+  };
+
+  const handleConnectUsb = async () => {
+    try {
+      const item = await usbPrinterService.requestUsbDevice();
+      toast.success(`¡Impresora USB "${item.name}" vinculada con éxito!`);
+    } catch (err: any) {
+      if (err?.name !== 'NotFoundError') {
+        toast.error(`Aviso: ${err?.message || 'No se seleccionó dispositivo'}`);
+      }
     }
   };
 
@@ -521,22 +600,87 @@ export const ReceiptPreviewCard: React.FC<Props> = ({
             />
           </div>
 
-          {/* Botón de Test de Impresión */}
-          <div className="pt-3">
+          {/* Panel de Estado y Simulación de Impresión */}
+          <div className="pt-3 space-y-2">
+            {/* Estado del hardware USB */}
+            <div
+              className={cn(
+                'flex items-center justify-between text-[11px] px-3 py-1.5 rounded-xl border transition-all',
+                usbConnected
+                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
+                  : 'bg-muted/40 text-muted-foreground border-border'
+              )}
+            >
+              <div className="flex items-center gap-1.5 truncate">
+                <Usb
+                  className={cn(
+                    'w-3.5 h-3.5 shrink-0',
+                    usbConnected ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'
+                  )}
+                />
+                <span className="truncate font-mono">
+                  {usbConnected ? `USB: ${usbDeviceName}` : 'Sin impresora USB activa'}
+                </span>
+              </div>
+              {usbConnected ? (
+                <span className="text-[10px] font-bold bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-800 dark:text-emerald-300 shrink-0">
+                  Lista
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleConnectUsb}
+                  className="text-[10px] font-bold text-primary hover:underline cursor-pointer shrink-0"
+                >
+                  Conectar USB
+                </button>
+              )}
+            </div>
+
+            {/* Botón Principal Inteligente */}
             <Button
               type="button"
-              variant="outline"
-              disabled={isPrintingSim}
-              onClick={handleTestPrint}
-              className="w-full text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-xs border-border hover:bg-muted"
+              disabled={isPrintingSim || isPrintingBrowser}
+              onClick={handleMainPrint}
+              className="w-full text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-md bg-primary hover:bg-primary/90 text-primary-foreground"
             >
-              <Play className={`w-3.5 h-3.5 text-emerald-500 ${isPrintingSim ? 'animate-spin' : ''}`} />
+              <Play className={`w-3.5 h-3.5 ${isPrintingSim || isPrintingBrowser ? 'animate-spin' : ''}`} />
               <span>
                 {isPrintingSim
-                  ? 'Imprimiendo en dispositivo...'
+                  ? 'Enviando por cable USB...'
+                  : isPrintingBrowser
+                  ? 'Generando tirilla térmica...'
                   : `Simular Impresión de ${mode === 'invoice' ? 'Factura' : mode === 'precheck' ? 'Pre-cuenta' : 'Comanda'}`}
               </span>
             </Button>
+
+            {/* Botones de Selección Directa (Cable USB vs Tirilla Navegador) */}
+            <div className="grid grid-cols-2 gap-2 pt-0.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isPrintingSim || isPrintingBrowser}
+                onClick={handleUsbPrint}
+                className="text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1.5 cursor-pointer border-border hover:bg-muted"
+                title="Envía el recibo en código binario ESC/POS directamente a la impresora por cable USB / OTG"
+              >
+                <Usb className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span className="truncate">Cable USB</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isPrintingSim || isPrintingBrowser}
+                onClick={handleBrowserThermalPrint}
+                className="text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1.5 cursor-pointer border-border hover:bg-muted"
+                title="Imprime únicamente la tirilla de 58/80mm sin imprimir el resto de la página web"
+              >
+                <Globe className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                <span className="truncate">Ticket Térmico</span>
+              </Button>
+            </div>
           </div>
         </CardContent>
       </div>

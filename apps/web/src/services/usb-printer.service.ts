@@ -282,16 +282,25 @@ class UsbPrinterService {
   async printTestTicket(
     deviceOrId: UsbDeviceItem | string,
     printerName: string,
-    paperWidth: '58' | '80' = '80'
+    paperWidth: '58' | '80' = '80',
+    promptIfNoDevice = true
   ): Promise<UsbTestResult> {
     try {
+      let paired = await this.getPairedDevices();
       let targetDevice: UsbDeviceItem | null = null;
 
       if (typeof deviceOrId === 'string') {
-        const paired = await this.getPairedDevices();
         targetDevice = this.matchDeviceByIdentifier(deviceOrId, paired);
       } else {
         targetDevice = deviceOrId;
+      }
+
+      if (!targetDevice && promptIfNoDevice && typeof navigator !== 'undefined' && 'usb' in navigator) {
+        try {
+          targetDevice = await this.requestUsbDevice();
+        } catch {
+          // Cancelado por el usuario
+        }
       }
 
       if (!targetDevice) {
@@ -330,7 +339,8 @@ class UsbPrinterService {
   async printRawEscpos(
     base64OrBuffer: string | Uint8Array,
     deviceOrIdentifier?: UsbDeviceItem | string,
-    _paperWidth: '58' | '80' = '80'
+    _paperWidth: '58' | '80' = '80',
+    promptIfNoDevice = false
   ): Promise<UsbTestResult> {
     try {
       let buffer: Uint8Array;
@@ -344,7 +354,7 @@ class UsbPrinterService {
         buffer = base64OrBuffer;
       }
 
-      const paired = await this.getPairedDevices();
+      let paired = await this.getPairedDevices();
       let targetDevice: UsbDeviceItem | null = null;
 
       if (deviceOrIdentifier) {
@@ -356,6 +366,14 @@ class UsbPrinterService {
 
       if (!targetDevice && paired.length > 0) {
         targetDevice = paired[0];
+      }
+
+      if (!targetDevice && promptIfNoDevice && typeof navigator !== 'undefined' && 'usb' in navigator) {
+        try {
+          targetDevice = await this.requestUsbDevice();
+        } catch {
+          // Cancelado por el usuario
+        }
       }
 
       if (!targetDevice) {
@@ -400,6 +418,7 @@ class UsbPrinterService {
     receiptHeader?: string;
     receiptFooter?: string;
     printerIdentifier?: string;
+    promptIfNoDevice?: boolean;
   }): Promise<UsbTestResult> {
     const {
       mode,
@@ -411,6 +430,7 @@ class UsbPrinterService {
       receiptHeader = 'Experiencias sensoriales y autor',
       receiptFooter = '¡Gracias por su visita!',
       printerIdentifier,
+      promptIfNoDevice = false,
     } = options;
 
     const width = paperWidth === '58' ? 32 : 42;
@@ -497,7 +517,7 @@ class UsbPrinterService {
     raw += `${GS}V\x41\x03`; // Cut
 
     const buffer = new TextEncoder().encode(raw);
-    return await this.printRawEscpos(buffer, printerIdentifier, paperWidth);
+    return await this.printRawEscpos(buffer, printerIdentifier, paperWidth, promptIfNoDevice);
   }
 
   /**

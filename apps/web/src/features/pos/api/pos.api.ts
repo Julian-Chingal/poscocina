@@ -39,7 +39,7 @@ export const posApi = {
   printReceipt: async (receiptId: string) => {
     const res: any = await api.post('/hardware/print-receipt', { receiptId });
     if (res?.rawEscposBase64) {
-      usbPrinterService.printRawEscpos(res.rawEscposBase64, res.printerName, res.paperWidth || '80').catch((err) => {
+      usbPrinterService.printRawEscpos(res.rawEscposBase64, res.ipAddress || res.printerName, res.paperWidth || '80').catch((err) => {
         console.warn('Error al imprimir comprobante USB:', err);
       });
     }
@@ -51,7 +51,7 @@ export const posApi = {
     if (Array.isArray(res)) {
       for (const item of res) {
         if (item?.rawEscposBase64) {
-          usbPrinterService.printRawEscpos(item.rawEscposBase64, item.printerName, item.paperWidth || '80').catch((err) => {
+          usbPrinterService.printRawEscpos(item.rawEscposBase64, item.ipAddress || item.printerName, item.paperWidth || '80').catch((err) => {
             console.warn('Error al imprimir comanda USB:', err);
           });
         }
@@ -63,7 +63,7 @@ export const posApi = {
   printPreCheck: async (orderId: string) => {
     const res: any = await api.post('/hardware/print-precheck', { orderId });
     if (res?.rawEscposBase64) {
-      usbPrinterService.printRawEscpos(res.rawEscposBase64, res.printerName, res.paperWidth || '80').catch((err) => {
+      usbPrinterService.printRawEscpos(res.rawEscposBase64, res.ipAddress || res.printerName, res.paperWidth || '80').catch((err) => {
         console.warn('Error al imprimir pre-cuenta USB:', err);
       });
     }

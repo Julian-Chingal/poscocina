@@ -58,6 +58,7 @@ export class PrintKitchenTicketUseCase {
         printerId: printer?.id,
         printerName: printer?.name || 'Virtual / Fallback',
         connectionType: printer?.connectionType || 'network_tcp',
+        ipAddress: printer?.ipAddress,
         paperWidth,
         networkSent,
         networkError,

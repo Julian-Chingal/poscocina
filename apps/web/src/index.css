@@ -287,4 +287,18 @@
   -webkit-font-smoothing: subpixel-antialiased;
 }
 
+/* Print Media Safeguards */
+@media print {
+  .no-print,
+  [data-sileo-viewport],
+  button:not(.allow-print) {
+    display: none !important;
+  }
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+}
+
+
 

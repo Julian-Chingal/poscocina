@@ -13,6 +13,7 @@ interface Props {
   isTabletDefault?: boolean;
   isUsbConnected?: boolean;
   onToggleTabletDefault?: (p: PrinterDevice) => void;
+  onConnectUsb?: (p: PrinterDevice) => void;
   onTest: (p: PrinterDevice) => void;
   onEdit: (p: PrinterDevice) => void;
   onDelete: (printer: PrinterDevice) => void;
@@ -25,6 +26,7 @@ export const PrinterCard: React.FC<Props> = ({
   isTabletDefault,
   isUsbConnected,
   onToggleTabletDefault,
+  onConnectUsb,
   onTest,
   onEdit,
   onDelete,
@@ -50,26 +52,40 @@ export const PrinterCard: React.FC<Props> = ({
       case 'usb_direct': {
         const cleanUsbLabel = (printer.ipAddress || 'OTG Directo').replace(/^(?:USB:\s*)+/i, '');
         return (
-          <div className="flex items-center justify-between text-xs text-amber-600 dark:text-amber-400 font-mono">
+          <div className="flex items-center justify-between text-xs text-amber-600 dark:text-amber-400 font-mono gap-1">
             <div className="flex items-center space-x-1.5 truncate">
               <Usb className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">USB: {cleanUsbLabel}</span>
             </div>
             {isUsbConnected !== undefined && (
-              <span
-                className={`ml-2 inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 ${
-                  isUsbConnected
-                    ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
-                    : 'bg-muted text-muted-foreground border border-border'
-                }`}
-              >
+              <div className="flex items-center gap-1.5 shrink-0 ml-1">
                 <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    isUsbConnected ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground'
+                  className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                    isUsbConnected
+                      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                      : 'bg-muted text-muted-foreground border border-border'
                   }`}
-                />
-                {isUsbConnected ? 'Conectada' : 'Desconectada'}
-              </span>
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      isUsbConnected ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground'
+                    }`}
+                  />
+                  {isUsbConnected ? 'Conectada' : 'Desconectada'}
+                </span>
+                {!isUsbConnected && onConnectUsb && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onConnectUsb(printer)}
+                    className="h-5 px-1.5 text-[9.5px] font-bold bg-primary/10 text-primary border-primary/30 hover:bg-primary/20 rounded cursor-pointer"
+                    title="Vincular o conceder permisos a la impresora USB en este navegador"
+                  >
+                    Conectar
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         );

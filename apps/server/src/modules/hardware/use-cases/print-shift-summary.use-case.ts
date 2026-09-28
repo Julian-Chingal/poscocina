@@ -77,6 +77,7 @@ export class PrintShiftSummaryUseCase {
       printerId: cashierPrinter?.id,
       printerName: cashierPrinter?.name || 'Caja Virtual',
       connectionType: cashierPrinter?.connectionType || 'network_tcp',
+      ipAddress: cashierPrinter?.ipAddress,
       paperWidth,
       networkSent,
       networkError,
