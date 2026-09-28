@@ -4,14 +4,34 @@ import {
   TableItem,
   Customer,
   CreateReservationPayload,
+  ReservationQueryParams,
+  ReservationMetrics,
+  ReservationStatus,
 } from '../types/reservations.types';
 
 export const reservationsApi = {
-  getReservations: (venueId: string, date?: string): Promise<Reservation[]> => {
-    const url = date
-      ? `/reservations?venueId=${venueId}&date=${date}`
-      : `/reservations?venueId=${venueId}`;
-    return api.get(url);
+  getReservations: (venueId: string, filters?: ReservationQueryParams): Promise<Reservation[]> => {
+    const params = new URLSearchParams({ venueId });
+    if (filters?.status && filters.status !== 'all') {
+      params.append('status', filters.status);
+    }
+    if (filters?.date) {
+      params.append('date', filters.date);
+    }
+    if (filters?.timeframe && filters.timeframe !== 'all') {
+      params.append('timeframe', filters.timeframe);
+    }
+    if (filters?.search) {
+      params.append('search', filters.search);
+    }
+    return api.get(`/reservations?${params.toString()}`);
+  },
+
+  getMetrics: (venueId: string, timeframe?: string, date?: string): Promise<ReservationMetrics> => {
+    const params = new URLSearchParams({ venueId });
+    if (timeframe && timeframe !== 'all') params.append('timeframe', timeframe);
+    if (date) params.append('date', date);
+    return api.get(`/reservations/metrics?${params.toString()}`);
   },
 
   getTables: (venueId: string): Promise<TableItem[]> =>
@@ -25,7 +45,7 @@ export const reservationsApi = {
 
   updateStatus: (
     reservationId: string,
-    status: 'confirmed' | 'cancelled' | 'no_show'
+    status: ReservationStatus
   ): Promise<void> =>
     api.patch(`/reservations/${reservationId}/status`, { status }),
 

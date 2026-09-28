@@ -4,74 +4,77 @@ import {
   Reservation,
   TableItem,
   ReservationFilterStatus,
+  ReservationTimeframe,
+  ReservationMetrics,
 } from '../types/reservations.types';
 
 export const useReservationsData = (venueId: string) => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [tables, setTables] = useState<TableItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
-  );
+  
+  // Navigation & Filters: Status is primary, timeframe/date is secondary
   const [statusFilter, setStatusFilter] = useState<ReservationFilterStatus>('all');
+  const [timeframe, setTimeframe] = useState<ReservationTimeframe>('all');
+  const [selectedDate, setSelectedDate] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
-  const fetchReservations = useCallback(async () => {
+  const [metrics, setMetrics] = useState<ReservationMetrics>({
+    pendingCount: 0,
+    confirmedCount: 0,
+    seatedCount: 0,
+    cancelledCount: 0,
+    noShowCount: 0,
+    totalActive: 0,
+    totalGuests: 0,
+  });
+
+  const fetchData = useCallback(async () => {
     if (!venueId) return;
     try {
       setLoading(true);
-      const data = await reservationsApi.getReservations(venueId, selectedDate);
-      setReservations(data || []);
+      const [resData, metricsData, tablesData] = await Promise.all([
+        reservationsApi.getReservations(venueId, {
+          status: statusFilter,
+          date: selectedDate || undefined,
+          timeframe: selectedDate ? undefined : timeframe,
+          search: searchTerm || undefined,
+        }),
+        reservationsApi.getMetrics(
+          venueId,
+          selectedDate ? undefined : timeframe,
+          selectedDate || undefined
+        ),
+        reservationsApi.getTables(venueId),
+      ]);
+
+      setReservations(resData || []);
+      if (metricsData) {
+        setMetrics(metricsData);
+      }
+      setTables(tablesData || []);
     } catch (err) {
-      console.error('Error fetching reservations:', err);
+      console.error('Error fetching reservations data:', err);
     } finally {
       setLoading(false);
     }
-  }, [venueId, selectedDate]);
-
-  const fetchTables = useCallback(async () => {
-    if (!venueId) return;
-    try {
-      const data = await reservationsApi.getTables(venueId);
-      setTables(data || []);
-    } catch (err) {
-      console.error('Error fetching tables:', err);
-    }
-  }, [venueId]);
-
-  const refresh = useCallback(() => {
-    fetchReservations();
-    fetchTables();
-  }, [fetchReservations, fetchTables]);
+  }, [venueId, statusFilter, selectedDate, timeframe, searchTerm]);
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  const filteredReservations = useMemo(() => {
-    return reservations.filter((r) => {
-      if (statusFilter !== 'all' && r.status !== statusFilter) return false;
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        const matchName = r.customerName.toLowerCase().includes(term);
-        const matchPhone = r.customerPhone?.includes(term);
-        const matchTable = r.table?.label?.toLowerCase().includes(term);
-        return matchName || matchPhone || matchTable;
-      }
-      return true;
-    });
-  }, [reservations, statusFilter, searchTerm]);
+    fetchData();
+  }, [fetchData]);
 
   const kpis = useMemo(() => {
-    const pendingCount = reservations.filter((r) => r.status === 'pending').length;
-    const confirmedCount = reservations.filter((r) => r.status === 'confirmed').length;
-    const seatedCount = reservations.filter((r) => r.status === 'seated').length;
-    const totalGuests = reservations
-      .filter((r) => r.status !== 'cancelled' && r.status !== 'no_show')
-      .reduce((sum, r) => sum + r.guestCount, 0);
-
-    return { pendingCount, confirmedCount, seatedCount, totalGuests };
-  }, [reservations]);
+    return {
+      pendingCount: metrics.pendingCount,
+      confirmedCount: metrics.confirmedCount,
+      seatedCount: metrics.seatedCount,
+      cancelledCount: metrics.cancelledCount,
+      noShowCount: metrics.noShowCount,
+      totalActive: metrics.totalActive,
+      totalGuests: metrics.totalGuests,
+    };
+  }, [metrics]);
 
   return {
     reservations,
@@ -79,12 +82,14 @@ export const useReservationsData = (venueId: string) => {
     loading,
     selectedDate,
     setSelectedDate,
+    timeframe,
+    setTimeframe,
     statusFilter,
     setStatusFilter,
     searchTerm,
     setSearchTerm,
-    filteredReservations,
+    filteredReservations: reservations,
     kpis,
-    refresh,
+    refresh: fetchData,
   };
 };

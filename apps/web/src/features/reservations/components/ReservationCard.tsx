@@ -26,7 +26,7 @@ import {
 
 interface ReservationCardProps {
   reservation: Reservation;
-  onUpdateStatus: (id: string, status: 'confirmed' | 'cancelled' | 'no_show') => void;
+  onUpdateStatus: (id: string, status: ReservationStatus) => void;
   onSeatReservation: (reservation: Reservation) => void;
 }
 
@@ -71,6 +71,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
   onSeatReservation,
 }) => {
   const [showCancelAlert, setShowCancelAlert] = React.useState(false);
+  const [showNoShowAlert, setShowNoShowAlert] = React.useState(false);
 
   const timeStr = new Date(reservation.reservationTime).toLocaleTimeString([], {
     hour: '2-digit',
@@ -131,13 +132,13 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
       </div>
 
       {/* Card Action Buttons */}
-      <CardFooter className="p-0 pt-3 border-t border-border flex items-center justify-between gap-2 mt-0">
+      <CardFooter className="p-0 pt-3 border-t border-border flex items-center justify-between gap-1.5 mt-0 flex-wrap">
         {reservation.status === 'pending' && (
           <Button
             size="sm"
             type="button"
             onClick={() => onUpdateStatus(reservation.id, 'confirmed')}
-            className="flex-1 py-1.5 px-3 h-8 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+            className="flex-1 py-1.5 px-2.5 h-8 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
           >
             <CheckCircle2 className="w-3.5 h-3.5" /> Confirmar
           </Button>
@@ -148,26 +149,59 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
             size="sm"
             type="button"
             onClick={() => onSeatReservation(reservation)}
-            className="flex-1 py-1.5 px-3 h-8 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+            className="flex-1 py-1.5 px-2.5 h-8 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer shadow-xs"
           >
             <UserCheck className="w-3.5 h-3.5" /> Sentar Mesa
           </Button>
         )}
 
         {(reservation.status === 'pending' || reservation.status === 'confirmed') && (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              type="button"
+              onClick={() => setShowNoShowAlert(true)}
+              title="Marcar como No Asistió"
+              className="h-8 px-2 rounded-xl text-muted-foreground hover:text-foreground text-xs transition cursor-pointer"
+            >
+              <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+              <span className="hidden sm:inline ml-1">No Asistió</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              type="button"
+              onClick={() => setShowCancelAlert(true)}
+              title="Cancelar reserva"
+              className="h-8 w-8 rounded-xl bg-destructive/10 hover:bg-destructive/20 border border-destructive/20 text-destructive text-xs transition cursor-pointer p-0"
+            >
+              <XCircle className="w-4 h-4" />
+            </Button>
+          </>
+        )}
+
+        {reservation.status === 'seated' && (
+          <div className="w-full flex items-center justify-center gap-1.5 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 rounded-xl">
+            <UserCheck className="w-3.5 h-3.5" />
+            <span>Comensales en mesa (Orden activa)</span>
+          </div>
+        )}
+
+        {(reservation.status === 'cancelled' || reservation.status === 'no_show') && (
           <Button
-            variant="ghost"
-            size="icon"
+            variant="outline"
+            size="sm"
             type="button"
-            onClick={() => setShowCancelAlert(true)}
-            title="Cancelar reserva"
-            className="h-8 w-8 rounded-xl bg-destructive/10 hover:bg-destructive/20 border border-destructive/20 text-destructive text-xs transition cursor-pointer p-0"
+            onClick={() => onUpdateStatus(reservation.id, 'confirmed')}
+            className="w-full h-8 rounded-xl text-xs font-semibold text-primary hover:text-primary transition cursor-pointer flex items-center justify-center gap-1.5"
           >
-            <XCircle className="w-4 h-4" />
+            <CheckCircle2 className="w-3.5 h-3.5" /> Reabrir / Confirmar Reserva
           </Button>
         )}
       </CardFooter>
 
+      {/* Cancel Alert Dialog */}
       <AlertDialog open={showCancelAlert} onOpenChange={setShowCancelAlert}>
         <AlertDialogContent className="max-w-sm text-center sm:text-center">
           <AlertDialogHeader className="text-center sm:text-center">
@@ -190,6 +224,35 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold"
             >
               Sí, cancelar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* No Show Alert Dialog */}
+      <AlertDialog open={showNoShowAlert} onOpenChange={setShowNoShowAlert}>
+        <AlertDialogContent className="max-w-sm text-center sm:text-center">
+          <AlertDialogHeader className="text-center sm:text-center">
+            <AlertDialogTitle className="text-base font-bold">
+              ¿Marcar como "No Asistió"?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs">
+              Se registrará que el cliente <span className="text-foreground font-semibold">"{reservation.customerName}"</span> no se presentó a su reserva.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="justify-center sm:justify-center mt-4 gap-2">
+            <AlertDialogCancel onClick={() => setShowNoShowAlert(false)}>
+              Volver
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                onUpdateStatus(reservation.id, 'no_show');
+                setShowNoShowAlert(false);
+              }}
+              className="bg-amber-600 hover:bg-amber-500 text-white font-bold"
+            >
+              Confirmar No Asistió
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

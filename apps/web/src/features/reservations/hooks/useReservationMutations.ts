@@ -4,6 +4,7 @@ import {
   Reservation,
   CreateReservationPayload,
   TableItem,
+  ReservationStatus,
 } from '../types/reservations.types';
 
 export const useReservationMutations = (onSuccess: () => void) => {
@@ -34,7 +35,7 @@ export const useReservationMutations = (onSuccess: () => void) => {
 
   const handleUpdateStatus = async (
     reservationId: string,
-    status: 'confirmed' | 'cancelled' | 'no_show'
+    status: ReservationStatus
   ): Promise<void> => {
     try {
       await reservationsApi.updateStatus(reservationId, status);

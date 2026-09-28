@@ -21,6 +21,8 @@ export const ReservationsView: React.FC<ReservationsViewProps> = ({
     loading,
     selectedDate,
     setSelectedDate,
+    timeframe,
+    setTimeframe,
     statusFilter,
     setStatusFilter,
     searchTerm,
@@ -56,12 +58,15 @@ export const ReservationsView: React.FC<ReservationsViewProps> = ({
       />
 
       <ReservationsFilterBar
-        selectedDate={selectedDate}
-        onDateChange={setSelectedDate}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
+        timeframe={timeframe}
+        onTimeframeChange={setTimeframe}
+        selectedDate={selectedDate}
+        onDateChange={setSelectedDate}
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
+        kpis={kpis}
         loading={loading}
         onRefresh={refresh}
       />
@@ -79,7 +84,7 @@ export const ReservationsView: React.FC<ReservationsViewProps> = ({
         isOpen={showModal}
         venueId={venueId}
         tables={tables}
-        defaultDate={selectedDate}
+        defaultDate={selectedDate || new Date().toISOString().split('T')[0]}
         submitting={submitting}
         errorMessage={errorMessage}
         onClose={() => setShowModal(false)}

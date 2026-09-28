@@ -1,12 +1,12 @@
 import React from 'react';
 import { Calendar } from 'lucide-react';
-import { Reservation } from '../types/reservations.types';
+import { Reservation, ReservationStatus } from '../types/reservations.types';
 import { ReservationCard } from './ReservationCard';
 
 interface ReservationsGridProps {
   loading: boolean;
   reservations: Reservation[];
-  onUpdateStatus: (id: string, status: 'confirmed' | 'cancelled' | 'no_show') => void;
+  onUpdateStatus: (id: string, status: ReservationStatus) => void;
   onSeatReservation: (reservation: Reservation) => void;
 }
 

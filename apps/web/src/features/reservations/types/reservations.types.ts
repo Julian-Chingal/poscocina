@@ -55,7 +55,28 @@ export type ReservationFilterStatus =
   | 'pending'
   | 'confirmed'
   | 'seated'
-  | 'cancelled';
+  | 'history'
+  | 'cancelled'
+  | 'no_show';
+
+export type ReservationTimeframe = 'all' | 'today' | 'tomorrow' | 'week' | 'upcoming';
+
+export interface ReservationMetrics {
+  pendingCount: number;
+  confirmedCount: number;
+  seatedCount: number;
+  cancelledCount: number;
+  noShowCount: number;
+  totalActive: number;
+  totalGuests: number;
+}
+
+export interface ReservationQueryParams {
+  status?: ReservationFilterStatus;
+  date?: string;
+  timeframe?: ReservationTimeframe;
+  search?: string;
+}
 
 export interface ReservationsViewProps {
   venueId: string;

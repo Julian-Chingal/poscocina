@@ -5,8 +5,12 @@ import { auditService } from '../../../utils/audit.service.js';
 export class ManageReservationsUseCase {
   constructor(private readonly repo: IReservationRepository) {}
 
-  async getReservations(venueId: string, date?: string) {
-    return await this.repo.findReservations(venueId, date);
+  async getReservations(venueId: string, filters?: any) {
+    return await this.repo.findReservations(venueId, filters);
+  }
+
+  async getMetrics(venueId: string, timeframe?: string, date?: string) {
+    return await this.repo.getReservationMetrics(venueId, timeframe, date);
   }
 
   async getById(id: string) {

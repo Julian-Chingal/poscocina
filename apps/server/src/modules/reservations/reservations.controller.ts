@@ -10,9 +10,29 @@ export class ReservationsController {
 
   async getReservations(request: FastifyRequest, reply: FastifyReply) {
     const venueId = await resolveVenueId(request);
-    const { date } = request.query as { date?: string };
-    const results = await this.useCase.getReservations(venueId, date);
+    const { date, status, timeframe, search } = request.query as {
+      date?: string;
+      status?: string;
+      timeframe?: string;
+      search?: string;
+    };
+    const results = await this.useCase.getReservations(venueId, {
+      date,
+      status,
+      timeframe,
+      search,
+    });
     return reply.send(results);
+  }
+
+  async getMetrics(request: FastifyRequest, reply: FastifyReply) {
+    const venueId = await resolveVenueId(request);
+    const { timeframe, date } = request.query as {
+      timeframe?: string;
+      date?: string;
+    };
+    const metrics = await this.useCase.getMetrics(venueId, timeframe, date);
+    return reply.send(metrics);
   }
 
   async getById(request: FastifyRequest, reply: FastifyReply) {

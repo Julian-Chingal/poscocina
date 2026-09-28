@@ -4,6 +4,8 @@ import { reservationsController } from './reservations.controller.js';
 export async function reservationsRoutes(fastify: FastifyInstance) {
   const authGuard = { preHandler: [fastify.authenticate] };
 
+  fastify.get('/api/venues/:venueId/reservations/metrics', authGuard, (req, rep) => reservationsController.getMetrics(req, rep));
+  fastify.get('/api/reservations/metrics', authGuard, (req, rep) => reservationsController.getMetrics(req, rep));
   fastify.get('/api/venues/:venueId/reservations', authGuard, (req, rep) => reservationsController.getReservations(req, rep));
   fastify.get('/api/reservations', authGuard, (req, rep) => reservationsController.getReservations(req, rep));
   fastify.get('/api/reservations/:id', authGuard, (req, rep) => reservationsController.getById(req, rep));
