@@ -42,7 +42,9 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
         allTables={table.allTables}
         isCashShiftOpen={table.isCashShiftOpen}
         waiterName={currentUser?.name}
+        guestName={table.guestName}
         onSelectTable={table.setCurrentTable}
+        onGuestNameChange={table.setGuestName}
       />
 
       <div className="w-full min-w-0 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">

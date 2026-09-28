@@ -66,6 +66,7 @@ export class CreateOrderUseCase {
         paymentStatus: 'unpaid',
         kitchenStatus: 'queued',
         guestCount,
+        guestName: data.guestName?.trim() || null,
         subtotal: subtotal.toFixed(2),
         taxTotal: taxTotal.toFixed(2),
         total: total.toFixed(2),

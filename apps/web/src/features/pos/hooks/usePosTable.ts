@@ -10,6 +10,7 @@ export const usePosTable = (
   userId?: string
 ) => {
   const [currentTable, setCurrentTable] = useState<TableItem | null>(initialTable || null);
+  const [guestName, setGuestName] = useState<string>('');
   const [allTables, setAllTables] = useState<TableItem[]>([]);
   const [activeOrder, setActiveOrder] = useState<PosOrder | null>(null);
   const isCashShiftOpen = useShiftStore((s) => s.isOpen);
@@ -109,10 +110,12 @@ export const usePosTable = (
           tableId: currentTable?.id || undefined,
           waiterId: userId || undefined,
           customerId: customerId || undefined,
+          guestName: !currentTable && guestName.trim() ? guestName.trim() : undefined,
           items: itemsPayload,
         });
       }
 
+      setGuestName('');
       setOrderSentSuccess(true);
       toast.success('¡Comanda enviada a cocina/barra exitosamente!');
       setTimeout(() => setOrderSentSuccess(false), 2500);
@@ -139,12 +142,14 @@ export const usePosTable = (
 
   return {
     currentTable,
+    guestName,
     allTables,
     activeOrder,
     isCashShiftOpen,
     submitting,
     orderSentSuccess,
     setCurrentTable,
+    setGuestName,
     sendOrder,
     requestCheck,
     refreshOrder: () => activeOrder?.id && fetchActiveOrder(activeOrder.id),

@@ -15,6 +15,7 @@ export interface CreateOrderPayload {
   orderType?: 'dine_in' | 'takeout' | 'delivery';
   waiterId?: string | null;
   guestCount?: number;
+  guestName?: string | null;
   notes?: string;
   items: CreateOrderItemInput[];
 }

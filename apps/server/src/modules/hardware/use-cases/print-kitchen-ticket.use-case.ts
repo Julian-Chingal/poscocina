@@ -35,7 +35,7 @@ export class PrintKitchenTicketUseCase {
       const { escposBuffer, asciiPreview } = this.driver.generateKitchenTicket({
         stationName: stationDisplayName,
         orderId: order.id,
-        tableLabel: order.table?.label,
+        tableLabel: order.table?.label || (order.guestName ? `Para Llevar (${order.guestName})` : 'Para Llevar'),
         waiterName: order.waiter?.name,
         openedAt: order.openedAt,
         notes: order.notes,

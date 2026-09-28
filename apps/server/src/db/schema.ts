@@ -246,6 +246,7 @@ export const orders = pgTable('orders', {
   kitchenStatus: varchar('kitchen_status', { length: 30 }).notNull().default('queued'),
   waiterId: uuid('waiter_id').references(() => users.id, { onDelete: 'set null' }),
   guestCount: smallint('guest_count').default(1),
+  guestName: varchar('guest_name', { length: 150 }),
   notes: text('notes'),
   openedAt: timestamp('opened_at', { withTimezone: true }).notNull().defaultNow(),
   closedAt: timestamp('closed_at', { withTimezone: true }),

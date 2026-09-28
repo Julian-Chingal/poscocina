@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Users, AlertTriangle, CheckCircle2, User } from 'lucide-react';
 import { TableItem } from '../types/pos.types';
 import {
   Select,
@@ -9,13 +9,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 
 interface Props {
   currentTable: TableItem | null;
   allTables: TableItem[];
   isCashShiftOpen: boolean | null;
   waiterName?: string;
+  guestName?: string;
   onSelectTable: (table: TableItem | null) => void;
+  onGuestNameChange?: (name: string) => void;
 }
 
 const TABLE_STATUS_LABEL: Record<string, string> = {
@@ -31,7 +34,9 @@ export const PosHeader: React.FC<Props> = ({
   allTables,
   isCashShiftOpen,
   waiterName,
+  guestName = '',
   onSelectTable,
+  onGuestNameChange,
 }) => (
   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 mb-4 border-b border-border gap-4">
     <div className="flex flex-wrap items-center gap-3">
@@ -65,6 +70,20 @@ export const PosHeader: React.FC<Props> = ({
           </Select>
         </div>
       </div>
+
+      {/* Guest Name Input for Takeout */}
+      {!currentTable && onGuestNameChange && (
+        <div className="flex items-center space-x-1.5 bg-muted/40 border border-border rounded-xl px-2.5 py-1">
+          <User className="w-3.5 h-3.5 text-primary" />
+          <Input
+            type="text"
+            placeholder="Cliente (ej. Camilo - Chaqueta)"
+            value={guestName}
+            onChange={(e) => onGuestNameChange(e.target.value)}
+            className="h-7 text-xs border-none bg-transparent shadow-none focus-visible:ring-0 px-1 w-44 sm:w-56"
+          />
+        </div>
+      )}
 
       {waiterName && (
         <span className="text-xs text-muted-foreground hidden sm:inline">

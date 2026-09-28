@@ -37,7 +37,7 @@ export const KdsOrderCard: React.FC<KdsOrderCardProps> = ({
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-base sm:text-lg font-black text-foreground tracking-tight truncate">
-              {order.table?.label || 'Para Llevar'}
+              {order.table?.label || (order.guestName ? `Para Llevar (${order.guestName})` : 'Para Llevar')}
             </span>
             {order.orderNumber && (
               <span className="text-xs font-mono font-bold bg-background/80 border border-border/80 text-foreground px-2 py-0.5 rounded-lg shadow-2xs">

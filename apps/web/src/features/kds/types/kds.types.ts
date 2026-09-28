@@ -20,6 +20,7 @@ export interface KdsItem {
 export interface KdsOrder {
   id: string;
   orderNumber?: number | string;
+  guestName?: string | null;
   openedAt: string;
   closedAt?: string | null;
   paymentStatus?: 'unpaid' | 'partially_paid' | 'paid' | string;

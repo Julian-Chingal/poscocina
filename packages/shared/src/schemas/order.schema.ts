@@ -26,6 +26,7 @@ export const CreateOrderSchema = z.object({
   orderType: z.enum([ORDER_TYPE.DINE_IN, ORDER_TYPE.TAKEOUT, ORDER_TYPE.DELIVERY]).default(ORDER_TYPE.DINE_IN),
   waiterId: z.string().uuid().optional().nullable().or(z.literal('').transform(() => undefined)),
   guestCount: z.number().int().positive().default(1),
+  guestName: z.string().max(150).optional().nullable(),
   notes: z.string().max(500).optional(),
   items: z.array(CreateOrderItemSchema).min(1, 'La orden debe contener al menos un producto'),
 });
