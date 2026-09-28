@@ -7,20 +7,44 @@ export class ReceiptRepository implements IReceiptRepository {
   constructor(private readonly database = db) {}
 
   async findPendingBills(venueId: string) {
-    return await this.database.query.orders.findMany({
+    const rawOrders = await this.database.query.orders.findMany({
       where: (orders, { and, eq, notInArray }) =>
         and(
           eq(orders.venueId, venueId),
-          eq(orders.paymentStatus, 'unpaid'),
-          notInArray(orders.status, ['cancelled', 'voided', 'paid'])
+          notInArray(orders.status, ['cancelled', 'voided'])
         ),
       with: {
         table: true,
         waiter: { columns: { id: true, name: true } },
-        items: { with: { product: true, modifiers: true } },
+        items: {
+          with: {
+            product: true,
+            modifiers: { with: { modifier: true } },
+          },
+        },
+        receipts: { with: { payments: true } },
       },
       orderBy: (orders, { asc }) => [asc(orders.openedAt)],
     });
+
+    return rawOrders
+      .map((order) => {
+        const totalPaid = (order.receipts || []).reduce((acc: number, r: any) => {
+          return acc + parseFloat(r.total || '0');
+        }, 0);
+        const orderTotal = parseFloat(order.total || '0');
+        const pendingBalance = Math.max(0, orderTotal - totalPaid);
+
+        return {
+          ...order,
+          totalPaid: totalPaid.toFixed(2),
+          pendingBalance: pendingBalance.toFixed(2),
+        };
+      })
+      .filter((order) => {
+        const balance = parseFloat(order.pendingBalance);
+        return balance > 0.009 || order.paymentStatus !== 'paid';
+      });
   }
 
   async findOrderWithVenue(orderId: string, tx = this.database) {

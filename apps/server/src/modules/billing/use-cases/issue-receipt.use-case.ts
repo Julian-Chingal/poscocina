@@ -38,10 +38,20 @@ export class IssueReceiptUseCase {
           : Math.min(parseFloat(order.subtotal), discountValue);
       }
 
+      const existingReceipts = await tx
+        .select({ total: schema.receipts.total })
+        .from(schema.receipts)
+        .where(eq(schema.receipts.orderId, orderId));
+
+      const previousPaid = existingReceipts.reduce((sum, r) => sum + parseFloat(r.total || '0'), 0);
+      const cumulativePaid = previousPaid + totalPaid;
+      const netOrderTotal = Math.max(0, parseFloat(order.total) - discountTotal);
+      const isFullyPaid = cumulativePaid >= netOrderTotal - 0.01;
+
       let subtotal: number;
       let taxTotal: number;
 
-      if (!isSplit && Math.abs(totalPaid - parseFloat(order.total)) < 0.01 && discountTotal === 0) {
+      if (!isSplit && previousPaid === 0 && Math.abs(totalPaid - parseFloat(order.total)) < 0.01 && discountTotal === 0) {
         subtotal = parseFloat(order.subtotal);
         taxTotal = parseFloat(order.taxTotal);
       } else {
@@ -71,30 +81,37 @@ export class IssueReceiptUseCase {
 
       const isDelivered = order.kitchenStatus === 'delivered';
       const markPaidPayload: Record<string, any> = {
-        paymentStatus: 'paid',
+        paymentStatus: isFullyPaid ? 'paid' : 'partially_paid',
         discountTotal: discountTotal.toFixed(2),
         notes: discountReason ? `${order.notes || ''} [Desc: ${discountReason}]`.trim() : order.notes,
       };
 
-      let tableStatus = 'free';
+      let tableStatus = 'occupied';
       let isTableFreed = false;
 
-      if (isDelivered) {
-        // Kitchen already delivered everything -> order is closed & table is freed
-        markPaidPayload.status = 'paid';
-        markPaidPayload.closedAt = new Date();
-        if (order.tableId) {
-          await this.receiptRepo.freeTable(order.tableId, tx);
-          isTableFreed = true;
-          tableStatus = 'free';
+      if (isFullyPaid) {
+        if (isDelivered) {
+          // Kitchen already delivered everything -> order is closed & table is freed
+          markPaidPayload.status = 'paid';
+          markPaidPayload.closedAt = new Date();
+          if (order.tableId) {
+            await this.receiptRepo.freeTable(order.tableId, tx);
+            isTableFreed = true;
+            tableStatus = 'free';
+          }
+        } else {
+          // Food is still being cooked/served -> table remains active with paid_waiting_food
+          if (order.tableId) {
+            await this.receiptRepo.setTableWaitingFood(order.tableId, tx);
+            isTableFreed = false;
+            tableStatus = 'paid_waiting_food';
+          }
         }
       } else {
-        // Food is still being cooked/served -> table remains active with paid_waiting_food
-        if (order.tableId) {
-          await this.receiptRepo.setTableWaitingFood(order.tableId, tx);
-          isTableFreed = false;
-          tableStatus = 'paid_waiting_food';
-        }
+        // Still has pending balance -> order stays open
+        markPaidPayload.status = order.status === 'paid' ? 'open' : order.status;
+        markPaidPayload.closedAt = null;
+        tableStatus = 'occupied';
       }
 
       await this.receiptRepo.markOrderPaid(orderId, markPaidPayload, tx);

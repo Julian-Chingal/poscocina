@@ -10,6 +10,7 @@ interface Props {
   tipAmount: number;
   tipPct: number;
   billTotal: number;
+  totalPaid?: number;
   onTipPctChange: (pct: number) => void;
 }
 
@@ -19,11 +20,13 @@ export const CheckoutBreakdown: React.FC<Props> = ({
   tipAmount,
   tipPct,
   billTotal,
+  totalPaid = 0,
   onTipPctChange,
 }) => {
   const settings = useBrandingStore((s) => s.settings);
   const taxRate = typeof settings.taxRate === 'number' ? settings.taxRate : 0.08;
   const taxLabel = `${settings.taxRate === 0.19 ? 'IVA' : 'INC'} (${Math.round(taxRate * 100)}%):`;
+  const hasPriorPayments = totalPaid > 0.009;
 
   return (
     <Card className="p-4 bg-muted/40 rounded-2xl border-border mb-5 space-y-2 text-xs">
@@ -35,6 +38,14 @@ export const CheckoutBreakdown: React.FC<Props> = ({
         <span>{taxLabel}</span>
         <span className="font-mono text-foreground">${taxTotal.toLocaleString()}</span>
       </div>
+
+      {hasPriorPayments && (
+        <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold">
+          <span>(-) Abonos y Pagos Previos:</span>
+          <span className="font-mono">-${totalPaid.toLocaleString()}</span>
+        </div>
+      )}
+
       <Separator className="my-1" />
       <div className="flex justify-between text-muted-foreground items-center">
         <span className="flex items-center space-x-2">
@@ -60,7 +71,7 @@ export const CheckoutBreakdown: React.FC<Props> = ({
       </div>
       <Separator className="my-1.5" />
       <div className="flex justify-between text-base font-extrabold text-foreground">
-        <span>Total a Cobrar:</span>
+        <span>{hasPriorPayments ? 'Saldo a Cobrar:' : 'Total a Cobrar:'}</span>
         <span className="font-mono text-primary">${billTotal.toLocaleString()}</span>
       </div>
     </Card>

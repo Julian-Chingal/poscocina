@@ -43,8 +43,23 @@ export const CheckoutModal: React.FC<Props> = ({
 
   const billSubtotal = parseFloat(bill.subtotal || '0');
   const billTax = parseFloat(bill.taxTotal || '0');
-  const tipAmount = (billSubtotal * tipPct) / 100;
-  const billTotal = billSubtotal + billTax + tipAmount;
+  const totalPaid = parseFloat(bill.totalPaid || '0');
+  const hasPriorPayments = totalPaid > 0.009;
+  const pendingAmount =
+    bill.pendingBalance !== undefined
+      ? parseFloat(bill.pendingBalance)
+      : Math.max(0, billSubtotal + billTax - totalPaid);
+
+  const baseForCheckout = hasPriorPayments ? pendingAmount : billSubtotal + billTax;
+  const tipBase = hasPriorPayments ? pendingAmount : billSubtotal;
+  const tipAmount = (tipBase * tipPct) / 100;
+  const billTotal = baseForCheckout + tipAmount;
+
+  const destinationLabel = bill.table
+    ? bill.table.label
+    : bill.guestName
+    ? `Para Llevar (${bill.guestName})`
+    : 'Para Llevar';
 
   const tenderedNum = parseFloat(cashTendered) || 0;
   const changeDue = Math.max(0, tenderedNum - billTotal);
@@ -58,9 +73,11 @@ export const CheckoutModal: React.FC<Props> = ({
             <Sparkles className="w-3.5 h-3.5" />
             <span>Caja & Facturación Directa</span>
           </div>
-          <DialogTitle className="text-xl font-black">Cobro de Cuenta</DialogTitle>
+          <DialogTitle className="text-xl font-black">
+            {hasPriorPayments ? 'Cobro de Saldo Pendiente' : 'Cobro de Cuenta'}
+          </DialogTitle>
           <DialogDescription>
-            {bill.table ? bill.table.label : 'Para Llevar'} • Orden #{bill.orderNumber || bill.id.slice(0, 6)}
+            {destinationLabel} • Orden #{bill.orderNumber || bill.id.slice(0, 6)}
           </DialogDescription>
         </DialogHeader>
 
@@ -70,6 +87,7 @@ export const CheckoutModal: React.FC<Props> = ({
           tipAmount={tipAmount}
           tipPct={tipPct}
           billTotal={billTotal}
+          totalPaid={totalPaid}
           onTipPctChange={setTipPct}
         />
 

@@ -15,8 +15,8 @@ export class AppendOrderItemsUseCase {
 
     const order = await this.orderRepo.findOrderById(orderId);
     if (!order) throw new NotFoundError('Comanda no encontrada');
-    if (order.status === 'paid' || order.status === 'cancelled') {
-      throw new BadRequestError('No se pueden añadir ítems a una comanda cerrada o cancelada');
+    if (order.status === 'cancelled' || order.status === 'voided') {
+      throw new BadRequestError('No se pueden añadir ítems a una comanda cancelada');
     }
 
     const activeShift = await this.orderRepo.findActiveShift(order.venueId);
@@ -58,15 +58,27 @@ export class AppendOrderItemsUseCase {
       const newTaxTotal = parseFloat(order.taxTotal) + appendedTax;
       const newTotal = newSubtotal + newTaxTotal;
 
+      const isReopening = order.status === 'paid';
       const resetKitchenStatus = order.kitchenStatus === 'delivered' ? 'queued' : order.kitchenStatus;
-      const newPaymentStatus = order.paymentStatus === 'paid' ? 'partially_paid' : order.paymentStatus;
+      const newStatus = isReopening ? 'open' : order.status;
+      const newPaymentStatus = (order.paymentStatus === 'paid' || isReopening) ? 'partially_paid' : order.paymentStatus;
+      const closedAt = isReopening ? null : order.closedAt;
+
+      if (isReopening && order.tableId) {
+        await this.orderRepo.updateTableOccupied(order.tableId, order.id, tx);
+      }
 
       const updatedOrder = await this.orderRepo.updateOrderTotals(
         orderId,
         newSubtotal.toFixed(2),
         newTaxTotal.toFixed(2),
         newTotal.toFixed(2),
-        { kitchenStatus: resetKitchenStatus, paymentStatus: newPaymentStatus },
+        {
+          status: newStatus,
+          closedAt,
+          kitchenStatus: resetKitchenStatus,
+          paymentStatus: newPaymentStatus,
+        },
         tx
       );
 

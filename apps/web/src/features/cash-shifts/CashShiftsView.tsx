@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useCashShift } from './hooks/useCashShift';
 import { usePendingBills } from './hooks/usePendingBills';
 import { CashShiftsHeader } from './components/CashShiftsHeader';
@@ -10,8 +10,12 @@ import { CloseShiftModal } from './components/CloseShiftModal';
 import { ClosedShiftReport } from './components/ClosedShiftReport';
 import { CheckoutModal } from './components/CheckoutModal';
 import { ReceiptSuccessModal } from './components/ReceiptSuccessModal';
+import { OrderDetailsDialog } from './components/OrderDetailsDialog';
+import { PendingBill } from './types/cash-shifts.types';
 
 export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
+  const [inspectingBill, setInspectingBill] = useState<PendingBill | null>(null);
+
   const {
     shiftData,
     loading,
@@ -66,6 +70,7 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
           <PendingBillsGrid
             pendingBills={pendingBills}
             onSelectBill={setSelectedBill}
+            onViewDetails={setInspectingBill}
             onRefresh={refreshPendingBills}
           />
         </div>
@@ -82,6 +87,16 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
         isOpen={showCloseModal}
         onClose={closeCloseModal}
         onConfirmClose={closeShift}
+      />
+
+      <OrderDetailsDialog
+        bill={inspectingBill}
+        isOpen={Boolean(inspectingBill)}
+        onClose={() => setInspectingBill(null)}
+        onProceedToCheckout={(bill) => {
+          setInspectingBill(null);
+          setSelectedBill(bill);
+        }}
       />
 
       {selectedBill && (
