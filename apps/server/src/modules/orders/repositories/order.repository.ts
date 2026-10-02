@@ -78,7 +78,10 @@ export class OrderRepository implements IOrderRepository {
         table: true,
         waiter: { columns: { id: true, name: true } },
         items: {
-          with: { product: true, modifiers: true },
+          with: {
+            product: true,
+            modifiers: { with: { modifier: true } },
+          },
         },
       },
     });

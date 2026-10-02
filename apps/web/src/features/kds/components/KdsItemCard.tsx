@@ -27,7 +27,7 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({
 
   return (
     <Card
-      className={`p-3.5 rounded-xl border transition-all ${
+      className={`p-4 rounded-xl border transition-all ${
         isDelivered
           ? 'bg-muted/60 border-border/70 opacity-75'
           : isReady
@@ -37,35 +37,52 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({
           : 'bg-card border-border/80 text-foreground'
       }`}
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="font-bold flex items-center space-x-2.5 min-w-0">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start space-x-3 min-w-0 flex-1">
           <Badge
             variant="outline"
-            className="text-primary text-xs sm:text-sm font-black bg-primary/15 border-primary/30 shrink-0 px-2 py-0.5"
+            className="text-primary text-sm sm:text-base font-black bg-primary/20 border-primary/40 shrink-0 px-2.5 py-1 rounded-lg"
           >
             {item.quantity}x
           </Badge>
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-foreground text-xs sm:text-sm font-bold leading-snug truncate">
+          <div className="flex flex-col min-w-0 flex-1">
+            <div className="flex items-start gap-1.5 flex-wrap">
+              <span className="text-foreground text-sm sm:text-base font-black leading-snug whitespace-normal break-words">
                 {item.product?.name || 'Producto'}
               </span>
               {item.wasModifiedHot && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-1.5 py-0.2 rounded-md">
-                  <Sparkles className="size-2.5 shrink-0" />
+                <span className="inline-flex items-center gap-1 text-xs font-bold bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md shrink-0">
+                  <Sparkles className="size-3 shrink-0" />
                   Actualizado
                 </span>
               )}
             </div>
             {item.course && item.course > 1 && (
-              <span className="text-[10px] font-medium text-muted-foreground">
+              <span className="text-xs font-semibold text-muted-foreground mt-0.5">
                 Tiempo/Paso {item.course}
               </span>
+            )}
+
+            {/* Toppings y Adiciones en Comanda KDS */}
+            {(item as any).modifiers && (item as any).modifiers.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {(item as any).modifiers.map((mod: any, mIdx: number) => {
+                  const modName = mod.modifier?.name || mod.name || 'Extra';
+                  return (
+                    <span
+                      key={`${mod.id || mIdx}`}
+                      className="inline-flex items-center text-xs bg-primary/15 text-primary border border-primary/30 px-2 py-0.5 rounded-md font-bold whitespace-normal break-words"
+                    >
+                      +{modName}
+                    </span>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
           {/* Undo Button */}
           {canUndo && (
             <Button
@@ -74,7 +91,7 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({
               size="icon"
               title="Deshacer estado anterior"
               onClick={() => onUndoStatus?.(item)}
-              className="size-8 sm:size-9 rounded-xl border-border/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground cursor-pointer shrink-0 transition-transform active:scale-90"
+              className="size-9 rounded-xl border-border/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground cursor-pointer shrink-0 transition-transform active:scale-90"
             >
               <Undo2 className="size-4" />
             </Button>
@@ -86,7 +103,7 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({
               type="button"
               size="sm"
               onClick={() => onNextStatus(item)}
-              className={`text-xs h-8 sm:h-9 px-3 rounded-xl font-bold transition-all cursor-pointer shrink-0 shadow-xs active:scale-95 ${
+              className={`text-xs sm:text-sm h-9 sm:h-10 px-3.5 sm:px-4 rounded-xl font-bold transition-all cursor-pointer shrink-0 shadow-xs active:scale-95 ${
                 isReady
                   ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'
                   : isCooking
@@ -97,7 +114,7 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({
               {isReady ? 'Servido ✓' : isCooking ? '¡Listo!' : 'Cocinar'}
             </Button>
           ) : (
-            <Badge variant="outline" className="text-[11px] font-semibold text-muted-foreground border-border/60">
+            <Badge variant="outline" className="text-xs font-semibold text-muted-foreground border-border/60 py-1 px-2.5">
               Despachado
             </Badge>
           )}
@@ -105,9 +122,9 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({
       </div>
 
       {item.notes && (
-        <div className="mt-2 text-xs text-destructive font-semibold bg-destructive/10 p-2 rounded-lg border border-destructive/30 flex items-start space-x-2">
+        <div className="mt-2.5 text-xs sm:text-sm text-destructive font-bold bg-destructive/10 p-2.5 rounded-xl border border-destructive/30 flex items-start space-x-2">
           <AlertCircle className="size-4 shrink-0 mt-0.5" />
-          <span>Nota: {item.notes}</span>
+          <span className="whitespace-normal break-words">Nota: {item.notes}</span>
         </div>
       )}
     </Card>

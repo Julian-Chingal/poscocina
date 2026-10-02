@@ -42,7 +42,12 @@ export class PrinterRepository implements IPrinterRepository {
         table: true,
         waiter: { columns: { id: true, name: true } },
         venue: true,
-        items: { with: { product: true, modifiers: true } },
+        items: {
+          with: {
+            product: true,
+            modifiers: { with: { modifier: true } },
+          },
+        },
       },
     });
   }
@@ -58,7 +63,12 @@ export class PrinterRepository implements IPrinterRepository {
             table: true,
             waiter: { columns: { id: true, name: true } },
             venue: true,
-            items: { with: { product: true, modifiers: true } },
+            items: {
+              with: {
+                product: true,
+                modifiers: { with: { modifier: true } },
+              },
+            },
           },
         },
       },

@@ -142,6 +142,16 @@ export class PrinterDriverService {
       raw += `${qtyStr} ${it.productName}\n`;
       ascii += `${qtyStr} ${it.productName}\n`;
       raw += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+      if (it.modifiers && Array.isArray(it.modifiers) && it.modifiers.length > 0) {
+        for (const mod of it.modifiers) {
+          const modName = typeof mod === 'string' ? mod : mod.name || mod.modifier?.name;
+          if (modName) {
+            const modStr = `   + [EXTRA]: ${modName}\n`;
+            raw += CMD.BOLD_ON + modStr + CMD.BOLD_OFF;
+            ascii += modStr;
+          }
+        }
+      }
 
       if (it.notes && it.notes.trim()) {
         const noteStr = `   >> NOTA: ${it.notes.trim()}\n`;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Minus, Trash2, FileText } from 'lucide-react';
+import { Plus, Minus, Trash2, FileText, SlidersHorizontal } from 'lucide-react';
 import { CartItem } from '../types/pos.types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ interface Props {
   index: number;
   onUpdateQuantity: (index: number, delta: number) => void;
   onUpdateNotes: (index: number, notes: string) => void;
+  onCustomizeItem?: (index: number) => void;
 }
 
 export const CartItemRow: React.FC<Props> = ({
@@ -17,25 +18,30 @@ export const CartItemRow: React.FC<Props> = ({
   index,
   onUpdateQuantity,
   onUpdateNotes,
+  onCustomizeItem,
 }) => {
   const [showNotesInput, setShowNotesInput] = useState(Boolean(item.notes));
   const unitPrice = parseFloat(item.product.price || '0');
   const modsDelta = item.modifiers?.reduce((acc, m) => acc + (m.priceDelta || 0), 0) || 0;
   const lineTotal = (unitPrice + modsDelta) * item.quantity;
+  const hasModifiersInProduct = Boolean(
+    item.product.modifierGroups && item.product.modifierGroups.length > 0
+  );
+  const hasSelectedModifiers = Boolean(item.modifiers && item.modifiers.length > 0);
 
   return (
-    <Card className="p-3 bg-muted/25 hover:bg-muted/40 rounded-xl border border-border/70 space-y-2.5 transition-all">
-      <div className="flex items-start justify-between gap-2">
+    <Card className="p-3 sm:p-3.5 bg-muted/25 hover:bg-muted/40 rounded-xl border border-border/70 space-y-2.5 transition-all">
+      <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <h5 className="text-xs sm:text-sm font-bold text-foreground leading-snug truncate">
+          <h5 className="text-sm sm:text-base font-bold text-foreground leading-snug whitespace-normal break-words">
             {item.product.name}
           </h5>
-          <span className="text-[11px] font-mono tabular-nums text-muted-foreground">
+          <span className="text-xs font-mono tabular-nums text-muted-foreground mt-0.5 block">
             ${(unitPrice + modsDelta).toLocaleString()} c/u
           </span>
 
-          {item.modifiers && item.modifiers.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1.5">
+          {hasSelectedModifiers && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
               {item.modifiers.map((mod, mIdx) => {
                 const modName =
                   mod.name ||
@@ -46,16 +52,17 @@ export const CartItemRow: React.FC<Props> = ({
                 return (
                   <span
                     key={`${mod.modifierId}-${mIdx}`}
-                    className="inline-flex items-center text-[10px] bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded-md font-medium"
+                    className="inline-flex items-center text-xs bg-primary/10 text-primary border border-primary/25 px-2 py-0.5 rounded-md font-semibold whitespace-normal break-words"
                   >
                     +{modName}
+                    {mod.priceDelta > 0 && ` (+$${mod.priceDelta.toLocaleString()})`}
                   </span>
                 );
               })}
             </div>
           )}
         </div>
-        <span className="text-xs sm:text-sm font-extrabold font-mono tabular-nums text-primary shrink-0">
+        <span className="text-sm sm:text-base font-extrabold font-mono tabular-nums text-primary shrink-0 pt-0.5">
           ${lineTotal.toLocaleString()}
         </span>
       </div>
@@ -91,20 +98,39 @@ export const CartItemRow: React.FC<Props> = ({
           </Button>
         </div>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          type="button"
-          onClick={() => setShowNotesInput(!showNotesInput)}
-          className={`h-7 px-2 text-[11px] rounded-lg flex items-center gap-1.5 transition-colors ${
-            item.notes
-              ? 'text-primary font-bold bg-primary/10'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-          }`}
-        >
-          <FileText className="size-3" />
-          <span>{item.notes ? 'Editar nota' : '+ Nota'}</span>
-        </Button>
+        <div className="flex items-center gap-1.5">
+          {(hasModifiersInProduct || hasSelectedModifiers) && onCustomizeItem && (
+            <Button
+              variant="ghost"
+              size="sm"
+              type="button"
+              onClick={() => onCustomizeItem(index)}
+              className={`h-7 px-2 text-[11px] rounded-lg flex items-center gap-1 transition-colors ${
+                hasSelectedModifiers
+                  ? 'text-primary font-bold bg-primary/10 hover:bg-primary/20'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              <SlidersHorizontal className="size-3" />
+              <span>{hasSelectedModifiers ? 'Toppings' : '+ Toppings'}</span>
+            </Button>
+          )}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            type="button"
+            onClick={() => setShowNotesInput(!showNotesInput)}
+            className={`h-7 px-2 text-[11px] rounded-lg flex items-center gap-1.5 transition-colors ${
+              item.notes
+                ? 'text-primary font-bold bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+          >
+            <FileText className="size-3" />
+            <span>{item.notes ? 'Nota' : '+ Nota'}</span>
+          </Button>
+        </div>
       </div>
 
       {showNotesInput && (

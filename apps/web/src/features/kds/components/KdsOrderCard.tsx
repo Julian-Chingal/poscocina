@@ -33,35 +33,35 @@ export const KdsOrderCard: React.FC<KdsOrderCardProps> = ({
       className={`w-full min-w-0 h-full border rounded-2xl overflow-hidden flex flex-col shadow-xl transition-all ${urgency.cardBorder}`}
     >
       {/* Order Header */}
-      <CardHeader className="bg-muted/50 px-4 py-3 border-b border-border/80 flex flex-row items-center justify-between space-y-0 gap-2">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-base sm:text-lg font-black text-foreground tracking-tight truncate">
+      <CardHeader className="bg-muted/50 px-4 py-3.5 border-b border-border/80 flex flex-row items-start justify-between space-y-0 gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-base sm:text-xl font-black text-foreground tracking-tight whitespace-normal break-words">
               {order.table?.label || (order.guestName ? `Para Llevar (${order.guestName})` : 'Para Llevar')}
             </span>
             {order.orderNumber && (
-              <span className="text-xs font-mono font-bold bg-background/80 border border-border/80 text-foreground px-2 py-0.5 rounded-lg shadow-2xs">
+              <span className="text-xs sm:text-sm font-mono font-bold bg-background/90 border border-border/80 text-foreground px-2.5 py-0.5 rounded-lg shadow-2xs shrink-0">
                 #{order.orderNumber}
               </span>
             )}
           </div>
-          <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
+          <div className="text-xs text-muted-foreground mt-1 whitespace-normal break-words">
             Mesero: <span className="text-foreground font-semibold">{order.waiter?.name || 'Caja'}</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 pt-0.5">
           {order.paymentStatus === 'paid' ? (
             <Badge
               variant="outline"
-              className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/40 text-[10px] font-extrabold tracking-wider uppercase px-2 py-0.5 shadow-2xs"
+              className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/40 text-xs font-black tracking-wider uppercase px-2.5 py-0.5 shadow-2xs"
             >
               Pagado
             </Badge>
           ) : (
             <Badge
               variant="outline"
-              className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/40 text-[10px] font-extrabold tracking-wider uppercase px-2 py-0.5 shadow-2xs"
+              className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/40 text-xs font-black tracking-wider uppercase px-2.5 py-0.5 shadow-2xs"
             >
               Por Cobrar
             </Badge>
@@ -70,17 +70,17 @@ export const KdsOrderCard: React.FC<KdsOrderCardProps> = ({
           {/* Urgency Badge with tabular timer */}
           <Badge
             variant="outline"
-            className={`gap-1.5 text-xs px-2.5 py-1 font-mono tabular-nums shadow-2xs ${urgency.badge}`}
+            className={`gap-1.5 text-xs sm:text-sm px-2.5 py-1 font-mono tabular-nums shadow-2xs ${urgency.badge}`}
             title={urgency.label}
           >
-            <Clock className="size-3.5 shrink-0" strokeWidth={2.2} />
+            <Clock className="size-3.5 sm:size-4 shrink-0" strokeWidth={2.2} />
             <span>{urgency.elapsedMinutes}m</span>
           </Badge>
         </div>
       </CardHeader>
 
       {/* Items List */}
-      <CardContent className="p-3.5 space-y-2.5 flex-1 overflow-y-auto max-h-96">
+      <CardContent className="p-3.5 sm:p-4 space-y-3 flex-1 overflow-y-auto max-h-[38rem]">
         {order.items.map((item) => (
           <KdsItemCard
             key={item.id}

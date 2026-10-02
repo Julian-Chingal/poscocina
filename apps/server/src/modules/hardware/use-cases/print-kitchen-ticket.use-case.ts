@@ -22,6 +22,7 @@ export class PrintKitchenTicketUseCase {
         quantity: it.quantity,
         productName: it.product?.name || 'Producto',
         notes: it.notes,
+        modifiers: (it.modifiers || []).map((m: any) => m.modifier?.name || m.name).filter(Boolean),
       });
     }
 

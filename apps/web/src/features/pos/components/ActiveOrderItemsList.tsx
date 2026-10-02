@@ -120,42 +120,72 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
   return (
     <div className="space-y-2 mt-3 pt-3 border-t border-border/80">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-          <ChefHat className="size-3.5 text-primary" />
+        <span className="text-sm font-bold text-foreground flex items-center gap-1.5">
+          <ChefHat className="size-4 text-primary" />
           En Comanda / Cocina ({items.length})
         </span>
       </div>
 
-      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+      <div className="space-y-2 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
         {items.map((item: any) => (
           <div
             key={item.id}
-            className="flex items-center justify-between p-2 rounded-lg bg-background border border-border/70 text-xs gap-2"
+            className="flex items-start justify-between p-3 rounded-xl bg-background border border-border/80 text-sm gap-2.5 shadow-2xs"
           >
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-foreground truncate">
-                  {item.quantity}x {item.product?.name || 'Producto'}
-                </span>
-                {getStatusBadge(item.status)}
+              <div className="flex items-start justify-between gap-2 flex-wrap">
+                <div className="flex items-start gap-2 flex-1 min-w-0">
+                  <Badge
+                    variant="outline"
+                    className="text-primary text-xs sm:text-sm font-black bg-primary/15 border-primary/30 shrink-0 px-2 py-0.5 mt-0.5"
+                  >
+                    {item.quantity}x
+                  </Badge>
+                  <span className="font-bold text-sm sm:text-base text-foreground leading-snug whitespace-normal break-words">
+                    {item.product?.name || 'Producto'}
+                  </span>
+                </div>
+                <div className="shrink-0 pt-0.5">
+                  {getStatusBadge(item.status)}
+                </div>
               </div>
+
+              {/* Toppings / Extras añadidos a la comanda */}
+              {item.modifiers && item.modifiers.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {item.modifiers.map((mod: any, mIdx: number) => {
+                    const modName = mod.modifier?.name || mod.name || 'Extra';
+                    const priceDelta = parseFloat(mod.priceDelta || mod.modifier?.priceDelta || '0');
+                    return (
+                      <span
+                        key={`${mod.id || mod.modifierId || mIdx}`}
+                        className="inline-flex items-center text-xs bg-primary/10 text-primary border border-primary/25 px-2 py-0.5 rounded-md font-semibold whitespace-normal break-words"
+                      >
+                        +{modName}
+                        {priceDelta > 0 && ` (+$${priceDelta.toLocaleString()})`}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+
               {item.notes && (
-                <p className="text-[11px] text-muted-foreground truncate mt-0.5 italic">
+                <p className="text-xs text-muted-foreground whitespace-normal break-words mt-1.5 italic bg-muted/40 p-1.5 rounded-md border border-border/50">
                   Nota: {item.notes}
                 </p>
               )}
             </div>
 
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-1 shrink-0 pt-0.5">
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 title="Editar / Cambiar ítem"
                 onClick={() => handleOpenEdit(item)}
-                className="size-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                className="size-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
               >
-                <Edit3 className="size-3.5" />
+                <Edit3 className="size-4" />
               </Button>
               <Button
                 type="button"
@@ -163,9 +193,9 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
                 size="icon"
                 title="Eliminar de comanda"
                 onClick={() => handleDeleteItem(item)}
-                className="size-7 rounded-md text-destructive/80 hover:text-destructive hover:bg-destructive/10"
+                className="size-8 rounded-lg text-destructive/80 hover:text-destructive hover:bg-destructive/10"
               >
-                <Trash2 className="size-3.5" />
+                <Trash2 className="size-4" />
               </Button>
             </div>
           </div>
