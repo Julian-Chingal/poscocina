@@ -17,6 +17,7 @@ const PurchasesTab = lazy(() => import('./components/PurchasesTab').then((m) => 
 const SuppliersTab = lazy(() => import('./components/SuppliersTab').then((m) => ({ default: m.SuppliersTab })));
 const RecipesTab = lazy(() => import('./components/RecipesTab').then((m) => ({ default: m.RecipesTab })));
 const MovementsTab = lazy(() => import('./components/MovementsTab').then((m) => ({ default: m.MovementsTab })));
+const ModifiersManagerModal = lazy(() => import('../catalog/components/ModifiersManagerModal').then((m) => ({ default: m.ModifiersManagerModal })));
 
 export const InventoryView: React.FC<{ venueId: string }> = ({ venueId }) => {
   const [activeTab, setActiveTab] = useState<InventoryTab>('stock');
@@ -65,15 +66,34 @@ export const InventoryView: React.FC<{ venueId: string }> = ({ venueId }) => {
         {activeTab === 'recipes' && (
           <RecipesTab
             products={recipes.products}
+            allProductsCount={recipes.allProducts.length}
             items={stock.items}
             selectedProductId={recipes.selectedProductId}
             currentRecipe={recipes.currentRecipe}
             isSaving={recipes.isSaving}
+            onlyTrackable={recipes.onlyTrackable}
+            searchProductQuery={recipes.searchProductQuery}
+            onSetOnlyTrackable={recipes.setOnlyTrackable}
+            onSearchProductChange={recipes.setSearchProductQuery}
             onSelectProduct={recipes.setSelectedProductId}
             onAddIngredient={recipes.addIngredient}
+            onUpdateIngredientItem={recipes.updateIngredientItem}
             onUpdateIngredientQty={recipes.updateIngredientQty}
             onRemoveIngredient={recipes.removeIngredient}
             onSaveRecipe={recipes.saveRecipe}
+          />
+        )}
+
+        {activeTab === 'toppings' && (
+          <ModifiersManagerModal
+            isOpen={true}
+            venueId={venueId}
+            allProducts={recipes.allProducts}
+            onClose={() => setActiveTab('stock')}
+            onCatalogUpdated={() => {
+              recipes.refreshCatalog();
+              stock.refreshItems();
+            }}
           />
         )}
 

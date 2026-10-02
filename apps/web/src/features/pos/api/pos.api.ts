@@ -1,6 +1,7 @@
 import { api } from '@/services/api';
 import { Customer, TableItem } from '../types/pos.types';
 import { usbPrinterService } from '@/services/usb-printer.service';
+import type { IssueReceiptInput, SplitEqualPaymentInput, SplitItemsPaymentInput } from '@poscocina/shared';
 
 export const posApi = {
   getCatalog: (venueId: string) => api.get(`/venues/${venueId}/catalog`),
@@ -34,7 +35,11 @@ export const posApi = {
 
   requestCheck: (orderId: string) => api.post(`/orders/${orderId}/request-check`),
 
-  processPayment: (payload: any) => api.post('/receipts', payload),
+  processPayment: (payload: IssueReceiptInput) => api.post('/receipts', payload),
+
+  splitEqual: (payload: SplitEqualPaymentInput) => api.post('/billing/split-equal', payload),
+
+  splitItems: (payload: SplitItemsPaymentInput) => api.post('/billing/split-items', payload),
 
   printReceipt: async (receiptId: string) => {
     const res: any = await api.post('/hardware/print-receipt', { receiptId });

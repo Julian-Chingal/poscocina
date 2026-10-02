@@ -49,3 +49,38 @@ export type CreateCategoryInput = z.infer<typeof CreateCategorySchema>;
 export type UpdateCategoryInput = z.infer<typeof UpdateCategorySchema>;
 export type CreateProductInput = z.infer<typeof CreateProductSchema>;
 export type UpdateProductInput = z.infer<typeof UpdateProductSchema>;
+
+// Modifiers & Toppings Schemas
+export const CreateModifierGroupSchema = z.object({
+  name: z.string().min(1, 'El nombre del grupo es obligatorio'),
+  selectionType: z.enum(['single', 'multiple']).default('single'),
+  isRequired: z.boolean().default(false),
+  minSelections: z.number().int().min(0).default(0),
+  maxSelections: z.number().int().min(1).optional().nullable(),
+  sortOrder: z.number().int().default(0),
+});
+
+export const UpdateModifierGroupSchema = CreateModifierGroupSchema.partial();
+
+export const CreateModifierSchema = z.object({
+  name: z.string().min(1, 'El nombre del modificador es obligatorio'),
+  priceDelta: z.number().min(0).default(0),
+  isDefault: z.boolean().default(false),
+  isAvailable: z.boolean().default(true),
+  sortOrder: z.number().int().default(0),
+});
+
+export const UpdateModifierSchema = CreateModifierSchema.partial();
+
+export const LinkProductModifierGroupSchema = z.object({
+  groupId: z.string().uuid('ID de grupo inválido'),
+  isRequired: z.boolean().optional().nullable(),
+  sortOrder: z.number().int().default(0),
+});
+
+export type CreateModifierGroupInput = z.infer<typeof CreateModifierGroupSchema>;
+export type UpdateModifierGroupInput = z.infer<typeof UpdateModifierGroupSchema>;
+export type CreateModifierInput = z.infer<typeof CreateModifierSchema>;
+export type UpdateModifierInput = z.infer<typeof UpdateModifierSchema>;
+export type LinkProductModifierGroupInput = z.infer<typeof LinkProductModifierGroupSchema>;
+

@@ -8,6 +8,11 @@ import {
   UpdateCategorySchema,
   CreateProductSchema,
   UpdateProductSchema,
+  CreateModifierGroupSchema,
+  UpdateModifierGroupSchema,
+  CreateModifierSchema,
+  UpdateModifierSchema,
+  LinkProductModifierGroupSchema,
 } from '@poscocina/shared';
 
 export class CatalogController {
@@ -79,6 +84,85 @@ export class CatalogController {
     request.server.io?.emit('catalog:product_updated', updated);
     return reply.send(updated);
   }
+
+  // Modifier Groups & Modifiers
+  async getModifierGroups(request: FastifyRequest, reply: FastifyReply) {
+    const { venueId } = request.params as { venueId: string };
+    const targetVenueId = await resolveVenueId(request, venueId);
+    const groups = await this.useCase.getModifierGroups(targetVenueId);
+    return reply.send(groups);
+  }
+
+  async createModifierGroup(request: FastifyRequest, reply: FastifyReply) {
+    const { venueId } = request.params as { venueId: string };
+    const targetVenueId = await resolveVenueId(request, venueId);
+    const data = validate(CreateModifierGroupSchema, request.body);
+    const newGroup = await this.useCase.createModifierGroup(targetVenueId, data);
+
+    request.server.io?.emit('catalog:modifier_group_created', newGroup);
+    return reply.status(201).send(newGroup);
+  }
+
+  async updateModifierGroup(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const data = validate(UpdateModifierGroupSchema, request.body);
+    const updated = await this.useCase.updateModifierGroup(id, data);
+
+    request.server.io?.emit('catalog:modifier_group_updated', updated);
+    return reply.send(updated);
+  }
+
+  async deleteModifierGroup(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const result = await this.useCase.deleteModifierGroup(id);
+
+    request.server.io?.emit('catalog:modifier_group_deleted', { id });
+    return reply.send(result);
+  }
+
+  async createModifier(request: FastifyRequest, reply: FastifyReply) {
+    const { groupId } = request.params as { groupId: string };
+    const data = validate(CreateModifierSchema, request.body);
+    const newModifier = await this.useCase.createModifier(groupId, data);
+
+    request.server.io?.emit('catalog:modifier_created', newModifier);
+    return reply.status(201).send(newModifier);
+  }
+
+  async updateModifier(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const data = validate(UpdateModifierSchema, request.body);
+    const updated = await this.useCase.updateModifier(id, data);
+
+    request.server.io?.emit('catalog:modifier_updated', updated);
+    return reply.send(updated);
+  }
+
+  async deleteModifier(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const result = await this.useCase.deleteModifier(id);
+
+    request.server.io?.emit('catalog:modifier_deleted', { id });
+    return reply.send(result);
+  }
+
+  async linkProductModifierGroup(request: FastifyRequest, reply: FastifyReply) {
+    const { id: productId } = request.params as { id: string };
+    const data = validate(LinkProductModifierGroupSchema, request.body);
+    const result = await this.useCase.linkProductModifierGroup(productId, data.groupId, data.isRequired, data.sortOrder);
+
+    request.server.io?.emit('catalog:product_modifier_linked', { productId, groupId: data.groupId });
+    return reply.status(201).send(result);
+  }
+
+  async unlinkProductModifierGroup(request: FastifyRequest, reply: FastifyReply) {
+    const { id: productId, groupId } = request.params as { id: string; groupId: string };
+    const result = await this.useCase.unlinkProductModifierGroup(productId, groupId);
+
+    request.server.io?.emit('catalog:product_modifier_unlinked', { productId, groupId });
+    return reply.send(result);
+  }
 }
 
 export const catalogController = new CatalogController();
+

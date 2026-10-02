@@ -68,7 +68,7 @@ export interface PosViewProps {
   selectedTable?: TableItem | null;
 }
 
-export type SplitMode = 'single' | 'equal' | 'items';
+export type SplitMode = 'single' | 'equal' | 'custom' | 'items';
 export type PaymentMethod = 'cash' | 'card_credit' | 'transfer';
 export type DiscountType = 'percent' | 'fixed';
 

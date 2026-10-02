@@ -6,7 +6,9 @@ export const usePosCart = (taxRate: number = 0.08) => {
 
   const addToCart = useCallback((product: Product) => {
     setCart((prev) => {
-      const existingIdx = prev.findIndex((item) => item.product.id === product.id && !item.notes);
+      const existingIdx = prev.findIndex(
+        (item) => item.product.id === product.id && !item.notes && (!item.modifiers || item.modifiers.length === 0)
+      );
       if (existingIdx >= 0) {
         const next = [...prev];
         next[existingIdx].quantity += 1;
@@ -15,6 +17,26 @@ export const usePosCart = (taxRate: number = 0.08) => {
       return [...prev, { product, quantity: 1, notes: '', modifiers: [] }];
     });
   }, []);
+
+  const addCustomizedToCart = useCallback(
+    (
+      product: Product,
+      quantity: number,
+      notes: string,
+      modifiers: Array<{ modifierId: string; priceDelta: number; name?: string }>
+    ) => {
+      setCart((prev) => [
+        ...prev,
+        {
+          product,
+          quantity: Math.max(1, quantity),
+          notes,
+          modifiers,
+        },
+      ]);
+    },
+    []
+  );
 
   const updateQuantity = useCallback((index: number, delta: number) => {
     setCart((prev) => {
@@ -35,6 +57,30 @@ export const usePosCart = (taxRate: number = 0.08) => {
       return next;
     });
   }, []);
+
+  const updateCartItem = useCallback(
+    (
+      index: number,
+      updates: {
+        quantity?: number;
+        notes?: string;
+        modifiers?: Array<{ modifierId: string; priceDelta: number; name?: string }>;
+      }
+    ) => {
+      setCart((prev) => {
+        if (!prev[index]) return prev;
+        const next = [...prev];
+        next[index] = {
+          ...next[index],
+          ...(updates.quantity !== undefined ? { quantity: updates.quantity } : {}),
+          ...(updates.notes !== undefined ? { notes: updates.notes } : {}),
+          ...(updates.modifiers !== undefined ? { modifiers: updates.modifiers } : {}),
+        };
+        return next;
+      });
+    },
+    []
+  );
 
   const clearCart = useCallback(() => {
     setCart([]);
@@ -61,8 +107,10 @@ export const usePosCart = (taxRate: number = 0.08) => {
   return {
     cart,
     addToCart,
+    addCustomizedToCart,
     updateQuantity,
     updateNotes,
+    updateCartItem,
     clearCart,
     subtotal,
     taxTotal,

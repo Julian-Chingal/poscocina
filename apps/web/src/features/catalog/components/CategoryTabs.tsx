@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, SlidersHorizontal } from 'lucide-react';
 import { Category, Product } from '../types/catalog.types';
 import { Button } from '@/components/ui/button';
 
@@ -12,6 +12,7 @@ interface Props {
   onOpenCreateCategory: () => void;
   onEditCategory: (cat: Category, e: React.MouseEvent) => void;
   onDeleteCategory: (cat: Category) => void;
+  onOpenModifiers?: () => void;
 }
 
 export const CategoryTabs: React.FC<Props> = ({
@@ -23,6 +24,7 @@ export const CategoryTabs: React.FC<Props> = ({
   onOpenCreateCategory,
   onEditCategory,
   onDeleteCategory,
+  onOpenModifiers,
 }) => {
   return (
     <div className="flex items-center space-x-2 overflow-x-auto pb-4 mb-6">
@@ -96,6 +98,18 @@ export const CategoryTabs: React.FC<Props> = ({
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Nueva Categoría</span>
+        </Button>
+      )}
+
+      {onOpenModifiers && (
+        <Button
+          variant="outline"
+          type="button"
+          onClick={onOpenModifiers}
+          className="flex items-center space-x-1.5 px-3.5 h-9 rounded-xl text-xs font-bold text-foreground hover:text-primary bg-card hover:bg-primary/10 border border-border/80 hover:border-primary/40 whitespace-nowrap ml-auto shadow-2xs"
+        >
+          <SlidersHorizontal className="size-3.5 text-primary" />
+          <span>Toppings & Modificadores</span>
         </Button>
       )}
     </div>

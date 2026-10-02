@@ -1,5 +1,5 @@
 import React from 'react';
-import { Utensils, Plus } from 'lucide-react';
+import { Utensils, Plus, SlidersHorizontal } from 'lucide-react';
 import { SearchInput } from '@/components/common/search-input';
 import { Button } from '@/components/ui/button';
 
@@ -8,6 +8,7 @@ interface Props {
   isManager: boolean;
   onSearchChange: (val: string) => void;
   onOpenCreateProduct: () => void;
+  onOpenModifiersManager?: () => void;
 }
 
 export const CatalogHeader: React.FC<Props> = ({
@@ -15,6 +16,7 @@ export const CatalogHeader: React.FC<Props> = ({
   isManager,
   onSearchChange,
   onOpenCreateProduct,
+  onOpenModifiersManager,
 }) => {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 mb-8 border-b border-border gap-4">
@@ -27,7 +29,7 @@ export const CatalogHeader: React.FC<Props> = ({
           Menú, Platos y Precios
         </h2>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Configuración de catálogo, impuestos (INC 8% / IVA 19%), disponibilidad y estaciones.
+          Configuración de catálogo, impuestos (INC 8% / IVA 19%), disponibilidad, toppings y estaciones.
         </p>
       </div>
 
@@ -38,6 +40,18 @@ export const CatalogHeader: React.FC<Props> = ({
           placeholder="Buscar plato o bebida..."
           className="flex-1 sm:w-64"
         />
+
+        {onOpenModifiersManager && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onOpenModifiersManager}
+            className="flex items-center space-x-1.5 text-xs font-semibold px-3 h-10 rounded-xl whitespace-nowrap shadow-xs"
+          >
+            <SlidersHorizontal className="w-4 h-4 text-primary" />
+            <span>Toppings / Extras</span>
+          </Button>
+        )}
 
         {isManager && (
           <Button

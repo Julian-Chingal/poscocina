@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useCatalogData } from './hooks/useCatalogData';
 import { useCatalogMutations } from './hooks/useCatalogMutations';
@@ -8,11 +8,13 @@ import { ProductGrid } from './components/ProductGrid';
 import { CategoryModal } from './components/CategoryModal';
 import { ProductModal } from './components/ProductModal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
+import { ModifiersManagerModal } from './components/ModifiersManagerModal';
 
 export const CatalogView: React.FC<{ venueId: string }> = ({ venueId }) => {
   const { isManager } = usePermissions();
   const data = useCatalogData(venueId);
   const mutations = useCatalogMutations(venueId, data.refreshCatalog);
+  const [showModifiersModal, setShowModifiersModal] = useState(false);
 
   return (
     <div className="w-full min-w-0 max-w-7xl mx-auto p-6 sm:p-10 space-y-6">
@@ -21,6 +23,7 @@ export const CatalogView: React.FC<{ venueId: string }> = ({ venueId }) => {
         isManager={isManager}
         onSearchChange={data.setSearch}
         onOpenCreateProduct={mutations.openCreateProduct}
+        onOpenModifiersManager={() => setShowModifiersModal(true)}
       />
 
       <CategoryTabs
@@ -32,6 +35,7 @@ export const CatalogView: React.FC<{ venueId: string }> = ({ venueId }) => {
         onOpenCreateCategory={mutations.openCreateCategory}
         onEditCategory={mutations.openEditCategory}
         onDeleteCategory={(c) => mutations.setDeleteTarget({ type: 'category', id: c.id, name: c.name })}
+        onOpenModifiers={() => setShowModifiersModal(true)}
       />
 
       <ProductGrid
@@ -41,7 +45,6 @@ export const CatalogView: React.FC<{ venueId: string }> = ({ venueId }) => {
         isManager={isManager}
         onOpenCreateProduct={mutations.openCreateProduct}
         onToggleAvailability={mutations.toggleAvailability}
-
         onEditProduct={mutations.openEditProduct}
         onDeleteProduct={(p) => mutations.setDeleteTarget({ type: 'product', id: p.id, name: p.name })}
       />
@@ -72,6 +75,15 @@ export const CatalogView: React.FC<{ venueId: string }> = ({ venueId }) => {
         submitting={mutations.submitting}
         onClose={() => mutations.setDeleteTarget(null)}
         onConfirm={mutations.confirmDelete}
+      />
+
+      {/* Modifiers & Toppings Manager Modal */}
+      <ModifiersManagerModal
+        isOpen={showModifiersModal}
+        venueId={venueId}
+        allProducts={data.products}
+        onClose={() => setShowModifiersModal(false)}
+        onCatalogUpdated={data.refreshCatalog}
       />
     </div>
   );

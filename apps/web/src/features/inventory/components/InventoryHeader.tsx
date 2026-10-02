@@ -1,5 +1,5 @@
 import React from 'react';
-import { Boxes, Truck, Building2, CookingPot, History } from 'lucide-react';
+import { Boxes, Truck, Building2, CookingPot, History, SlidersHorizontal } from 'lucide-react';
 import { InventoryTab } from '../types/inventory.types';
 import { Button } from '@/components/ui/button';
 
@@ -14,6 +14,7 @@ export const InventoryHeader: React.FC<Props> = ({ activeTab, onSelectTab }) => 
     { id: 'purchases' as const, label: 'Facturas de Compra', icon: Truck },
     { id: 'suppliers' as const, label: 'Proveedores', icon: Building2 },
     { id: 'recipes' as const, label: 'Escandallo & Recetas', icon: CookingPot },
+    { id: 'toppings' as const, label: 'Toppings & Modificadores', icon: SlidersHorizontal },
     { id: 'movements' as const, label: 'Kardex de Movimientos', icon: History },
   ];
 

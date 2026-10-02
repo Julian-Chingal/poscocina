@@ -56,4 +56,55 @@ export class ManageCatalogUseCase {
     if (!existing) throw new NotFoundError('Producto no encontrado');
     return await this.catalogRepo.toggleProductAvailability(id);
   }
+
+  // Modifier Groups & Modifiers
+  async getModifierGroups(venueId: string) {
+    return await this.catalogRepo.findModifierGroups(venueId);
+  }
+
+  async createModifierGroup(venueId: string, data: any) {
+    return await this.catalogRepo.createModifierGroup(venueId, data);
+  }
+
+  async updateModifierGroup(id: string, data: any) {
+    const existing = await this.catalogRepo.findModifierGroupById(id);
+    if (!existing) throw new NotFoundError('Grupo de modificadores no encontrado');
+    return await this.catalogRepo.updateModifierGroup(id, data);
+  }
+
+  async deleteModifierGroup(id: string) {
+    const existing = await this.catalogRepo.findModifierGroupById(id);
+    if (!existing) throw new NotFoundError('Grupo de modificadores no encontrado');
+    await this.catalogRepo.deleteModifierGroup(id);
+    return { success: true };
+  }
+
+  async createModifier(groupId: string, data: any) {
+    const existing = await this.catalogRepo.findModifierGroupById(groupId);
+    if (!existing) throw new NotFoundError('Grupo de modificadores no encontrado');
+    return await this.catalogRepo.createModifier(groupId, data);
+  }
+
+  async updateModifier(id: string, data: any) {
+    return await this.catalogRepo.updateModifier(id, data);
+  }
+
+  async deleteModifier(id: string) {
+    await this.catalogRepo.deleteModifier(id);
+    return { success: true };
+  }
+
+  async linkProductModifierGroup(productId: string, groupId: string, isRequired?: boolean | null, sortOrder?: number) {
+    const product = await this.catalogRepo.findProductById(productId);
+    if (!product) throw new NotFoundError('Producto no encontrado');
+    const group = await this.catalogRepo.findModifierGroupById(groupId);
+    if (!group) throw new NotFoundError('Grupo de modificadores no encontrado');
+    return await this.catalogRepo.linkProductModifierGroup(productId, groupId, isRequired, sortOrder);
+  }
+
+  async unlinkProductModifierGroup(productId: string, groupId: string) {
+    await this.catalogRepo.unlinkProductModifierGroup(productId, groupId);
+    return { success: true };
+  }
 }
+

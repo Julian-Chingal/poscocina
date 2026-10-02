@@ -25,4 +25,32 @@ export const catalogApi = {
 
   toggleProductAvailability: (productId: string): Promise<Product> =>
     api.patch(`/products/${productId}/toggle-availability`),
+
+  // Modifier Groups & Toppings
+  getModifierGroups: (venueId: string): Promise<any[]> =>
+    api.get(`/venues/${venueId}/modifier-groups`),
+
+  createModifierGroup: (venueId: string, data: any): Promise<any> =>
+    api.post(`/venues/${venueId}/modifier-groups`, data),
+
+  updateModifierGroup: (venueId: string, id: string, data: any): Promise<any> =>
+    api.patch(`/venues/${venueId}/modifier-groups/${id}`, data),
+
+  deleteModifierGroup: (venueId: string, id: string): Promise<void> =>
+    api.delete(`/venues/${venueId}/modifier-groups/${id}`),
+
+  createModifier: (venueId: string, groupId: string, data: any): Promise<any> =>
+    api.post(`/venues/${venueId}/modifier-groups/${groupId}/modifiers`, data),
+
+  updateModifier: (venueId: string, id: string, data: any): Promise<any> =>
+    api.patch(`/venues/${venueId}/modifiers/${id}`, data),
+
+  deleteModifier: (venueId: string, id: string): Promise<void> =>
+    api.delete(`/venues/${venueId}/modifiers/${id}`),
+
+  linkProductModifierGroup: (productId: string, groupId: string, isRequired?: boolean, sortOrder?: number): Promise<any> =>
+    api.post(`/products/${productId}/modifier-groups`, { groupId, isRequired, sortOrder }),
+
+  unlinkProductModifierGroup: (productId: string, groupId: string): Promise<void> =>
+    api.delete(`/products/${productId}/modifier-groups/${groupId}`),
 };

@@ -120,6 +120,126 @@ export class CatalogRepository implements ICatalogRepository {
       .returning();
     return updated;
   }
+
+  async findModifierGroups(venueId: string) {
+    return await this.database.query.modifierGroups.findMany({
+      where: (mg, { eq }) => eq(mg.venueId, venueId),
+      orderBy: (mg, { asc }) => [asc(mg.sortOrder)],
+      with: {
+        modifiers: {
+          orderBy: (m, { asc }) => [asc(m.sortOrder)],
+        },
+        products: {
+          with: {
+            product: true,
+          },
+        },
+      },
+    });
+  }
+
+  async findModifierGroupById(id: string) {
+    return await this.database.query.modifierGroups.findFirst({
+      where: (mg, { eq }) => eq(mg.id, id),
+      with: {
+        modifiers: {
+          orderBy: (m, { asc }) => [asc(m.sortOrder)],
+        },
+      },
+    });
+  }
+
+  async createModifierGroup(venueId: string, data: any) {
+    const [created] = await this.database
+      .insert(schema.modifierGroups)
+      .values({
+        venueId,
+        name: data.name.trim(),
+        selectionType: data.selectionType || 'single',
+        isRequired: data.isRequired ?? false,
+        minSelections: data.minSelections ?? 0,
+        maxSelections: data.maxSelections ?? null,
+        sortOrder: data.sortOrder ?? 0,
+      })
+      .returning();
+    return created;
+  }
+
+  async updateModifierGroup(id: string, data: any) {
+    const [updated] = await this.database
+      .update(schema.modifierGroups)
+      .set(data)
+      .where(eq(schema.modifierGroups.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteModifierGroup(id: string): Promise<void> {
+    await this.database.delete(schema.modifierGroups).where(eq(schema.modifierGroups.id, id));
+  }
+
+  async createModifier(groupId: string, data: any) {
+    const [created] = await this.database
+      .insert(schema.modifiers)
+      .values({
+        groupId,
+        name: data.name.trim(),
+        priceDelta: data.priceDelta !== undefined ? Number(data.priceDelta).toFixed(2) : '0.00',
+        isDefault: data.isDefault ?? false,
+        isAvailable: data.isAvailable ?? true,
+        sortOrder: data.sortOrder ?? 0,
+      })
+      .returning();
+    return created;
+  }
+
+  async updateModifier(id: string, data: any) {
+    const updatePayload: Record<string, any> = { ...data };
+    if (data.priceDelta !== undefined) {
+      updatePayload.priceDelta = Number(data.priceDelta).toFixed(2);
+    }
+    const [updated] = await this.database
+      .update(schema.modifiers)
+      .set(updatePayload)
+      .where(eq(schema.modifiers.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteModifier(id: string): Promise<void> {
+    await this.database.delete(schema.modifiers).where(eq(schema.modifiers.id, id));
+  }
+
+  async linkProductModifierGroup(productId: string, groupId: string, isRequired?: boolean | null, sortOrder: number = 0) {
+    await this.database
+      .insert(schema.productModifierGroups)
+      .values({
+        productId,
+        groupId,
+        isRequired: isRequired ?? null,
+        sortOrder,
+      })
+      .onConflictDoUpdate({
+        target: [schema.productModifierGroups.productId, schema.productModifierGroups.groupId],
+        set: {
+          isRequired: isRequired ?? null,
+          sortOrder,
+        },
+      });
+    return { success: true, productId, groupId };
+  }
+
+  async unlinkProductModifierGroup(productId: string, groupId: string): Promise<void> {
+    await this.database
+      .delete(schema.productModifierGroups)
+      .where(
+        and(
+          eq(schema.productModifierGroups.productId, productId),
+          eq(schema.productModifierGroups.groupId, groupId)
+        )
+      );
+  }
 }
 
 export const catalogRepository = new CatalogRepository();
+
