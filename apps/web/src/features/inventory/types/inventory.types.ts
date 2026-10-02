@@ -68,13 +68,19 @@ export interface Purchase {
 
 export interface InventoryMovement {
   id: string;
-  venueId: string;
-  inventoryItemId: string;
+  venueId?: string;
+  inventoryItemId?: string;
   type?: 'purchase' | 'waste' | 'adjustment' | 'order_consumed';
   movementType?: 'purchase' | 'waste' | 'adjustment' | 'sale';
   quantity: string;
   notes?: string | null;
   createdAt: string;
-  inventoryItem?: InventoryItem;
+  itemName?: string;
+  unit?: string;
+  inventoryItem?: {
+    id?: string;
+    name?: string;
+    unit?: string;
+  };
 }
 

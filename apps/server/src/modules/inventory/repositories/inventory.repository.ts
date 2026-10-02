@@ -68,16 +68,22 @@ export class InventoryRepository implements IInventoryRepository {
     return mov;
   }
 
-  async findMovements(venueId: string, limit = 50) {
+  async findMovements(venueId: string, limit = 100) {
     return await this.database
       .select({
         id: schema.inventoryMovements.id,
-        itemName: schema.inventoryItems.name,
-        unit: schema.inventoryItems.unit,
+        inventoryItemId: schema.inventoryMovements.inventoryItemId,
         movementType: schema.inventoryMovements.movementType,
         quantity: schema.inventoryMovements.quantity,
         notes: schema.inventoryMovements.notes,
         createdAt: schema.inventoryMovements.createdAt,
+        itemName: schema.inventoryItems.name,
+        unit: schema.inventoryItems.unit,
+        inventoryItem: {
+          id: schema.inventoryItems.id,
+          name: schema.inventoryItems.name,
+          unit: schema.inventoryItems.unit,
+        },
       })
       .from(schema.inventoryMovements)
       .innerJoin(schema.inventoryItems, eq(schema.inventoryMovements.inventoryItemId, schema.inventoryItems.id))
