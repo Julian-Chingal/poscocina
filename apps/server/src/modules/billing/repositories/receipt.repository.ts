@@ -1,4 +1,4 @@
-import { eq, inArray, sql } from 'drizzle-orm';
+import { eq, inArray, sql, and } from 'drizzle-orm';
 import { db } from '../../../db/index.js';
 import * as schema from '../../../db/schema.js';
 import { IReceiptRepository } from '../interfaces/billing.repository.interface.js';
@@ -108,12 +108,23 @@ export class ReceiptRepository implements IReceiptRepository {
     const productIds = Array.from(new Set(items.map((i) => i.productId)));
     if (productIds.length === 0) return updatedStockItems;
 
+    // Solo descontar si el producto tiene activa la opción de descuento de inventario (track_inventory = true)
+    const trackableProducts = await tx
+      .select({ id: schema.products.id })
+      .from(schema.products)
+      .where(and(inArray(schema.products.id, productIds), eq(schema.products.trackInventory, true)));
+
+    const trackableIds = new Set(trackableProducts.map((p) => p.id));
+    if (trackableIds.size === 0) return updatedStockItems;
+
     const recipes = await tx
       .select()
       .from(schema.productRecipes)
-      .where(inArray(schema.productRecipes.productId, productIds));
+      .where(inArray(schema.productRecipes.productId, Array.from(trackableIds)));
 
     for (const item of items) {
+      if (!trackableIds.has(item.productId)) continue;
+
       const itemRecipes = recipes.filter((r) => r.productId === item.productId);
       for (const recipe of itemRecipes) {
         const qtyToDeduct = parseFloat(recipe.quantity) * item.quantity;

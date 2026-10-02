@@ -17,35 +17,35 @@ export const inventoryApi = {
   getMovements: (venueId: string): Promise<InventoryMovement[]> =>
     api.get(`/venues/${venueId}/inventory/movements`),
 
-  createMovement: (venueId: string, data: any) =>
-    api.post(`/venues/${venueId}/inventory/movements`, data),
+  createMovement: (_venueId: string, data: any) =>
+    api.post('/inventory/movements', data),
 
   getCatalog: (venueId: string) =>
     api.get(`/venues/${venueId}/catalog`),
 
   getSuppliers: (venueId: string, query: string = ''): Promise<Supplier[]> => {
     const url = query
-      ? `/venues/${venueId}/purchases/suppliers?q=${encodeURIComponent(query)}`
-      : `/venues/${venueId}/purchases/suppliers`;
+      ? `/venues/${venueId}/suppliers?q=${encodeURIComponent(query)}`
+      : `/venues/${venueId}/suppliers`;
     return api.get(url);
   },
 
   createSupplier: (venueId: string, data: any): Promise<Supplier> =>
-    api.post(`/venues/${venueId}/purchases/suppliers`, data),
+    api.post('/suppliers', { ...data, venueId }),
 
   getPurchases: (venueId: string): Promise<Purchase[]> =>
     api.get(`/venues/${venueId}/purchases`),
 
   createPurchase: (venueId: string, data: any): Promise<Purchase> =>
-    api.post(`/venues/${venueId}/purchases`, data),
+    api.post('/purchases', { ...data, venueId }),
 
-  receivePurchase: (venueId: string, purchaseId: string): Promise<any> =>
-    api.post(`/venues/${venueId}/purchases/${purchaseId}/receive`),
+  receivePurchase: (_venueId: string, purchaseId: string): Promise<any> =>
+    api.post(`/purchases/${purchaseId}/receive`),
 
-  getRecipe: (venueId: string, productId: string): Promise<RecipeIngredient[]> =>
-    api.get(`/venues/${venueId}/inventory/recipes/${productId}`),
+  getRecipe: (_venueId: string, productId: string): Promise<RecipeIngredient[]> =>
+    api.get(`/products/${productId}/recipe`),
 
-  saveRecipe: (venueId: string, productId: string, ingredients: RecipeIngredient[]) =>
-    api.put(`/venues/${venueId}/inventory/recipes/${productId}`, { ingredients }),
+  saveRecipe: (_venueId: string, productId: string, ingredients: RecipeIngredient[]) =>
+    api.post(`/products/${productId}/recipe`, { ingredients }),
 };
 

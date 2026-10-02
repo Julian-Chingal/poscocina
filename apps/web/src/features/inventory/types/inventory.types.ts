@@ -1,4 +1,4 @@
-export type InventoryTab = 'stock' | 'purchases' | 'suppliers' | 'recipes' | 'movements';
+export type InventoryTab = 'stock' | 'purchases' | 'suppliers' | 'recipes' | 'movements' | 'toppings';
 export type MovementType = 'purchase' | 'waste' | 'adjustment';
 export type SupplierDocType = 'NIT' | 'RUT' | 'CC' | 'CE' | 'Passport';
 
@@ -15,6 +15,12 @@ export interface Product {
   id: string;
   name: string;
   price: string;
+  isAvailable?: boolean;
+  trackInventory?: boolean;
+  categoryId?: string;
+  category?: { id?: string; name?: string };
+  costPrice?: string;
+  printerStation?: string;
 }
 
 export interface RecipeIngredient {
