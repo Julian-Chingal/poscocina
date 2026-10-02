@@ -22,7 +22,7 @@ const TabSkeleton: React.FC = () => (
 export const SettingsView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('identity');
   const venues = useBrandingStore((s) => s.venues);
-  const { form, setField, setTaxType, saveSettings, saving, savedSuccess } = useSettingsForm();
+  const { form, setField, setTaxType, saveSettings, saveReceiptFormat, saving, savedSuccess } = useSettingsForm();
 
   const settingsGroups: SubNavGroup[] = [
     {
@@ -152,7 +152,42 @@ export const SettingsView: React.FC = () => {
 
       {activeTab === 'printer' && (
         <Suspense fallback={<TabSkeleton />}>
-          <PrintersTab />
+          <PrintersTab
+            paperWidth={form.paperWidth}
+            fontFamily={form.fontFamily}
+            fontSize={form.fontSize}
+            autoCut={form.autoCut}
+            openDrawer={form.openDrawer}
+            beepOnPrint={form.beepOnPrint}
+            autoPrintReceipt={form.autoPrintReceipt}
+            receiptHeader={form.receiptHeader}
+            receiptFooter={form.receiptFooter}
+            logoUrl={form.logoUrl}
+            primaryColor={form.primaryColor}
+            companyName={form.companyName}
+            legalName={form.legalName}
+            taxId={form.taxId}
+            venueAddress={form.venueAddress}
+            phone={form.phone}
+            taxType={form.taxType}
+            taxRate={form.taxRate}
+            defaultTipPct={form.defaultTipPct}
+            currency={form.currency}
+            showLogoOnReceipt={form.showLogoOnReceipt}
+            showQrOnReceipt={form.showQrOnReceipt}
+            showWaiterOnReceipt={form.showWaiterOnReceipt}
+            showTaxBreakdown={form.showTaxBreakdown}
+            showResolutionOnReceipt={form.showResolutionOnReceipt}
+            isInvoiceResolutionEnabled={form.isInvoiceResolutionEnabled}
+            invoicePrefix={form.invoicePrefix}
+            invoiceResolution={form.invoiceResolution}
+            invoiceInitialNumber={form.invoiceInitialNumber}
+            invoiceFinalNumber={form.invoiceFinalNumber}
+            invoiceResolutionDate={form.invoiceResolutionDate}
+            onFieldChange={setField}
+            onSaveFormat={saveReceiptFormat}
+            savingFormat={saving}
+          />
         </Suspense>
       )}
 

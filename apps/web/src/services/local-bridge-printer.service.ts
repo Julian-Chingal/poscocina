@@ -34,6 +34,23 @@ export interface BridgePrintResponse {
   message?: string;
 }
 
+export interface BridgeReceiptConfig {
+  paperWidth: number;
+  fontFamily: string;
+  fontSize: string;
+  printLogo: boolean;
+  logoBase64?: string | null;
+  logoAlignment?: string;
+  headerText: string;
+  subHeaderText: string;
+  footerText: string;
+  extraFeedLines: number;
+  autoCut: boolean;
+  openDrawer: boolean;
+  beepOnPrint: boolean;
+  columnsCount?: number;
+}
+
 class LocalBridgePrinterService {
   private bridgeUrl = 'http://127.0.0.1:8080';
   private wsUrl = 'ws://127.0.0.1:8080/ws';
@@ -236,6 +253,44 @@ class LocalBridgePrinterService {
         error: err?.message || 'Error de comunicación',
         message: 'El controlador local de Flutter no respondió.',
       };
+    }
+  }
+
+  /**
+   * Consulta la configuración de recibos térmicos almacenada en el Bridge
+   */
+  async getReceiptConfig(): Promise<BridgeReceiptConfig | null> {
+    try {
+      const resp = await fetch(`${this.bridgeUrl}/receipt-config`, {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+      });
+      if (!resp.ok) return null;
+      const json = await resp.json();
+      return json.receiptConfig || null;
+    } catch (e) {
+      console.warn('No se pudo consultar la configuración de recibo del Bridge:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Sincroniza la configuración de recibos térmicos hacia el Bridge
+   */
+  async updateReceiptConfig(config: Partial<BridgeReceiptConfig>): Promise<boolean> {
+    try {
+      const resp = await fetch(`${this.bridgeUrl}/receipt-config`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(config),
+      });
+      return resp.ok;
+    } catch (e) {
+      console.warn('No se pudo actualizar la configuración de recibo en el Bridge:', e);
+      return false;
     }
   }
 

@@ -1,7 +1,8 @@
 import { useReducer, useEffect, useCallback, useState } from 'react';
 import { useBrandingStore, VenueSettings } from '@/stores/branding.store';
-import { TaxType, PaperWidth } from '../types/settings.types';
+import { TaxType, PaperWidth, EscPosFontFamily, EscPosFontSize } from '../types/settings.types';
 import { settingsApi } from '../api/settings.api';
+import { localBridgePrinterService } from '@/services/local-bridge-printer.service';
 import { toast } from '@/components/ui/sileo';
 
 export interface FormState {
@@ -31,6 +32,11 @@ export interface FormState {
   invoiceFinalNumber: string;
   invoiceResolutionDate: string;
   paperWidth: PaperWidth;
+  fontFamily: EscPosFontFamily;
+  fontSize: EscPosFontSize;
+  autoCut: boolean;
+  openDrawer: boolean;
+  beepOnPrint: boolean;
   autoPrintReceipt: boolean;
   receiptHeader: string;
   receiptFooter: string;
@@ -75,6 +81,11 @@ const getInitialState = (settings: VenueSettings, name: string, address: string)
   invoiceFinalNumber: '50000',
   invoiceResolutionDate: '',
   paperWidth: ((Number(localStorage.getItem('poscocina_paper_width')) as PaperWidth) || (settings.paperWidth as PaperWidth) || 80),
+  fontFamily: ((localStorage.getItem('poscocina_font_family') as EscPosFontFamily) || (settings.fontFamily as EscPosFontFamily) || 'font_a'),
+  fontSize: ((localStorage.getItem('poscocina_font_size') as EscPosFontSize) || (settings.fontSize as EscPosFontSize) || 'normal'),
+  autoCut: localStorage.getItem('poscocina_auto_cut') !== null ? localStorage.getItem('poscocina_auto_cut') === 'true' : (settings.autoCut ?? true),
+  openDrawer: localStorage.getItem('poscocina_open_drawer') !== null ? localStorage.getItem('poscocina_open_drawer') === 'true' : (settings.openDrawer ?? false),
+  beepOnPrint: localStorage.getItem('poscocina_beep_on_print') !== null ? localStorage.getItem('poscocina_beep_on_print') === 'true' : (settings.beepOnPrint ?? false),
   autoPrintReceipt: localStorage.getItem('poscocina_auto_print_receipt') !== null ? localStorage.getItem('poscocina_auto_print_receipt') === 'true' : (settings.autoPrintReceipt ?? true),
   receiptHeader: localStorage.getItem('poscocina_receipt_header') || settings.receiptHeader || 'Sabor tradicional & Alta cocina',
   receiptFooter: localStorage.getItem('poscocina_receipt_footer') || settings.receiptFooter || '¡Gracias por su visita! Síguenos en @poscocina',
@@ -119,6 +130,12 @@ function formReducer(state: FormState, action: FormAction): FormState {
         invoiceResolutionDate: f.invoiceResolutionDate ? f.invoiceResolutionDate.substring(0, 10) : state.invoiceResolutionDate,
         receiptHeader: f.receiptHeader || state.receiptHeader,
         receiptFooter: f.receiptFooter || state.receiptFooter,
+        paperWidth: (f.paperWidth as PaperWidth) || state.paperWidth,
+        fontFamily: (f.fontFamily as EscPosFontFamily) || state.fontFamily,
+        fontSize: (f.fontSize as EscPosFontSize) || state.fontSize,
+        autoCut: f.autoCut !== undefined ? Boolean(f.autoCut) : state.autoCut,
+        openDrawer: f.openDrawer !== undefined ? Boolean(f.openDrawer) : state.openDrawer,
+        beepOnPrint: f.beepOnPrint !== undefined ? Boolean(f.beepOnPrint) : state.beepOnPrint,
       };
     }
     default:
@@ -144,6 +161,44 @@ export const useSettingsForm = () => {
       .catch((err) => {
         console.warn('No se pudo cargar datos de empresa:', err);
       });
+
+    // Sincronizar parámetros con la APK de impresión si está activa
+    localBridgePrinterService.isOnline().then(async (online) => {
+      if (online && mounted) {
+        try {
+          const bridgeConfig = await localBridgePrinterService.getReceiptConfig();
+          if (bridgeConfig && mounted) {
+            if (bridgeConfig.paperWidth === 58 || bridgeConfig.paperWidth === 80) {
+              dispatch({ type: 'SET_FIELD', field: 'paperWidth', value: bridgeConfig.paperWidth as PaperWidth });
+            }
+            if (bridgeConfig.fontFamily === 'font_a' || bridgeConfig.fontFamily === 'font_b') {
+              dispatch({ type: 'SET_FIELD', field: 'fontFamily', value: bridgeConfig.fontFamily as EscPosFontFamily });
+            }
+            if (bridgeConfig.fontSize) {
+              dispatch({ type: 'SET_FIELD', field: 'fontSize', value: bridgeConfig.fontSize as EscPosFontSize });
+            }
+            if (bridgeConfig.headerText) {
+              dispatch({ type: 'SET_FIELD', field: 'receiptHeader', value: bridgeConfig.headerText });
+            }
+            if (bridgeConfig.footerText) {
+              dispatch({ type: 'SET_FIELD', field: 'receiptFooter', value: bridgeConfig.footerText });
+            }
+            if (typeof bridgeConfig.printLogo === 'boolean') {
+              dispatch({ type: 'SET_FIELD', field: 'showLogoOnReceipt', value: bridgeConfig.printLogo });
+            }
+            if (typeof bridgeConfig.autoCut === 'boolean') {
+              dispatch({ type: 'SET_FIELD', field: 'autoCut', value: bridgeConfig.autoCut });
+            }
+            if (typeof bridgeConfig.openDrawer === 'boolean') {
+              dispatch({ type: 'SET_FIELD', field: 'openDrawer', value: bridgeConfig.openDrawer });
+            }
+            if (typeof bridgeConfig.beepOnPrint === 'boolean') {
+              dispatch({ type: 'SET_FIELD', field: 'beepOnPrint', value: bridgeConfig.beepOnPrint });
+            }
+          }
+        } catch (_) {}
+      }
+    });
 
     return () => {
       mounted = false;
@@ -240,6 +295,11 @@ export const useSettingsForm = () => {
         localStorage.setItem('poscocina_secondary_color', state.secondaryColor);
         localStorage.setItem('poscocina_border_radius', state.borderRadius);
         localStorage.setItem('poscocina_paper_width', String(state.paperWidth));
+        localStorage.setItem('poscocina_font_family', state.fontFamily);
+        localStorage.setItem('poscocina_font_size', state.fontSize);
+        localStorage.setItem('poscocina_auto_cut', String(state.autoCut));
+        localStorage.setItem('poscocina_open_drawer', String(state.openDrawer));
+        localStorage.setItem('poscocina_beep_on_print', String(state.beepOnPrint));
         localStorage.setItem('poscocina_auto_print_receipt', String(state.autoPrintReceipt));
         localStorage.setItem('poscocina_receipt_header', state.receiptHeader);
         localStorage.setItem('poscocina_receipt_footer', state.receiptFooter);
@@ -252,6 +312,23 @@ export const useSettingsForm = () => {
       } catch (e) {
         console.warn('Error guardando en localStorage:', e);
       }
+
+      // Sincronizar con el Bridge de la APK si está conectado
+      try {
+        if (await localBridgePrinterService.isOnline()) {
+          await localBridgePrinterService.updateReceiptConfig({
+            paperWidth: state.paperWidth,
+            fontFamily: state.fontFamily,
+            fontSize: state.fontSize,
+            headerText: state.receiptHeader,
+            footerText: state.receiptFooter,
+            printLogo: state.showLogoOnReceipt,
+            autoCut: state.autoCut,
+            openDrawer: state.openDrawer,
+            beepOnPrint: state.beepOnPrint,
+          });
+        }
+      } catch (_) {}
 
       // 4. Aplicar CSS variables
       if (state.primaryColor) {
@@ -275,6 +352,11 @@ export const useSettingsForm = () => {
   const saveReceiptFormat = useCallback(async () => {
     try {
       localStorage.setItem('poscocina_paper_width', String(state.paperWidth));
+      localStorage.setItem('poscocina_font_family', state.fontFamily);
+      localStorage.setItem('poscocina_font_size', state.fontSize);
+      localStorage.setItem('poscocina_auto_cut', String(state.autoCut));
+      localStorage.setItem('poscocina_open_drawer', String(state.openDrawer));
+      localStorage.setItem('poscocina_beep_on_print', String(state.beepOnPrint));
       localStorage.setItem('poscocina_auto_print_receipt', String(state.autoPrintReceipt));
       localStorage.setItem('poscocina_receipt_header', state.receiptHeader);
       localStorage.setItem('poscocina_receipt_footer', state.receiptFooter);
@@ -290,12 +372,47 @@ export const useSettingsForm = () => {
         settings: {
           ...settings,
           paperWidth: state.paperWidth,
+          fontFamily: state.fontFamily,
+          fontSize: state.fontSize,
+          autoCut: state.autoCut,
+          openDrawer: state.openDrawer,
+          beepOnPrint: state.beepOnPrint,
           autoPrintReceipt: state.autoPrintReceipt,
           receiptHeader: state.receiptHeader,
           receiptFooter: state.receiptFooter,
+          showLogoOnReceipt: state.showLogoOnReceipt,
+          showQrOnReceipt: state.showQrOnReceipt,
+          showWaiterOnReceipt: state.showWaiterOnReceipt,
+          showTaxBreakdown: state.showTaxBreakdown,
+          showResolutionOnReceipt: state.showResolutionOnReceipt,
         },
       });
-      toast.success('Formato de recibo guardado y sincronizado');
+
+      // Si la APK / Bridge está conectada, sincronizar también su configuración
+      let bridged = false;
+      try {
+        if (await localBridgePrinterService.isOnline()) {
+          bridged = await localBridgePrinterService.updateReceiptConfig({
+            paperWidth: state.paperWidth,
+            fontFamily: state.fontFamily,
+            fontSize: state.fontSize,
+            headerText: state.receiptHeader,
+            footerText: state.receiptFooter,
+            printLogo: state.showLogoOnReceipt,
+            autoCut: state.autoCut,
+            openDrawer: state.openDrawer,
+            beepOnPrint: state.beepOnPrint,
+          });
+        }
+      } catch (bridgeErr) {
+        console.warn('Aviso sincronizando formato con APK Bridge:', bridgeErr);
+      }
+
+      if (bridged) {
+        toast.success('Formato de recibo guardado y sincronizado con Zogui Print Bridge (APK)');
+      } else {
+        toast.success('Formato de recibo guardado y sincronizado en la nube');
+      }
     } catch {
       toast.success('Formato de recibo guardado localmente en esta tablet');
     }

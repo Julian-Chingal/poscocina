@@ -15,17 +15,18 @@ export class PrintReceiptUseCase {
     const printers = await this.printerRepo.findPrintersByVenue(receipt.order.venueId);
     const cashierPrinter = printers.find((p) => p.station === 'cashier') || printers[0];
 
-    const paperWidth = (cashierPrinter?.paperWidth === '58' ? '58' : '80') as '58' | '80';
     const venueSettings = (venue?.settings as Record<string, any>) || {};
+    const paperWidth = ((cashierPrinter?.paperWidth || venueSettings.paperWidth || '80') === '58' ? '58' : '80') as '58' | '80';
 
     const { escposBuffer, asciiPreview } = this.driver.generateReceiptTicket({
-      companyName: venue?.name || 'Mi Restaurante',
+      companyName: venueSettings.companyName || venue?.name || 'Mi Restaurante',
       taxId: venueSettings.taxId || 'NIT: 900.000.000-1',
-      address: venueSettings.address || venue?.address,
+      address: venueSettings.venueAddress || venueSettings.address || venue?.address,
       phone: venueSettings.phone,
+      headerNote: venueSettings.receiptHeader,
       receiptNumber: String(receipt.receiptNumber),
       tableLabel: receipt.order?.table?.label,
-      waiterName: receipt.order?.waiter?.name,
+      waiterName: venueSettings.showWaiterOnReceipt !== false ? receipt.order?.waiter?.name : undefined,
       customerName: receipt.customer?.name,
       customerDoc: receipt.customer?.documentNumber,
       loyaltyPoints: receipt.customer?.loyaltyPoints,
@@ -35,7 +36,7 @@ export class PrintReceiptUseCase {
       taxTotal: parseFloat(receipt.taxTotal),
       discountTotal: parseFloat(receipt.discountTotal),
       total: parseFloat(receipt.total),
-      openDrawer: cashierPrinter?.openDrawerOnPrint,
+      openDrawer: cashierPrinter?.openDrawerOnPrint ?? venueSettings.openDrawer,
       items: (receipt.order?.items || []).map((i: any) => ({
         quantity: i.quantity,
         productName: i.product?.name || 'Producto',

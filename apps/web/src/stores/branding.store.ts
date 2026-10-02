@@ -26,9 +26,19 @@ export interface VenueSettings {
   defaultTipPct?: number;
   phone?: string;
   paperWidth?: 58 | 80;
+  fontFamily?: string;
+  fontSize?: string;
+  autoCut?: boolean;
+  openDrawer?: boolean;
+  beepOnPrint?: boolean;
   autoPrintReceipt?: boolean;
   receiptHeader?: string;
   receiptFooter?: string;
+  showLogoOnReceipt?: boolean;
+  showQrOnReceipt?: boolean;
+  showWaiterOnReceipt?: boolean;
+  showTaxBreakdown?: boolean;
+  showResolutionOnReceipt?: boolean;
 }
 
 interface BrandingState {

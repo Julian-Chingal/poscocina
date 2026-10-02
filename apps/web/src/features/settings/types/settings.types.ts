@@ -5,6 +5,8 @@ export type PrinterStation = 'cashier' | 'kitchen' | 'bar' | 'dessert' | 'expedi
 export type PrinterConnectionType = 'network_tcp' | 'bluetooth' | 'usb_direct' | 'browser_raw' | 'disabled' | 'zogui_bridge';
 export type TaxType = 'INC_8' | 'IVA_19' | 'EXENTO';
 export type PaperWidth = 58 | 80;
+export type EscPosFontFamily = 'font_a' | 'font_b';
+export type EscPosFontSize = 'normal' | 'compact' | 'expanded' | 'double_height';
 
 export interface PrinterDevice {
   id: string;

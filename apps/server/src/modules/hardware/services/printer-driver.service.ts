@@ -351,6 +351,7 @@ export class PrinterDriverService {
     total: number;
     suggestedTip: number;
     totalWithTip: number;
+    footerText?: string;
     paperWidth?: '58' | '80';
     items: Array<{
       quantity: string | number;
@@ -411,7 +412,16 @@ export class PrinterDriverService {
 
     raw += divider;
     raw += CMD.ALIGN_CENTER;
-    raw += 'La propina es voluntaria.\nGracias por su preferencia.\n';
+    if (data.footerText && data.footerText.trim()) {
+      const footerLines = data.footerText.trim().split('\n');
+      for (const fl of footerLines) {
+        raw += `${fl.trim()}\n`;
+        ascii += `${fl.trim()}\n`;
+      }
+    } else {
+      raw += 'La propina es voluntaria.\nGracias por su preferencia.\n';
+      ascii += 'La propina es voluntaria.\nGracias por su preferencia.\n';
+    }
     raw += CMD.FEED_3;
     raw += CMD.CUT;
 
