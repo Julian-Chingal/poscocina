@@ -121,6 +121,7 @@ export const usePosCheckout = (venueId: string, onCheckoutSuccess?: () => void) 
             tipAmount,
           },
         ],
+        isSplit: false,
       };
 
       const data = await posApi.processPayment(payload);
@@ -155,6 +156,7 @@ export const usePosCheckout = (venueId: string, onCheckoutSuccess?: () => void) 
     setEqualSplitCount: (c: number) => dispatch({ type: 'SET_EQUAL_SPLIT_COUNT', payload: c }),
     setSelectedItemIds: (ids: string[]) => dispatch({ type: 'SET_SELECTED_ITEM_IDS', payload: ids }),
     clearReceiptSuccess: () => dispatch({ type: 'SET_RECEIPT_SUCCESS', payload: null }),
+    setReceiptSuccess: (r: any) => dispatch({ type: 'SET_RECEIPT_SUCCESS', payload: r }),
     calculateTotals,
     processPayment,
   };

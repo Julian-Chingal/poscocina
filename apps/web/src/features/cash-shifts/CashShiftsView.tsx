@@ -37,7 +37,6 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
     receiptSuccess,
     setSelectedBill,
     clearReceiptSuccess,
-    confirmPayment,
     refreshPendingBills,
   } = usePendingBills(venueId, refreshShift);
 
@@ -102,9 +101,14 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
       {selectedBill && (
         <CheckoutModal
           bill={selectedBill}
+          venueId={venueId}
           isProcessing={processingPayment}
           onClose={() => setSelectedBill(null)}
-          onConfirmPayment={confirmPayment}
+          onSuccess={() => {
+            setSelectedBill(null);
+            refreshPendingBills();
+            refreshShift();
+          }}
         />
       )}
 

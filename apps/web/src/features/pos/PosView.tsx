@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useBrandingStore } from '@/stores/branding.store';
-import { PosViewProps } from './types/pos.types';
+import { PosViewProps, Product } from './types/pos.types';
 import { usePosCatalog } from './hooks/usePosCatalog';
 import { usePosCart } from './hooks/usePosCart';
 import { usePosTable } from './hooks/usePosTable';
@@ -14,6 +14,10 @@ import { CartPanel } from './components/CartPanel';
 import { CheckoutModal } from './components/CheckoutModal';
 import { CreateCustomerModal } from './components/CreateCustomerModal';
 import { ReceiptSuccessModal } from './components/ReceiptSuccessModal';
+import {
+  ProductModifiersModal,
+  SelectedModifierPayload,
+} from './components/ProductModifiersModal';
 
 export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
   const currentUser = useAuthStore((s) => s.currentUser);
@@ -25,6 +29,10 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
   const table = usePosTable(venueId, selectedTable, currentUser?.id);
   const crm = useCustomerCrm(venueId, table.activeOrder?.id);
 
+  // Modifiers / Toppings modal state
+  const [customizingProduct, setCustomizingProduct] = useState<Product | null>(null);
+  const [editingCartItemIndex, setEditingCartItemIndex] = useState<number | null>(null);
+
   const checkout = usePosCheckout(venueId, () => {
     cart.clearCart();
     table.refreshOrder();
@@ -34,6 +42,62 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
     const success = await table.sendOrder(cart.cart, crm.selectedCustomer?.id);
     if (success) cart.clearCart();
   };
+
+  const handleOpenCustomizeProduct = (product: Product) => {
+    setEditingCartItemIndex(null);
+    setCustomizingProduct(product);
+  };
+
+  const handleCustomizeCartItem = (index: number) => {
+    const item = cart.cart[index];
+    if (!item) return;
+    setEditingCartItemIndex(index);
+    setCustomizingProduct(item.product);
+  };
+
+  const handleCloseModifiersModal = () => {
+    setCustomizingProduct(null);
+    setEditingCartItemIndex(null);
+  };
+
+  const handleConfirmModifiers = ({
+    product,
+    quantity,
+    notes,
+    modifiers,
+  }: {
+    product: Product;
+    quantity: number;
+    notes: string;
+    modifiers: SelectedModifierPayload[];
+  }) => {
+    if (editingCartItemIndex !== null) {
+      cart.updateCartItem(editingCartItemIndex, {
+        quantity,
+        notes,
+        modifiers: modifiers.map((m) => ({
+          modifierId: m.modifierId,
+          priceDelta: m.priceDelta,
+          name: m.name,
+        })),
+      });
+    } else {
+      cart.addCustomizedToCart(
+        product,
+        quantity,
+        notes,
+        modifiers.map((m) => ({
+          modifierId: m.modifierId,
+          priceDelta: m.priceDelta,
+          name: m.name,
+        }))
+      );
+    }
+    handleCloseModifiersModal();
+  };
+
+  const currentEditingItem =
+    editingCartItemIndex !== null ? cart.cart[editingCartItemIndex] : null;
 
   return (
     <div className="w-full min-w-0 max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
@@ -59,6 +123,7 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
           <ProductCatalogGrid
             products={catalog.filteredProducts}
             onAddToCart={cart.addToCart}
+            onCustomizeProduct={handleOpenCustomizeProduct}
           />
         </div>
 
@@ -87,40 +152,39 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
             onClearCustomer={crm.clearCustomer}
             onOpenCreateCustomerModal={() => crm.setShowCreateModal(true)}
             onRefreshOrder={table.refreshOrder}
+            onCustomizeCartItem={handleCustomizeCartItem}
           />
         </div>
       </div>
+
+      {/* Toppings / Modifiers Selection Modal */}
+      <ProductModifiersModal
+        isOpen={Boolean(customizingProduct)}
+        product={customizingProduct}
+        isEditing={editingCartItemIndex !== null}
+        initialQuantity={currentEditingItem?.quantity || 1}
+        initialNotes={currentEditingItem?.notes || ''}
+        initialModifiers={
+          currentEditingItem?.modifiers?.map((m) => ({
+            modifierId: m.modifierId,
+            priceDelta: m.priceDelta,
+            name: m.name || '',
+          })) || []
+        }
+        onClose={handleCloseModifiersModal}
+        onConfirm={handleConfirmModifiers}
+      />
 
       <CheckoutModal
         isOpen={checkout.showCheckoutModal}
         order={table.activeOrder}
         customer={crm.selectedCustomer}
-        processing={checkout.processing}
-        paymentMethod={checkout.paymentMethod}
-        cashTendered={checkout.cashTendered}
-        cardReference={checkout.cardReference}
-        tipPct={checkout.tipPct}
-        checkoutMode={checkout.checkoutMode}
-        equalSplitCount={checkout.equalSplitCount}
-        applyDiscount={checkout.applyDiscount}
-        discountType={checkout.discountType}
-        discountValue={checkout.discountValue}
-        discountReason={checkout.discountReason}
+        venueId={venueId}
         onClose={() => checkout.setShowCheckoutModal(false)}
-        onPaymentMethodChange={checkout.setPaymentMethod}
-        onCashTenderedChange={checkout.setCashTendered}
-        onCardReferenceChange={checkout.setCardReference}
-        onTipPctChange={checkout.setTipPct}
-        onCheckoutModeChange={checkout.setCheckoutMode}
-        onEqualSplitCountChange={checkout.setEqualSplitCount}
-        onApplyDiscountChange={checkout.setApplyDiscount}
-        onDiscountTypeChange={checkout.setDiscountType}
-        onDiscountValueChange={checkout.setDiscountValue}
-        onDiscountReasonChange={checkout.setDiscountReason}
-        onProcessPayment={(total, tip) => {
-          if (table.activeOrder?.id) {
-            checkout.processPayment(table.activeOrder.id, total, tip);
-          }
+        onSuccess={(receipt) => {
+          cart.clearCart();
+          table.refreshOrder();
+          checkout.setReceiptSuccess(receipt);
         }}
       />
 

@@ -33,6 +33,7 @@ interface Props {
   onClearCustomer: () => void;
   onOpenCreateCustomerModal: () => void;
   onRefreshOrder?: () => void;
+  onCustomizeCartItem?: (index: number) => void;
 }
 
 export const CartPanel: React.FC<Props> = ({
@@ -59,6 +60,7 @@ export const CartPanel: React.FC<Props> = ({
   onClearCustomer,
   onOpenCreateCustomerModal,
   onRefreshOrder,
+  onCustomizeCartItem,
 }) => (
   <Card className="p-4 flex flex-col justify-between h-[80vh] shadow-sm">
     <div className="space-y-3 overflow-hidden flex flex-col flex-1">
@@ -105,6 +107,7 @@ export const CartPanel: React.FC<Props> = ({
             index={idx}
             onUpdateQuantity={onUpdateQuantity}
             onUpdateNotes={onUpdateNotes}
+            onCustomizeItem={onCustomizeCartItem}
           />
         ))}
 
