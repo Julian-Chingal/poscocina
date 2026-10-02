@@ -1,4 +1,4 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 
 export const CreateSupplierSchema = z.object({
   venueId: z.string().uuid('ID de local invalido'),
@@ -16,17 +16,17 @@ export const UpdateSupplierSchema = CreateSupplierSchema.partial().omit({ venueI
 
 export const PurchaseItemInputSchema = z.object({
   inventoryItemId: z.string().uuid('ID de insumo invalido'),
-  quantity: z.number().positive('La cantidad debe ser mayor a 0'),
-  unitCost: z.number().nonnegative('El costo unitario no puede ser negativo'),
+  quantity: z.coerce.number().positive('La cantidad debe ser mayor a 0'),
+  unitCost: z.coerce.number().nonnegative('El costo unitario no puede ser negativo'),
 });
 
 export const CreatePurchaseSchema = z.object({
-  venueId: z.string().uuid('ID de local invalido'),
+  venueId: z.string().optional(),
   supplierId: z.string().uuid('ID de proveedor invalido'),
   invoiceNumber: z.string().min(1, 'El numero de factura o remision es obligatorio'),
-  purchaseDate: z.string().datetime().optional(),
+  purchaseDate: z.string().optional().nullable(),
   status: z.enum(['draft', 'received']).default('received'),
-  notes: z.string().optional(),
+  notes: z.string().optional().nullable(),
   items: z.array(PurchaseItemInputSchema).min(1, 'Debe incluir al menos un insumo en la compra'),
 });
 

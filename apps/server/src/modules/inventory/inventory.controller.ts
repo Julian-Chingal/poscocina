@@ -123,8 +123,9 @@ export class InventoryController {
   }
 
   async createPurchase(request: FastifyRequest, reply: FastifyReply) {
-    const data = validate(CreatePurchaseSchema, request.body);
-    const targetVenueId = await resolveVenueId(request, data.venueId);
+    const rawBody = (request.body || {}) as any;
+    const targetVenueId = await resolveVenueId(request, rawBody.venueId);
+    const data = validate(CreatePurchaseSchema, { ...rawBody, venueId: targetVenueId });
     const user = request.user as { id?: string } | undefined;
     const result = await this.purchasesUseCase.createPurchase({ ...data, venueId: targetVenueId }, user?.id);
 

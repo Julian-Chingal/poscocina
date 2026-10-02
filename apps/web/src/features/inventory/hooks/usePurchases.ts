@@ -31,11 +31,19 @@ export const usePurchases = (venueId: string, onPurchaseCreated?: () => void) =>
     invoiceNumber: string;
     status: 'received' | 'draft';
     notes?: string;
-    items: Array<{ inventoryItemId: string; quantity: string; unitCost: string }>;
+    items: Array<{ inventoryItemId: string; quantity: string | number; unitCost: string | number }>;
   }) => {
     setIsSubmitting(true);
     try {
-      await inventoryApi.createPurchase(venueId, payload);
+      const sanitizedItems = payload.items.map((it) => ({
+        inventoryItemId: it.inventoryItemId,
+        quantity: Number(it.quantity) || 1,
+        unitCost: Number(it.unitCost) || 0,
+      }));
+      await inventoryApi.createPurchase(venueId, {
+        ...payload,
+        items: sanitizedItems,
+      });
       toast.success('Factura de compra registrada exitosamente');
       setShowNewModal(false);
       fetchPurchases();

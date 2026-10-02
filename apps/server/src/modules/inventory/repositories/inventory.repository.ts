@@ -173,9 +173,26 @@ export class InventoryRepository implements IInventoryRepository {
             inventoryItemId: l.inventoryItemId,
             quantity: String(l.quantity),
             unitCost: String(l.unitCost || 0),
-            totalCost: String(l.totalCost || (l.quantity * (l.unitCost || 0)).toFixed(2)),
+            totalCost: String(l.totalCost || (Number(l.quantity) * Number(l.unitCost || 0)).toFixed(2)),
           }))
         );
+
+        if (data.status === 'received') {
+          for (const line of lines) {
+            await this.updateStock(line.inventoryItemId, parseFloat(line.quantity), tx as any);
+            await this.insertMovement(
+              {
+                inventoryItemId: line.inventoryItemId,
+                movementType: 'purchase',
+                quantity: String(line.quantity),
+                referenceId: purchase.id,
+                notes: `Factura de compra #${purchase.invoiceNumber}`,
+                createdBy: data.receivedBy || null,
+              },
+              tx as any
+            );
+          }
+        }
       }
       return purchase;
     });

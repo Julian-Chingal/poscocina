@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Receipt, Plus } from 'lucide-react';
 import { Supplier, InventoryItem } from '../types/inventory.types';
 import { PurchaseLineRow } from './PurchaseLineRow';
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/sonner';
 
 interface Props {
   isOpen: boolean;
@@ -44,13 +45,42 @@ export const NewPurchaseModal: React.FC<Props> = ({
     { inventoryItemId: '', quantity: '1', unitCost: '0' },
   ]);
 
+  useEffect(() => {
+    if (isOpen && items.length > 0 && lines.length === 1 && !lines[0].inventoryItemId) {
+      setLines([{ inventoryItemId: items[0].id, quantity: '1', unitCost: String(items[0].costPerUnit || '0') }]);
+    }
+    if (isOpen && suppliers.length > 0 && !supplierId) {
+      setSupplierId(suppliers[0].id);
+    }
+  }, [isOpen, items, suppliers]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit({ supplierId, invoiceNumber, status, notes, items: lines });
+    if (!supplierId) {
+      toast.error('Por favor selecciona un proveedor');
+      return;
+    }
+    if (!invoiceNumber.trim()) {
+      toast.error('Por favor ingresa el número de factura o remisión');
+      return;
+    }
+    const validLines = lines.filter((l) => l.inventoryItemId && parseFloat(l.quantity) > 0);
+    if (validLines.length === 0) {
+      toast.error('Debes seleccionar al menos un insumo con cantidad mayor a 0');
+      return;
+    }
+
+    await onSubmit({
+      supplierId,
+      invoiceNumber: invoiceNumber.trim(),
+      status,
+      notes: notes.trim() || undefined,
+      items: validLines,
+    });
     setSupplierId('');
     setInvoiceNumber('');
     setNotes('');
-    setLines([{ inventoryItemId: '', quantity: '1', unitCost: '0' }]);
+    setLines([{ inventoryItemId: items[0]?.id || '', quantity: '1', unitCost: '0' }]);
   };
 
   const updateLine = (idx: number, field: string, value: string) => {

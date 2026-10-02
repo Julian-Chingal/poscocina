@@ -35,31 +35,36 @@ export class ManagePurchasesUseCase {
 
   async createPurchase(data: any, createdBy?: string) {
     let subtotal = 0;
-    let tax = 0;
-    const lines = (data.lines || []).map((l: any) => {
-      const lineTotal = Number(l.unitCost) * Number(l.quantity);
+    const rawItems = data.items || data.lines || [];
+    const lines = rawItems.map((l: any) => {
+      const qty = Number(l.quantity) || 0;
+      const cost = Number(l.unitCost) || 0;
+      const lineTotal = cost * qty;
       subtotal += lineTotal;
       return {
         inventoryItemId: l.inventoryItemId,
-        quantity: Number(l.quantity).toFixed(4),
-        unitCost: Number(l.unitCost).toFixed(2),
+        quantity: qty.toFixed(4),
+        unitCost: cost.toFixed(4),
         totalCost: lineTotal.toFixed(2),
       };
     });
 
-    const total = subtotal + tax;
-    return await this.repo.createPurchase({
-      venueId: data.venueId,
-      supplierId: data.supplierId,
-      invoiceNumber: data.invoiceNumber || null,
-      purchaseDate: data.purchaseDate ? new Date(data.purchaseDate) : new Date(),
-      status: 'pending',
-      subtotal: subtotal.toFixed(2),
-      taxTotal: tax.toFixed(2),
-      total: total.toFixed(2),
-      notes: data.notes || null,
-      createdBy: createdBy || null,
-    }, lines);
+    const status = data.status === 'draft' ? 'draft' : 'received';
+    const purchaseDate = data.purchaseDate ? new Date(data.purchaseDate) : new Date();
+
+    return await this.repo.createPurchase(
+      {
+        venueId: data.venueId,
+        supplierId: data.supplierId,
+        invoiceNumber: String(data.invoiceNumber).trim(),
+        purchaseDate,
+        status,
+        totalAmount: subtotal.toFixed(2),
+        notes: data.notes || null,
+        receivedBy: status === 'received' ? createdBy || null : null,
+      },
+      lines
+    );
   }
 
   async receivePurchase(id: string, receivedBy?: string) {
