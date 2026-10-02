@@ -1,4 +1,4 @@
-import React, { useState, useCallback, lazy, Suspense } from "react";
+import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { TopBar } from "./components/TopBar";
 import { AppLauncherView } from "./components/navigation/launcher";
 import { ViewLoadingFallback } from "./components/ViewLoadingFallback";
@@ -6,6 +6,7 @@ import { OfflineView } from "./features/shared";
 import { LockScreen } from "./features/auth";
 import { Toaster } from "./components/ui/sileo";
 import { useAuthStore } from "./stores/auth.store";
+import { useShiftStore } from "./stores/shift.store";
 import { usePermissions } from "./hooks/usePermissions";
 import { useAppBootstrap } from "./hooks/useAppBootstrap";
 import { useHashRouter } from "./hooks/useHashRouter";
@@ -53,6 +54,12 @@ export const App: React.FC = () => {
 
   useGlobalKeyboardShortcuts(handleNavigate, handleBack);
   useAppSocketEvents(handleNavigateHome);
+
+  useEffect(() => {
+    if (currentUser && venueId) {
+      useShiftStore.getState().fetchCurrentShift(venueId);
+    }
+  }, [currentUser, venueId]);
 
   const handleSelectTable = (table: TableItem) => {
     setSelectedTable(table);

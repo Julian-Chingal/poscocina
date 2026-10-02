@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { io, Socket } from 'socket.io-client';
 import { api } from '@/services/api';
+import { useAuthStore } from './auth.store';
 
 interface ShiftState {
   isOpen: boolean;
@@ -24,6 +25,11 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
 
   fetchCurrentShift: async (venueId: string) => {
     if (!venueId) return;
+    const token = useAuthStore.getState().token;
+    if (!token) {
+      set({ isOpen: false, shiftId: null, cashierName: undefined, loading: false });
+      return;
+    }
     set({ loading: true });
     try {
       const data = await api.get(`/cash-shifts/current/${venueId}`);

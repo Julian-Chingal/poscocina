@@ -109,9 +109,12 @@ async function request<T = any>(endpoint: string, options: RequestOptions = {}):
 
   // Handle Unauthorized (Session expired or invalid token)
   if (response.status === 401) {
-    console.warn('🔒 Sesión expirada o token no autorizado (401). Bloqueando terminal...');
-    toast.error('Sesión expirada. Inicia sesión nuevamente');
-    useAuthStore.getState().logout();
+    const hadToken = Boolean(useAuthStore.getState().token);
+    if (hadToken) {
+      console.warn('🔒 Sesión expirada o token no autorizado (401). Bloqueando terminal...');
+      toast.error('Sesión expirada. Inicia sesión nuevamente');
+      useAuthStore.getState().logout();
+    }
   } else if (response.status === 403) {
     toast.error('No tienes permisos para realizar esta acción');
   }

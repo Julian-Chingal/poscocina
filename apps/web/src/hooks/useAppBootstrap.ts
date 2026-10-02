@@ -2,14 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from '../components/ui/sonner';
 import { useAuthStore } from '../stores/auth.store';
 import { useBrandingStore } from '../stores/branding.store';
-import { useShiftStore } from '../stores/shift.store';
 import { api, onNetworkStatusChange } from '../services/api';
 
 export const useAppBootstrap = () => {
   const [isApiOnline, setIsApiOnline] = useState<boolean>(true);
 
   // Atomic Zustand selectors
-  const token = useAuthStore((s) => s.token);
   const setVenueId = useAuthStore((s) => s.setVenueId);
   const checkSession = useAuthStore((s) => s.checkSession);
 
@@ -25,7 +23,8 @@ export const useAppBootstrap = () => {
       }
       setIsApiOnline(true);
 
-      if (token) {
+      const currentToken = useAuthStore.getState().token;
+      if (currentToken) {
         const isValid = await checkSession();
         if (!isValid) {
           toast.error('Sesión expirada. Inicia sesión nuevamente');
@@ -39,7 +38,6 @@ export const useAppBootstrap = () => {
           if (data?.id) {
             setVenueId(data.id);
             loadBranding(data.id);
-            useShiftStore.getState().fetchCurrentShift(data.id);
             return;
           }
         } catch {
@@ -52,7 +50,6 @@ export const useAppBootstrap = () => {
         if (data?.id) {
           setVenueId(data.id);
           loadBranding(data.id);
-          useShiftStore.getState().fetchCurrentShift(data.id);
         }
       } catch (venueErr) {
         console.warn('Could not bootstrap default venue:', venueErr);
@@ -61,7 +58,7 @@ export const useAppBootstrap = () => {
       console.warn('API health check failed:', err);
       setIsApiOnline(false);
     }
-  }, [token, checkSession, setVenueId, loadBranding]);
+  }, [checkSession, setVenueId, loadBranding]);
 
   useEffect(() => {
     checkHealthAndBootstrap();

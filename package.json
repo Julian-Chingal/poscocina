@@ -5,13 +5,21 @@
   "description": "Sistema POS modular para gastronomía",
   "packageManager": "pnpm@12.4.1",
   "scripts": {
-    "dev": "turbo run dev",
+    "dev": "pnpm --filter @poscocina/web dev",
+    "dev:web": "pnpm --filter @poscocina/web dev",
+    "dev:server": "pnpm --filter @poscocina/server dev",
+    "dev:all": "turbo run dev",
     "build": "turbo run build",
+    "build:web": "pnpm --filter @poscocina/web build",
+    "build:server": "pnpm --filter @poscocina/server build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "db:generate": "pnpm --filter @poscocina/server db:generate",
     "db:migrate": "pnpm --filter @poscocina/server db:migrate",
     "db:seed": "pnpm --filter @poscocina/server db:seed",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
     "clean": "turbo run clean"
   },
   "devDependencies": {
