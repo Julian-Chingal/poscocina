@@ -22,7 +22,9 @@ export class InventoryController {
     const { venueId } = request.params as { venueId: string };
     const targetVenueId = await resolveVenueId(request, venueId);
     const body = request.body as any;
-    if (!body?.name) throw new BadRequestError('El nombre del insumo es obligatorio.');
+    if (!body?.name || typeof body.name !== 'string' || !body.name.trim()) {
+      throw new BadRequestError('El nombre del insumo es obligatorio.');
+    }
 
     const newItem = await this.stockUseCase.createItem(targetVenueId, body);
     request.server.io?.emit('inventory:item_created', newItem);
@@ -31,10 +33,17 @@ export class InventoryController {
 
   async registerMovement(request: FastifyRequest, reply: FastifyReply) {
     const body = request.body as any;
-    if (!body?.inventoryItemId || !body?.movementType || body.quantity === undefined) {
+    const movementType = body?.movementType || body?.type;
+    if (!body?.inventoryItemId || !movementType || body.quantity === undefined) {
       throw new BadRequestError('Faltan parámetros requeridos para el movimiento de inventario.');
     }
-    const result = await this.stockUseCase.registerMovement(body);
+    const result = await this.stockUseCase.registerMovement({
+      inventoryItemId: body.inventoryItemId,
+      movementType,
+      quantity: Number(body.quantity),
+      notes: body.notes || body.reason,
+      createdBy: (request.user as any)?.id,
+    });
     request.server.io?.emit('inventory:stock_updated', result.item);
     if (result.isLowStock) {
       request.server.io?.emit('inventory:low_stock', {

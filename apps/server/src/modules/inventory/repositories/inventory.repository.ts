@@ -16,14 +16,38 @@ export class InventoryRepository implements IInventoryRepository {
   }
 
   async createItem(venueId: string, data: any) {
-    const [newItem] = await this.database.insert(schema.inventoryItems).values({
-      venueId,
-      name: data.name.trim(),
-      unit: data.unit,
-      currentStock: (data.currentStock || 0).toFixed(4),
-      alertThreshold: (data.alertThreshold || 5).toFixed(4),
-      costPerUnit: (data.costPerUnit || 0).toFixed(2),
-    }).returning();
+    const rawStock = Number(data.currentStock ?? 0);
+    const rawThreshold = Number(data.alertThreshold ?? 5);
+    const rawCost = Number(data.costPerUnit ?? 0);
+
+    const currentStockNum = isNaN(rawStock) ? 0 : rawStock;
+    const alertThresholdNum = isNaN(rawThreshold) ? 5 : rawThreshold;
+    const costPerUnitNum = isNaN(rawCost) ? 0 : rawCost;
+
+    const [newItem] = await this.database
+      .insert(schema.inventoryItems)
+      .values({
+        venueId,
+        name: data.name.trim(),
+        unit: data.unit || 'g',
+        currentStock: currentStockNum.toFixed(4),
+        alertThreshold: alertThresholdNum.toFixed(4),
+        costPerUnit: costPerUnitNum.toFixed(4),
+      })
+      .returning();
+
+    if (currentStockNum > 0) {
+      await this.database
+        .insert(schema.inventoryMovements)
+        .values({
+          inventoryItemId: newItem.id,
+          movementType: 'adjustment',
+          quantity: currentStockNum.toFixed(4),
+          notes: 'Inventario inicial',
+        })
+        .catch(() => {});
+    }
+
     return newItem;
   }
 

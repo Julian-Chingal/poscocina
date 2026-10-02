@@ -37,6 +37,7 @@ export const useInventoryMovements = (venueId: string, onMovementSuccess?: () =>
     try {
       await inventoryApi.createMovement(venueId, {
         inventoryItemId: selectedItem.id,
+        movementType: type,
         type,
         quantity,
         notes,
