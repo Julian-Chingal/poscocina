@@ -1,11 +1,20 @@
 import React from 'react';
-import { Utensils, Plus, SlidersHorizontal } from 'lucide-react';
+import { Plus, SlidersHorizontal, LayoutGrid, List, UtensilsCrossed, AlertTriangle } from 'lucide-react';
 import { SearchInput } from '@/components/common/search-input';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface Props {
   search: string;
   isManager: boolean;
+  stats?: {
+    total: number;
+    available: number;
+    soldOut: number;
+    totalCategories: number;
+  };
+  viewMode?: 'grid' | 'table';
+  onViewModeChange?: (mode: 'grid' | 'table') => void;
   onSearchChange: (val: string) => void;
   onOpenCreateProduct: () => void;
   onOpenModifiersManager?: () => void;
@@ -14,52 +23,117 @@ interface Props {
 export const CatalogHeader: React.FC<Props> = ({
   search,
   isManager,
+  stats,
+  viewMode = 'grid',
+  onViewModeChange,
   onSearchChange,
   onOpenCreateProduct,
   onOpenModifiersManager,
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 mb-8 border-b border-border gap-4">
-      <div>
-        <div className="flex items-center space-x-2 text-xs font-semibold text-primary uppercase tracking-wider mb-1">
-          <Utensils className="w-3.5 h-3.5" />
-          <span>Gestión Gastronómica</span>
+    <div className="flex flex-col lg:flex-row lg:items-center justify-between pb-5 border-b border-border/70 gap-4">
+      {/* Title & Live Status */}
+      <div className="space-y-1">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center justify-center size-8 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20 shadow-2xs">
+            <UtensilsCrossed className="size-4" />
+          </div>
+          <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+            Menú y Catálogo
+          </h1>
+
+          {stats && (
+            <div className="flex items-center gap-1.5 ml-1">
+              <Badge variant="secondary" className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-muted text-foreground border-border/80">
+                {stats.total} {stats.total === 1 ? 'producto' : 'productos'}
+              </Badge>
+              {stats.soldOut > 0 ? (
+                <Badge variant="outline" className="text-xs font-semibold px-2 py-0.5 rounded-lg border-amber-500/40 text-amber-700 dark:text-amber-400 bg-amber-500/10 flex items-center gap-1">
+                  <AlertTriangle className="size-3" />
+                  <span>{stats.soldOut} agotados (86)</span>
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-xs font-semibold px-2 py-0.5 rounded-lg border-emerald-500/30 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 flex items-center gap-1">
+                  <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>100% disponible</span>
+                </Badge>
+              )}
+            </div>
+          )}
         </div>
-        <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
-          Menú, Platos y Precios
-        </h2>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Configuración de catálogo, impuestos (INC 8% / IVA 19%), disponibilidad, toppings y estaciones.
+        <p className="text-xs sm:text-sm text-muted-foreground">
+          Gestiona precios, recetas, estaciones de comanda y disponibilidad de tu carta.
         </p>
       </div>
 
-      <div className="flex items-center space-x-3 w-full sm:w-auto">
-        <SearchInput
-          value={search}
-          onChange={onSearchChange}
-          placeholder="Buscar plato o bebida..."
-          className="flex-1 sm:w-64"
-        />
+      {/* Actions Bar */}
+      <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap w-full lg:w-auto">
+        {/* Search */}
+        <div className="w-full sm:w-64">
+          <SearchInput
+            value={search}
+            onChange={onSearchChange}
+            placeholder="Buscar por plato, ingrediente..."
+            className="w-full"
+          />
+        </div>
 
+        {/* View Switcher (Grid vs Table) */}
+        {onViewModeChange && (
+          <div className="flex items-center bg-muted/60 p-1 rounded-xl border border-border/80 shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              type="button"
+              onClick={() => onViewModeChange('grid')}
+              className={`h-7 w-7 rounded-lg transition-all ${
+                viewMode === 'grid'
+                  ? 'bg-card text-foreground shadow-2xs font-bold'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              title="Vista en tarjetas"
+            >
+              <LayoutGrid className="size-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              type="button"
+              onClick={() => onViewModeChange('table')}
+              className={`h-7 w-7 rounded-lg transition-all ${
+                viewMode === 'table'
+                  ? 'bg-card text-foreground shadow-2xs font-bold'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              title="Vista en tabla"
+            >
+              <List className="size-3.5" />
+            </Button>
+          </div>
+        )}
+
+        {/* Toppings / Modifiers Button */}
         {onOpenModifiersManager && (
           <Button
             type="button"
             variant="outline"
             onClick={onOpenModifiersManager}
-            className="flex items-center space-x-1.5 text-xs font-semibold px-3 h-10 rounded-xl whitespace-nowrap shadow-xs"
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 h-9 rounded-xl border-border/80 bg-card hover:bg-muted text-foreground hover:text-primary transition-all shadow-2xs shrink-0 cursor-pointer"
           >
-            <SlidersHorizontal className="w-4 h-4 text-primary" />
-            <span>Toppings / Extras</span>
+            <SlidersHorizontal className="size-3.5 text-primary" />
+            <span className="hidden sm:inline">Toppings & Modificadores</span>
+            <span className="sm:hidden">Toppings</span>
           </Button>
         )}
 
+        {/* Create Product Button */}
         {isManager && (
           <Button
             type="button"
             onClick={onOpenCreateProduct}
-            className="flex items-center space-x-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold px-4 h-10 rounded-xl shadow-lg hover:shadow-primary/20 whitespace-nowrap"
+            className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold px-3.5 h-9 rounded-xl shadow-xs hover:shadow-primary/25 transition-all shrink-0 cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="size-3.5" />
             <span>Nuevo Producto</span>
           </Button>
         )}

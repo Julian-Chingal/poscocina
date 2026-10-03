@@ -1,8 +1,23 @@
 import React from 'react';
-import { CheckCircle, XCircle, Edit2, Trash2, Boxes, Printer } from 'lucide-react';
+import {
+  XCircle,
+  Pencil,
+  Trash2,
+  Boxes,
+  ChefHat,
+  Coffee,
+  Clock,
+  MoreVertical,
+} from 'lucide-react';
 import { Product, Category } from '../types/catalog.types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface Props {
   product: Product;
@@ -13,122 +28,182 @@ interface Props {
   onDelete: (product: Product) => void;
 }
 
-export const ProductCard: React.FC<Props> = ({
-  product,
-  category,
-  isManager,
-  onToggleAvailability,
-  onEdit,
-  onDelete,
-}) => {
-  const taxPercent = product.taxRate ? Number(product.taxRate) * 100 : 8;
+export const ProductCard: React.FC<Props> = React.memo(
+  ({
+    product,
+    category,
+    isManager,
+    onToggleAvailability,
+    onEdit,
+    onDelete,
+  }) => {
+    const taxPercent = product.taxRate ? Number(product.taxRate) * 100 : 8;
+    const priceNum = Number(product.price) || 0;
+    const formattedPrice = new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      maximumFractionDigits: 0,
+    }).format(priceNum);
 
-  return (
-    <Card
-      className={`w-full min-w-0 h-full p-5 rounded-2xl border transition-all flex flex-col justify-between shadow-md relative group ${
-        product.isAvailable
-          ? 'bg-card border-border hover:border-primary/50'
-          : 'bg-card/40 border-border opacity-60'
-      }`}
-    >
-      <CardContent className="p-0">
-        <div className="flex items-start justify-between mb-2">
-          <span
-            className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-            style={{
-              backgroundColor: `${category?.color || 'var(--primary)'}20`,
-              color: category?.color || 'var(--primary)',
-            }}
-          >
-            {category?.name || 'Categoría'}
-          </span>
+    const categoryColor = category?.color || 'var(--primary)';
+    const isBarStation = product.printerStation === 'bar';
 
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              type="button"
-              onClick={() => onToggleAvailability(product.id)}
-              className={`flex items-center space-x-1 text-[11px] font-bold px-2 h-7 rounded-lg border transition-all ${
-                product.isAvailable
-                  ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/25'
-                  : 'bg-destructive/15 border-destructive/30 text-destructive hover:bg-destructive/25'
-              }`}
+    return (
+      <div
+        className={`group relative h-full bg-card rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md ${
+          product.isAvailable
+            ? 'border-border/80 hover:border-primary/50 hover:-translate-y-0.5'
+            : 'border-destructive/30 bg-card/60 opacity-80'
+        }`}
+      >
+        {/* Top/Left Category Color Indicator Bar */}
+        <div
+          className="h-1 w-full shrink-0 transition-opacity"
+          style={{ backgroundColor: categoryColor }}
+        />
+
+        <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3.5">
+          {/* Top Bar: Category badge & Status / Actions */}
+          <div className="flex items-center justify-between gap-2">
+            <span
+              className="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md inline-flex items-center gap-1.5"
+              style={{
+                backgroundColor: `${categoryColor}15`,
+                color: categoryColor,
+              }}
             >
-              {product.isAvailable ? (
-                <>
-                  <CheckCircle className="w-3 h-3" />
-                  <span>Disponible</span>
-                </>
-              ) : (
-                <>
-                  <XCircle className="w-3 h-3" />
-                  <span>Agotado (86)</span>
-                </>
-              )}
-            </Button>
+              <span
+                className="size-1.5 rounded-full"
+                style={{ backgroundColor: categoryColor }}
+              />
+              <span>{category?.name || 'General'}</span>
+            </span>
 
-            {isManager && (
-              <div className="flex items-center space-x-1 opacity-80 group-hover:opacity-100 transition">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  type="button"
-                  onClick={() => onEdit(product)}
-                  title="Editar producto"
-                  className="h-7 w-7 p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  type="button"
-                  onClick={() => onDelete(product)}
-                  title="Eliminar producto"
-                  className="h-7 w-7 p-1 text-muted-foreground hover:text-destructive rounded hover:bg-muted"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              </div>
+            <div className="flex items-center gap-1.5">
+              {/* Interactive Availability Toggle Pill */}
+              <button
+                type="button"
+                onClick={() => onToggleAvailability(product.id)}
+                title={
+                  product.isAvailable
+                    ? 'Click para marcar como Agotado (86)'
+                    : 'Click para marcar como Disponible'
+                }
+                className={`flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg border transition-all cursor-pointer select-none active:scale-95 ${
+                  product.isAvailable
+                    ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/25 shadow-2xs'
+                    : 'bg-destructive/10 hover:bg-destructive/20 text-destructive border-destructive/30 shadow-2xs'
+                }`}
+              >
+                {product.isAvailable ? (
+                  <>
+                    <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Disponible</span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="size-3 text-destructive" />
+                    <span>Agotado (86)</span>
+                  </>
+                )}
+              </button>
+
+              {/* Manager Actions Menu */}
+              {isManager && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-7 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+                    >
+                      <MoreVertical className="size-3.5" />
+                      <span className="sr-only">Acciones</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-36 rounded-xl">
+                    <DropdownMenuItem
+                      onClick={() => onEdit(product)}
+                      className="gap-2 text-xs font-semibold cursor-pointer"
+                    >
+                      <Pencil className="size-3.5 text-muted-foreground" />
+                      <span>Editar plato</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onDelete(product)}
+                      className="gap-2 text-xs font-semibold text-destructive focus:text-destructive cursor-pointer"
+                    >
+                      <Trash2 className="size-3.5" />
+                      <span>Eliminar</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          </div>
+
+          {/* Product Name & Description */}
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors leading-snug line-clamp-1">
+              {product.name}
+            </h3>
+            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed min-h-[2rem]">
+              {product.description || (
+                <span className="italic text-muted-foreground/50">Sin descripción agregada</span>
+              )}
+            </p>
+          </div>
+
+          {/* Middle metadata chips (Prep Time, Recipe, Station) */}
+          <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+            {/* Station Chip */}
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-muted/80 text-foreground/80 border border-border/60">
+              {isBarStation ? (
+                <Coffee className="size-3 text-amber-500" />
+              ) : (
+                <ChefHat className="size-3 text-primary" />
+              )}
+              <span>{isBarStation ? 'Barra' : 'Cocina'}</span>
+            </span>
+
+            {/* Inventory / Recipe tracking */}
+            {product.trackInventory && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20">
+                <Boxes className="size-3" />
+                <span>Receta</span>
+              </span>
             )}
+
+            {/* Prep Time */}
+            {product.prepTimeMin && product.prepTimeMin > 0 ? (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/50">
+                <Clock className="size-3" />
+                <span>{product.prepTimeMin} min</span>
+              </span>
+            ) : null}
           </div>
         </div>
 
-        <h3 className="text-base font-bold text-foreground mt-1">{product.name}</h3>
-        {product.description && (
-          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{product.description}</p>
-        )}
-      </CardContent>
-
-      <CardFooter className="p-0 mt-5 pt-3 border-t border-border flex items-center justify-between text-xs">
-        <div>
-          <span className="text-base font-black text-primary">
-            ${Number(product.price).toLocaleString()}
-          </span>
-          <span className="text-[10px] text-muted-foreground ml-1.5 font-medium">
-            ({taxPercent === 8 ? 'INC 8%' : taxPercent === 19 ? 'IVA 19%' : 'Exento'})
-          </span>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          {product.trackInventory && (
-            <span
-              title="Control de inventario activo"
-              className="text-[10px] text-purple-600 dark:text-purple-400 bg-purple-500/15 px-1.5 py-0.5 rounded border border-purple-500/30 flex items-center space-x-1"
-            >
-              <Boxes className="w-3 h-3" />
-              <span>Receta</span>
+        {/* Card Footer: Price & Tax Chip */}
+        <div className="px-4 py-3 sm:px-5 sm:py-3.5 bg-muted/30 border-t border-border/60 flex items-center justify-between">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-base sm:text-lg font-black text-foreground tracking-tight">
+              {formattedPrice}
             </span>
-          )}
-          <span className="text-[11px] text-foreground bg-muted px-2 py-0.5 rounded-md border border-border flex items-center space-x-1">
-            <Printer className="w-3 h-3 text-muted-foreground" />
-            <span>{product.printerStation === 'bar' ? 'Barra' : 'Cocina'}</span>
-          </span>
+          </div>
+
+          <Badge
+            variant="secondary"
+            className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-muted text-muted-foreground border-border/60"
+          >
+            {taxPercent === 8 ? 'INC 8%' : taxPercent === 19 ? 'IVA 19%' : 'Exento'}
+          </Badge>
         </div>
-      </CardFooter>
-    </Card>
-  );
-};
+      </div>
+    );
+  }
+);
+
+ProductCard.displayName = 'ProductCard';
 
 export default ProductCard;
