@@ -8,24 +8,25 @@ export const getUrgencyStyles = (openedAt: string, currentTime: number): Urgency
 
   if (elapsedMinutes >= 20) {
     return {
-      badge: 'bg-destructive/15 text-destructive border-destructive/40 animate-pulse font-extrabold',
-      cardBorder: 'border-destructive/80 shadow-destructive/20',
+      badge: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/25 font-bold',
+      cardBorder: 'border-t-4 border-t-rose-500 border-x border-b border-border/80 shadow-xs',
       elapsedMinutes,
-      label: 'Retrasado',
+      label: 'Retrasado (> 20 min)',
     };
   }
   if (elapsedMinutes >= 10) {
     return {
-      badge: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/40 font-bold',
-      cardBorder: 'border-amber-500/60 shadow-amber-500/20',
+      badge: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/25 font-bold',
+      cardBorder: 'border-t-4 border-t-amber-500 border-x border-b border-border/80 shadow-xs',
       elapsedMinutes,
-      label: 'Demora media',
+      label: 'Demora media (10-20 min)',
     };
   }
   return {
-    badge: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/40',
-    cardBorder: 'border-border',
+    badge: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25 font-semibold',
+    cardBorder: 'border-t-4 border-t-emerald-500 border-x border-b border-border/80 shadow-xs',
     elapsedMinutes,
-    label: 'A tiempo',
+    label: 'A tiempo (< 10 min)',
   };
 };
+

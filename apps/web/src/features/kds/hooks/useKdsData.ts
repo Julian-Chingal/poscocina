@@ -183,6 +183,45 @@ export const useKdsData = (venueId: string) => {
     }
   };
 
+  // Mark all unready items in an order ready, or if all ready, mark all delivered
+  const handleCompleteOrder = async (order: KdsOrder) => {
+    const hasUnready = order.items.some(
+      (it) => it.status === 'pending' || it.status === 'sent' || it.status === 'in_preparation'
+    );
+    const targetStatus: KdsItem['status'] = hasUnready ? 'ready' : 'delivered';
+
+    // Optimistic update
+    setOrders((prevOrders) =>
+      prevOrders.map((ord) =>
+        ord.id === order.id
+          ? {
+              ...ord,
+              items: ord.items.map((i) =>
+                targetStatus === 'delivered' || (i.status !== 'ready' && i.status !== 'delivered')
+                  ? { ...i, status: targetStatus }
+                  : i
+              ),
+            }
+          : ord
+      )
+    );
+
+    try {
+      const itemsToUpdate = order.items.filter((it) =>
+        targetStatus === 'ready'
+          ? it.status !== 'ready' && it.status !== 'delivered'
+          : it.status !== 'delivered'
+      );
+      await Promise.all(
+        itemsToUpdate.map((it) => kdsApi.updateItemStatus(it.id, targetStatus))
+      );
+      fetchOrders(true);
+    } catch (err) {
+      console.error('Error completing all items in order:', err);
+      fetchOrders();
+    }
+  };
+
   return {
     orders,
     loading,
@@ -193,6 +232,7 @@ export const useKdsData = (venueId: string) => {
     currentTime,
     handleNextStatus,
     handleUndoStatus,
+    handleCompleteOrder,
     refreshOrders: fetchOrders,
   };
 };
