@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   Sparkles,
   Trash2,
+  Smartphone,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,7 @@ import { ProductDimensions, DisplayMediaType } from '../types/catalog.types';
 import { catalogApi } from '../api/catalog.api';
 import { toast } from '@/components/ui/sonner';
 import { Product3dViewer } from './Product3dViewer';
+import { ScanPoseIllustration } from './ScanPoseIllustration';
 
 interface ScanStep {
   id: number;
@@ -87,6 +89,7 @@ export const Product3dScannerModal: React.FC<Props> = ({
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showPoseIllustration, setShowPoseIllustration] = useState(true);
 
   // Dimensions state
   const [diameter, setDiameter] = useState<string>(
@@ -365,23 +368,50 @@ export const Product3dScannerModal: React.FC<Props> = ({
           {currentStepIndex < 3 ? (
             /* CAMERA CAPTURE STEPS (0, 1, 2) */
             <div className="space-y-4">
-              {/* Step Instruction Card */}
-              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-start gap-3">
-                <div className="size-8 rounded-xl bg-primary/20 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                  <Sparkles className="size-4" />
+              {/* Step Instruction Card with Illustration */}
+              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-3 sm:p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-3">
+                    <div className="size-8 rounded-xl bg-primary/20 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                      <Sparkles className="size-4" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-black text-foreground">
+                        {SCAN_STEPS[currentStepIndex].title}
+                      </h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {SCAN_STEPS[currentStepIndex].tip}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPoseIllustration((prev) => !prev)}
+                    className="h-8 px-2.5 rounded-xl text-xs font-bold border-primary/30 text-primary hover:bg-primary/10 shrink-0 gap-1.5 cursor-pointer"
+                  >
+                    <Smartphone className="size-3.5" />
+                    <span className="hidden sm:inline">
+                      {showPoseIllustration ? 'Ocultar Ilustración' : 'Ver Cómo Colocar Móvil'}
+                    </span>
+                    <span className="sm:hidden">
+                      {showPoseIllustration ? 'Ocultar' : 'Ilustración'}
+                    </span>
+                  </Button>
                 </div>
-                <div className="space-y-1">
-                  <h4 className="text-sm font-black text-foreground">
-                    {SCAN_STEPS[currentStepIndex].title}
-                  </h4>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {SCAN_STEPS[currentStepIndex].tip}
-                  </p>
-                </div>
+
+                {/* Illustrated Pose Guide */}
+                {showPoseIllustration && (
+                  <div className="pt-2 border-t border-primary/15 animate-in fade-in duration-200">
+                    <ScanPoseIllustration step={currentStepIndex} />
+                  </div>
+                )}
               </div>
 
-              {/* Viewfinder Frame */}
-              <div className="relative aspect-video max-h-[420px] w-full bg-black rounded-2xl overflow-hidden shadow-inner flex items-center justify-center border border-border/80">
+              {/* Viewfinder Frame (Optimized for Mobile Height) */}
+              <div className="relative aspect-[4/3] sm:aspect-video w-full min-h-[300px] sm:min-h-[360px] max-h-[440px] bg-black rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center border border-border/80">
                 {cameraError ? (
                   <div className="p-6 text-center space-y-3 max-w-sm">
                     <AlertCircle className="size-10 text-destructive mx-auto" />
@@ -417,49 +447,88 @@ export const Product3dScannerModal: React.FC<Props> = ({
                     />
 
                     {/* HUD Guidance Overlay */}
-                    <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-between p-4">
-                      {/* Top status */}
-                      <div className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-full text-[11px] font-semibold text-white/90 border border-white/20 flex items-center gap-2">
-                        <span className={`size-2 rounded-full ${isCameraActive ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-                        <span>{SCAN_STEPS[currentStepIndex].subtitle}</span>
+                    <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-between p-3 sm:p-4">
+                      {/* Top status bar */}
+                      <div className="w-full flex items-center justify-between gap-2">
+                        <div className="px-3.5 py-1.5 bg-black/75 backdrop-blur-md rounded-full text-[11px] sm:text-xs font-bold text-white/95 border border-white/20 flex items-center gap-2 shadow-lg">
+                          <span
+                            className={`size-2.5 rounded-full ${
+                              isCameraActive ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                            }`}
+                          />
+                          <span>{SCAN_STEPS[currentStepIndex].subtitle}</span>
+                        </div>
+
+                        {!showPoseIllustration && (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setShowPoseIllustration(true)}
+                            className="pointer-events-auto h-7 px-2.5 rounded-full bg-black/75 hover:bg-black/90 text-white text-[10px] font-bold backdrop-blur-md border border-white/25 shadow-md flex items-center gap-1 cursor-pointer"
+                          >
+                            <Smartphone className="size-3" />
+                            <span>Ver Postura</span>
+                          </Button>
+                        )}
                       </div>
 
                       {/* Center Reticle Shape */}
-                      <div className="relative w-full max-w-xs aspect-square flex items-center justify-center">
+                      <div className="relative w-full max-w-xs flex items-center justify-center pointer-events-none">
                         {currentStepIndex === 0 && (
-                          /* Horizontal Level guide */
-                          <div className="w-full border-t-2 border-dashed border-primary/80 relative flex items-center justify-center">
-                            <span className="px-2 py-0.5 bg-black/70 rounded text-[10px] text-primary font-bold">
-                              Nivel de Mesa
-                            </span>
+                          /* Horizontal Level guide with Plate Silhouette */
+                          <div className="w-full flex flex-col items-center justify-center">
+                            {/* Plate Silhouette Ghost */}
+                            <div className="w-44 h-12 rounded-[50%] border-2 border-dashed border-primary/60 bg-primary/10 flex items-center justify-center mb-1">
+                              <span className="text-[9px] font-black text-primary bg-black/75 px-2 py-0.5 rounded-full">
+                                Centra el plato
+                              </span>
+                            </div>
+                            {/* Horizontal Level line */}
+                            <div className="w-full border-t-2 border-dashed border-primary relative flex items-center justify-center">
+                              <span className="px-2.5 py-0.5 bg-black/85 rounded-full text-[10px] text-white font-extrabold border border-primary/40 -mt-2.5 shadow-sm">
+                                0° Nivel de Mesa
+                              </span>
+                            </div>
                           </div>
                         )}
 
                         {currentStepIndex === 1 && (
-                          /* 45 degree oval guide */
-                          <div className="w-48 h-32 rounded-[100%] border-2 border-dashed border-primary/90 flex items-center justify-center animate-pulse">
-                            <span className="text-[10px] text-primary font-black bg-black/60 px-2 py-0.5 rounded">
+                          /* 45 degree oval guide with depth angle */
+                          <div className="w-52 h-36 rounded-[100%] border-2 border-dashed border-primary bg-primary/10 flex flex-col items-center justify-center animate-pulse">
+                            <span className="text-[10px] text-white font-black bg-black/85 px-2.5 py-0.5 rounded-full border border-primary/50 shadow-sm">
                               45° Inclinación
+                            </span>
+                            <span className="text-[9px] text-primary-foreground font-semibold mt-1">
+                              Apunta al centro
                             </span>
                           </div>
                         )}
 
                         {currentStepIndex === 2 && (
                           /* Top-down circular rim guide */
-                          <div className="size-48 rounded-full border-2 border-dashed border-emerald-400/90 flex items-center justify-center animate-pulse">
-                            <div className="size-2 rounded-full bg-emerald-400" />
+                          <div className="size-48 rounded-full border-2 border-dashed border-emerald-400 bg-emerald-500/10 flex flex-col items-center justify-center animate-pulse relative">
+                            <div className="size-3.5 rounded-full bg-emerald-400 ring-4 ring-emerald-400/30" />
+                            <span className="text-[10px] text-white font-black bg-black/85 px-2.5 py-0.5 rounded-full border border-emerald-400/50 mt-2 shadow-sm">
+                              90° Cenital (Desde arriba)
+                            </span>
+                            {/* Crosshairs */}
+                            <div className="absolute top-0 w-0.5 h-3 bg-emerald-400" />
+                            <div className="absolute bottom-0 w-0.5 h-3 bg-emerald-400" />
+                            <div className="absolute left-0 w-3 h-0.5 bg-emerald-400" />
+                            <div className="absolute right-0 w-3 h-0.5 bg-emerald-400" />
                           </div>
                         )}
                       </div>
 
-                      {/* Bottom camera flip button */}
+                      {/* Bottom camera flip & upload buttons */}
                       <div className="flex items-center gap-2 pointer-events-auto">
                         <Button
                           type="button"
                           variant="secondary"
                           size="sm"
                           onClick={toggleCameraFacing}
-                          className="h-8 px-3 rounded-xl bg-black/60 hover:bg-black/80 text-white text-xs font-semibold backdrop-blur-md border border-white/20"
+                          className="h-8 px-3 rounded-xl bg-black/70 hover:bg-black/90 text-white text-xs font-semibold backdrop-blur-md border border-white/20 shadow-md cursor-pointer"
                         >
                           <RefreshCw className="size-3.5 mr-1" />
                           <span>Cambiar Cámara</span>
@@ -470,7 +539,7 @@ export const Product3dScannerModal: React.FC<Props> = ({
                           variant="secondary"
                           size="sm"
                           onClick={() => fileInputRef.current?.click()}
-                          className="h-8 px-3 rounded-xl bg-black/60 hover:bg-black/80 text-white text-xs font-semibold backdrop-blur-md border border-white/20"
+                          className="h-8 px-3 rounded-xl bg-black/70 hover:bg-black/90 text-white text-xs font-semibold backdrop-blur-md border border-white/20 shadow-md cursor-pointer"
                         >
                           <Upload className="size-3.5 mr-1" />
                           <span>Subir Archivo</span>
@@ -541,6 +610,9 @@ export const Product3dScannerModal: React.FC<Props> = ({
                   Estas medidas permitirán a los clientes y camareros conocer la escala real del plato en 3D y Realidad Aumentada (AR).
                 </p>
               </div>
+
+              {/* Illustrated Dimensions Guide */}
+              <ScanPoseIllustration step={3} className="max-w-md mx-auto" />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-muted/20 p-5 rounded-2xl border border-border/80">
                 <div className="space-y-2">
