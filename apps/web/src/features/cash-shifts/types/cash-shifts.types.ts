@@ -7,6 +7,7 @@ export interface ActiveShiftInfo {
     openedAt: string;
     openingAmount: string;
     notes?: string;
+    openedByName?: string;
   };
   salesByMethod?: Array<{
     method: string;

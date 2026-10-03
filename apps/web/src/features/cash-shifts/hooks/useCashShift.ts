@@ -99,6 +99,15 @@ export const useCashShift = (venueId: string) => {
     }
   };
 
+  const openDrawer = async () => {
+    try {
+      await cashShiftsApi.openDrawer(venueId);
+      toast.success('Comando enviado: Cajón monedero abierto');
+    } catch (err: any) {
+      toast.error(err.message || 'No se pudo abrir el cajón monedero');
+    }
+  };
+
   return {
     shiftData,
     loading,
@@ -110,6 +119,7 @@ export const useCashShift = (venueId: string) => {
     openShift,
     closeShift,
     printSummary,
+    openDrawer,
     refreshShift: fetchShift,
   };
 };

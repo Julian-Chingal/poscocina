@@ -1,12 +1,11 @@
 import React from 'react';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Trash2, Utensils } from 'lucide-react';
 import { CartItem, Customer, TableItem } from '../types/pos.types';
 import { CartItemRow } from './CartItemRow';
 import { CustomerSelectDropdown } from './CustomerSelectDropdown';
 import { CartFooter } from './CartFooter';
 import { ActiveOrderItemsList } from './ActiveOrderItemsList';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 interface Props {
@@ -61,85 +60,111 @@ export const CartPanel: React.FC<Props> = ({
   onOpenCreateCustomerModal,
   onRefreshOrder,
   onCustomizeCartItem,
-}) => (
-  <Card className="p-4 flex flex-col justify-between h-[80vh] shadow-sm">
-    <div className="space-y-3 overflow-hidden flex flex-col flex-1">
-      <div className="flex items-center justify-between pb-2 border-b border-border">
-        <div className="flex items-center space-x-2 text-xs font-bold text-foreground">
-          <ShoppingCart className="w-4 h-4 text-primary" />
-          <span>Comanda Actual</span>
+}) => {
+  const totalItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+
+  return (
+    <div className="bg-card/95 backdrop-blur-sm border border-border/80 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between h-[calc(100vh-140px)] min-h-[580px] shadow-xs">
+      <div className="space-y-3 overflow-hidden flex flex-col flex-1">
+        {/* Ticket Header */}
+        <div className="flex items-center justify-between pb-2.5 border-b border-border/80">
+          <div className="flex items-center gap-2">
+            <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <ShoppingCart className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs sm:text-sm font-bold text-foreground">
+                  {currentTable ? `Comanda Mesa ${currentTable.label}` : 'Comanda para Llevar'}
+                </span>
+                {totalItemCount > 0 && (
+                  <Badge
+                    variant="outline"
+                    className="px-1.5 py-0.2 bg-primary/15 text-primary border-primary/30 text-[10px] font-bold tabular-nums"
+                  >
+                    {totalItemCount} {totalItemCount === 1 ? 'ítem' : 'ítems'}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+
           {cart.length > 0 && (
-            <Badge variant="outline" className="px-1.5 py-0.5 bg-primary/15 text-primary border-primary/30 text-[10px]">
-              {cart.length}
-            </Badge>
+            <Button
+              variant="ghost"
+              size="sm"
+              type="button"
+              onClick={onClearCart}
+              className="h-6 px-2 text-[10px] text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1 rounded-md transition-colors"
+              title="Vaciar comanda actual"
+            >
+              <Trash2 className="size-3" />
+              <span>Limpiar</span>
+            </Button>
           )}
         </div>
-        {cart.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            type="button"
-            onClick={onClearCart}
-            className="h-6 px-2 text-[10px] text-destructive hover:text-destructive/80 hover:bg-destructive/10"
-          >
-            Limpiar
-          </Button>
-        )}
+
+        {/* Customer Assignment Search */}
+        <CustomerSelectDropdown
+          selectedCustomer={selectedCustomer}
+          searchQuery={customerSearchQuery}
+          searchResults={customerSearchResults}
+          showDropdown={Boolean(customerSearchQuery.length >= 2)}
+          onSearchChange={onCustomerSearchChange}
+          onSelectCustomer={onSelectCustomer}
+          onClearCustomer={onClearCustomer}
+          onOpenCreateModal={onOpenCreateCustomerModal}
+        />
+
+        {/* Cart & Kitchen Items Scrollable Area */}
+        <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+          {cart.map((item, idx) => (
+            <CartItemRow
+              key={`${item.product.id}-${idx}`}
+              item={item}
+              index={idx}
+              onUpdateQuantity={onUpdateQuantity}
+              onUpdateNotes={onUpdateNotes}
+              onCustomizeItem={onCustomizeCartItem}
+            />
+          ))}
+
+          {cart.length === 0 && (
+            <div className="h-32 flex flex-col items-center justify-center text-center text-muted-foreground text-xs border border-dashed border-border/80 rounded-xl bg-muted/15 p-4 space-y-1.5">
+              <div className="size-8 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground/60 mb-0.5">
+                <Utensils className="size-4" />
+              </div>
+              <span className="font-semibold text-foreground/80">Comanda vacía</span>
+              <span className="text-[11px] text-muted-foreground max-w-[220px]">
+                Toca productos en el menú para agregarlos a la orden.
+              </span>
+            </div>
+          )}
+
+          {/* Existing order items sent to kitchen */}
+          {activeOrder && onRefreshOrder && (
+            <ActiveOrderItemsList order={activeOrder} onRefreshOrder={onRefreshOrder} />
+          )}
+        </div>
       </div>
 
-      <CustomerSelectDropdown
-        selectedCustomer={selectedCustomer}
-        searchQuery={customerSearchQuery}
-        searchResults={customerSearchResults}
-        showDropdown={Boolean(customerSearchQuery.length >= 2)}
-        onSearchChange={onCustomerSearchChange}
-        onSelectCustomer={onSelectCustomer}
-        onClearCustomer={onClearCustomer}
-        onOpenCreateModal={onOpenCreateCustomerModal}
+      {/* Cart Totals & Primary Actions Footer */}
+      <CartFooter
+        cartLength={cart.length}
+        subtotal={subtotal}
+        taxTotal={taxTotal}
+        total={total}
+        currentTable={currentTable}
+        activeOrder={activeOrder}
+        submitting={submitting}
+        orderSentSuccess={orderSentSuccess}
+        isCashShiftOpen={isCashShiftOpen}
+        onSendOrder={onSendOrder}
+        onRequestCheck={onRequestCheck}
+        onOpenCheckout={onOpenCheckout}
       />
-
-      {/* Cart Items List */}
-      <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-        {cart.map((item, idx) => (
-          <CartItemRow
-            key={`${item.product.id}-${idx}`}
-            item={item}
-            index={idx}
-            onUpdateQuantity={onUpdateQuantity}
-            onUpdateNotes={onUpdateNotes}
-            onCustomizeItem={onCustomizeCartItem}
-          />
-        ))}
-
-        {cart.length === 0 && (
-          <Card className="h-28 flex flex-col items-center justify-center text-center text-muted-foreground text-xs border border-dashed border-border bg-transparent p-4">
-            <ShoppingCart className="w-5 h-5 mb-1.5 opacity-40" />
-            <span>Selecciona productos del catálogo para añadir a la comanda.</span>
-          </Card>
-        )}
-
-        {/* Existing order items sent to kitchen */}
-        {activeOrder && onRefreshOrder && (
-          <ActiveOrderItemsList order={activeOrder} onRefreshOrder={onRefreshOrder} />
-        )}
-      </div>
     </div>
-
-    <CartFooter
-      cartLength={cart.length}
-      subtotal={subtotal}
-      taxTotal={taxTotal}
-      total={total}
-      currentTable={currentTable}
-      activeOrder={activeOrder}
-      submitting={submitting}
-      orderSentSuccess={orderSentSuccess}
-      isCashShiftOpen={isCashShiftOpen}
-      onSendOrder={onSendOrder}
-      onRequestCheck={onRequestCheck}
-      onOpenCheckout={onOpenCheckout}
-    />
-  </Card>
-);
+  );
+};
 
 export default CartPanel;

@@ -99,8 +99,10 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
   const currentEditingItem =
     editingCartItemIndex !== null ? cart.cart[editingCartItemIndex] : null;
 
+  const activeCategory = catalog.categories.find((c) => c.id === catalog.activeCategoryId);
+
   return (
-    <div className="w-full min-w-0 max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+    <div className="w-full min-w-0 max-w-7xl mx-auto p-2.5 sm:p-4 lg:p-5 space-y-3 sm:space-y-4">
       <PosHeader
         currentTable={table.currentTable}
         allTables={table.allTables}
@@ -111,10 +113,11 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
         onGuestNameChange={table.setGuestName}
       />
 
-      <div className="w-full min-w-0 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <div className="w-full min-w-0 lg:col-span-2 space-y-4">
+      <div className="w-full min-w-0 grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 items-start">
+        <div className="w-full min-w-0 lg:col-span-2 space-y-3">
           <CategoryChips
             categories={catalog.categories}
+            products={catalog.products}
             activeCategoryId={catalog.activeCategoryId}
             searchQuery={catalog.productSearch}
             onSelectCategory={catalog.setActiveCategoryId}
@@ -122,6 +125,13 @@ export const PosView: React.FC<PosViewProps> = ({ venueId, selectedTable }) => {
           />
           <ProductCatalogGrid
             products={catalog.filteredProducts}
+            totalCatalogCount={catalog.products.length}
+            activeCategoryName={activeCategory?.name}
+            searchQuery={catalog.productSearch}
+            onResetFilters={() => {
+              catalog.setActiveCategoryId('all');
+              catalog.setProductSearch('');
+            }}
             onAddToCart={cart.addToCart}
             onCustomizeProduct={handleOpenCustomizeProduct}
           />
