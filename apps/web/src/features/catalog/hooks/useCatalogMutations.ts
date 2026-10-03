@@ -82,6 +82,11 @@ export const useCatalogMutations = (venueId: string, onSuccess: () => void) => {
         prepTimeMin: Number(data.prepTimeMin) || 0,
         trackInventory: data.trackInventory,
         isAvailable: data.isAvailable,
+        imageUrl: data.imageUrl ?? null,
+        model3dUrl: data.model3dUrl ?? null,
+        model3dType: data.model3dType ?? 'glb',
+        dimensions: data.dimensions ?? {},
+        displayMedia: data.displayMedia ?? 'both',
       };
 
       if (editingProduct) {

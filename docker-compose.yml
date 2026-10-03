@@ -71,6 +71,15 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@poscocina.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
       ADMIN_PIN: ${ADMIN_PIN:-1234}
+      # Garage / S3 Object Storage
+      GARAGE_S3_ENDPOINT: ${GARAGE_S3_ENDPOINT:-http://garage:3900}
+      GARAGE_S3_REGION: ${GARAGE_S3_REGION:-garage}
+      GARAGE_S3_BUCKET: ${GARAGE_S3_BUCKET:-poscocina}
+      GARAGE_ACCESS_KEY_ID: ${GARAGE_ACCESS_KEY_ID:-}
+      GARAGE_SECRET_ACCESS_KEY: ${GARAGE_SECRET_ACCESS_KEY:-}
+      PUBLIC_STORAGE_URL: ${PUBLIC_STORAGE_URL:-}
+    volumes:
+      - server_uploads:/app/apps/server/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -103,6 +112,21 @@ services:
           - poscocina-client
           - client
 
+  garage:
+    image: dxflrs/garage:v1.1.0
+    container_name: poscocina-garage
+    restart: unless-stopped
+    volumes:
+      - garage_meta:/var/lib/garage/meta
+      - garage_data:/var/lib/garage/data
+    networks:
+      poscocina-network:
+        aliases:
+          - poscocina-garage
+          - garage
+    expose:
+      - "3900"
+
 networks:
   poscocina-network:
     name: poscocina-network
@@ -113,3 +137,10 @@ volumes:
     name: poscocina_postgres_data
   redis_data:
     name: poscocina_redis_data
+  garage_meta:
+    name: poscocina_garage_meta
+  garage_data:
+    name: poscocina_garage_data
+  server_uploads:
+    name: poscocina_server_uploads
+

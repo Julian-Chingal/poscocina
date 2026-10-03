@@ -47,5 +47,9 @@ export async function catalogRoutes(fastify: FastifyInstance) {
   // 7. Product-Modifier Group Associations
   fastify.post('/api/products/:id/modifier-groups', managerGuard, (req, rep) => catalogController.linkProductModifierGroup(req, rep));
   fastify.delete('/api/products/:id/modifier-groups/:groupId', managerGuard, (req, rep) => catalogController.unlinkProductModifierGroup(req, rep));
+
+  // 8. Media Uploads (Garage S3 or Local fallback)
+  fastify.post('/api/catalog/upload', staffGuard, (req, rep) => catalogController.uploadMedia(req, rep));
+  fastify.post('/api/catalog/upload-base64', staffGuard, (req, rep) => catalogController.uploadBase64(req, rep));
 }
 

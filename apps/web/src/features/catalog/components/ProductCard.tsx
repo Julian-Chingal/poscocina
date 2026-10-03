@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   XCircle,
   Pencil,
@@ -8,6 +8,9 @@ import {
   Coffee,
   Clock,
   MoreVertical,
+  Rotate3d,
+  Ruler,
+  Eye,
 } from 'lucide-react';
 import { Product, Category } from '../types/catalog.types';
 import { Button } from '@/components/ui/button';
@@ -18,6 +21,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Product3dViewer } from './Product3dViewer';
 
 interface Props {
   product: Product;
@@ -37,6 +47,12 @@ export const ProductCard: React.FC<Props> = React.memo(
     onEdit,
     onDelete,
   }) => {
+    const [show3dModal, setShow3dModal] = useState(false);
+    // Initial display mode: if product.displayMedia === 'model3d', start in 3d; else image
+    const [activeView, setActiveView] = useState<'image' | '3d'>(
+      product.displayMedia === 'model3d' ? '3d' : 'image'
+    );
+
     const taxPercent = product.taxRate ? Number(product.taxRate) * 100 : 8;
     const priceNum = Number(product.price) || 0;
     const formattedPrice = new Intl.NumberFormat('es-CO', {
@@ -47,6 +63,14 @@ export const ProductCard: React.FC<Props> = React.memo(
 
     const categoryColor = category?.color || 'var(--primary)';
     const isBarStation = product.printerStation === 'bar';
+
+    const hasImage = Boolean(product.imageUrl);
+    const has3d = Boolean(product.model3dUrl);
+    const hasMedia = hasImage || has3d;
+    const canToggleBoth = product.displayMedia === 'both' && hasImage && has3d;
+    const hasDimensions = Boolean(
+      product.dimensions && (product.dimensions.diameter || product.dimensions.height)
+    );
 
     return (
       <div
@@ -61,6 +85,96 @@ export const ProductCard: React.FC<Props> = React.memo(
           className="h-1 w-full shrink-0 transition-opacity"
           style={{ backgroundColor: categoryColor }}
         />
+
+        {/* Media Preview Container (Photo / 3D) */}
+        {hasMedia && (
+          <div className="relative w-full h-44 bg-muted/30 overflow-hidden border-b border-border/60">
+            {activeView === '3d' && has3d ? (
+              <Product3dViewer
+                name={product.name}
+                modelUrl={product.model3dUrl}
+                imageUrl={product.imageUrl}
+                dimensions={product.dimensions}
+                showDimensionsDefault={false}
+                autoRotate={true}
+                className="w-full h-full rounded-none border-none min-h-0"
+              />
+            ) : hasImage ? (
+              <img
+                src={product.imageUrl!}
+                alt={product.name}
+                loading="lazy"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/60 bg-primary/5">
+                <Rotate3d className="size-8 stroke-[1.5] text-primary/70 mb-1" />
+                <span className="text-[10px] font-bold text-primary">Modelo 3D</span>
+              </div>
+            )}
+
+            {/* Quick Toggle for Both (Foto vs 3D) */}
+            {canToggleBoth && (
+              <div className="absolute top-2.5 left-2.5 z-10 flex items-center bg-background/85 backdrop-blur-md rounded-lg p-0.5 border border-border/60 shadow-xs">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveView('image');
+                  }}
+                  className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-all cursor-pointer ${
+                    activeView === 'image'
+                      ? 'bg-primary text-primary-foreground shadow-2xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Foto
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveView('3d');
+                  }}
+                  className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-all cursor-pointer flex items-center gap-1 ${
+                    activeView === '3d'
+                      ? 'bg-primary text-primary-foreground shadow-2xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Rotate3d className="size-2.5" />
+                  <span>3D</span>
+                </button>
+              </div>
+            )}
+
+            {/* Dimensions Badge if configured */}
+            {hasDimensions && (
+              <div className="absolute bottom-2 left-2 z-10 px-2 py-0.5 bg-background/85 backdrop-blur-md rounded-md border border-border/60 text-[10px] font-bold text-foreground shadow-2xs flex items-center gap-1">
+                <Ruler className="size-2.5 text-primary" />
+                <span>
+                  {product.dimensions?.diameter ? `Ø ${product.dimensions.diameter}cm` : ''}
+                  {product.dimensions?.height ? ` • ↕ ${product.dimensions.height}cm` : ''}
+                </span>
+              </div>
+            )}
+
+            {/* Inspect / 3D Full Preview Button */}
+            {(has3d || product.displayMedia === 'both') && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShow3dModal(true);
+                }}
+                title="Inspeccionar 3D y Dimensiones"
+                className="absolute bottom-2 right-2 z-10 size-7 bg-background/85 hover:bg-background backdrop-blur-md rounded-lg border border-border/60 text-foreground flex items-center justify-center shadow-2xs cursor-pointer transition-transform active:scale-95"
+              >
+                <Eye className="size-3.5" />
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3.5">
           {/* Top Bar: Category badge & Status / Actions */}
@@ -199,6 +313,32 @@ export const ProductCard: React.FC<Props> = React.memo(
             {taxPercent === 8 ? 'INC 8%' : taxPercent === 19 ? 'IVA 19%' : 'Exento'}
           </Badge>
         </div>
+
+        {/* Modal: Fullscreen 3D & Dimension Viewer */}
+        {show3dModal && (
+          <Dialog open={show3dModal} onOpenChange={setShow3dModal}>
+            <DialogContent maxWidth="md" className="p-0 overflow-hidden rounded-3xl border-border/80 shadow-2xl">
+              <DialogHeader className="px-5 py-3.5 border-b border-border/70 flex items-center justify-between bg-muted/30">
+                <div>
+                  <DialogTitle className="text-sm font-black text-foreground">{product.name}</DialogTitle>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Visualización 3D Interactiva & Dimensiones Físicas
+                  </p>
+                </div>
+              </DialogHeader>
+              <div className="h-[420px] p-2 bg-background">
+                <Product3dViewer
+                  name={product.name}
+                  modelUrl={product.model3dUrl}
+                  imageUrl={product.imageUrl}
+                  dimensions={product.dimensions}
+                  showDimensionsDefault={true}
+                  autoRotate={true}
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     );
   }

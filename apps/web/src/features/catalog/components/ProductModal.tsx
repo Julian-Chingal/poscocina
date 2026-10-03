@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -7,10 +7,21 @@ import {
   Boxes,
   ChefHat,
   Coffee,
+  Camera,
+  Image as ImageIcon,
+  Rotate3d,
+  Ruler,
+  Sparkles,
+  Eye,
 } from 'lucide-react';
-import { Product, Category } from '../types/catalog.types';
+import { Product, Category, ProductDimensions, DisplayMediaType } from '../types/catalog.types';
 import { ProductSchema, ProductFormValues } from '../schemas/catalog.schemas';
 import { TAX_RATE_OPTIONS } from '../constants/catalog.constants';
+import { catalogApi } from '../api/catalog.api';
+import { toast } from '@/components/ui/sonner';
+import { Product3dScannerModal } from './Product3dScannerModal';
+import { Product3dViewer } from './Product3dViewer';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -64,6 +75,12 @@ export const ProductModal: React.FC<Props> = ({
       ? defaultCategoryId || categories[0]?.id || ''
       : categories[0]?.id || '';
 
+  const [showScannerModal, setShowScannerModal] = useState(false);
+  const [show3dPreviewModal, setShow3dPreviewModal] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const modelInputRef = useRef<HTMLInputElement>(null);
+
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(ProductSchema),
     defaultValues: {
@@ -76,11 +93,20 @@ export const ProductModal: React.FC<Props> = ({
       prepTimeMin: 15,
       trackInventory: false,
       isAvailable: true,
+      imageUrl: null,
+      model3dUrl: null,
+      model3dType: 'glb',
+      dimensions: { diameter: 24, height: 6, unit: 'cm', portion: '' },
+      displayMedia: 'both',
     },
   });
 
   const watchedPrice = form.watch('price');
   const watchedCategoryId = form.watch('categoryId');
+  const watchedImageUrl = form.watch('imageUrl');
+  const watchedModel3dUrl = form.watch('model3dUrl');
+  const watchedDimensions = form.watch('dimensions');
+  const watchedDisplayMedia = form.watch('displayMedia') || 'both';
   const selectedCategory = categories.find((c) => c.id === watchedCategoryId);
 
   // Live formatted price helper
@@ -106,6 +132,11 @@ export const ProductModal: React.FC<Props> = ({
         prepTimeMin: editingProduct.prepTimeMin || 15,
         trackInventory: editingProduct.trackInventory ?? false,
         isAvailable: editingProduct.isAvailable,
+        imageUrl: editingProduct.imageUrl || null,
+        model3dUrl: editingProduct.model3dUrl || null,
+        model3dType: editingProduct.model3dType || 'glb',
+        dimensions: editingProduct.dimensions || { diameter: 24, height: 6, unit: 'cm', portion: '' },
+        displayMedia: editingProduct.displayMedia || 'both',
       });
     } else {
       form.reset({
@@ -118,9 +149,61 @@ export const ProductModal: React.FC<Props> = ({
         prepTimeMin: 15,
         trackInventory: false,
         isAvailable: true,
+        imageUrl: null,
+        model3dUrl: null,
+        model3dType: 'glb',
+        dimensions: { diameter: 24, height: 6, unit: 'cm', portion: '' },
+        displayMedia: 'both',
       });
     }
   }, [editingProduct, defaultCatId, isOpen, form]);
+
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingMedia(true);
+      const res = await catalogApi.uploadMedia(file);
+      form.setValue('imageUrl', res.url);
+      toast.success('Fotografía del plato subida con éxito');
+    } catch (err: any) {
+      toast.error('Error al subir imagen: ' + (err.message || 'Error'));
+    } finally {
+      setUploadingMedia(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleModelFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingMedia(true);
+      const res = await catalogApi.uploadMedia(file);
+      form.setValue('model3dUrl', res.url);
+      form.setValue('model3dType', 'glb');
+      toast.success('Modelo 3D (.glb) subido con éxito');
+    } catch (err: any) {
+      toast.error('Error al subir archivo 3D: ' + (err.message || 'Error'));
+    } finally {
+      setUploadingMedia(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleScannerComplete = (scanned: {
+    imageUrl?: string;
+    model3dUrl?: string;
+    dimensions: ProductDimensions;
+    displayMedia: DisplayMediaType;
+  }) => {
+    if (scanned.imageUrl) form.setValue('imageUrl', scanned.imageUrl);
+    if (scanned.model3dUrl) form.setValue('model3dUrl', scanned.model3dUrl);
+    form.setValue('dimensions', scanned.dimensions);
+    form.setValue('displayMedia', scanned.displayMedia);
+  };
 
   const handleSubmit = form.handleSubmit(async (values) => {
     await onSubmit(values);
@@ -393,6 +476,217 @@ export const ProductModal: React.FC<Props> = ({
               )}
             />
 
+            {/* Multimedia, 3D & Physical Dimensions Section */}
+            <div className="p-4 rounded-2xl border border-border/80 bg-muted/20 space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <h4 className="text-xs font-bold text-foreground flex items-center gap-2">
+                    <Sparkles className="size-4 text-primary" />
+                    <span>Presentación Visual, Fotos & Escaneo 3D</span>
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Almacena fotos del plato y genera o vincula visualización 3D interactiva con dimensiones.
+                  </p>
+                </div>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setShowScannerModal(true)}
+                  className="h-8 px-3 rounded-xl bg-primary text-primary-foreground text-xs font-bold shadow-xs hover:bg-primary/90 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Camera className="size-3.5" />
+                  <span>Escanear con Cámara (3D)</span>
+                </Button>
+              </div>
+
+              {/* Uploaded Media Summary & Actions */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* 2D Photo Card */}
+                <div className="p-3 rounded-xl bg-card border border-border/70 flex items-center gap-3">
+                  <div className="size-14 rounded-lg bg-muted border border-border/60 overflow-hidden flex items-center justify-center shrink-0">
+                    {watchedImageUrl ? (
+                      <img src={watchedImageUrl} alt="Plato" className="w-full h-full object-cover" />
+                    ) : (
+                      <ImageIcon className="size-6 text-muted-foreground/40" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-foreground">Fotografía 2D</span>
+                      {watchedImageUrl ? (
+                        <Badge variant="secondary" className="text-[9px] font-bold py-0 px-1 bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                          Cargada
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[9px] text-muted-foreground py-0 px-1">
+                          Sin foto
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => imageInputRef.current?.click()}
+                        disabled={uploadingMedia}
+                        className="text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+                      >
+                        {uploadingMedia ? 'Subiendo...' : watchedImageUrl ? 'Cambiar' : 'Subir archivo'}
+                      </button>
+                      {watchedImageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => form.setValue('imageUrl', null)}
+                          className="text-[11px] font-semibold text-destructive hover:underline cursor-pointer"
+                        >
+                          Eliminar
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3D Model Card */}
+                <div className="p-3 rounded-xl bg-card border border-border/70 flex items-center gap-3">
+                  <div className="size-14 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 text-primary">
+                    <Rotate3d className="size-6 animate-spin-slow" />
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-foreground">Modelo 3D</span>
+                      {watchedModel3dUrl ? (
+                        <Badge variant="secondary" className="text-[9px] font-bold py-0 px-1 bg-primary/15 text-primary border-primary/30">
+                          .GLB Activo
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[9px] text-muted-foreground py-0 px-1">
+                          Opcional
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => modelInputRef.current?.click()}
+                        disabled={uploadingMedia}
+                        className="text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+                      >
+                        {watchedModel3dUrl ? 'Reemplazar .glb' : 'Subir .glb'}
+                      </button>
+                      {watchedModel3dUrl && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setShow3dPreviewModal(true)}
+                            className="text-[11px] font-semibold text-foreground hover:underline cursor-pointer flex items-center gap-0.5"
+                          >
+                            <Eye className="size-3" /> Ver
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => form.setValue('model3dUrl', null)}
+                            className="text-[11px] font-semibold text-destructive hover:underline cursor-pointer"
+                          >
+                            Quitar
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Display Media Preference (Solo Foto, Solo 3D, Ambos) */}
+              <div className="space-y-1.5 pt-1">
+                <FormLabel className="text-xs font-bold text-foreground">
+                  Preferencia de Visualización (Opcional)
+                </FormLabel>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'image', label: '📷 Solo Foto 2D' },
+                    { id: 'model3d', label: '🧊 Solo 3D' },
+                    { id: 'both', label: '✨ Ambos (Recomendado)' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => form.setValue('displayMedia', opt.id as any)}
+                      className={`py-2 px-2.5 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer ${
+                        watchedDisplayMedia === opt.id
+                          ? 'bg-primary text-primary-foreground border-primary shadow-2xs'
+                          : 'bg-card text-muted-foreground border-border/80 hover:bg-muted/50'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Physical Dimensions Inputs */}
+              <div className="space-y-2 pt-1 border-t border-border/60">
+                <span className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                  <Ruler className="size-3 text-primary" />
+                  <span>Dimensiones Físicas y Porción</span>
+                </span>
+                <div className="grid grid-cols-3 gap-2.5">
+                  <div>
+                    <label className="text-[10px] font-semibold text-muted-foreground block mb-1">
+                      Diámetro ({watchedDimensions?.unit || 'cm'})
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      placeholder="24"
+                      value={watchedDimensions?.diameter ?? ''}
+                      onChange={(e) =>
+                        form.setValue('dimensions', {
+                          ...watchedDimensions,
+                          diameter: e.target.value ? parseFloat(e.target.value) : undefined,
+                        })
+                      }
+                      className="h-8 text-xs rounded-lg bg-card font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-semibold text-muted-foreground block mb-1">
+                      Altura ({watchedDimensions?.unit || 'cm'})
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      placeholder="6"
+                      value={watchedDimensions?.height ?? ''}
+                      onChange={(e) =>
+                        form.setValue('dimensions', {
+                          ...watchedDimensions,
+                          height: e.target.value ? parseFloat(e.target.value) : undefined,
+                        })
+                      }
+                      className="h-8 text-xs rounded-lg bg-card font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-semibold text-muted-foreground block mb-1">
+                      Porción / Peso
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="Ej. 350g"
+                      value={watchedDimensions?.portion ?? ''}
+                      onChange={(e) =>
+                        form.setValue('dimensions', {
+                          ...watchedDimensions,
+                          portion: e.target.value,
+                        })
+                      }
+                      className="h-8 text-xs rounded-lg bg-card font-medium"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Operational Switch Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               {/* Recipe Inventory Tracking */}
@@ -511,6 +805,56 @@ export const ProductModal: React.FC<Props> = ({
           </form>
         </Form>
       </DialogContent>
+
+      {/* Product 3D Scanner Modal (Web Camera Assisted) */}
+      <Product3dScannerModal
+        isOpen={showScannerModal}
+        productName={form.watch('name') || 'Nuevo Plato'}
+        currentImageUrl={watchedImageUrl}
+        currentModel3dUrl={watchedModel3dUrl}
+        currentDimensions={watchedDimensions}
+        currentDisplayMedia={watchedDisplayMedia}
+        onClose={() => setShowScannerModal(false)}
+        onComplete={handleScannerComplete}
+      />
+
+      {/* Standalone 3D Model Preview Dialog */}
+      {show3dPreviewModal && (
+        <Dialog open={show3dPreviewModal} onOpenChange={setShow3dPreviewModal}>
+          <DialogContent maxWidth="md" className="p-0 overflow-hidden rounded-2xl">
+            <div className="p-4 border-b border-border/70 flex items-center justify-between">
+              <span className="text-sm font-bold text-foreground">
+                Vista Previa 3D: {form.watch('name') || 'Plato'}
+              </span>
+            </div>
+            <div className="h-[360px] p-2">
+              <Product3dViewer
+                name={form.watch('name') || 'Plato'}
+                modelUrl={watchedModel3dUrl}
+                imageUrl={watchedImageUrl}
+                dimensions={watchedDimensions}
+                autoRotate={true}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Hidden file inputs */}
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/jpg"
+        className="hidden"
+        onChange={handleImageFileChange}
+      />
+      <input
+        ref={modelInputRef}
+        type="file"
+        accept=".glb,.gltf"
+        className="hidden"
+        onChange={handleModelFileChange}
+      />
     </Dialog>
   );
 };

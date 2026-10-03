@@ -53,4 +53,28 @@ export const catalogApi = {
 
   unlinkProductModifierGroup: (productId: string, groupId: string): Promise<void> =>
     api.delete(`/products/${productId}/modifier-groups/${groupId}`),
+
+  uploadMedia: async (file: File): Promise<{ url: string; key: string; filename: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = (await import('@/stores/auth.store')).useAuthStore.getState().token;
+    const venueId = (await import('@/stores/auth.store')).useAuthStore.getState().venueId;
+    const res = await fetch('/api/catalog/upload', {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(venueId ? { 'x-venue-id': venueId } : {}),
+      },
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Error al subir archivo');
+    }
+    return res.json();
+  },
+
+  uploadBase64: async (data: { base64Data: string; filename?: string; mimeType?: string }): Promise<{ url: string; key: string; filename: string }> => {
+    return api.post('/catalog/upload-base64', data);
+  },
 };

@@ -3,6 +3,10 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import jwt from '@fastify/jwt';
+import multipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
+import path from 'path';
+import fs from 'fs';
 import { env } from './config/env.js';
 import { authPlugin } from './plugins/auth.plugin.js';
 import { socketPlugin } from './plugins/socket.plugin.js';
@@ -99,6 +103,24 @@ export async function buildServer() {
 
   // 6. Real-time WebSocket plugin
   await server.register(socketPlugin);
+
+  // 6.1 Multipart file uploads (images & 3D models up to 50MB)
+  await server.register(multipart, {
+    limits: {
+      fileSize: 50 * 1024 * 1024,
+    },
+  });
+
+  // 6.2 Static uploads directory fallback
+  const uploadsDir = path.resolve(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  await server.register(fastifyStatic, {
+    root: uploadsDir,
+    prefix: '/uploads/',
+    decorateReply: false,
+  });
 
   // 7. Register Domain Feature Modules
   await server.register(healthModule);
