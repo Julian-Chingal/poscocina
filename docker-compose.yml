@@ -79,7 +79,7 @@ services:
       GARAGE_SECRET_ACCESS_KEY: ${GARAGE_SECRET_ACCESS_KEY:-}
       PUBLIC_STORAGE_URL: ${PUBLIC_STORAGE_URL:-}
     volumes:
-      - server_uploads:/app/apps/server/uploads
+      - server_uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy

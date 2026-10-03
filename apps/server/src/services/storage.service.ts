@@ -3,12 +3,12 @@ import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs/promises';
 
-const S3_ENDPOINT = process.env.S3_ENDPOINT || 'http://garage:3900';
-const S3_REGION = process.env.S3_REGION || 'garage';
-const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME || 'poscocina';
-const S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID || '';
-const S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY || '';
-const S3_PUBLIC_URL = process.env.S3_PUBLIC_URL || '';
+const S3_ENDPOINT = process.env.GARAGE_S3_ENDPOINT || process.env.S3_ENDPOINT || 'http://garage:3900';
+const S3_REGION = process.env.GARAGE_S3_REGION || process.env.S3_REGION || 'garage';
+const S3_BUCKET_NAME = process.env.GARAGE_S3_BUCKET || process.env.S3_BUCKET_NAME || 'poscocina';
+const S3_ACCESS_KEY_ID = process.env.GARAGE_ACCESS_KEY_ID || process.env.S3_ACCESS_KEY_ID || '';
+const S3_SECRET_ACCESS_KEY = process.env.GARAGE_SECRET_ACCESS_KEY || process.env.S3_SECRET_ACCESS_KEY || '';
+const S3_PUBLIC_URL = process.env.PUBLIC_STORAGE_URL || process.env.S3_PUBLIC_URL || '';
 
 export class StorageService {
   private s3Client: S3Client | null = null;

@@ -113,14 +113,23 @@ export async function buildServer() {
 
   // 6.2 Static uploads directory fallback
   const uploadsDir = path.resolve(process.cwd(), 'uploads');
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
+  try {
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+  } catch (err) {
+    server.log.warn({ err }, 'Could not ensure uploads directory exists');
   }
-  await server.register(fastifyStatic, {
-    root: uploadsDir,
-    prefix: '/uploads/',
-    decorateReply: false,
-  });
+
+  try {
+    await server.register(fastifyStatic, {
+      root: uploadsDir,
+      prefix: '/uploads/',
+      decorateReply: false,
+    });
+  } catch (err) {
+    server.log.warn({ err }, 'Could not register fastifyStatic for uploads');
+  }
 
   // 7. Register Domain Feature Modules
   await server.register(healthModule);

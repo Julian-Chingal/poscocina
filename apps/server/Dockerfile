@@ -59,6 +59,9 @@ COPY --chown=node:node --from=builder /app/apps/server/drizzle ./drizzle
 COPY --chown=node:node apps/server/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
 
+# Crear directorio de uploads y asegurar permisos para el usuario node
+RUN mkdir -p /app/uploads && chown -R node:node /app
+
 # Usuario sin privilegios
 USER node
 
