@@ -15,10 +15,10 @@ export const ScanPoseIllustration: React.FC<ScanPoseIllustrationProps> = ({
 }) => {
   return (
     <div
-      className={`relative w-full rounded-2xl bg-gradient-to-b from-muted/50 to-muted/20 border border-border/80 overflow-hidden flex flex-col items-center justify-between p-3 select-none ${className}`}
+      className={`relative w-full rounded-2xl bg-gradient-to-b from-muted/50 to-muted/20 border border-border/80 overflow-hidden flex flex-col items-center justify-between p-2.5 sm:p-3 select-none touch-pan-y ${className}`}
     >
       {/* Step Badge & Title */}
-      <div className="w-full flex items-center justify-between gap-2 mb-2">
+      <div className="w-full flex items-center justify-between gap-2 mb-1.5">
         <div className="flex items-center gap-1.5">
           <Smartphone className="size-4 text-primary shrink-0" />
           <span className="text-[11px] font-black text-foreground tracking-tight">
@@ -39,8 +39,8 @@ export const ScanPoseIllustration: React.FC<ScanPoseIllustrationProps> = ({
         </Badge>
       </div>
 
-      {/* Dynamic SVG Illustration Area */}
-      <div className="w-full h-36 sm:h-44 relative flex items-center justify-center">
+      {/* Dynamic SVG Illustration Area (Touch pass-through) */}
+      <div className="w-full h-28 sm:h-36 relative flex items-center justify-center pointer-events-none">
         {step === 0 && (
           /* STEP 0: FRONTAL / LEVEL VIEW */
           <svg viewBox="0 0 340 160" className="w-full h-full" fill="none">

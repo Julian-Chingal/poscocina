@@ -312,18 +312,18 @@ export const Product3dScannerModal: React.FC<Props> = ({
   if (!isOpen || typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-card border border-border/80 w-full max-w-4xl max-h-[95vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+      <div className="bg-card border-0 sm:border border-border/80 w-full max-w-4xl h-full sm:h-auto sm:max-h-[92vh] max-h-[100dvh] rounded-none sm:rounded-3xl shadow-2xl flex flex-col min-h-0 overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border/70 flex items-center justify-between bg-muted/30">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-border/70 shrink-0 flex items-center justify-between bg-muted/30">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center ring-1 ring-primary/20 shadow-2xs">
+            <div className="size-9 sm:size-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center ring-1 ring-primary/20 shadow-2xs shrink-0">
               <Camera className="size-5" />
             </div>
             <div>
-              <h2 className="text-base font-black text-foreground tracking-tight flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-black text-foreground tracking-tight flex items-center gap-2">
                 <span>Asistente de Escaneo 3D & Dimensiones</span>
-                <Badge variant="outline" className="text-[10px] font-bold border-primary/40 text-primary">
+                <Badge variant="outline" className="hidden sm:inline-flex text-[10px] font-bold border-primary/40 text-primary">
                   Cámara Web
                 </Badge>
               </h2>
@@ -338,14 +338,14 @@ export const Product3dScannerModal: React.FC<Props> = ({
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="size-8 rounded-xl text-muted-foreground hover:text-foreground"
+            className="size-8 rounded-xl text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
           >
             <X className="size-4" />
           </Button>
         </div>
 
         {/* Step Indicator Bar */}
-        <div className="px-6 py-3 border-b border-border/60 bg-muted/15 flex items-center justify-between gap-1 overflow-x-auto">
+        <div className="px-3 sm:px-6 py-2 sm:py-3 border-b border-border/60 bg-muted/15 shrink-0 flex items-center justify-between gap-1 overflow-x-auto touch-pan-x custom-scrollbar">
           {[
             { label: '1. Frontal', idx: 0 },
             { label: '2. Ángulo 45°', idx: 1 },
@@ -437,10 +437,10 @@ export const Product3dScannerModal: React.FC<Props> = ({
         )}
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-6 custom-scrollbar touch-pan-y">
           {currentStepIndex < 3 ? (
             /* CAMERA CAPTURE STEPS (0, 1, 2) */
-            <div className="space-y-4">
+            <div className="space-y-4 pb-8 sm:pb-4">
               {/* Step Instruction Card with Illustration */}
               <div className="bg-primary/5 border border-primary/20 rounded-2xl p-3 sm:p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
@@ -463,22 +463,54 @@ export const Product3dScannerModal: React.FC<Props> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => setShowPoseIllustration((prev) => !prev)}
-                    className="h-8 px-2.5 rounded-xl text-xs font-bold border-primary/30 text-primary hover:bg-primary/10 shrink-0 gap-1.5 cursor-pointer"
+                    className="hidden sm:inline-flex h-8 px-2.5 rounded-xl text-xs font-bold border-primary/30 text-primary hover:bg-primary/10 shrink-0 gap-1.5 cursor-pointer"
                   >
                     <Smartphone className="size-3.5" />
-                    <span className="hidden sm:inline">
-                      {showPoseIllustration ? 'Ocultar Ilustración' : 'Ver Cómo Colocar Móvil'}
-                    </span>
-                    <span className="sm:hidden">
-                      {showPoseIllustration ? 'Ocultar' : 'Ilustración'}
-                    </span>
+                    <span>{showPoseIllustration ? 'Ocultar Ilustración' : 'Ver Guía de Postura'}</span>
                   </Button>
+                </div>
+
+                {/* Mobile View Mode Switcher: Cámara vs Guía Visual */}
+                <div className="flex sm:hidden items-center bg-muted/60 p-1 rounded-xl gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowPoseIllustration(false)}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      !showPoseIllustration
+                        ? 'bg-primary text-primary-foreground shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    📸 Cámara en Vivo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPoseIllustration(true)}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      showPoseIllustration
+                        ? 'bg-primary text-primary-foreground shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    📐 Guía de Postura
+                  </button>
                 </div>
 
                 {/* Illustrated Pose Guide */}
                 {showPoseIllustration && (
                   <div className="pt-2 border-t border-primary/15 animate-in fade-in duration-200">
                     <ScanPoseIllustration step={currentStepIndex} />
+                    <div className="mt-2 flex sm:hidden justify-center">
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setShowPoseIllustration(false)}
+                        className="w-full h-8 text-xs font-bold bg-primary text-primary-foreground rounded-xl cursor-pointer"
+                      >
+                        <Camera className="size-3.5 mr-1.5" />
+                        <span>Ir a la Cámara para Capturar</span>
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -876,7 +908,7 @@ export const Product3dScannerModal: React.FC<Props> = ({
         </div>
 
         {/* Footer Navigation */}
-        <div className="px-6 py-4 border-t border-border/70 bg-muted/20 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-border/70 bg-muted/25 shrink-0 flex items-center justify-between z-10">
           <div>
             {currentStepIndex > 0 ? (
               <Button
