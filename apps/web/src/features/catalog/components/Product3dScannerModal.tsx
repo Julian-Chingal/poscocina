@@ -14,6 +14,7 @@ import {
   Sparkles,
   Trash2,
   Smartphone,
+  Copy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -90,6 +91,24 @@ export const Product3dScannerModal: React.FC<Props> = ({
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPoseIllustration, setShowPoseIllustration] = useState(true);
+  const [isDesktopBrowser, setIsDesktopBrowser] = useState(false);
+  const [showDesktopMobileNotice, setShowDesktopMobileNotice] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isMobile =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+      setIsDesktopBrowser(!isMobile);
+    }
+  }, []);
+
+  const handleCopyLink = () => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success('Enlace copiado al portapapeles. Puedes abrirlo en tu celular para escanear');
+    }
+  };
 
   // Dimensions state
   const [diameter, setDiameter] = useState<string>(
@@ -362,6 +381,60 @@ export const Product3dScannerModal: React.FC<Props> = ({
             );
           })}
         </div>
+
+        {/* Mobile Device Recommendation Notice for Desktop Browser Clients */}
+        {isDesktopBrowser && showDesktopMobileNotice && (
+          <div className="mx-4 sm:mx-6 mt-3 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start justify-between gap-3 text-amber-950 dark:text-amber-100 animate-in fade-in slide-in-from-top-1">
+            <div className="flex items-start gap-3">
+              <div className="size-9 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                <Smartphone className="size-5" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="text-xs sm:text-sm font-black text-amber-900 dark:text-amber-200">
+                    💡 Recomendación: Escanea desde un Dispositivo Móvil
+                  </h4>
+                  <Badge variant="outline" className="text-[10px] font-extrabold border-amber-500/40 text-amber-700 dark:text-amber-300 bg-amber-500/10">
+                    Mayor comodidad
+                  </Badge>
+                </div>
+                <p className="text-xs text-amber-800/90 dark:text-amber-300/90 leading-relaxed max-w-2xl">
+                  Para registrar los diferentes ángulos del plato (nivel de mesa a 0°, diagonal a 45° y cenital desde arriba a 90°) con mayor libertad de movimiento y comodidad, <strong>te recomendamos abrir este panel desde tu smartphone o tablet</strong>.
+                </p>
+                <div className="pt-1 flex items-center gap-2 flex-wrap">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyLink}
+                    className="h-7 px-2.5 rounded-lg text-xs font-bold border-amber-500/40 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20 gap-1.5 cursor-pointer"
+                  >
+                    <Copy className="size-3" />
+                    <span>Copiar enlace para el móvil</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowDesktopMobileNotice(false)}
+                    className="h-7 px-2 rounded-lg text-xs font-bold text-amber-800/70 dark:text-amber-300/70 hover:bg-amber-500/15 cursor-pointer"
+                  >
+                    <span>Continuar con webcam en PC</span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowDesktopMobileNotice(false)}
+              className="size-7 rounded-lg text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+              title="Cerrar recomendación"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        )}
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
