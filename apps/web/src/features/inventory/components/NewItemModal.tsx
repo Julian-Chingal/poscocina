@@ -19,7 +19,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 
 interface Props {
@@ -93,16 +99,21 @@ export const NewItemModal: React.FC<Props> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Unidad de Medida *</FormLabel>
-                    <FormControl>
-                      <Select {...field}>
-                        <option value="kg">Kilogramos (kg)</option>
-                        <option value="g">Gramos (g)</option>
-                        <option value="lt">Litros (lt)</option>
-                        <option value="ml">Mililitros (ml)</option>
-                        <option value="und">Unidades (und)</option>
-                        <option value="botella">Botella</option>
-                      </Select>
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-9 rounded-xl">
+                          <SelectValue placeholder="Seleccionar unidad" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="kg">Kilogramos (kg)</SelectItem>
+                        <SelectItem value="g">Gramos (g)</SelectItem>
+                        <SelectItem value="lt">Litros (lt)</SelectItem>
+                        <SelectItem value="ml">Mililitros (ml)</SelectItem>
+                        <SelectItem value="und">Unidades (und)</SelectItem>
+                        <SelectItem value="botella">Botella</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

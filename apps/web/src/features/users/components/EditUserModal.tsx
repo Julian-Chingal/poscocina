@@ -21,7 +21,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 
@@ -119,15 +125,20 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Rol Asignado *</FormLabel>
-                  <FormControl>
-                    <Select {...field}>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-10 text-sm rounded-xl bg-background">
+                        <SelectValue placeholder="Seleccionar rol" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
                       {roles.map((r) => (
-                        <option key={r.id} value={r.id}>
+                        <SelectItem key={r.id} value={r.id}>
                           {r.label} ({r.name})
-                        </option>
+                        </SelectItem>
                       ))}
-                    </Select>
-                  </FormControl>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

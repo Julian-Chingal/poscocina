@@ -2,7 +2,13 @@ import React from 'react';
 import { Clock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface Props {
   printerStation: string;
@@ -22,11 +28,15 @@ export const ProductStationFields: React.FC<Props> = ({
       <Label className="mb-1.5 block">Estación de Impresión</Label>
       <Select
         value={printerStation}
-        onChange={(e) => onPrinterStationChange(e.target.value)}
-        className="h-10 rounded-xl"
+        onValueChange={onPrinterStationChange}
       >
-        <option value="kitchen">Cocina Principal (KDS)</option>
-        <option value="bar">Barra de Bebidas (Bar)</option>
+        <SelectTrigger className="h-10 rounded-xl bg-background">
+          <SelectValue placeholder="Seleccionar estación" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="kitchen">Cocina Principal (KDS)</SelectItem>
+          <SelectItem value="bar">Barra de Bebidas (Bar)</SelectItem>
+        </SelectContent>
       </Select>
     </div>
     <div>

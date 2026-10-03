@@ -21,7 +21,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -141,16 +147,20 @@ export const ProductModal: React.FC<Props> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Categoría *</FormLabel>
-                    <FormControl>
-                      <Select {...field}>
-                        <option value="">Selecciona categoría</option>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-9 rounded-xl">
+                          <SelectValue placeholder="Selecciona categoría" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
                         {categories.map((c) => (
-                          <option key={c.id} value={c.id}>
+                          <SelectItem key={c.id} value={c.id}>
                             {c.name}
-                          </option>
+                          </SelectItem>
                         ))}
-                      </Select>
-                    </FormControl>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -188,18 +198,23 @@ export const ProductModal: React.FC<Props> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Impuesto</FormLabel>
-                    <FormControl>
-                      <Select
-                        value={field.value}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                      >
+                    <Select
+                      value={String(field.value)}
+                      onValueChange={(val) => field.onChange(parseFloat(val))}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-9 rounded-xl">
+                          <SelectValue placeholder="Seleccionar impuesto" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
                         {TAX_RATE_OPTIONS.map((t) => (
-                          <option key={t.value} value={t.value}>
+                          <SelectItem key={t.value} value={String(t.value)}>
                             {t.label}
-                          </option>
+                          </SelectItem>
                         ))}
-                      </Select>
-                    </FormControl>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -213,12 +228,17 @@ export const ProductModal: React.FC<Props> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Estación de Comanda</FormLabel>
-                    <FormControl>
-                      <Select {...field}>
-                        <option value="kitchen">Cocina Principal (KDS)</option>
-                        <option value="bar">Barra de Bebidas (Bar)</option>
-                      </Select>
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-9 rounded-xl">
+                          <SelectValue placeholder="Seleccionar estación" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="kitchen">Cocina Principal (KDS)</SelectItem>
+                        <SelectItem value="bar">Barra de Bebidas (Bar)</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

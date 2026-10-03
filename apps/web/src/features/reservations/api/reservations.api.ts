@@ -2,6 +2,7 @@ import { api } from '@/services/api';
 import {
   Reservation,
   TableItem,
+  FloorPlanItem,
   Customer,
   CreateReservationPayload,
   ReservationQueryParams,
@@ -36,6 +37,9 @@ export const reservationsApi = {
 
   getTables: (venueId: string): Promise<TableItem[]> =>
     api.get(`/venues/${venueId}/tables`),
+
+  getFloorPlans: (venueId: string): Promise<FloorPlanItem[]> =>
+    api.get(`/venues/${venueId}/floor-plans`),
 
   searchCustomers: (venueId: string, query: string): Promise<Customer[]> =>
     api.get(`/customers/search?venueId=${venueId}&query=${encodeURIComponent(query)}`),

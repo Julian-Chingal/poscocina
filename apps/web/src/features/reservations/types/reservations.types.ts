@@ -7,11 +7,49 @@ export interface Customer {
   loyaltyPoints?: number;
 }
 
+export interface FloorPlanLayout {
+  canvasWidth?: number;
+  canvasHeight?: number;
+  gridSize?: number;
+  walls?: Array<{
+    id: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    kind: string;
+    label?: string;
+  }>;
+  fixtures?: Array<{
+    id: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    kind: string;
+    label: string;
+  }>;
+}
+
+export interface FloorPlanItem {
+  id: string;
+  name: string;
+  layout?: FloorPlanLayout;
+  isActive?: boolean;
+}
+
 export interface TableItem {
   id: string;
   label: string;
   capacity: number;
   status: string;
+  floorPlanId?: string;
+  positionX?: string | number;
+  positionY?: string | number;
+  width?: number;
+  height?: number;
+  shape?: 'rect' | 'circle' | 'square';
+  currentOrderId?: string | null;
 }
 
 export type ReservationStatus =

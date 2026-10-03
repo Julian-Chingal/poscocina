@@ -4,7 +4,13 @@ import { SplitMode, DiscountType } from '../types/pos.types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 
 interface Props {
@@ -108,11 +114,15 @@ export const SplitBillSection: React.FC<Props> = ({
             <Label className="block text-[10px] text-muted-foreground">Tipo:</Label>
             <Select
               value={discountType}
-              onChange={(e: any) => onDiscountTypeChange(e.target.value)}
-              className="h-8 text-xs"
+              onValueChange={(val: any) => onDiscountTypeChange(val)}
             >
-              <option value="percent">Porcentaje (%)</option>
-              <option value="fixed">Monto Fijo ($)</option>
+              <SelectTrigger className="h-8 text-xs rounded-lg bg-background">
+                <SelectValue placeholder="Tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="percent">Porcentaje (%)</SelectItem>
+                <SelectItem value="fixed">Monto Fijo ($)</SelectItem>
+              </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">

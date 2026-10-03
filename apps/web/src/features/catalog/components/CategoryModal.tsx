@@ -21,7 +21,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 
 interface Props {
@@ -145,15 +151,20 @@ export const CategoryModal: React.FC<Props> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Estación de Preparación Predeterminada</FormLabel>
-                  <FormControl>
-                    <Select {...field}>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-9 rounded-xl">
+                        <SelectValue placeholder="Seleccionar estación" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
                       {PRINTER_STATION_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
+                        <SelectItem key={opt.value} value={opt.value}>
                           {opt.label}
-                        </option>
+                        </SelectItem>
                       ))}
-                    </Select>
-                  </FormControl>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

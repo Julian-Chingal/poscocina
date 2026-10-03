@@ -3,7 +3,13 @@ import { KeyRound, Mail, Lock } from 'lucide-react';
 import { RoleItem, CreateUserPayload } from '../types/users.types';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface CreateUserFormFieldsProps {
   formData: CreateUserPayload;
@@ -34,14 +40,18 @@ export const CreateUserFormFields: React.FC<CreateUserFormFieldsProps> = ({
         <Label className="text-xs font-semibold text-foreground block">Rol en el Restaurante *</Label>
         <Select
           value={formData.roleId || roles[0]?.id || ''}
-          onChange={(e) => onChange({ roleId: e.target.value })}
-          className="h-10 text-sm"
+          onValueChange={(val) => onChange({ roleId: val })}
         >
-          {roles.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.label} ({r.name})
-            </option>
-          ))}
+          <SelectTrigger className="h-10 text-sm rounded-xl bg-background">
+            <SelectValue placeholder="Seleccionar rol" />
+          </SelectTrigger>
+          <SelectContent>
+            {roles.map((r) => (
+              <SelectItem key={r.id} value={r.id}>
+                {r.label} ({r.name})
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
       </div>
 

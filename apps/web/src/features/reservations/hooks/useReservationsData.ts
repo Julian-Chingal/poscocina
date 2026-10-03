@@ -3,6 +3,7 @@ import { reservationsApi } from '../api/reservations.api';
 import {
   Reservation,
   TableItem,
+  FloorPlanItem,
   ReservationFilterStatus,
   ReservationTimeframe,
   ReservationMetrics,
@@ -11,6 +12,7 @@ import {
 export const useReservationsData = (venueId: string) => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [tables, setTables] = useState<TableItem[]>([]);
+  const [floorPlans, setFloorPlans] = useState<FloorPlanItem[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Navigation & Filters: Status is primary, timeframe/date is secondary
@@ -33,7 +35,7 @@ export const useReservationsData = (venueId: string) => {
     if (!venueId) return;
     try {
       setLoading(true);
-      const [resData, metricsData, tablesData] = await Promise.all([
+      const [resData, metricsData, tablesData, floorPlansData] = await Promise.all([
         reservationsApi.getReservations(venueId, {
           status: statusFilter,
           date: selectedDate || undefined,
@@ -46,6 +48,7 @@ export const useReservationsData = (venueId: string) => {
           selectedDate || undefined
         ),
         reservationsApi.getTables(venueId),
+        reservationsApi.getFloorPlans(venueId).catch(() => [] as FloorPlanItem[]),
       ]);
 
       setReservations(resData || []);
@@ -53,6 +56,7 @@ export const useReservationsData = (venueId: string) => {
         setMetrics(metricsData);
       }
       setTables(tablesData || []);
+      setFloorPlans(floorPlansData || []);
     } catch (err) {
       console.error('Error fetching reservations data:', err);
     } finally {
@@ -79,6 +83,7 @@ export const useReservationsData = (venueId: string) => {
   return {
     reservations,
     tables,
+    floorPlans,
     loading,
     selectedDate,
     setSelectedDate,

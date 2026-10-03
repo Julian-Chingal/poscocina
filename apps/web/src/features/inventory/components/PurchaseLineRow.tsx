@@ -1,7 +1,13 @@
 import React from 'react';
 import { Trash2 } from 'lucide-react';
 import { InventoryItem } from '../types/inventory.types';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -35,16 +41,20 @@ export const PurchaseLineRow: React.FC<Props> = ({
     <Card className="flex flex-row items-center space-x-2 bg-muted/40 p-2 rounded-xl border-border text-xs">
       <div className="flex-1">
         <Select
-          value={line.inventoryItemId}
-          onChange={(e) => onUpdate(index, 'inventoryItemId', e.target.value)}
-          className="h-8 text-xs"
+          value={line.inventoryItemId || 'none'}
+          onValueChange={(val) => onUpdate(index, 'inventoryItemId', val === 'none' ? '' : val)}
         >
-          <option value="">-- Insumo --</option>
-          {items.map((it) => (
-            <option key={it.id} value={it.id}>
-              {it.name} ({it.unit})
-            </option>
-          ))}
+          <SelectTrigger className="h-8 text-xs rounded-lg bg-background">
+            <SelectValue placeholder="-- Insumo --" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">-- Insumo --</SelectItem>
+            {items.map((it) => (
+              <SelectItem key={it.id} value={it.id}>
+                {it.name} ({it.unit})
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
       </div>
       <Input
@@ -58,25 +68,26 @@ export const PurchaseLineRow: React.FC<Props> = ({
       <Input
         type="number"
         step="any"
-        placeholder="Costo"
+        placeholder="Costo U."
         value={line.unitCost}
         onChange={(e) => onUpdate(index, 'unitCost', e.target.value)}
         className="w-24 h-8 font-mono text-xs"
       />
-      <div className="w-24 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">
-        ${subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+      <div className="w-24 text-right font-mono font-bold text-foreground">
+        ${subtotal.toLocaleString('es-CO')}
       </div>
-      {canRemove && (
-        <Button
-          variant="ghost"
-          size="icon"
-          type="button"
-          onClick={() => onRemove(index)}
-          className="h-7 w-7 text-muted-foreground hover:text-destructive p-1 cursor-pointer transition-colors"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
-      )}
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        disabled={!canRemove}
+        onClick={() => onRemove(index)}
+        className="text-destructive hover:bg-destructive/10 h-7 w-7 rounded-lg transition-colors cursor-pointer"
+      >
+        <Trash2 className="w-3.5 h-3.5" />
+      </Button>
     </Card>
   );
 };
+
+export default PurchaseLineRow;

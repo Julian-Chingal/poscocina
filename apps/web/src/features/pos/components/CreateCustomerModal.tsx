@@ -19,7 +19,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 
 interface Props {
@@ -85,14 +91,19 @@ export const CreateCustomerModal: React.FC<Props> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tipo Doc.</FormLabel>
-                    <FormControl>
-                      <Select {...field}>
-                        <option value="CC">CC</option>
-                        <option value="NIT">NIT</option>
-                        <option value="CE">CE</option>
-                        <option value="Pasaporte">Pasaporte</option>
-                      </Select>
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-9 rounded-xl">
+                          <SelectValue placeholder="Tipo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="CC">CC</SelectItem>
+                        <SelectItem value="NIT">NIT</SelectItem>
+                        <SelectItem value="CE">CE</SelectItem>
+                        <SelectItem value="Pasaporte">Pasaporte</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

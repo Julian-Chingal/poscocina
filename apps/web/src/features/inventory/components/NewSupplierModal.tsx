@@ -21,7 +21,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 
 interface Props {
@@ -110,15 +116,20 @@ export const NewSupplierModal: React.FC<Props> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tipo Doc *</FormLabel>
-                    <FormControl>
-                      <Select {...field}>
-                        <option value="NIT">NIT</option>
-                        <option value="RUT">RUT</option>
-                        <option value="CC">Cédula (CC)</option>
-                        <option value="CE">Cédula Extranjería</option>
-                        <option value="Passport">Pasaporte</option>
-                      </Select>
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-9 rounded-xl">
+                          <SelectValue placeholder="Tipo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="NIT">NIT</SelectItem>
+                        <SelectItem value="RUT">RUT</SelectItem>
+                        <SelectItem value="CC">Cédula (CC)</SelectItem>
+                        <SelectItem value="CE">Cédula Extranjería</SelectItem>
+                        <SelectItem value="Passport">Pasaporte</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -3,7 +3,13 @@ import { DollarSign } from 'lucide-react';
 import { TAX_RATE_OPTIONS } from '../constants/catalog.constants';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/common/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface Props {
   price: string;
@@ -38,15 +44,19 @@ export const ProductPricingFields: React.FC<Props> = ({
     <div>
       <Label className="mb-1.5 block">Impuesto</Label>
       <Select
-        value={taxRate}
-        onChange={(e) => onTaxRateChange(parseFloat(e.target.value))}
-        className="h-10 rounded-xl"
+        value={String(taxRate)}
+        onValueChange={(val) => onTaxRateChange(parseFloat(val))}
       >
-        {TAX_RATE_OPTIONS.map((t) => (
-          <option key={t.value} value={t.value}>
-            {t.label}
-          </option>
-        ))}
+        <SelectTrigger className="h-10 rounded-xl bg-background">
+          <SelectValue placeholder="Seleccionar impuesto" />
+        </SelectTrigger>
+        <SelectContent>
+          {TAX_RATE_OPTIONS.map((t) => (
+            <SelectItem key={t.value} value={String(t.value)}>
+              {t.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
       </Select>
     </div>
   </div>
