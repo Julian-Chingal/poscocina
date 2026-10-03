@@ -71,10 +71,12 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@poscocina.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
       ADMIN_PIN: ${ADMIN_PIN:-1234}
-      # Garage / S3 Object Storage
+      # Almacenamiento Multimedia (S3 / MinIO / Garage / Filestash / Local)
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-${GARAGE_S3_BUCKET:-catastrocol-cargues}}
+      STORAGE_PATH: ${STORAGE_PATH:-gastropos}
       GARAGE_S3_ENDPOINT: ${GARAGE_S3_ENDPOINT:-http://garage:3900}
       GARAGE_S3_REGION: ${GARAGE_S3_REGION:-garage}
-      GARAGE_S3_BUCKET: ${GARAGE_S3_BUCKET:-poscocina}
+      GARAGE_S3_BUCKET: ${STORAGE_BUCKET:-${GARAGE_S3_BUCKET:-catastrocol-cargues}}
       GARAGE_ACCESS_KEY_ID: ${GARAGE_ACCESS_KEY_ID:-}
       GARAGE_SECRET_ACCESS_KEY: ${GARAGE_SECRET_ACCESS_KEY:-}
       PUBLIC_STORAGE_URL: ${PUBLIC_STORAGE_URL:-}
