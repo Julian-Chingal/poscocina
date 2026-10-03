@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
@@ -65,26 +66,37 @@ export const NewItemModal: React.FC<Props> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent maxWidth="md" onClose={onClose}>
+      <DialogContent maxWidth="md" onClose={onClose} className="rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <Boxes className="w-5 h-5 text-primary" />
-            <span>Nuevo Insumo de Cocina / Barra</span>
-          </DialogTitle>
+          <div className="flex items-center space-x-2.5">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+              <Boxes className="w-5 h-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-base font-extrabold text-foreground">
+                Nuevo Insumo de Almacén
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Controla existencias, costo por unidad y alertas de reposición automática.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="space-y-3.5">
+          <form onSubmit={handleSubmit} className="space-y-4 pt-1">
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nombre del Insumo *</FormLabel>
+                  <FormLabel className="text-xs font-semibold">Nombre del Insumo o Materia Prima *</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder="Ej. Lomo de Res, Leche Entera, Café en Grano"
+                      placeholder="Ej. Lomo de Res, Leche Entera, Coca-Cola 350ml, Café Molido"
+                      className="h-10 rounded-xl text-xs"
+                      autoFocus
                     />
                   </FormControl>
                   <FormMessage />
@@ -98,10 +110,10 @@ export const NewItemModal: React.FC<Props> = ({
                 name="unit"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Unidad de Medida *</FormLabel>
+                    <FormLabel className="text-xs font-semibold">Unidad de Medida *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-9 rounded-xl">
+                        <SelectTrigger className="h-10 rounded-xl text-xs font-medium">
                           <SelectValue placeholder="Seleccionar unidad" />
                         </SelectTrigger>
                       </FormControl>
@@ -112,6 +124,7 @@ export const NewItemModal: React.FC<Props> = ({
                         <SelectItem value="ml">Mililitros (ml)</SelectItem>
                         <SelectItem value="und">Unidades (und)</SelectItem>
                         <SelectItem value="botella">Botella</SelectItem>
+                        <SelectItem value="porción">Porción</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -124,9 +137,15 @@ export const NewItemModal: React.FC<Props> = ({
                 name="currentStock"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Stock Inicial</FormLabel>
+                    <FormLabel className="text-xs font-semibold">Stock Inicial</FormLabel>
                     <FormControl>
-                      <Input {...field} type="number" step="0.01" className="font-mono" />
+                      <Input
+                        {...field}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        className="font-mono h-10 rounded-xl text-xs"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -140,10 +159,19 @@ export const NewItemModal: React.FC<Props> = ({
                 name="alertThreshold"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Umbral Alerta Mínima</FormLabel>
+                    <FormLabel className="text-xs font-semibold">Umbral Mínimo Alerta</FormLabel>
                     <FormControl>
-                      <Input {...field} type="number" step="0.01" className="font-mono" />
+                      <Input
+                        {...field}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        className="font-mono h-10 rounded-xl text-xs"
+                      />
                     </FormControl>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      Alerta cuando el stock caiga a este nivel
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -154,24 +182,33 @@ export const NewItemModal: React.FC<Props> = ({
                 name="costPerUnit"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Costo Unitario ($)</FormLabel>
+                    <FormLabel className="text-xs font-semibold">Costo Unitario ($ COP)</FormLabel>
                     <FormControl>
-                      <Input {...field} type="number" step="0.01" className="font-mono" />
+                      <Input
+                        {...field}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        className="font-mono h-10 rounded-xl text-xs"
+                      />
                     </FormControl>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      Para cálculo de escandallos
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            <DialogFooter>
-              <Button variant="ghost" type="button" onClick={onClose}>
+            <DialogFooter className="pt-2">
+              <Button variant="ghost" type="button" onClick={onClose} className="rounded-xl">
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting || form.formState.isSubmitting}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-5"
               >
                 {isSubmitting || form.formState.isSubmitting ? 'Guardando...' : 'Crear Insumo'}
               </Button>

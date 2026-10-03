@@ -30,18 +30,34 @@ export const InventoryView: React.FC<{ venueId: string }> = ({ venueId }) => {
   });
   const recipes = useRecipes(venueId);
 
+  const criticalStockCount = React.useMemo(() => {
+    return stock.items.filter((item) => {
+      const current = parseFloat(item.currentStock || '0');
+      const threshold = parseFloat(item.alertThreshold || '0');
+      return current <= threshold;
+    }).length;
+  }, [stock.items]);
+
   return (
     <div className="w-full min-w-0 max-w-7xl mx-auto p-6 sm:p-10 space-y-6">
-      <InventoryHeader activeTab={activeTab} onSelectTab={setActiveTab} />
+      <InventoryHeader
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        criticalCount={criticalStockCount}
+        totalItems={stock.items.length}
+      />
 
       <Suspense fallback={<div className="p-8 text-center text-xs text-muted-foreground">Cargando sección de inventario...</div>}>
         {activeTab === 'stock' && (
           <StockTable
-            items={stock.filteredItems}
+            items={stock.items}
             searchQuery={stock.searchQuery}
             onSearchChange={stock.setSearchQuery}
             onOpenNewItemModal={() => stock.setShowNewItemModal(true)}
             onOpenMovementModal={movements.openMovementModal}
+            onViewMovements={() => setActiveTab('movements')}
+            onRefresh={stock.refreshItems}
+            isLoading={stock.loading}
           />
         )}
 
