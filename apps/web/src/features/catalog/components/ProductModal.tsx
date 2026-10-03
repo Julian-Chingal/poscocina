@@ -598,9 +598,9 @@ export const ProductModal: React.FC<Props> = ({
 
               {/* Display Media Preference (Solo Foto, Solo 3D, Ambos) */}
               <div className="space-y-1.5 pt-1">
-                <FormLabel className="text-xs font-bold text-foreground">
+                <label className="text-xs font-bold text-foreground block">
                   Preferencia de Visualización (Opcional)
-                </FormLabel>
+                </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { id: 'image', label: '📷 Solo Foto 2D' },
