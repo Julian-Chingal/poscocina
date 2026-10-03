@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ReceiptText, CheckCircle2, Receipt, Eye, Search, ShoppingCart, Clock } from 'lucide-react';
+import { ReceiptText, CheckCircle2, Receipt, Eye, Search, ShoppingCart } from 'lucide-react';
 import { PendingBill } from '../types/cash-shifts.types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
