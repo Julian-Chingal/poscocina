@@ -15,8 +15,8 @@ export class ManageAnalyticsUseCase {
     return await this.repo.getTopSellingProducts(venueId, limit);
   }
 
-  async getKdsMetrics(venueId: string) {
-    return await this.repo.getKdsMetrics(venueId);
+  async getKdsMetrics(venueId: string, range?: { from?: string; to?: string }) {
+    return await this.repo.getKdsMetrics(venueId, range);
   }
 
   async getCogsProfitability(venueId: string) {

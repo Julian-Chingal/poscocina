@@ -25,8 +25,9 @@ export class AnalyticsController {
   }
 
   async getKdsMetrics(request: FastifyRequest, reply: FastifyReply) {
+    const { from, to } = request.query as { from?: string; to?: string };
     const venueId = await resolveVenueId(request);
-    return reply.send(await this.useCase.getKdsMetrics(venueId));
+    return reply.send(await this.useCase.getKdsMetrics(venueId, { from, to }));
   }
 
   async getCogsProfitability(request: FastifyRequest, reply: FastifyReply) {

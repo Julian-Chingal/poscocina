@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, Printer, RefreshCw, PieChart, ShieldAlert } from 'lucide-react';
+import { FileSpreadsheet, Printer, RefreshCw, PieChart, ShieldAlert } from 'lucide-react';
 import { ReportPeriod } from '../types/reports.types';
 import { Button } from '@/components/ui/button';
 
@@ -99,8 +99,8 @@ export const ReportsHeader: React.FC<ReportsHeaderProps> = ({
             onClick={onExportCSV}
             className="flex items-center gap-1.5 px-3 py-1.5 h-8 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/25 text-emerald-700 dark:text-emerald-400 text-xs font-semibold transition cursor-pointer"
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>Exportar CSV</span>
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>Exportar Excel</span>
           </Button>
 
           <Button

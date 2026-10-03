@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import * as XLSX from 'xlsx';
 import { reportsApi } from '../api/reports.api';
 import {
   ReportPeriod,
@@ -48,11 +49,26 @@ export const useReportsData = (venueId?: string | null, companyName?: string) =>
       const params = { from, to, venueId: venueId || undefined };
 
       const [resOverview, resHourly, resTop, resKds, resCogs] = await Promise.all([
-        reportsApi.getOverview(params),
-        reportsApi.getHourlySales(params),
-        reportsApi.getTopProducts(params),
-        reportsApi.getKdsMetrics(params),
-        reportsApi.getCogsProfitability(params),
+        reportsApi.getOverview(params).catch((err) => {
+          console.error('Error cargando overview:', err);
+          return null;
+        }),
+        reportsApi.getHourlySales(params).catch((err) => {
+          console.error('Error cargando ventas por hora:', err);
+          return [];
+        }),
+        reportsApi.getTopProducts(params).catch((err) => {
+          console.error('Error cargando top productos:', err);
+          return [];
+        }),
+        reportsApi.getKdsMetrics(params).catch((err) => {
+          console.error('Error cargando métricas KDS:', err);
+          return null;
+        }),
+        reportsApi.getCogsProfitability(params).catch((err) => {
+          console.error('Error cargando rentabilidad COGS:', err);
+          return null;
+        }),
       ]);
 
       // Normalize overview and payment methods
@@ -185,45 +201,81 @@ export const useReportsData = (venueId?: string | null, companyName?: string) =>
     loadData();
   }, [loadData]);
 
-  const exportCSV = () => {
+  const exportExcel = () => {
     if (!overview) return;
-    const lines = [
+
+    const workbook = XLSX.utils.book_new();
+
+    // 1. Resumen General
+    const summaryData = [
       ['REPORTE DE VENTAS - POSCOCINA', companyName || ''],
-      ['Generado el', new Date().toLocaleString('es-CO')],
-      ['Periodo', period],
+      ['Fecha de Emisión', new Date().toLocaleString('es-CO')],
+      ['Período', period],
       [],
-      ['RESUMEN GENERAL'],
+      ['Métrica', 'Valor'],
       ['Ventas Brutas', overview.totalSales],
-      ['Subtotal', overview.subtotalSales],
-      ['Impuestos (INC/IVA)', overview.taxTotal],
-      ['Descuentos', overview.discountTotal],
-      ['Total Tickets', overview.ticketCount],
+      ['Subtotal Neto', overview.subtotalSales],
+      ['Impuestos (INC / IVA)', overview.taxTotal],
+      ['Descuentos Otorgados', overview.discountTotal],
+      ['Total Tickets / Recibos', overview.ticketCount],
       ['Ticket Promedio', overview.avgTicket],
       ['Propinas Recaudadas', overview.totalTips],
-      [],
-      ['DESGLOSE POR MEDIO DE PAGO'],
-      ['Metodo', 'Monto', 'Propinas', 'Transacciones', '% Participacion'],
-      ...overview.paymentMethods.map((p) => [
-        p.method,
+      ['Margen Bruto Estimado (%)', cogsMetrics ? `${cogsMetrics.grossMarginPct}%` : 'N/A'],
+      ['Ganancia Bruta Estimada', cogsMetrics?.grossProfit || 0],
+      ['Costo de Insumos (COGS)', cogsMetrics?.totalCogs || 0],
+      ['Tiempo Promedio Cocina (KDS min)', kdsMetrics?.avgPrepMinutes || 0],
+    ];
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+    wsSummary['!cols'] = [{ wch: 32 }, { wch: 25 }];
+    XLSX.utils.book_append_sheet(workbook, wsSummary, 'Resumen General');
+
+    // 2. Medios de Pago
+    const paymentData = [
+      ['Canal de Pago', 'Monto Total', 'Propinas', 'Transacciones', 'Participación %'],
+      ...(overview.paymentMethods || []).map((p) => [
+        p.method === 'cash' ? 'Efectivo' : p.method === 'card' ? 'Tarjeta' : p.method === 'transfer' ? 'Transferencia/QR' : p.method,
         p.totalAmount,
         p.totalTip,
         p.count,
         `${p.percentage}%`,
       ]),
-      [],
-      ['TOP PRODUCTOS VENDIDOS'],
-      ['Producto', 'Categoria', 'Precio Unitario', 'Cantidad Vendida', 'Ingresos'],
-      ...topProducts.map((p) => [p.name, p.category, p.price, p.quantity, p.revenue]),
     ];
+    const wsPayments = XLSX.utils.aoa_to_sheet(paymentData);
+    wsPayments['!cols'] = [{ wch: 22 }, { wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 18 }];
+    XLSX.utils.book_append_sheet(workbook, wsPayments, 'Medios de Pago');
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + lines.map((e) => e.join(';')).join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `reporte_ventas_${period}_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // 3. Top Productos
+    const productsData = [
+      ['Posición', 'Producto', 'Categoría', 'Precio Unitario', 'Cantidad Vendida', 'Ingresos Totales'],
+      ...topProducts.map((p, idx) => [
+        idx + 1,
+        p.name,
+        p.category,
+        p.price,
+        p.quantity || p.unitsSold,
+        p.revenue,
+      ]),
+    ];
+    const wsProducts = XLSX.utils.aoa_to_sheet(productsData);
+    wsProducts['!cols'] = [{ wch: 10 }, { wch: 32 }, { wch: 20 }, { wch: 16 }, { wch: 18 }, { wch: 18 }];
+    XLSX.utils.book_append_sheet(workbook, wsProducts, 'Top Productos');
+
+    // 4. Ventas por Hora
+    const hourlyData = [
+      ['Hora', 'Ventas Totales', 'Cantidad de Pedidos'],
+      ...hourly.map((h) => [
+        h.hourLabel,
+        h.sales,
+        h.tickets,
+      ]),
+    ];
+    const wsHourly = XLSX.utils.aoa_to_sheet(hourlyData);
+    wsHourly['!cols'] = [{ wch: 14 }, { wch: 18 }, { wch: 20 }];
+    XLSX.utils.book_append_sheet(workbook, wsHourly, 'Ventas por Hora');
+
+    // Download XLSX file
+    const dateStr = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(workbook, `reporte_ventas_${period}_${dateStr}.xlsx`);
   };
 
   return {
@@ -236,6 +288,7 @@ export const useReportsData = (venueId?: string | null, companyName?: string) =>
     cogsMetrics,
     setPeriod,
     refreshData: loadData,
-    exportCSV,
+    exportExcel,
+    exportCSV: exportExcel, // alias for backwards compatibility
   };
 };

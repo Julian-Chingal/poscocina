@@ -144,46 +144,64 @@ export class AnalyticsRepository implements IAnalyticsRepository {
     });
   }
 
-  async getKdsMetrics(venueId: string) {
-    const [speedMetrics] = await this.database
-      .select({
-        avgPrepSeconds: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${schema.orderItems.readyAt} - ${schema.orderItems.sentAt}))), 0)::int`,
-        countPrepared: sql<number>`COUNT(${schema.orderItems.id})::int`,
-      })
-      .from(schema.orderItems)
-      .innerJoin(schema.orders, eq(schema.orderItems.orderId, schema.orders.id))
-      .where(
-        and(
-          eq(schema.orders.venueId, venueId),
-          sql`${schema.orderItems.sentAt} IS NOT NULL`,
-          sql`${schema.orderItems.readyAt} IS NOT NULL`
-        )
-      );
+  async getKdsMetrics(venueId: string, filter?: { from?: string; to?: string }) {
+    try {
+      const conditions = [];
+      if (filter?.from) conditions.push(gte(schema.orders.openedAt, new Date(filter.from)));
+      if (filter?.to) conditions.push(lte(schema.orders.openedAt, new Date(filter.to)));
 
-    const [statusCounts] = await this.database
-      .select({
-        completed: sql<number>`COUNT(CASE WHEN ${schema.orderItems.status} = 'ready' OR ${schema.orderItems.readyAt} IS NOT NULL THEN 1 END)::int`,
-        preparing: sql<number>`COUNT(CASE WHEN ${schema.orderItems.status} = 'preparing' THEN 1 END)::int`,
-        pending: sql<number>`COUNT(CASE WHEN ${schema.orderItems.status} = 'pending' THEN 1 END)::int`,
-      })
-      .from(schema.orderItems)
-      .innerJoin(schema.orders, eq(schema.orderItems.orderId, schema.orders.id))
-      .where(eq(schema.orders.venueId, venueId));
+      const [speedMetrics] = await this.database
+        .select({
+          avgPrepSeconds: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${schema.orderItems.readyAt} - ${schema.orderItems.sentAt}))), 0)::int`,
+          countPrepared: sql<number>`COUNT(${schema.orderItems.id})::int`,
+        })
+        .from(schema.orderItems)
+        .innerJoin(schema.orders, eq(schema.orderItems.orderId, schema.orders.id))
+        .where(
+          and(
+            eq(schema.orders.venueId, venueId),
+            sql`${schema.orderItems.sentAt} IS NOT NULL`,
+            sql`${schema.orderItems.readyAt} IS NOT NULL`,
+            ...conditions
+          )
+        );
 
-    const avgMinutes = Math.round(((speedMetrics?.avgPrepSeconds || 0) / 60) * 10) / 10;
-    const completed = statusCounts?.completed || speedMetrics?.countPrepared || 0;
-    const preparing = statusCounts?.preparing || 0;
-    const pending = statusCounts?.pending || 0;
+      const [statusCounts] = await this.database
+        .select({
+          completed: sql<number>`COUNT(CASE WHEN ${schema.orderItems.status}::text IN ('ready', 'delivered') OR ${schema.orderItems.readyAt} IS NOT NULL THEN 1 END)::int`,
+          preparing: sql<number>`COUNT(CASE WHEN ${schema.orderItems.status}::text IN ('in_preparation', 'sent') THEN 1 END)::int`,
+          pending: sql<number>`COUNT(CASE WHEN ${schema.orderItems.status}::text = 'pending' THEN 1 END)::int`,
+        })
+        .from(schema.orderItems)
+        .innerJoin(schema.orders, eq(schema.orderItems.orderId, schema.orders.id))
+        .where(and(eq(schema.orders.venueId, venueId), ...conditions));
 
-    return {
-      avgPrepMinutes: avgMinutes,
-      avgPrepTimeMinutes: avgMinutes,
-      totalCompleted: completed,
-      totalOrdersPrepared: completed,
-      totalPreparing: preparing,
-      totalPending: pending,
-      targetMinutes: 15,
-    };
+      const avgMinutes = Math.round(((speedMetrics?.avgPrepSeconds || 0) / 60) * 10) / 10;
+      const completed = statusCounts?.completed || speedMetrics?.countPrepared || 0;
+      const preparing = statusCounts?.preparing || 0;
+      const pending = statusCounts?.pending || 0;
+
+      return {
+        avgPrepMinutes: avgMinutes,
+        avgPrepTimeMinutes: avgMinutes,
+        totalCompleted: completed,
+        totalOrdersPrepared: completed,
+        totalPreparing: preparing,
+        totalPending: pending,
+        targetMinutes: 15,
+      };
+    } catch (err) {
+      console.error('Error fetching KDS metrics:', err);
+      return {
+        avgPrepMinutes: 0,
+        avgPrepTimeMinutes: 0,
+        totalCompleted: 0,
+        totalOrdersPrepared: 0,
+        totalPreparing: 0,
+        totalPending: 0,
+        targetMinutes: 15,
+      };
+    }
   }
 
   async getCogsProfitability(venueId: string) {
