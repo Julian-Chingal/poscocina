@@ -114,21 +114,6 @@ services:
           - poscocina-client
           - client
 
-  garage:
-    image: dxflrs/garage:v1.1.0
-    container_name: poscocina-garage
-    restart: unless-stopped
-    volumes:
-      - garage_meta:/var/lib/garage/meta
-      - garage_data:/var/lib/garage/data
-    networks:
-      poscocina-network:
-        aliases:
-          - poscocina-garage
-          - garage
-    expose:
-      - "3900"
-
 networks:
   poscocina-network:
     name: poscocina-network
@@ -139,10 +124,6 @@ volumes:
     name: poscocina_postgres_data
   redis_data:
     name: poscocina_redis_data
-  garage_meta:
-    name: poscocina_garage_meta
-  garage_data:
-    name: poscocina_garage_data
   server_uploads:
     name: poscocina_server_uploads
 

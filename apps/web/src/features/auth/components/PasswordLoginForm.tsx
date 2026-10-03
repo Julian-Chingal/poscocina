@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { PasswordLoginSchema, PasswordLoginFormValues } from '../schemas/auth.schemas';
 import {
   Form,
@@ -25,6 +25,8 @@ export const PasswordLoginForm: React.FC<PasswordLoginFormProps> = ({
   isLoading,
   error,
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
+
   const form = useForm<PasswordLoginFormValues>({
     resolver: zodResolver(PasswordLoginSchema),
     defaultValues: {
@@ -80,10 +82,23 @@ export const PasswordLoginForm: React.FC<PasswordLoginFormProps> = ({
                   <Lock className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground pointer-events-none" />
                   <Input
                     {...field}
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    className="pl-9 h-10 rounded-xl"
+                    className="pl-9 pr-10 h-10 rounded-xl"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded focus:outline-none cursor-pointer"
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
               </FormControl>
               <FormMessage />
