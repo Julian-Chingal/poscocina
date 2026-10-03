@@ -23,6 +23,8 @@ export interface PaymentMethodMetric {
   totalTip: number;
   count: number;
   percentage: number;
+  total?: number;
+  tip?: number;
 }
 
 export interface OverviewMetrics {
@@ -34,6 +36,7 @@ export interface OverviewMetrics {
   avgTicket: number;
   totalTips: number;
   paymentMethods: PaymentMethodMetric[];
+  salesByPaymentMethod?: PaymentMethodMetric[];
 }
 
 export interface HourlySale {
@@ -41,22 +44,28 @@ export interface HourlySale {
   hourLabel: string;
   sales: number;
   tickets: number;
+  orderCount?: number;
 }
 
 export interface TopProduct {
   id: string;
+  productId?: string;
   name: string;
   category: string;
   price: number;
   quantity: number;
+  unitsSold?: number;
   revenue: number;
 }
 
 export interface KdsMetrics {
   avgPrepMinutes: number;
+  avgPrepTimeMinutes?: number;
   totalCompleted: number;
+  totalOrdersPrepared?: number;
   totalPending: number;
   totalPreparing: number;
+  targetMinutes?: number;
 }
 
 export interface CogsMetrics {
@@ -64,4 +73,13 @@ export interface CogsMetrics {
   totalCogs: number;
   grossProfit: number;
   grossMarginPct: number;
+  items?: Array<{
+    productId: string;
+    name: string;
+    unitsSold: number;
+    totalRevenue: number;
+    estimatedCogs: number;
+    grossProfit: number;
+    profitMarginPct: number;
+  }>;
 }

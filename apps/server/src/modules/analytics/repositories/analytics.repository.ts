@@ -42,6 +42,23 @@ export class AnalyticsRepository implements IAnalyticsRepository {
 
     const totalTipsNum = paymentsSummary.reduce((acc, curr) => acc + Number(curr.totalTip || 0), 0);
 
+    const paymentMethods = paymentsSummary.map((p) => {
+      const amount = Number(p.totalAmount || 0);
+      const tip = Number(p.totalTip || 0);
+      const count = p.transactionCount || 0;
+      const percentage = totalSalesNum > 0 ? Math.round((amount / totalSalesNum) * 100) : 0;
+      return {
+        method: p.method,
+        totalAmount: amount,
+        totalTip: tip,
+        count,
+        percentage,
+        // compatibility aliases:
+        total: amount,
+        tip,
+      };
+    });
+
     return {
       totalSales: totalSalesNum,
       subtotalSales: Number(receiptsSummary?.subtotalSales || 0),
@@ -50,12 +67,8 @@ export class AnalyticsRepository implements IAnalyticsRepository {
       ticketCount: ticketCountNum,
       avgTicket,
       totalTips: totalTipsNum,
-      salesByPaymentMethod: paymentsSummary.map((p) => ({
-        method: p.method,
-        total: Number(p.totalAmount),
-        tip: Number(p.totalTip),
-        count: p.transactionCount,
-      })),
+      paymentMethods,
+      salesByPaymentMethod: paymentMethods,
     };
   }
 
@@ -76,12 +89,24 @@ export class AnalyticsRepository implements IAnalyticsRepository {
       .groupBy(sql`EXTRACT(HOUR FROM ${schema.receipts.issuedAt})`)
       .orderBy(sql`EXTRACT(HOUR FROM ${schema.receipts.issuedAt})`);
 
-    return results.map((r) => ({
-      hour: r.hour,
-      hourLabel: `${String(r.hour).padStart(2, '0')}:00`,
-      sales: Number(r.sales),
-      orderCount: r.orderCount,
-    }));
+    const salesMap = new Map<number, { sales: number; count: number }>();
+    for (const r of results) {
+      salesMap.set(r.hour, { sales: Number(r.sales || 0), count: r.orderCount || 0 });
+    }
+
+    const fullHourly = [];
+    for (let h = 0; h < 24; h++) {
+      const match = salesMap.get(h);
+      fullHourly.push({
+        hour: h,
+        hourLabel: `${String(h).padStart(2, '0')}:00`,
+        sales: match ? match.sales : 0,
+        tickets: match ? match.count : 0,
+        orderCount: match ? match.count : 0,
+      });
+    }
+
+    return fullHourly;
   }
 
   async getTopSellingProducts(venueId: string, limit = 10) {
@@ -102,13 +127,21 @@ export class AnalyticsRepository implements IAnalyticsRepository {
       .orderBy(desc(sql`SUM(${schema.orderItems.quantity})`))
       .limit(limit);
 
-    return results.map((r) => ({
-      productId: r.productId,
-      name: r.productName,
-      category: r.categoryName,
-      unitsSold: r.totalQuantity,
-      revenue: Number(r.totalRevenue),
-    }));
+    return results.map((r) => {
+      const qty = r.totalQuantity || 0;
+      const revenue = Number(r.totalRevenue || 0);
+      const unitPrice = qty > 0 ? Math.round(revenue / qty) : 0;
+      return {
+        id: r.productId,
+        productId: r.productId,
+        name: r.productName,
+        category: r.categoryName,
+        quantity: qty,
+        unitsSold: qty,
+        price: unitPrice,
+        revenue,
+      };
+    });
   }
 
   async getKdsMetrics(venueId: string) {
@@ -127,9 +160,28 @@ export class AnalyticsRepository implements IAnalyticsRepository {
         )
       );
 
+    const [statusCounts] = await this.database
+      .select({
+        completed: sql<number>`COUNT(CASE WHEN ${schema.orderItems.status} = 'ready' OR ${schema.orderItems.readyAt} IS NOT NULL THEN 1 END)::int`,
+        preparing: sql<number>`COUNT(CASE WHEN ${schema.orderItems.status} = 'preparing' THEN 1 END)::int`,
+        pending: sql<number>`COUNT(CASE WHEN ${schema.orderItems.status} = 'pending' THEN 1 END)::int`,
+      })
+      .from(schema.orderItems)
+      .innerJoin(schema.orders, eq(schema.orderItems.orderId, schema.orders.id))
+      .where(eq(schema.orders.venueId, venueId));
+
+    const avgMinutes = Math.round(((speedMetrics?.avgPrepSeconds || 0) / 60) * 10) / 10;
+    const completed = statusCounts?.completed || speedMetrics?.countPrepared || 0;
+    const preparing = statusCounts?.preparing || 0;
+    const pending = statusCounts?.pending || 0;
+
     return {
-      avgPrepTimeMinutes: Math.round(((speedMetrics?.avgPrepSeconds || 0) / 60) * 10) / 10,
-      totalOrdersPrepared: speedMetrics?.countPrepared || 0,
+      avgPrepMinutes: avgMinutes,
+      avgPrepTimeMinutes: avgMinutes,
+      totalCompleted: completed,
+      totalOrdersPrepared: completed,
+      totalPreparing: preparing,
+      totalPending: pending,
       targetMinutes: 15,
     };
   }
@@ -148,23 +200,38 @@ export class AnalyticsRepository implements IAnalyticsRepository {
       .where(and(eq(schema.orders.venueId, venueId), eq(schema.orders.status, 'paid')));
 
     const productTotals: Record<string, { name: string; units: number; revenue: number }> = {};
+    let totalRevenue = 0;
     for (const item of rawItems) {
       if (!productTotals[item.productId]) {
         productTotals[item.productId] = { name: item.productName, units: 0, revenue: 0 };
       }
       productTotals[item.productId].units += item.quantity;
-      productTotals[item.productId].revenue += Number(item.sellingPrice) * item.quantity;
+      const itemRev = Number(item.sellingPrice) * item.quantity;
+      productTotals[item.productId].revenue += itemRev;
+      totalRevenue += itemRev;
     }
 
-    return Object.entries(productTotals).map(([id, p]) => ({
+    const totalCogs = Math.round(totalRevenue * 0.35); // 35% standard food cost benchmark
+    const grossProfit = totalRevenue - totalCogs;
+    const grossMarginPct = totalRevenue > 0 ? Math.round((grossProfit / totalRevenue) * 100) : 0;
+
+    const items = Object.entries(productTotals).map(([id, p]) => ({
       productId: id,
       name: p.name,
       unitsSold: p.units,
       totalRevenue: p.revenue,
-      estimatedCogs: p.revenue * 0.35,
-      grossProfit: p.revenue * 0.65,
+      estimatedCogs: Math.round(p.revenue * 0.35),
+      grossProfit: Math.round(p.revenue * 0.65),
       profitMarginPct: 65,
     }));
+
+    return {
+      totalRevenue,
+      totalCogs,
+      grossProfit,
+      grossMarginPct,
+      items,
+    };
   }
 
   async getAuditLogs(venueId: string, options: { action?: string; limit?: number }) {

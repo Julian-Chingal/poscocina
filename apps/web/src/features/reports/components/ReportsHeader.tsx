@@ -2,7 +2,6 @@ import React from 'react';
 import { Download, Printer, RefreshCw, PieChart, ShieldAlert } from 'lucide-react';
 import { ReportPeriod } from '../types/reports.types';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
 interface ReportsHeaderProps {
   period: ReportPeriod;
@@ -30,39 +29,56 @@ export const ReportsHeader: React.FC<ReportsHeaderProps> = ({
   activeTab,
   onTabChange,
 }) => {
+  const periodDescriptions: Record<ReportPeriod, string> = {
+    today: 'Transacciones y rendimiento del turno actual',
+    '7d': 'Consolidado acumulado de los últimos 7 días',
+    month: 'Rendimiento mensual acumulado en curso',
+    all: 'Histórico global consolidado del establecimiento',
+  };
+
   return (
     <div className="space-y-4">
       {/* Top Header & Filters */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">Reportes & Business Intelligence</h1>
-            <Badge variant="outline" className="text-xs bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 font-semibold">
-              Fase 3
-            </Badge>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-border/80 pb-5">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Reportes & Analítica de Negocio
+            </h1>
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-medium">
+              <span className="flex h-1.5 w-1.5 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
+              <span>En vivo</span>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Métricas transaccionales, rentabilidad de recetas, flujo horario y velocidad de cocina
+          <p className="text-xs text-muted-foreground">
+            {periodDescriptions[period] || 'Métricas transaccionales, rentabilidad de recetas, flujo horario y KDS'}
           </p>
         </div>
 
         {/* Filter Controls & Actions */}
-        <div className="flex flex-wrap items-center gap-2 print:hidden">
-          <div className="flex bg-muted/40 border border-border rounded-xl p-1 text-xs">
-            {PERIODS.map((p) => (
-              <Button
-                key={p.id}
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => onPeriodChange(p.id)}
-                className={`px-3 py-1.5 h-7 rounded-lg font-medium transition text-xs ${
-                  period === p.id ? 'bg-primary text-primary-foreground shadow hover:bg-primary/90' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                }`}
-              >
-                {p.label}
-              </Button>
-            ))}
+        <div className="flex flex-wrap items-center gap-2.5 print:hidden">
+          {/* Period selector pill */}
+          <div className="flex bg-muted/60 p-1 rounded-xl border border-border/60 shadow-xs">
+            {PERIODS.map((p) => {
+              const active = period === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => onPeriodChange(p.id)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                    active
+                      ? 'bg-background text-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
           </div>
 
           <Button
@@ -71,9 +87,9 @@ export const ReportsHeader: React.FC<ReportsHeaderProps> = ({
             type="button"
             onClick={onRefresh}
             title="Actualizar datos"
-            className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground transition"
+            className="h-8 w-8 rounded-xl border-border/80 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
 
           <Button
@@ -81,10 +97,10 @@ export const ReportsHeader: React.FC<ReportsHeaderProps> = ({
             size="sm"
             type="button"
             onClick={onExportCSV}
-            className="flex items-center gap-1.5 px-3 py-1.5 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/25 text-xs font-semibold transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 h-8 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/25 text-emerald-700 dark:text-emerald-400 text-xs font-semibold transition cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>CSV</span>
+            <span>Exportar CSV</span>
           </Button>
 
           <Button
@@ -92,7 +108,7 @@ export const ReportsHeader: React.FC<ReportsHeaderProps> = ({
             size="sm"
             type="button"
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-1.5 h-8 rounded-xl text-xs font-semibold transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 h-8 rounded-xl border-border/80 text-xs font-semibold transition cursor-pointer hover:bg-muted/50"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Imprimir</span>
@@ -101,32 +117,32 @@ export const ReportsHeader: React.FC<ReportsHeaderProps> = ({
       </div>
 
       {/* Sub-tab Switcher: Métricas vs Auditoría */}
-      <div className="flex items-center gap-2 border-b border-border pb-3 print:hidden">
-        <Button
+      <div className="flex items-center gap-2 border-b border-border/60 pb-3 print:hidden">
+        <button
           type="button"
           onClick={() => onTabChange('metrics')}
-          className={`flex items-center gap-2 px-4 py-2 h-auto rounded-xl text-xs font-bold transition cursor-pointer ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             activeTab === 'metrics'
-              ? 'bg-primary text-primary-foreground shadow-lg hover:bg-primary/90'
-              : 'bg-card text-muted-foreground hover:text-foreground border border-border hover:bg-muted'
+              ? 'bg-primary text-primary-foreground shadow-xs'
+              : 'bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
           }`}
         >
-          <PieChart className="w-4 h-4" />
-          <span>Métricas & Rentabilidad</span>
-        </Button>
+          <PieChart className="w-3.5 h-3.5" />
+          <span>Métricas de Operación</span>
+        </button>
 
-        <Button
+        <button
           type="button"
           onClick={() => onTabChange('audit')}
-          className={`flex items-center gap-2 px-4 py-2 h-auto rounded-xl text-xs font-bold transition cursor-pointer ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             activeTab === 'audit'
-              ? 'bg-destructive text-destructive-foreground shadow-lg hover:bg-destructive/90'
-              : 'bg-card text-muted-foreground hover:text-foreground border border-border hover:bg-muted'
+              ? 'bg-foreground text-background shadow-xs'
+              : 'bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
           }`}
         >
-          <ShieldAlert className="w-4 h-4" />
-          <span>Auditoría de Seguridad (Audit Trail)</span>
-        </Button>
+          <ShieldAlert className="w-3.5 h-3.5" />
+          <span>Registro de Auditoría</span>
+        </button>
       </div>
     </div>
   );
