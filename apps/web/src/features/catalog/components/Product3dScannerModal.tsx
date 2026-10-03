@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Camera,
   RefreshCw,
@@ -286,10 +287,10 @@ export const Product3dScannerModal: React.FC<Props> = ({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === 'undefined') return null;
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-200">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-200">
       <div className="bg-card border border-border/80 w-full max-w-4xl max-h-[95vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 border-b border-border/70 flex items-center justify-between bg-muted/30">
@@ -799,7 +800,8 @@ export const Product3dScannerModal: React.FC<Props> = ({
         className="hidden"
         onChange={handleModelFileUpload}
       />
-    </div>
+    </div>,
+    document.body
   );
 };
 

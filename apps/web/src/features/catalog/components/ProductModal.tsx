@@ -210,8 +210,15 @@ export const ProductModal: React.FC<Props> = ({
   });
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent maxWidth="xl" onClose={onClose} className="p-0 overflow-hidden rounded-2xl border-border/80 shadow-2xl max-h-[92vh] flex flex-col">
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent
+          maxWidth="xl"
+          onClose={onClose}
+          className={`p-0 overflow-hidden rounded-2xl border-border/80 shadow-2xl max-h-[92vh] flex flex-col ${
+            showScannerModal ? 'hidden' : ''
+          }`}
+        >
         {/* Modal Header */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/70 bg-gradient-to-b from-muted/40 to-transparent shrink-0">
           <div className="flex items-center gap-3">
@@ -805,57 +812,58 @@ export const ProductModal: React.FC<Props> = ({
           </form>
         </Form>
       </DialogContent>
-
-      {/* Product 3D Scanner Modal (Web Camera Assisted) */}
-      <Product3dScannerModal
-        isOpen={showScannerModal}
-        productName={form.watch('name') || 'Nuevo Plato'}
-        currentImageUrl={watchedImageUrl}
-        currentModel3dUrl={watchedModel3dUrl}
-        currentDimensions={watchedDimensions}
-        currentDisplayMedia={watchedDisplayMedia}
-        onClose={() => setShowScannerModal(false)}
-        onComplete={handleScannerComplete}
-      />
-
-      {/* Standalone 3D Model Preview Dialog */}
-      {show3dPreviewModal && (
-        <Dialog open={show3dPreviewModal} onOpenChange={setShow3dPreviewModal}>
-          <DialogContent maxWidth="md" className="p-0 overflow-hidden rounded-2xl">
-            <div className="p-4 border-b border-border/70 flex items-center justify-between">
-              <span className="text-sm font-bold text-foreground">
-                Vista Previa 3D: {form.watch('name') || 'Plato'}
-              </span>
-            </div>
-            <div className="h-[360px] p-2">
-              <Product3dViewer
-                name={form.watch('name') || 'Plato'}
-                modelUrl={watchedModel3dUrl}
-                imageUrl={watchedImageUrl}
-                dimensions={watchedDimensions}
-                autoRotate={true}
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Hidden file inputs */}
-      <input
-        ref={imageInputRef}
-        type="file"
-        accept="image/png,image/jpeg,image/webp,image/jpg"
-        className="hidden"
-        onChange={handleImageFileChange}
-      />
-      <input
-        ref={modelInputRef}
-        type="file"
-        accept=".glb,.gltf"
-        className="hidden"
-        onChange={handleModelFileChange}
-      />
     </Dialog>
+
+    {/* Product 3D Scanner Modal (Web Camera Assisted) */}
+    <Product3dScannerModal
+      isOpen={showScannerModal}
+      productName={form.watch('name') || 'Nuevo Plato'}
+      currentImageUrl={watchedImageUrl}
+      currentModel3dUrl={watchedModel3dUrl}
+      currentDimensions={watchedDimensions}
+      currentDisplayMedia={watchedDisplayMedia}
+      onClose={() => setShowScannerModal(false)}
+      onComplete={handleScannerComplete}
+    />
+
+    {/* Standalone 3D Model Preview Dialog */}
+    {show3dPreviewModal && (
+      <Dialog open={show3dPreviewModal} onOpenChange={setShow3dPreviewModal}>
+        <DialogContent maxWidth="md" className="p-0 overflow-hidden rounded-2xl z-[100]">
+          <div className="p-4 border-b border-border/70 flex items-center justify-between">
+            <span className="text-sm font-bold text-foreground">
+              Vista Previa 3D: {form.watch('name') || 'Plato'}
+            </span>
+          </div>
+          <div className="h-[360px] p-2">
+            <Product3dViewer
+              name={form.watch('name') || 'Plato'}
+              modelUrl={watchedModel3dUrl}
+              imageUrl={watchedImageUrl}
+              dimensions={watchedDimensions}
+              autoRotate={true}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    )}
+
+    {/* Hidden file inputs */}
+    <input
+      ref={imageInputRef}
+      type="file"
+      accept="image/png,image/jpeg,image/webp,image/jpg"
+      className="hidden"
+      onChange={handleImageFileChange}
+    />
+    <input
+      ref={modelInputRef}
+      type="file"
+      accept=".glb,.gltf"
+      className="hidden"
+      onChange={handleModelFileChange}
+    />
+  </>
   );
 };
 
