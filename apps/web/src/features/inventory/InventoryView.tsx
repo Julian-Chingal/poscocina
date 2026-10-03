@@ -17,7 +17,7 @@ const PurchasesTab = lazy(() => import('./components/PurchasesTab').then((m) => 
 const SuppliersTab = lazy(() => import('./components/SuppliersTab').then((m) => ({ default: m.SuppliersTab })));
 const RecipesTab = lazy(() => import('./components/RecipesTab').then((m) => ({ default: m.RecipesTab })));
 const MovementsTab = lazy(() => import('./components/MovementsTab').then((m) => ({ default: m.MovementsTab })));
-const ModifiersManagerModal = lazy(() => import('../catalog/components/ModifiersManagerModal').then((m) => ({ default: m.ModifiersManagerModal })));
+const ToppingsTab = lazy(() => import('./components/ToppingsTab').then((m) => ({ default: m.ToppingsTab })));
 
 export const InventoryView: React.FC<{ venueId: string }> = ({ venueId }) => {
   const [activeTab, setActiveTab] = useState<InventoryTab>('stock');
@@ -101,11 +101,9 @@ export const InventoryView: React.FC<{ venueId: string }> = ({ venueId }) => {
         )}
 
         {activeTab === 'toppings' && (
-          <ModifiersManagerModal
-            isOpen={true}
+          <ToppingsTab
             venueId={venueId}
             allProducts={recipes.allProducts}
-            onClose={() => setActiveTab('stock')}
             onCatalogUpdated={() => {
               recipes.refreshCatalog();
               stock.refreshItems();
