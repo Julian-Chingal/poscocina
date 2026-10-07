@@ -1,3 +1,4 @@
+import path from 'path';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { catalogRepository } from './repositories/catalog.repository.js';
 import { ManageCatalogUseCase } from './use-cases/manage-catalog.use-case.js';
@@ -185,23 +186,69 @@ export class CatalogController {
   }
 
   async uploadBase64(request: FastifyRequest, reply: FastifyReply) {
-    const { dataUrl, filename, folder = 'images' } = (request.body as any) || {};
+    const body = (request.body as any) || {};
+    const rawData = body.dataUrl || body.base64Data || body.data || body.base64 || body.image;
+    const { filename, folder = 'images' } = body;
 
-    if (!dataUrl || typeof dataUrl !== 'string') {
-      return reply.status(400).send({ message: 'dataUrl es requerido' });
+    if (!rawData || typeof rawData !== 'string') {
+      return reply.status(400).send({ message: 'Se requiere dataUrl o base64Data' });
     }
 
-    const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-    if (!matches || matches.length !== 3) {
-      return reply.status(400).send({ message: 'Formato dataUrl inválido' });
+    const sanitized = rawData.trim();
+    let mimeType = body.mimeType || 'image/jpeg';
+    let base64Content = sanitized;
+
+    // Check if it has data URL prefix: data:[<mediatype>][;base64],<data>
+    const dataUrlPrefixMatch = sanitized.match(/^data:([^;,]+)(?:;[^,]*)?;base64,(.*)$/s);
+    if (dataUrlPrefixMatch) {
+      mimeType = dataUrlPrefixMatch[1] || mimeType;
+      base64Content = dataUrlPrefixMatch[2];
+    } else if (sanitized.includes(';base64,')) {
+      const parts = sanitized.split(';base64,');
+      const headerPart = parts[0];
+      base64Content = parts.slice(1).join(';base64,');
+      const mimeMatch = headerPart.match(/^data:([^;,]+)/);
+      if (mimeMatch) {
+        mimeType = mimeMatch[1];
+      }
     }
 
-    const mimeType = matches[1];
-    const buffer = Buffer.from(matches[2], 'base64');
-    const safeFilename = filename || `capture_${Date.now()}.${mimeType.split('/')[1] || 'webp'}`;
+    // Clean any whitespace/newlines from base64 string
+    base64Content = base64Content.replace(/\s+/g, '');
 
-    const fileUrl = await storageService.uploadFile(buffer, safeFilename, mimeType, folder);
-    return reply.status(201).send({ url: fileUrl, filename: safeFilename, mimetype: mimeType });
+    const buffer = Buffer.from(base64Content, 'base64');
+    if (buffer.length === 0) {
+      return reply.status(400).send({ message: 'El contenido en Base64 está vacío o no es válido' });
+    }
+
+    // Derive proper extension
+    let ext = '.jpeg';
+    if (mimeType.includes('png')) ext = '.png';
+    else if (mimeType.includes('webp')) ext = '.webp';
+    else if (mimeType.includes('gif')) ext = '.gif';
+    else if (mimeType.includes('glb') || mimeType.includes('model')) ext = '.glb';
+    else if (mimeType.includes('gltf')) ext = '.gltf';
+    else if (filename && path.extname(filename)) ext = path.extname(filename);
+
+    const safeFilename = filename || `capture_${Date.now()}${ext}`;
+
+    const is3d =
+      mimeType.includes('model') ||
+      mimeType.includes('glb') ||
+      mimeType.includes('gltf') ||
+      safeFilename.toLowerCase().endsWith('.glb') ||
+      safeFilename.toLowerCase().endsWith('.gltf');
+
+    const targetFolder = is3d ? 'models3d' : folder;
+
+    const fileUrl = await storageService.uploadFile(buffer, safeFilename, mimeType, targetFolder);
+    return reply.status(201).send({
+      url: fileUrl,
+      filename: safeFilename,
+      mimetype: mimeType,
+      key: fileUrl,
+      is3d,
+    });
   }
 }
 

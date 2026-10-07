@@ -74,7 +74,12 @@ export const catalogApi = {
     return res.json();
   },
 
-  uploadBase64: async (data: { base64Data: string; filename?: string; mimeType?: string }): Promise<{ url: string; key: string; filename: string }> => {
-    return api.post('/catalog/upload-base64', data);
+  uploadBase64: async (data: { base64Data?: string; dataUrl?: string; filename?: string; mimeType?: string }): Promise<{ url: string; key: string; filename: string }> => {
+    const payload = {
+      ...data,
+      dataUrl: data.dataUrl || data.base64Data,
+      base64Data: data.base64Data || data.dataUrl,
+    };
+    return api.post('/catalog/upload-base64', payload);
   },
 };

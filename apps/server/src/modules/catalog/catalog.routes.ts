@@ -50,6 +50,8 @@ export async function catalogRoutes(fastify: FastifyInstance) {
 
   // 8. Media Uploads (Garage S3 or Local fallback)
   fastify.post('/api/catalog/upload', staffGuard, (req, rep) => catalogController.uploadMedia(req, rep));
-  fastify.post('/api/catalog/upload-base64', staffGuard, (req, rep) => catalogController.uploadBase64(req, rep));
+  fastify.post('/api/catalog/upload-base64', { ...staffGuard, bodyLimit: 50 * 1024 * 1024 }, (req, rep) =>
+    catalogController.uploadBase64(req, rep)
+  );
 }
 

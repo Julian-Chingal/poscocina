@@ -29,6 +29,7 @@ import { companyModule } from './modules/company/index.js';
 export async function buildServer() {
   const server = Fastify({
     logger: env.NODE_ENV === 'development',
+    bodyLimit: 50 * 1024 * 1024, // 50MB for 3D model/high-res captures
   });
 
   // 0. Centralized Error Handling
@@ -36,23 +37,28 @@ export async function buildServer() {
 
   // 0.1 Handle application/json gracefully (allow empty bodies on DELETE/GET/HEAD without FST_ERR_CTP_EMPTY_JSON_BODY)
   server.removeContentTypeParser('application/json');
-  server.addContentTypeParser('application/json', { parseAs: 'string' }, (_req, body: string, done) => {
-    if (!body || (typeof body === 'string' && body.trim() === '')) {
-      done(null, undefined);
-      return;
+  server.addContentTypeParser(
+    'application/json',
+    { parseAs: 'string', bodyLimit: 50 * 1024 * 1024 },
+    (_req, body: string, done) => {
+      if (!body || (typeof body === 'string' && body.trim() === '')) {
+        done(null, undefined);
+        return;
+      }
+      try {
+        done(null, JSON.parse(body));
+      } catch (err: any) {
+        err.statusCode = 400;
+        done(err, undefined);
+      }
     }
-    try {
-      done(null, JSON.parse(body));
-    } catch (err: any) {
-      err.statusCode = 400;
-      done(err, undefined);
-    }
-  });
+  );
 
   // 1. Security Headers (Helmet)
   await server.register(helmet, {
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   });
 
   // 2. Global Rate Limiting
@@ -126,6 +132,21 @@ export async function buildServer() {
       root: uploadsDir,
       prefix: '/uploads/',
       decorateReply: false,
+      setHeaders: (res: any) => {
+        if (typeof res.header === 'function') {
+          res.header('Access-Control-Allow-Origin', '*');
+          res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+          res.header('Cache-Control', 'public, max-age=86400');
+        } else if (res.raw && typeof res.raw.setHeader === 'function') {
+          res.raw.setHeader('Access-Control-Allow-Origin', '*');
+          res.raw.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+          res.raw.setHeader('Cache-Control', 'public, max-age=86400');
+        } else if (typeof res.setHeader === 'function') {
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+          res.setHeader('Cache-Control', 'public, max-age=86400');
+        }
+      },
     });
   } catch (err) {
     server.log.warn({ err }, 'Could not register fastifyStatic for uploads');

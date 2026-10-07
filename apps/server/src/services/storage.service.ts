@@ -125,7 +125,15 @@ export class StorageService {
   ): Promise<string> {
     const { endpoint, bucket, storagePath, publicUrl } = this.getStorageConfig();
 
-    const ext = path.extname(originalFilename) || (mimeType.includes('glb') ? '.glb' : '.webp');
+    let ext = path.extname(originalFilename);
+    if (!ext) {
+      if (mimeType.includes('jpeg') || mimeType.includes('jpg')) ext = '.jpeg';
+      else if (mimeType.includes('png')) ext = '.png';
+      else if (mimeType.includes('webp')) ext = '.webp';
+      else if (mimeType.includes('glb') || mimeType.includes('model')) ext = '.glb';
+      else if (mimeType.includes('gltf')) ext = '.gltf';
+      else ext = '.webp';
+    }
     const randomName = `${crypto.randomUUID()}${ext}`;
 
     // Construir la clave / ruta relativa: [storagePath/][folder/]filename
