@@ -9,7 +9,8 @@ export type TableStatus =
   | 'check_requested'
   | 'paid_waiting_food'
   | 'reserved'
-  | 'blocked';
+  | 'blocked'
+  | 'maintenance';
 
 const tableStatusConfig: Record<
   TableStatus,
@@ -21,6 +22,11 @@ const tableStatusConfig: Record<
   paid_waiting_food: { label: 'Pagada (En Cocina)', variant: 'info', customClass: 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30' },
   reserved: { label: 'Reservada', variant: 'outline', customClass: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30' },
   blocked: { label: 'Bloqueada', variant: 'secondary', customClass: 'bg-muted text-muted-foreground border-border/80' },
+  maintenance: {
+    label: 'Mantenimiento',
+    variant: 'outline',
+    customClass: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+  },
 };
 
 export const TableStatusBadge: React.FC<{

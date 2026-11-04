@@ -5,6 +5,7 @@ export const TABLE_STATUS = {
   PAID_WAITING_FOOD: 'paid_waiting_food',
   RESERVED: 'reserved',
   BLOCKED: 'blocked',
+  MAINTENANCE: 'maintenance',
 } as const;
 
 export type TableStatus = (typeof TABLE_STATUS)[keyof typeof TABLE_STATUS];

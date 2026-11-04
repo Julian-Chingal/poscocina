@@ -50,7 +50,7 @@ export interface TableItem {
   width?: number;
   height?: number;
   shape?: 'rect' | 'circle' | 'square';
-  status: 'free' | 'occupied' | 'check_requested' | 'paid_waiting_food' | 'reserved' | 'blocked';
+  status: 'free' | 'occupied' | 'check_requested' | 'paid_waiting_food' | 'reserved' | 'blocked' | 'maintenance';
   currentOrderId?: string | null;
 }
 

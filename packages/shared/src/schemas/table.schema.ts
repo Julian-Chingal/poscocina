@@ -15,6 +15,18 @@ export const CreateTableSchema = z.object({
   shape: z.enum(['rect', 'circle', 'square']).default('rect'),
 });
 
+export const tableStatusSchema = z.enum([
+  'free',
+  'occupied',
+  'check_requested',
+  'paid_waiting_food',
+  'reserved',
+  'blocked',
+  'maintenance',
+]);
+
+export type TableStatusSchema = z.infer<typeof tableStatusSchema>;
+
 export const UpdateTableSchema = z.object({
   floorPlanId: z.string().uuid('ID de salón no válido').optional(),
   label: z.string().min(1).optional(),
@@ -22,7 +34,7 @@ export const UpdateTableSchema = z.object({
   positionX: z.number().optional(),
   positionY: z.number().optional(),
   shape: z.enum(['rect', 'circle', 'square']).optional(),
-  status: z.enum(['free', 'occupied', 'check_requested', 'reserved', 'blocked']).optional(),
+  status: tableStatusSchema.optional(),
 });
 
 export const UpdateFloorPlanSchema = z.object({
