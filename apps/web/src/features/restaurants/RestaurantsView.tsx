@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Building2,
   Store,
@@ -11,10 +11,17 @@ import {
   Hash,
   ShieldCheck,
   Layers,
+  Sparkles,
+  CreditCard,
 } from 'lucide-react';
 import { CompanyItem, CreateCompanyPayload } from './types/restaurants.types';
 import { restaurantsApi } from './api/restaurants.api';
 import { CreateRestaurantModal } from './components/CreateRestaurantModal';
+import {
+  ManageSubscriptionModal,
+  PlansAndCouponsManagerModal,
+  saasApi,
+} from '../saas-subscriptions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -29,11 +36,27 @@ export const RestaurantsView: React.FC = () => {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
+  // SaaS Subscriptions & Plans Management
+  const [selectedSubCompany, setSelectedSubCompany] = useState<CompanyItem | null>(null);
+  const [isPlansCouponsOpen, setIsPlansCouponsOpen] = useState(false);
+  const [subscriptionsMap, setSubscriptionsMap] = useState<Record<string, any>>({});
+
   const fetchCompanies = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await restaurantsApi.getCompanies();
+      const [data, subs] = await Promise.all([
+        restaurantsApi.getCompanies(),
+        saasApi.getAllSubscriptions().catch(() => []),
+      ]);
       setCompanies(data);
+
+      const map: Record<string, any> = {};
+      subs.forEach((item: any) => {
+        if (item.subscription?.companyId) {
+          map[item.subscription.companyId] = item;
+        }
+      });
+      setSubscriptionsMap(map);
     } catch (err: any) {
       toast.error(err.message || 'Error al cargar los restaurantes');
     } finally {
@@ -104,6 +127,16 @@ export const RestaurantsView: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsPlansCouponsOpen(true)}
+            className="h-10 rounded-xl gap-2 border-primary/30 hover:border-primary/60 text-xs font-semibold"
+          >
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="hidden sm:inline">Tarifas & Cupones</span>
+          </Button>
+
           <Button
             variant="outline"
             size="sm"
@@ -225,9 +258,34 @@ export const RestaurantsView: React.FC = () => {
                       </div>
                     </div>
 
-                    <Badge variant="outline" className="text-[10px] font-mono shrink-0">
-                      NIT: {c.taxId}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <Badge variant="outline" className="text-[10px] font-mono">
+                        NIT: {c.taxId}
+                      </Badge>
+                      {(() => {
+                        const subInfo = subscriptionsMap[c.id];
+                        if (subInfo?.subscription?.isComplimentary) {
+                          return (
+                            <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px] font-bold gap-1 py-0.5">
+                              <Sparkles className="w-3 h-3 fill-amber-500" />
+                              100% Gratis
+                            </Badge>
+                          );
+                        }
+                        if (subInfo?.plan) {
+                          return (
+                            <Badge variant="outline" className="text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 py-0.5">
+                              {subInfo.plan.name}
+                            </Badge>
+                          );
+                        }
+                        return (
+                          <Badge variant="outline" className="text-[10px] text-muted-foreground border-dashed py-0.5">
+                            Sin Plan
+                          </Badge>
+                        );
+                      })()}
+                    </div>
                   </div>
 
                   {/* Slug & Details */}
@@ -317,14 +375,27 @@ export const RestaurantsView: React.FC = () => {
               </div>
 
               {/* Card Footer */}
-              <div className="p-4 bg-muted/20 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground">
-                <span>Registrado el {new Date(c.createdAt).toLocaleDateString()}</span>
-                <span
-                  className="font-semibold"
-                  style={{ color: c.primaryColor || '#ea580c' }}
+              <div className="p-3.5 bg-muted/20 border-t border-border/60 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <span
+                    className="font-semibold"
+                    style={{ color: c.primaryColor || '#ea580c' }}
+                  >
+                    {c.venues?.length || 0} sedes
+                  </span>
+                  <span>•</span>
+                  <span>{new Date(c.createdAt).toLocaleDateString()}</span>
+                </div>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setSelectedSubCompany(c)}
+                  className="h-8 text-xs font-semibold gap-1.5 rounded-xl border-primary/20 hover:border-primary/50 hover:bg-primary/5"
                 >
-                  {c.venues?.length || 0} sedes
-                </span>
+                  <CreditCard className="w-3.5 h-3.5 text-primary" />
+                  <span>Gestionar Plan</span>
+                </Button>
               </div>
             </Card>
           ))}
@@ -338,6 +409,21 @@ export const RestaurantsView: React.FC = () => {
         actionError={actionError}
         onClose={() => setIsCreateOpen(false)}
         onSubmit={handleCreateRestaurant}
+      />
+
+      {/* Modal for Managing Subscriptions & Complimentary Status */}
+      <ManageSubscriptionModal
+        isOpen={!!selectedSubCompany}
+        company={selectedSubCompany}
+        onClose={() => setSelectedSubCompany(null)}
+        onUpdated={fetchCompanies}
+      />
+
+      {/* Modal for SuperAdmin Plans & Coupons Management */}
+      <PlansAndCouponsManagerModal
+        isOpen={isPlansCouponsOpen}
+        onClose={() => setIsPlansCouponsOpen(false)}
+        onChanged={fetchCompanies}
       />
     </div>
   );
