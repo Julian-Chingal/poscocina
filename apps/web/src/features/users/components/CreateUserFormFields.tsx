@@ -1,5 +1,5 @@
 import React from 'react';
-import { KeyRound, Mail, Lock } from 'lucide-react';
+import { KeyRound, Mail, Lock, CreditCard } from 'lucide-react';
 import { RoleItem, CreateUserPayload } from '../types/users.types';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,22 @@ export const CreateUserFormFields: React.FC<CreateUserFormFieldsProps> = ({
           onChange={(e) => onChange({ name: e.target.value })}
           className="h-10 text-sm"
         />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs font-semibold text-foreground block">Número de Cédula / Documento *</Label>
+        <div className="relative">
+          <CreditCard className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
+          <Input
+            type="text"
+            required
+            placeholder="ej. 10203040"
+            value={formData.documentNumber || ''}
+            onChange={(e) => onChange({ documentNumber: e.target.value })}
+            className="pl-10 font-mono h-10 text-sm"
+          />
+        </div>
+        <span className="text-[10px] text-muted-foreground mt-1 block">Identificación para inicio de sesión en terminal</span>
       </div>
 
       <div className="space-y-1.5">

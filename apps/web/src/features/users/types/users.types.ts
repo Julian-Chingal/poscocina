@@ -8,6 +8,8 @@ export interface RoleItem {
 export interface UserItem {
   id: string;
   name: string;
+  documentNumber?: string | null;
+  companyId?: string | null;
   email?: string | null;
   avatarUrl?: string | null;
   isActive: boolean;
@@ -20,6 +22,7 @@ export interface UserItem {
 
 export interface CreateUserPayload {
   name: string;
+  documentNumber: string;
   email?: string;
   roleId: string;
   pin: string;
@@ -29,6 +32,7 @@ export interface CreateUserPayload {
 
 export interface UpdateUserPayload {
   name: string;
+  documentNumber?: string | null;
   email?: string;
   roleId: string;
   isActive?: boolean;

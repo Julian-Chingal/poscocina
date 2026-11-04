@@ -3,10 +3,24 @@ import { IAuthRepository, AuthenticatedUser } from '../interfaces/auth.interface
 import { UnauthorizedError, ForbiddenError } from '../../../errors/app-error.js';
 import { auditService } from '../../../utils/audit.service.js';
 
+export interface PasswordLoginResult {
+  user: AuthenticatedUser;
+  company?: {
+    id: string;
+    tradeName?: string;
+    logoUrl?: string | null;
+  } | null;
+  availableVenues: any[];
+}
+
 export class LoginPasswordUseCase {
   constructor(private readonly authRepo: IAuthRepository) {}
 
-  async execute(email: string, password: string, clientInfo?: { ip?: string; userAgent?: string }): Promise<AuthenticatedUser> {
+  async execute(
+    email: string,
+    password: string,
+    clientInfo?: { ip?: string; userAgent?: string }
+  ): Promise<PasswordLoginResult> {
     const user = await this.authRepo.findUserWithRoleByEmail(email);
     if (!user) throw new UnauthorizedError('Credenciales incorrectas');
     if (!user.isActive) throw new ForbiddenError('Este usuario se encuentra inactivo');
@@ -39,14 +53,32 @@ export class LoginPasswordUseCase {
       userAgent: clientInfo?.userAgent,
     }).catch(() => {});
 
+    const availableVenues = user.companyId
+      ? await this.authRepo.findCompanyVenues(user.companyId)
+      : user.venueId
+      ? [{ id: user.venueId, name: user.venueName, isActive: user.venueIsActive }]
+      : [];
+
     return {
-      id: user.id,
-      venueId: user.venueId,
-      name: user.name,
-      email: user.email,
-      role: user.roleName,
-      hierarchy: user.roleHierarchy,
-      tokenVersion: user.tokenVersion,
+      user: {
+        id: user.id,
+        companyId: user.companyId,
+        venueId: user.venueId,
+        allVenuesAccess: user.allVenuesAccess,
+        name: user.name,
+        email: user.email,
+        role: user.roleName,
+        hierarchy: user.roleHierarchy,
+        tokenVersion: user.tokenVersion,
+      },
+      company: user.companyId
+        ? {
+            id: user.companyId,
+            tradeName: user.companyName,
+            logoUrl: user.companyLogo,
+          }
+        : null,
+      availableVenues,
     };
   }
 }

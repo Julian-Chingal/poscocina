@@ -6,6 +6,108 @@ import { NotFoundError } from '../../../errors/app-error.js';
 export class CompanyRepository {
   constructor(private readonly database = db) {}
 
+  async listAllCompanies() {
+    const allCompanies = await this.database.select().from(schema.companies);
+    const results = [];
+    for (const c of allCompanies) {
+      const companyVenues = await this.database
+        .select({
+          id: schema.venues.id,
+          name: schema.venues.name,
+          slug: schema.venues.slug,
+          address: schema.venues.address,
+          isPrimary: schema.venues.isPrimary,
+          isActive: schema.venues.isActive,
+        })
+        .from(schema.venues)
+        .where(eq(schema.venues.companyId, c.id));
+
+      const [fiscal] = await this.database
+        .select()
+        .from(schema.companyFiscalSettings)
+        .where(eq(schema.companyFiscalSettings.companyId, c.id))
+        .limit(1);
+
+      results.push({
+        ...c,
+        fiscal: fiscal || null,
+        venues: companyVenues,
+      });
+    }
+    return results;
+  }
+
+  async createCompanyWithInitialVenue(data: any) {
+    return await this.database.transaction(async (tx) => {
+      let baseSlug = data.slug
+        ? data.slug.toLowerCase().trim().replace(/[^a-z0-9-]/g, '')
+        : data.tradeName.toLowerCase().trim().replace(/[^a-z0-9]/g, '-');
+      if (!baseSlug) baseSlug = 'restaurante';
+
+      const [existingSlug] = await tx
+        .select({ id: schema.companies.id })
+        .from(schema.companies)
+        .where(eq(schema.companies.slug, baseSlug))
+        .limit(1);
+
+      const finalSlug = existingSlug ? `${baseSlug}-${Date.now().toString().slice(-4)}` : baseSlug;
+
+      const [newCompany] = await tx
+        .insert(schema.companies)
+        .values({
+          legalName: data.legalName.trim(),
+          tradeName: data.tradeName.trim(),
+          taxId: data.taxId.trim(),
+          slug: finalSlug,
+          primaryColor: data.primaryColor || '#ea580c',
+          phone: data.phone || null,
+          email: data.email ? data.email.toLowerCase().trim() : null,
+          address: data.address || null,
+        })
+        .returning();
+
+      await tx
+        .insert(schema.companyFiscalSettings)
+        .values({
+          companyId: newCompany.id,
+          regime: 'SIMPLIFICADO',
+          taxType: 'INC_8',
+          taxRate: 0.08,
+          defaultTipPct: 10,
+          currency: 'COP',
+          isInvoiceResolutionEnabled: false,
+          receiptHeader: 'Sabor tradicional & Alta cocina',
+          receiptFooter: '¡Gracias por su visita!',
+        })
+        .onConflictDoNothing();
+
+      const [primaryVenue] = await tx
+        .insert(schema.venues)
+        .values({
+          companyId: newCompany.id,
+          name: data.initialVenueName || 'Sede Principal',
+          address: data.initialVenueAddress || data.address || 'Calle Principal',
+          timezone: 'America/Bogota',
+          isPrimary: true,
+          isActive: true,
+          settings: {
+            currency: 'COP',
+            tax_rate: 0.08,
+            defaultTaxType: 'INC',
+            defaultTaxRate: 0.08,
+            defaultTipPct: 10,
+            cashier_max_discount_pct: 10,
+          },
+        })
+        .returning();
+
+      return {
+        ...newCompany,
+        venues: [primaryVenue],
+      };
+    });
+  }
+
   async getCompanyWithFiscal() {
     const [company] = await this.database.select().from(schema.companies).limit(1);
     if (!company) {
@@ -27,7 +129,6 @@ export class CompanyRepository {
   async getFiscalSettings() {
     const [fiscal] = await this.database.select().from(schema.companyFiscalSettings).limit(1);
     if (!fiscal) {
-      // Fallback a valores estándar
       return {
         regime: 'SIMPLIFICADO',
         taxType: 'INC_8',
@@ -59,21 +160,21 @@ export class CompanyRepository {
       if (data.address !== undefined) companyUpdateFields.address = data.address;
 
       if (!company) {
-        const [created] = await tx
+        const [inserted] = await tx
           .insert(schema.companies)
           .values({
-            legalName: data.legalName || 'poscocina S.A.S.',
-            tradeName: data.tradeName || 'poscocina',
-            taxId: data.taxId || '900.123.456-7',
-            logoUrl: data.logoUrl,
+            legalName: data.legalName || 'Empresa',
+            tradeName: data.tradeName || 'Restaurante',
+            taxId: data.taxId || '900.000.000-1',
+            logoUrl: data.logoUrl || null,
             primaryColor: data.primaryColor || '#ea580c',
-            phone: data.phone,
-            email: data.email,
-            address: data.address,
+            phone: data.phone || null,
+            email: data.email || null,
+            address: data.address || null,
           })
           .returning();
-        company = created;
-      } else {
+        company = inserted;
+      } else if (Object.keys(companyUpdateFields).length > 1) {
         const [updated] = await tx
           .update(schema.companies)
           .set(companyUpdateFields)
@@ -84,26 +185,27 @@ export class CompanyRepository {
 
       let fiscalResult = null;
       if (data.fiscal) {
-        const fiscalUpdateFields: Record<string, unknown> = {
+        const fiscalFields: Record<string, unknown> = {
           updatedAt: new Date(),
         };
-        if (data.fiscal.regime !== undefined) fiscalUpdateFields.regime = data.fiscal.regime;
-        if (data.fiscal.taxType !== undefined) fiscalUpdateFields.taxType = data.fiscal.taxType;
-        if (data.fiscal.taxRate !== undefined) fiscalUpdateFields.taxRate = Number(data.fiscal.taxRate);
-        if (data.fiscal.defaultTipPct !== undefined) fiscalUpdateFields.defaultTipPct = Number(data.fiscal.defaultTipPct);
-        if (data.fiscal.currency !== undefined) fiscalUpdateFields.currency = data.fiscal.currency;
-        if (data.fiscal.isInvoiceResolutionEnabled !== undefined) {
-          fiscalUpdateFields.isInvoiceResolutionEnabled = Boolean(data.fiscal.isInvoiceResolutionEnabled);
+        const f = data.fiscal;
+        if (f.regime !== undefined) fiscalFields.regime = f.regime;
+        if (f.taxType !== undefined) fiscalFields.taxType = f.taxType;
+        if (f.taxRate !== undefined) fiscalFields.taxRate = f.taxRate;
+        if (f.defaultTipPct !== undefined) fiscalFields.defaultTipPct = f.defaultTipPct;
+        if (f.currency !== undefined) fiscalFields.currency = f.currency;
+        if (f.isInvoiceResolutionEnabled !== undefined) {
+          fiscalFields.isInvoiceResolutionEnabled = f.isInvoiceResolutionEnabled;
         }
-        if (data.fiscal.invoicePrefix !== undefined) fiscalUpdateFields.invoicePrefix = data.fiscal.invoicePrefix;
-        if (data.fiscal.invoiceResolution !== undefined) fiscalUpdateFields.invoiceResolution = data.fiscal.invoiceResolution;
-        if (data.fiscal.invoiceInitialNumber !== undefined) fiscalUpdateFields.invoiceInitialNumber = data.fiscal.invoiceInitialNumber;
-        if (data.fiscal.invoiceFinalNumber !== undefined) fiscalUpdateFields.invoiceFinalNumber = data.fiscal.invoiceFinalNumber;
-        if (data.fiscal.invoiceResolutionDate !== undefined) {
-          fiscalUpdateFields.invoiceResolutionDate = data.fiscal.invoiceResolutionDate ? new Date(data.fiscal.invoiceResolutionDate) : null;
+        if (f.invoicePrefix !== undefined) fiscalFields.invoicePrefix = f.invoicePrefix;
+        if (f.invoiceResolution !== undefined) fiscalFields.invoiceResolution = f.invoiceResolution;
+        if (f.invoiceInitialNumber !== undefined) fiscalFields.invoiceInitialNumber = f.invoiceInitialNumber;
+        if (f.invoiceFinalNumber !== undefined) fiscalFields.invoiceFinalNumber = f.invoiceFinalNumber;
+        if (f.invoiceResolutionDate !== undefined) {
+          fiscalFields.invoiceResolutionDate = f.invoiceResolutionDate ? new Date(f.invoiceResolutionDate) : null;
         }
-        if (data.fiscal.receiptHeader !== undefined) fiscalUpdateFields.receiptHeader = data.fiscal.receiptHeader;
-        if (data.fiscal.receiptFooter !== undefined) fiscalUpdateFields.receiptFooter = data.fiscal.receiptFooter;
+        if (f.receiptHeader !== undefined) fiscalFields.receiptHeader = f.receiptHeader;
+        if (f.receiptFooter !== undefined) fiscalFields.receiptFooter = f.receiptFooter;
 
         const [existingFiscal] = await tx
           .select()
@@ -114,7 +216,7 @@ export class CompanyRepository {
         if (existingFiscal) {
           const [updatedFiscal] = await tx
             .update(schema.companyFiscalSettings)
-            .set(fiscalUpdateFields)
+            .set(fiscalFields)
             .where(eq(schema.companyFiscalSettings.companyId, company.id))
             .returning();
           fiscalResult = updatedFiscal;
@@ -123,20 +225,8 @@ export class CompanyRepository {
             .insert(schema.companyFiscalSettings)
             .values({
               companyId: company.id,
-              regime: data.fiscal.regime || 'SIMPLIFICADO',
-              taxType: data.fiscal.taxType || 'INC_8',
-              taxRate: Number(data.fiscal.taxRate ?? 0.08),
-              defaultTipPct: Number(data.fiscal.defaultTipPct ?? 10),
-              currency: data.fiscal.currency || 'COP',
-              isInvoiceResolutionEnabled: Boolean(data.fiscal.isInvoiceResolutionEnabled ?? false),
-              invoicePrefix: data.fiscal.invoicePrefix,
-              invoiceResolution: data.fiscal.invoiceResolution,
-              invoiceInitialNumber: data.fiscal.invoiceInitialNumber,
-              invoiceFinalNumber: data.fiscal.invoiceFinalNumber,
-              invoiceResolutionDate: data.fiscal.invoiceResolutionDate ? new Date(data.fiscal.invoiceResolutionDate) : null,
-              receiptHeader: data.fiscal.receiptHeader || 'Sabor tradicional & Alta cocina',
-              receiptFooter: data.fiscal.receiptFooter || '¡Gracias por su visita!',
-            })
+              ...fiscalFields,
+            } as any)
             .returning();
           fiscalResult = createdFiscal;
         }

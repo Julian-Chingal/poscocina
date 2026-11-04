@@ -25,6 +25,7 @@ const CashShiftsView = lazy(() => import("./features/cash-shifts"));
 const ReportsView = lazy(() => import("./features/reports"));
 const UsersView = lazy(() => import("./features/users"));
 const ReservationsView = lazy(() => import("./features/reservations"));
+const RestaurantsView = lazy(() => import("./features/restaurants"));
 const ModulePlaceholder = lazy(
   () => import("./features/shared/components/ModulePlaceholder"),
 );
@@ -66,26 +67,21 @@ export const App: React.FC = () => {
     handleNavigate("pos");
   };
 
-  const handleSelectApp = (appId: string) => {
-    setSearchQuery("");
-    handleNavigate(appId);
-  };
-
-  if (!isApiOnline) {
-    return (
-      <>
-        <Toaster position="bottom-right" />
-        <OfflineView onRetry={checkHealthAndBootstrap} />
-      </>
-    );
-  }
-
-  // Render condicional del módulo activo
   const renderCurrentView = () => {
+    if (!isApiOnline) {
+      return (
+        <OfflineView
+          onRetry={async () => {
+            await checkHealthAndBootstrap();
+          }}
+        />
+      );
+    }
+
     if (currentView === "home") {
       return (
         <AppLauncherView
-          onSelectApp={handleSelectApp}
+          onSelectApp={handleNavigate}
           searchQuery={searchQuery}
         />
       );
@@ -126,6 +122,8 @@ export const App: React.FC = () => {
         return <ReportsView venueId={venueId || ""} />;
       case "users":
         return <UsersView venueId={venueId || ""} />;
+      case "restaurants":
+        return <RestaurantsView />;
       case "reservations":
         return (
           <ReservationsView

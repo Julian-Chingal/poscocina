@@ -41,6 +41,7 @@ async function seed() {
         legalName: 'poscocina S.A.S.',
         tradeName: 'poscocina',
         taxId: '900.123.456-7',
+        slug: 'poscocina',
         primaryColor: '#ea580c',
         email: 'contacto@poscocina.com',
         phone: '+57 300 123 4567',
@@ -63,6 +64,8 @@ async function seed() {
         receiptFooter: '¡Gracias por su visita!',
       })
       .onConflictDoNothing();
+  } else if (!company.slug) {
+    await db.update(schema.companies).set({ slug: 'poscocina' }).where(eq(schema.companies.id, company.id));
   }
 
   // 3. Venue Único Inicial (Completamente vacío, sin mesas ni zonas)
@@ -108,20 +111,57 @@ async function seed() {
 
   if (!existingAdmin) {
     await db.insert(schema.users).values({
+      companyId: company.id,
       venueId: venue.id,
       name: 'Administrador',
+      documentNumber: '10000001',
       email: adminEmail,
       passwordHash,
       pinHash,
       roleId: roleMap[ROLES.SUPER_ADMIN],
+      allVenuesAccess: true,
       isActive: true,
       tokenVersion: 1,
     });
     console.log(`  ✅ Usuario Administrador creado: ${adminEmail}`);
+    console.log(`     - Cédula inicial: 10000001`);
     console.log(`     - Contraseña inicial: ${adminPassword}`);
     console.log(`     - PIN inicial: ${adminPin}`);
   } else {
-    console.log(`  ℹ️ Usuario Administrador ya existente: ${adminEmail}`);
+    await db
+      .update(schema.users)
+      .set({
+        companyId: company.id,
+        documentNumber: '10000001',
+        allVenuesAccess: true,
+      })
+      .where(eq(schema.users.id, existingAdmin.id));
+    console.log(`  ℹ️ Usuario Administrador ya existente: ${adminEmail} (Actualizado con companyId y cédula)`);
+  }
+
+  // 4.1 Usuario Operativo de Demostración (Mesero para probar login con cédula)
+  const waiterDoc = '10203040';
+  const [existingWaiter] = await db
+    .select()
+    .from(schema.users)
+    .where(eq(schema.users.documentNumber, waiterDoc))
+    .limit(1);
+
+  if (!existingWaiter && roleMap[ROLES.WAITER]) {
+    const waiterPinHash = await bcrypt.hash('1234', 10);
+    await db.insert(schema.users).values({
+      companyId: company.id,
+      venueId: venue.id,
+      name: 'Carlos Mesero',
+      documentNumber: waiterDoc,
+      email: 'carlos.mesero@poscocina.com',
+      pinHash: waiterPinHash,
+      roleId: roleMap[ROLES.WAITER],
+      allVenuesAccess: false,
+      isActive: true,
+      tokenVersion: 1,
+    });
+    console.log(`  ✅ Usuario Mesero de prueba creado: Cédula ${waiterDoc} / PIN 1234`);
   }
 
   // 5. Estación de Trabajo por Defecto (Cocina Principal)
@@ -173,7 +213,7 @@ async function seed() {
     }
   }
 
-  console.log('✅ Semilla completada exitosamente: Sistema listo con un Venue vacío y cuenta Administrador.');
+  console.log('✅ Semilla completada exitosamente: Sistema listo con un Venue vacío y cuentas base.');
   await queryClient.end();
 }
 

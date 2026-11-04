@@ -9,6 +9,7 @@ import {
   Settings,
   Users,
   CalendarDays,
+  Building2,
 } from 'lucide-react';
 import { AppItem } from '../types/launcher.types';
 
@@ -104,6 +105,15 @@ export const APPS: AppItem[] = [
     icon: Settings,
     icon3d: '/icons/modules/settings.webp',
     gradient: 'from-slate-600 to-slate-800',
+    category: 'config',
+  },
+  {
+    id: 'restaurants',
+    name: 'Restaurantes',
+    subtitle: 'Creación y sedes corporativas',
+    icon: Building2,
+    icon3d: '/icons/modules/dining-table.webp',
+    gradient: 'from-amber-500 to-rose-600',
     category: 'config',
   },
 ];

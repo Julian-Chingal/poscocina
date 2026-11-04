@@ -15,6 +15,7 @@ const VIEW_NAMES: Record<string, string> = {
   reports: 'Reportes y Métricas',
   users: 'Gestión de Empleados',
   settings: 'Ajustes del Sistema',
+  restaurants: 'Restaurantes',
 };
 
 const getViewFromHash = (): string => {

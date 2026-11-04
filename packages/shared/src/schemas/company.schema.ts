@@ -16,6 +16,21 @@ export const CompanyFiscalSettingsSchema = z.object({
   receiptFooter: z.string().default('¡Gracias por su visita!'),
 });
 
+export const CreateCompanySchema = z.object({
+  legalName: z.string().min(2, 'La razón social debe tener al menos 2 caracteres'),
+  tradeName: z.string().min(2, 'El nombre comercial debe tener al menos 2 caracteres'),
+  taxId: z.string().min(3, 'El NIT/RUT debe tener al menos 3 caracteres'),
+  slug: z.string().min(2).regex(/^[a-z0-9-]+$/, 'El identificador slug solo debe contener minúsculas, números y guiones').optional(),
+  primaryColor: z.string().regex(/^#([0-9a-fA-F]{3}){1,2}$/, 'Color hex no válido').default('#ea580c'),
+  phone: z.string().optional().nullable(),
+  email: z.string().email('Email no válido').or(z.literal('')).optional().nullable(),
+  address: z.string().optional().nullable(),
+  initialVenueName: z.string().default('Sede Principal'),
+  initialVenueAddress: z.string().optional().nullable(),
+});
+
+export type CreateCompanyInput = z.infer<typeof CreateCompanySchema>;
+
 export const UpdateCompanySchema = z.object({
   legalName: z.string().min(2, 'La razón social debe tener al menos 2 caracteres').optional(),
   tradeName: z.string().min(2, 'El nombre comercial debe tener al menos 2 caracteres').optional(),

@@ -353,6 +353,8 @@ export class VenueRepository implements IVenueRepository {
       .select({
         id: schema.users.id,
         name: schema.users.name,
+        documentNumber: schema.users.documentNumber,
+        companyId: schema.users.companyId,
         email: schema.users.email,
         avatarUrl: schema.users.avatarUrl,
         isActive: schema.users.isActive,
@@ -372,6 +374,28 @@ export class VenueRepository implements IVenueRepository {
     const pinHash = await bcrypt.hash(data.pin, 10);
     const passwordHash = data.password ? await bcrypt.hash(data.password, 10) : null;
     const normalizedEmail = data.email ? data.email.toLowerCase().trim() : null;
+    const normalizedDoc = data.documentNumber ? String(data.documentNumber).trim() : null;
+
+    let companyId = data.companyId;
+    if (!companyId) {
+      const [venue] = await this.database
+        .select({ companyId: schema.venues.companyId })
+        .from(schema.venues)
+        .where(eq(schema.venues.id, venueId))
+        .limit(1);
+      companyId = venue?.companyId || null;
+    }
+
+    if (normalizedDoc && companyId) {
+      const [existingDoc] = await this.database
+        .select({ id: schema.users.id })
+        .from(schema.users)
+        .where(and(eq(schema.users.companyId, companyId), eq(schema.users.documentNumber, normalizedDoc)))
+        .limit(1);
+      if (existingDoc) {
+        throw new BadRequestError('Ya existe un usuario registrado con este número de cédula en este restaurante.');
+      }
+    }
 
     if (normalizedEmail) {
       const [existing] = await this.database.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.email, normalizedEmail)).limit(1);
@@ -381,8 +405,10 @@ export class VenueRepository implements IVenueRepository {
     const [newUser] = await this.database
       .insert(schema.users)
       .values({
+        companyId,
         venueId,
         name: data.name.trim(),
+        documentNumber: normalizedDoc,
         email: normalizedEmail,
         passwordHash,
         pinHash,
@@ -410,6 +436,23 @@ export class VenueRepository implements IVenueRepository {
         await redis.del(`user_token_version:${userId}`);
         await redis.del(`pin_lockout:${userId}`);
       }
+    }
+    if (data.documentNumber !== undefined) {
+      const normalizedDoc = data.documentNumber ? String(data.documentNumber).trim() : null;
+      if (normalizedDoc && normalizedDoc !== existing.documentNumber) {
+        const companyId = existing.companyId;
+        if (companyId) {
+          const [conflictDoc] = await this.database
+            .select({ id: schema.users.id })
+            .from(schema.users)
+            .where(and(eq(schema.users.companyId, companyId), eq(schema.users.documentNumber, normalizedDoc)))
+            .limit(1);
+          if (conflictDoc) {
+            throw new BadRequestError('El número de cédula ya se encuentra en uso por otro empleado en este restaurante.');
+          }
+        }
+      }
+      updatePayload.documentNumber = normalizedDoc;
     }
     if (data.email !== undefined) {
       const normalized = data.email ? data.email.toLowerCase().trim() : null;

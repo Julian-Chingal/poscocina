@@ -4,6 +4,8 @@ export interface UserInfo {
   id: string;
   name: string;
   venueId?: string;
+  companyId?: string | null;
+  documentNumber?: string | null;
   email?: string;
   roleName: string;
   roleLabel: string;
@@ -16,6 +18,25 @@ export interface PublicVenueItem {
   name: string;
   isPrimary: boolean;
   isActive?: boolean;
+}
+
+export interface ContextOption {
+  userId: string;
+  companyId: string;
+  companyName: string;
+  companyLogo?: string | null;
+  venueId: string;
+  venueName: string;
+  roleName: string;
+  roleLabel: string;
+}
+
+export interface DocumentLoginResponse {
+  success: boolean;
+  requiresContextSelection?: boolean;
+  selectionToken?: string;
+  options?: ContextOption[];
+  error?: string;
 }
 
 interface AuthState {
@@ -37,6 +58,8 @@ interface AuthState {
   checkSession: () => Promise<boolean>;
   fetchVenueUsers: (venueId?: string) => Promise<void>;
   loginWithPin: (userId: string, pin: string, venueId?: string) => Promise<boolean>;
+  loginWithDocument: (documentNumber: string, pin: string, companyId?: string, venueId?: string) => Promise<DocumentLoginResponse>;
+  selectAuthContext: (selectionToken: string, userId: string, companyId: string, venueId: string) => Promise<boolean>;
   loginWithPassword: (email: string, password: string) => Promise<boolean>;
   lockScreen: () => void;
   unlockScreen: () => void;
@@ -130,7 +153,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   currentUser: initialUser,
   user: initialUser,
   token: initialToken,
-  isLocked: initialLocked, // Require authentication if no valid session token exists or terminal was locked
+  isLocked: initialLocked,
   venueUsers: [],
   isLoading: false,
   error: null,
@@ -182,6 +205,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const userData: UserInfo = {
           id: data.user.id,
           name: data.user.name,
+          documentNumber: data.user.documentNumber,
+          companyId: data.user.companyId,
           roleName: data.user.roleName || data.user.role,
           roleLabel: data.user.roleLabel,
           role: data.user.role,
@@ -259,6 +284,147 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  loginWithDocument: async (documentNumber: string, pin: string, companyId?: string, venueId?: string): Promise<DocumentLoginResponse> => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await fetch('/api/auth/login-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentNumber, pin, companyId, venueId }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        const errorMsg = data.error || data.message || 'Cédula o PIN incorrecto';
+        set({ error: errorMsg, isLoading: false });
+        return { success: false, error: errorMsg };
+      }
+
+      if (data.requiresContextSelection) {
+        set({ isLoading: false, error: null });
+        return {
+          success: true,
+          requiresContextSelection: true,
+          selectionToken: data.selectionToken,
+          options: data.options,
+        };
+      }
+
+      // Login directo
+      const userData: UserInfo = {
+        id: data.user.id,
+        name: data.user.name,
+        venueId: data.user.venueId,
+        companyId: data.user.companyId,
+        documentNumber: data.user.documentNumber,
+        roleName: data.user.role,
+        roleLabel:
+          data.user.role === 'manager'
+            ? 'Gerente'
+            : data.user.role === 'cashier'
+            ? 'Cajero'
+            : data.user.role === 'waiter'
+            ? 'Mesero'
+            : 'Personal Operativo',
+        role: data.user.role,
+        hierarchy: data.user.hierarchy,
+      };
+
+      const finalVenueId = data.venue?.id || data.user.venueId || 'default';
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('poscocina_token', data.token);
+        localStorage.setItem('poscocina_user', JSON.stringify(userData));
+        localStorage.setItem('poscocina_venue_id', finalVenueId);
+        if (data.company?.id) {
+          localStorage.setItem('poscocina_company_id', data.company.id);
+        }
+        sessionStorage.removeItem('poscocina_locked');
+      }
+
+      set({
+        currentUser: userData,
+        user: userData,
+        venueId: finalVenueId,
+        selectedVenueId: finalVenueId,
+        token: data.token,
+        isLocked: false,
+        isLoading: false,
+        error: null,
+      });
+
+      return { success: true, requiresContextSelection: false };
+    } catch (err) {
+      const msg = 'Error de conexión con el servidor';
+      set({ error: msg, isLoading: false });
+      return { success: false, error: msg };
+    }
+  },
+
+  selectAuthContext: async (selectionToken: string, userId: string, companyId: string, venueId: string): Promise<boolean> => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await fetch('/api/auth/select-context', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ selectionToken, userId, companyId, venueId }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        set({ error: data.error || data.message || 'Error seleccionando restaurante', isLoading: false });
+        return false;
+      }
+
+      const userData: UserInfo = {
+        id: data.user.id,
+        name: data.user.name,
+        venueId: data.user.venueId,
+        companyId: data.user.companyId,
+        documentNumber: data.user.documentNumber,
+        roleName: data.user.role,
+        roleLabel:
+          data.user.role === 'manager'
+            ? 'Gerente'
+            : data.user.role === 'cashier'
+            ? 'Cajero'
+            : data.user.role === 'waiter'
+            ? 'Mesero'
+            : 'Personal Operativo',
+        role: data.user.role,
+        hierarchy: data.user.hierarchy,
+      };
+
+      const finalVenueId = data.venue?.id || data.user.venueId || 'default';
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('poscocina_token', data.token);
+        localStorage.setItem('poscocina_user', JSON.stringify(userData));
+        localStorage.setItem('poscocina_venue_id', finalVenueId);
+        if (data.company?.id) {
+          localStorage.setItem('poscocina_company_id', data.company.id);
+        }
+        sessionStorage.removeItem('poscocina_locked');
+      }
+
+      set({
+        currentUser: userData,
+        user: userData,
+        venueId: finalVenueId,
+        selectedVenueId: finalVenueId,
+        token: data.token,
+        isLocked: false,
+        isLoading: false,
+        error: null,
+      });
+
+      return true;
+    } catch (err) {
+      set({ error: 'Error de conexión con el servidor', isLoading: false });
+      return false;
+    }
+  },
+
   loginWithPin: async (userId: string, pin: string, venueId) => {
     set({ isLoading: true, error: null });
     try {
@@ -311,18 +477,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             ? 'Cajero'
             : data.user.role === 'waiter'
             ? 'Mesero'
-            : 'Administrador',
+            : 'Personal',
         role: data.user.role,
         hierarchy: data.user.hierarchy,
       };
 
-      const finalVenueId = data.user.venueId || vId;
+      const finalVenueId = data.user.venueId || vId || 'default';
+
       if (typeof window !== 'undefined') {
         localStorage.setItem('poscocina_token', data.token);
         localStorage.setItem('poscocina_user', JSON.stringify(userData));
-        if (finalVenueId) {
-          localStorage.setItem('poscocina_venue_id', finalVenueId);
-        }
+        localStorage.setItem('poscocina_venue_id', finalVenueId);
         sessionStorage.removeItem('poscocina_locked');
       }
 
@@ -362,6 +527,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const userData: UserInfo = {
         id: data.user.id,
         name: data.user.name,
+        companyId: data.user.companyId,
+        venueId: data.user.venueId,
+        documentNumber: data.user.documentNumber,
         roleName: data.user.role,
         roleLabel:
           data.user.role === 'manager'
@@ -375,15 +543,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         hierarchy: data.user.hierarchy,
       };
 
+      const finalVenueId = data.user.venueId || (data.availableVenues?.[0]?.id) || 'default';
+
       if (typeof window !== 'undefined') {
         localStorage.setItem('poscocina_token', data.token);
         localStorage.setItem('poscocina_user', JSON.stringify(userData));
+        localStorage.setItem('poscocina_venue_id', finalVenueId);
+        if (data.company?.id) {
+          localStorage.setItem('poscocina_company_id', data.company.id);
+        }
         sessionStorage.removeItem('poscocina_locked');
       }
 
       set({
         currentUser: userData,
         user: userData,
+        venueId: finalVenueId,
+        selectedVenueId: finalVenueId,
+        availableVenues: data.availableVenues || [],
         token: data.token,
         isLocked: false,
         isLoading: false,

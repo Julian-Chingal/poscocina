@@ -1,7 +1,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { UserPlus, KeyRound, Mail, Lock, AlertCircle } from 'lucide-react';
+import { UserPlus, KeyRound, Mail, Lock, AlertCircle, CreditCard } from 'lucide-react';
 import { RoleItem, CreateUserPayload } from '../types/users.types';
 import { CreateUserSchema, CreateUserFormValues } from '../schemas/users.schemas';
 import {
@@ -52,6 +52,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
     resolver: zodResolver(CreateUserSchema),
     defaultValues: {
       name: '',
+      documentNumber: '',
       email: '',
       roleId: roles[0]?.id || '',
       pin: '',
@@ -62,6 +63,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
   const handleSubmit = form.handleSubmit(async (values) => {
     const success = await onSubmit({
       name: values.name,
+      documentNumber: values.documentNumber,
       roleId: values.roleId,
       pin: values.pin,
       email: values.email || undefined,
@@ -83,7 +85,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
           <div>
             <DialogTitle className="text-lg font-bold">Nuevo Empleado</DialogTitle>
             <DialogDescription className="text-xs">
-              Asigne nombre, rol y clave PIN táctil de acceso
+              Asigne nombre, cédula, rol y clave PIN táctil de acceso
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -106,6 +108,29 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                   <FormControl>
                     <Input {...field} placeholder="ej. Laura Sánchez" />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="documentNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número de Cédula / Documento *</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <CreditCard className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground pointer-events-none" />
+                      <Input
+                        {...field}
+                        placeholder="ej. 10203040"
+                        className="pl-9 font-mono"
+                        autoComplete="off"
+                      />
+                    </div>
+                  </FormControl>
+                  <FormDescription>Identificación para inicio de sesión en terminal</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

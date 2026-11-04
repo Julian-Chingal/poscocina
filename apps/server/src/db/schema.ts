@@ -54,6 +54,7 @@ export const companies = pgTable('companies', {
   legalName: varchar('legal_name', { length: 150 }).notNull(),
   tradeName: varchar('trade_name', { length: 150 }).notNull(),
   taxId: varchar('tax_id', { length: 50 }).notNull(),
+  slug: varchar('slug', { length: 120 }),
   logoUrl: text('logo_url'),
   primaryColor: varchar('primary_color', { length: 10 }).notNull().default('#ea580c'),
   phone: varchar('phone', { length: 50 }),
@@ -123,19 +124,28 @@ export const rolePermissions = pgTable(
 );
 
 // 3. Users
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  venueId: uuid('venue_id').notNull().references(() => venues.id, { onDelete: 'cascade' }),
-  name: varchar('name', { length: 100 }).notNull(),
-  pinHash: varchar('pin_hash', { length: 72 }),
-  email: varchar('email', { length: 150 }).unique(),
-  passwordHash: varchar('password_hash', { length: 72 }),
-  roleId: uuid('role_id').notNull().references(() => roles.id),
-  avatarUrl: text('avatar_url'),
-  tokenVersion: smallint('token_version').notNull().default(1),
-  isActive: boolean('is_active').notNull().default(true),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+export const users = pgTable(
+  'users',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    companyId: uuid('company_id').references(() => companies.id, { onDelete: 'cascade' }),
+    venueId: uuid('venue_id').references(() => venues.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 100 }).notNull(),
+    documentNumber: varchar('document_number', { length: 30 }),
+    pinHash: varchar('pin_hash', { length: 72 }),
+    email: varchar('email', { length: 150 }),
+    passwordHash: varchar('password_hash', { length: 72 }),
+    roleId: uuid('role_id').notNull().references(() => roles.id),
+    avatarUrl: text('avatar_url'),
+    tokenVersion: smallint('token_version').notNull().default(1),
+    allVenuesAccess: boolean('all_venues_access').notNull().default(false),
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('users_company_document_idx').on(t.companyId, t.documentNumber),
+  ]
+);
 
 // 4. Floor Plans & Tables
 export const floorPlans = pgTable('floor_plans', {

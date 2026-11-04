@@ -77,6 +77,12 @@ export const UserCard: React.FC<UserCardProps> = ({
         {/* Details */}
         <Card className="bg-muted/40 p-3 border-border space-y-1.5 text-xs text-muted-foreground mb-4">
           <div className="flex justify-between items-center">
+            <span className="text-muted-foreground/80">Cédula / Doc:</span>
+            <span className="font-mono font-medium text-foreground">
+              {user.documentNumber || '—'}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
             <span className="text-muted-foreground/80">Email:</span>
             <span className="font-mono text-foreground truncate max-w-[180px]">
               {user.email || '— Sin correo (Solo PIN) —'}

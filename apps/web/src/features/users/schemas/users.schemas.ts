@@ -3,6 +3,12 @@ import { z } from 'zod';
 export const CreateUserSchema = z
   .object({
     name: z.string().trim().min(2, 'El nombre debe tener al menos 2 caracteres'),
+    documentNumber: z
+      .string()
+      .trim()
+      .min(4, 'El número de documento debe tener al menos 4 dígitos')
+      .max(30, 'El documento no puede exceder 30 caracteres')
+      .regex(/^[0-9a-zA-Z.-]+$/, 'Solo caracteres alfanuméricos válidos para documento'),
     roleId: z.string().min(1, 'Debes seleccionar un rol'),
     pin: z
       .string()
@@ -30,6 +36,13 @@ export type CreateUserFormValues = z.infer<typeof CreateUserSchema>;
 
 export const EditUserSchema = z.object({
   name: z.string().trim().min(2, 'El nombre debe tener al menos 2 caracteres'),
+  documentNumber: z
+    .string()
+    .trim()
+    .min(4, 'El número de documento debe tener al menos 4 caracteres')
+    .max(30, 'El documento no puede exceder 30 caracteres')
+    .optional()
+    .or(z.literal('')),
   roleId: z.string().min(1, 'Debes seleccionar un rol'),
   email: z
     .string()

@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Lock, ShieldAlert, KeyRound } from 'lucide-react';
-import { useAuthStore, UserInfo } from '@/stores/auth.store';
+import { Lock, ShieldAlert, KeyRound, CreditCard, ArrowRight, ArrowLeft } from 'lucide-react';
+import { useAuthStore, ContextOption } from '@/stores/auth.store';
 import { AuthMode } from './types/auth.types';
-import { UserAvatarSelector } from './components/UserAvatarSelector';
-import { PinDisplay } from './components/PinDisplay';
 import { PinPadKeypad } from './components/PinPadKeypad';
 import { PasswordLoginForm } from './components/PasswordLoginForm';
 import { AuthModeSwitcher } from './components/AuthModeSwitcher';
+import { AccountContextSelector } from './components/AccountContextSelector';
 import { PasswordLoginFormValues } from './schemas/auth.schemas';
-import { PIN_RESTRICTED_HIERARCHY } from '@poscocina/shared';
-import { VenueSelector } from './components/VenueSelector';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface LockScreenProps {
   onUnlocked?: () => void;
@@ -17,127 +16,137 @@ interface LockScreenProps {
 
 export const LockScreen: React.FC<LockScreenProps> = ({ onUnlocked }) => {
   const {
-    venueUsers,
-    fetchVenueUsers,
-    availableVenues,
-    selectedVenueId,
-    setSelectedVenueId,
-    fetchPublicVenues,
-    loginWithPin,
+    loginWithDocument,
+    selectAuthContext,
     loginWithPassword,
     isLoading,
     unlockScreen,
   } = useAuthStore();
 
   const [authMode, setAuthMode] = useState<AuthMode>('pin');
-  const [selectedUser, setSelectedUser] = useState<UserInfo | null>(null);
+  const [activeField, setActiveField] = useState<'document' | 'pin'>('document');
+  const [documentNumber, setDocumentNumber] = useState('');
   const [pin, setPin] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
 
-  const currentVenueName = availableVenues.find((v) => v.id === selectedVenueId)?.name;
+  // Estado para colaboradores multi-restaurante
+  const [selectionToken, setSelectionToken] = useState<string | null>(null);
+  const [selectionOptions, setSelectionOptions] = useState<ContextOption[] | null>(null);
 
-  // Cargar sedes públicas al montar
-  useEffect(() => {
-    fetchPublicVenues();
+  const resetOperativeState = useCallback(() => {
+    setDocumentNumber('');
     setPin('');
+    setActiveField('document');
     setLocalError(null);
-  }, [fetchPublicVenues]);
+    setSelectionToken(null);
+    setSelectionOptions(null);
+  }, []);
 
-  // Sincronizar usuarios cuando la sede seleccionada cambie
-  useEffect(() => {
-    if (selectedVenueId) {
-      fetchVenueUsers(selectedVenueId);
-      setSelectedUser(null);
-      setPin('');
-      setLocalError(null);
-    }
-  }, [selectedVenueId, fetchVenueUsers]);
-
-  const handleVenueChange = useCallback(
-    (newVenueId: string) => {
-      setSelectedVenueId(newVenueId);
-      setSelectedUser(null);
-      setPin('');
-      setLocalError(null);
-    },
-    [setSelectedVenueId]
-  );
-
-  // Filtrar usuarios operativos disponibles para PIN (Defense in Depth)
-  const operativeUsers = venueUsers.filter((u) => {
-    const isRestrictedByRole =
-      u.roleName === 'manager' ||
-      u.roleName === 'super_admin' ||
-      u.role === 'manager' ||
-      u.role === 'super_admin';
-    const isRestrictedByHierarchy =
-      u.hierarchy !== undefined && u.hierarchy >= PIN_RESTRICTED_HIERARCHY && u.hierarchy > 10;
-    return !isRestrictedByRole && !isRestrictedByHierarchy;
-  });
-
-  // Preseleccionar el primer usuario operativo si no hay seleccionado
-  useEffect(() => {
-    if (operativeUsers.length > 0) {
-      const isSelectedValid = selectedUser && operativeUsers.some((u) => u.id === selectedUser.id);
-      if (!isSelectedValid) {
-        setSelectedUser(operativeUsers[0]);
+  const submitDocumentLogin = useCallback(
+    async (doc: string, enteredPin: string) => {
+      if (!doc || doc.trim().length < 4) {
+        setLocalError('Por favor ingrese un número de cédula válido');
+        setActiveField('document');
+        return;
       }
-    }
-  }, [operativeUsers, selectedUser]);
+      if (!enteredPin || enteredPin.length < 4) {
+        setLocalError('El PIN debe tener al menos 4 dígitos');
+        setActiveField('pin');
+        return;
+      }
 
-  const submitPin = useCallback(
-    async (userId: string, enteredPin: string) => {
-      const userVenueId = selectedUser?.venueId || selectedVenueId || undefined;
-      const success = await loginWithPin(userId, enteredPin, userVenueId);
-      if (success) {
-        setPin('');
-        setLocalError(null);
-        unlockScreen();
-        if (onUnlocked) onUnlocked();
+      setLocalError(null);
+      const res = await loginWithDocument(doc.trim(), enteredPin);
+
+      if (res.success) {
+        if (res.requiresContextSelection && res.options && res.selectionToken) {
+          setSelectionToken(res.selectionToken);
+          setSelectionOptions(res.options);
+        } else {
+          resetOperativeState();
+          unlockScreen();
+          if (onUnlocked) onUnlocked();
+        }
       } else {
         setPin('');
-        const serverErr = useAuthStore.getState().error;
-        setLocalError(serverErr || 'PIN incorrecto. Intente nuevamente.');
+        setActiveField('pin');
+        setLocalError(res.error || 'Cédula o PIN incorrecto. Intente nuevamente.');
       }
     },
-    [loginWithPin, unlockScreen, onUnlocked, selectedUser, selectedVenueId]
+    [loginWithDocument, unlockScreen, onUnlocked, resetOperativeState]
   );
 
   const handleDigit = useCallback(
     (digit: string) => {
-      if (pin.length < 6) {
-        const nextPin = pin + digit;
-        setPin(nextPin);
-        setLocalError(null);
-        if (nextPin.length === 4 && selectedUser) {
-          submitPin(selectedUser.id, nextPin);
+      setLocalError(null);
+      if (activeField === 'document') {
+        if (documentNumber.length < 15) {
+          setDocumentNumber((prev) => prev + digit);
+        }
+      } else {
+        if (pin.length < 6) {
+          const nextPin = pin + digit;
+          setPin(nextPin);
+          // Auto-submit si el PIN llega a 4 dígitos y ya hay cédula
+          if (nextPin.length === 4 && documentNumber.length >= 4) {
+            submitDocumentLogin(documentNumber, nextPin);
+          }
         }
       }
     },
-    [pin, selectedUser, submitPin]
+    [activeField, documentNumber, pin, submitDocumentLogin]
   );
 
   const handleClear = useCallback(() => {
-    setPin('');
     setLocalError(null);
-  }, []);
+    if (activeField === 'document') {
+      setDocumentNumber('');
+    } else {
+      setPin('');
+    }
+  }, [activeField]);
 
   const handleDelete = useCallback(() => {
-    setPin((prev) => prev.slice(0, -1));
     setLocalError(null);
-  }, []);
+    if (activeField === 'document') {
+      setDocumentNumber((prev) => prev.slice(0, -1));
+    } else {
+      setPin((prev) => prev.slice(0, -1));
+    }
+  }, [activeField]);
 
-  // Soporte de teclado físico (números, backspace) y bloqueo estricto de Escape
+  // Selección de restaurante cuando el colaborador trabaja en múltiples sedes
+  const handleSelectOption = async (option: ContextOption) => {
+    if (!selectionToken) return;
+    const success = await selectAuthContext(
+      selectionToken,
+      option.userId,
+      option.companyId,
+      option.venueId
+    );
+    if (success) {
+      resetOperativeState();
+      unlockScreen();
+      if (onUnlocked) onUnlocked();
+    } else {
+      setLocalError('No fue posible iniciar turno en el restaurante seleccionado.');
+    }
+  };
+
+  const handleCancelSelection = () => {
+    resetOperativeState();
+  };
+
+  // Soporte de teclado físico (números, backspace, enter, tab) y bloqueo de Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Bloquear cierre de modal con tecla Escape
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
         return;
       }
 
-      if (authMode !== 'pin' || isLoading) return;
+      if (authMode !== 'pin' || selectionOptions !== null || isLoading) return;
 
       if (/^[0-9]$/.test(e.key)) {
         e.preventDefault();
@@ -148,12 +157,33 @@ export const LockScreen: React.FC<LockScreenProps> = ({ onUnlocked }) => {
       } else if (e.key === 'Delete' || e.key === 'c' || e.key === 'C') {
         e.preventDefault();
         handleClear();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeField === 'document' && documentNumber.length >= 4) {
+          setActiveField('pin');
+        } else if (activeField === 'pin' && pin.length >= 4 && documentNumber.length >= 4) {
+          submitDocumentLogin(documentNumber, pin);
+        }
+      } else if (e.key === 'Tab') {
+        e.preventDefault();
+        setActiveField((prev) => (prev === 'document' ? 'pin' : 'document'));
       }
     };
 
     window.addEventListener('keydown', handleKeyDown, true);
     return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [authMode, isLoading, handleDigit, handleDelete, handleClear]);
+  }, [
+    authMode,
+    selectionOptions,
+    isLoading,
+    handleDigit,
+    handleDelete,
+    handleClear,
+    activeField,
+    documentNumber,
+    pin,
+    submitDocumentLogin,
+  ]);
 
   const handlePasswordSubmit = async (values: PasswordLoginFormValues) => {
     const success = await loginWithPassword(values.email, values.password);
@@ -179,7 +209,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ onUnlocked }) => {
         {/* Cabecera común */}
         <div className="px-6 pt-6 pb-4 border-b border-border/60 bg-muted/20 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-primary/15 text-primary border border-primary/25 flex items-center justify-center shrink-0 shadow-xs">
+            <div className="size-11 rounded-2xl bg-primary/15 text-primary border border-primary/25 flex items-center justify-center shrink-0 shadow-xs">
               <Lock className="w-5 h-5" />
             </div>
             <div>
@@ -190,78 +220,212 @@ export const LockScreen: React.FC<LockScreenProps> = ({ onUnlocked }) => {
                 Terminal de Servicio
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Autenticación y reanudación de estación de trabajo
+                Autenticación unificada de estación de trabajo
               </p>
             </div>
           </div>
 
-          <div className="w-full sm:w-auto flex flex-wrap items-center justify-center sm:justify-end gap-2.5">
-            <VenueSelector
-              venues={availableVenues}
-              selectedVenueId={selectedVenueId}
-              onVenueChange={handleVenueChange}
-              disabled={isLoading}
-            />
+          <div className="w-full sm:w-auto flex items-center justify-center sm:justify-end gap-2.5">
             <AuthModeSwitcher
               mode={authMode}
               onModeChange={(m) => {
                 setAuthMode(m);
-                setLocalError(null);
-                setPin('');
+                resetOperativeState();
               }}
             />
           </div>
         </div>
 
-        {/* Contenido según modo de autenticación */}
-        {authMode === 'pin' ? (
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {/* Columna Izquierda: Selector de usuarios con scroll vertical contenido */}
-            <div className="bg-muted/15 border border-border/60 rounded-2xl p-4 flex flex-col min-h-[360px]">
-              <UserAvatarSelector
-                users={venueUsers}
-                selectedUser={selectedUser}
-                venueName={currentVenueName}
-                onSelectUser={(u) => {
-                  setSelectedUser(u);
-                  setPin('');
-                  setLocalError(null);
-                }}
-                onSwitchToPasswordLogin={() => {
-                  setAuthMode('password');
-                  setLocalError(null);
-                }}
-              />
-            </div>
+        {/* Contenido según modo y estado */}
+        {selectionOptions ? (
+          <div className="p-6">
+            <AccountContextSelector
+              options={selectionOptions}
+              onSelect={handleSelectOption}
+              onCancel={handleCancelSelection}
+              isLoading={isLoading}
+            />
+          </div>
+        ) : authMode === 'pin' ? (
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            {/* Columna Izquierda: Entradas táctiles de Cédula y PIN */}
+            <div className="flex flex-col gap-4">
+              <div className="text-left">
+                <h3 className="text-sm font-bold text-foreground">
+                  Acceso Operativo por Documento
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Digita tu cédula y tu PIN para iniciar turno. El sistema ubicará automáticamente tu restaurante.
+                </p>
+              </div>
 
-            {/* Columna Derecha: Indicador de usuario seleccionado + PIN Display + Numpad */}
-            <div className="flex flex-col items-center justify-center bg-card border border-border/80 rounded-2xl p-5 shadow-xs">
-              {selectedUser ? (
-                <div className="w-full max-w-xs mb-3 flex items-center gap-2.5 p-2 rounded-xl bg-muted/40 border border-border">
-                  <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground font-black text-xs flex items-center justify-center shrink-0">
-                    {selectedUser.name.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold truncate text-foreground">
-                      {selectedUser.name}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground truncate leading-none mt-0.5">
-                      {selectedUser.roleLabel || selectedUser.roleName}
-                    </p>
-                  </div>
-                  <KeyRound className="w-4 h-4 text-primary shrink-0 opacity-70" />
-                </div>
-              ) : (
-                <div className="w-full max-w-xs mb-3 p-2 text-center text-xs text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border">
-                  Selecciona tu usuario a la izquierda para digitar el PIN
+              {localError && (
+                <div className="p-3 rounded-2xl bg-destructive/15 border border-destructive/30 text-destructive text-xs flex items-center gap-2.5 animate-in fade-in">
+                  <ShieldAlert className="w-4 h-4 shrink-0 text-destructive" />
+                  <span>{localError}</span>
                 </div>
               )}
 
-              <PinDisplay
-                pin={pin}
-                error={localError}
-                isLoading={isLoading}
-              />
+              {/* Tarjeta de Entrada: Cédula */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveField('document');
+                  setLocalError(null);
+                }}
+                className={cn(
+                  'w-full p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between group shadow-xs',
+                  activeField === 'document'
+                    ? 'bg-primary/5 border-primary shadow-sm ring-1 ring-primary/40'
+                    : 'bg-muted/20 border-border/70 hover:bg-muted/40'
+                )}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={cn(
+                      'size-10 rounded-xl flex items-center justify-center shrink-0 border transition-colors',
+                      activeField === 'document'
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-card text-muted-foreground border-border'
+                    )}
+                  >
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground block">
+                      1. Número de Cédula
+                    </span>
+                    <span
+                      className={cn(
+                        'text-base font-bold font-mono tracking-wide truncate block',
+                        documentNumber ? 'text-foreground' : 'text-muted-foreground/60'
+                      )}
+                    >
+                      {documentNumber || 'Toca para digitar...'}
+                    </span>
+                  </div>
+                </div>
+
+                {activeField === 'document' && (
+                  <span className="size-2 rounded-full bg-primary animate-pulse" />
+                )}
+              </button>
+
+              {/* Tarjeta de Entrada: PIN */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveField('pin');
+                  setLocalError(null);
+                }}
+                className={cn(
+                  'w-full p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between group shadow-xs',
+                  activeField === 'pin'
+                    ? 'bg-primary/5 border-primary shadow-sm ring-1 ring-primary/40'
+                    : 'bg-muted/20 border-border/70 hover:bg-muted/40'
+                )}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={cn(
+                      'size-10 rounded-xl flex items-center justify-center shrink-0 border transition-colors',
+                      activeField === 'pin'
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-card text-muted-foreground border-border'
+                    )}
+                  >
+                    <KeyRound className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground block">
+                      2. PIN de Seguridad
+                    </span>
+                    <div className="flex items-center gap-2 mt-1">
+                      {[0, 1, 2, 3].map((idx) => (
+                        <div
+                          key={idx}
+                          className={cn(
+                            'size-3.5 rounded-full border transition-all duration-150',
+                            pin.length > idx
+                              ? 'bg-primary border-primary scale-110'
+                              : 'bg-card border-border/80'
+                          )}
+                        />
+                      ))}
+                      {pin.length > 4 && (
+                        <span className="text-xs font-mono text-primary font-bold ml-1">
+                          +{pin.length - 4}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {activeField === 'pin' && (
+                  <span className="size-2 rounded-full bg-primary animate-pulse" />
+                )}
+              </button>
+
+              {/* Botón de acción / alternar */}
+              <div className="pt-2">
+                {activeField === 'document' ? (
+                  <Button
+                    type="button"
+                    disabled={documentNumber.length < 4}
+                    onClick={() => {
+                      setActiveField('pin');
+                      setLocalError(null);
+                    }}
+                    className="w-full h-11 rounded-xl text-xs font-bold gap-2 cursor-pointer"
+                  >
+                    Continuar al PIN <ArrowRight className="w-4 h-4" />
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActiveField('document')}
+                      className="h-11 rounded-xl text-xs font-medium gap-1.5 cursor-pointer px-3"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" /> Volver a cédula
+                    </Button>
+                    <Button
+                      type="button"
+                      disabled={documentNumber.length < 4 || pin.length < 4 || isLoading}
+                      onClick={() => submitDocumentLogin(documentNumber, pin)}
+                      className="flex-1 h-11 rounded-xl text-xs font-bold gap-2 cursor-pointer"
+                    >
+                      {isLoading ? 'Verificando...' : 'Iniciar Turno'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Acceso rápido para administradores */}
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('password');
+                    setLocalError(null);
+                  }}
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer font-medium"
+                >
+                  ¿Eres Administrador o Gerente? Inicia sesión con correo
+                </button>
+              </div>
+            </div>
+
+            {/* Columna Derecha: Teclado táctil Numpad */}
+            <div className="flex flex-col items-center justify-center bg-muted/15 border border-border/80 rounded-2xl p-5 shadow-xs">
+              <div className="text-center mb-3">
+                <span className="text-[11px] font-semibold text-muted-foreground">
+                  {activeField === 'document'
+                    ? 'Digitando Cédula'
+                    : 'Digitando PIN de 4 dígitos'}
+                </span>
+              </div>
 
               <div className="w-full">
                 <PinPadKeypad
@@ -277,9 +441,9 @@ export const LockScreen: React.FC<LockScreenProps> = ({ onUnlocked }) => {
             <div className="mb-5 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-start gap-2.5">
               <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-foreground">Acceso de Seguridad para Administradores</p>
+                <p className="font-semibold text-foreground">Acceso Corporativo para Administradores</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  Por políticas de seguridad RBAC, los roles administrativos y gerenciales deben autenticarse con correo y contraseña.
+                  Los roles administrativos y gerenciales deben autenticarse con correo y contraseña.
                 </p>
               </div>
             </div>
@@ -295,11 +459,11 @@ export const LockScreen: React.FC<LockScreenProps> = ({ onUnlocked }) => {
                 type="button"
                 onClick={() => {
                   setAuthMode('pin');
-                  setLocalError(null);
+                  resetOperativeState();
                 }}
                 className="text-xs text-muted-foreground hover:text-foreground font-medium underline underline-offset-4 cursor-pointer"
               >
-                Volver a la selección de PIN rápido para operadores
+                Volver al acceso operativo por cédula y PIN
               </button>
             </div>
           </div>

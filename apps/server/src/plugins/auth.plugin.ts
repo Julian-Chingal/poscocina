@@ -4,7 +4,9 @@ import { auditService } from '../utils/audit.service.js';
 
 export interface AuthenticatedUser {
   sub: string;
+  companyId?: string | null;
   venueId: string;
+  allVenuesAccess?: boolean;
   name: string;
   role: string;
   hierarchy: number;

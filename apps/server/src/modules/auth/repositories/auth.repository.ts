@@ -18,7 +18,9 @@ export class AuthRepository implements IAuthRepository {
       .select({
         id: schema.users.id,
         venueId: schema.users.venueId,
+        companyId: schema.users.companyId,
         name: schema.users.name,
+        documentNumber: schema.users.documentNumber,
         roleId: schema.users.roleId,
         roleName: schema.roles.name,
         roleLabel: schema.roles.label,
@@ -43,11 +45,17 @@ export class AuthRepository implements IAuthRepository {
       .select({
         id: schema.users.id,
         name: schema.users.name,
+        documentNumber: schema.users.documentNumber,
+        companyId: schema.users.companyId,
+        companyName: schema.companies.tradeName,
+        companyLogo: schema.companies.logoUrl,
+        allVenuesAccess: schema.users.allVenuesAccess,
         venueId: schema.users.venueId,
         venueName: schema.venues.name,
         venueIsActive: schema.venues.isActive,
         email: schema.users.email,
         pinHash: schema.users.pinHash,
+        passwordHash: schema.users.passwordHash,
         tokenVersion: schema.users.tokenVersion,
         roleName: schema.roles.name,
         roleHierarchy: schema.roles.hierarchy,
@@ -55,7 +63,8 @@ export class AuthRepository implements IAuthRepository {
       })
       .from(schema.users)
       .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
-      .innerJoin(schema.venues, eq(schema.users.venueId, schema.venues.id))
+      .leftJoin(schema.venues, eq(schema.users.venueId, schema.venues.id))
+      .leftJoin(schema.companies, eq(schema.users.companyId, schema.companies.id))
       .where(eq(schema.users.id, userId))
       .limit(1);
 
@@ -67,11 +76,17 @@ export class AuthRepository implements IAuthRepository {
       .select({
         id: schema.users.id,
         name: schema.users.name,
+        documentNumber: schema.users.documentNumber,
+        companyId: schema.users.companyId,
+        companyName: schema.companies.tradeName,
+        companyLogo: schema.companies.logoUrl,
+        allVenuesAccess: schema.users.allVenuesAccess,
         email: schema.users.email,
         venueId: schema.users.venueId,
         venueName: schema.venues.name,
         venueIsActive: schema.venues.isActive,
         passwordHash: schema.users.passwordHash,
+        pinHash: schema.users.pinHash,
         tokenVersion: schema.users.tokenVersion,
         roleName: schema.roles.name,
         roleHierarchy: schema.roles.hierarchy,
@@ -79,11 +94,57 @@ export class AuthRepository implements IAuthRepository {
       })
       .from(schema.users)
       .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
-      .innerJoin(schema.venues, eq(schema.users.venueId, schema.venues.id))
+      .leftJoin(schema.venues, eq(schema.users.venueId, schema.venues.id))
+      .leftJoin(schema.companies, eq(schema.users.companyId, schema.companies.id))
       .where(eq(schema.users.email, email.toLowerCase().trim()))
       .limit(1);
 
     return user || null;
+  }
+
+  async findUsersWithRoleByDocument(documentNumber: string) {
+    const cleanDoc = documentNumber.trim();
+    if (!cleanDoc) return [];
+
+    return this.database
+      .select({
+        id: schema.users.id,
+        name: schema.users.name,
+        documentNumber: schema.users.documentNumber,
+        companyId: schema.users.companyId,
+        companyName: schema.companies.tradeName,
+        companyLogo: schema.companies.logoUrl,
+        allVenuesAccess: schema.users.allVenuesAccess,
+        venueId: schema.users.venueId,
+        venueName: schema.venues.name,
+        venueIsActive: schema.venues.isActive,
+        pinHash: schema.users.pinHash,
+        tokenVersion: schema.users.tokenVersion,
+        roleName: schema.roles.name,
+        roleLabel: schema.roles.label,
+        roleHierarchy: schema.roles.hierarchy,
+        isActive: schema.users.isActive,
+      })
+      .from(schema.users)
+      .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
+      .leftJoin(schema.venues, eq(schema.users.venueId, schema.venues.id))
+      .leftJoin(schema.companies, eq(schema.users.companyId, schema.companies.id))
+      .where(and(eq(schema.users.documentNumber, cleanDoc), eq(schema.users.isActive, true)));
+  }
+
+  async findCompanyVenues(companyId: string) {
+    return this.database
+      .select({
+        id: schema.venues.id,
+        companyId: schema.venues.companyId,
+        name: schema.venues.name,
+        slug: schema.venues.slug,
+        address: schema.venues.address,
+        isPrimary: schema.venues.isPrimary,
+        isActive: schema.venues.isActive,
+      })
+      .from(schema.venues)
+      .where(and(eq(schema.venues.companyId, companyId), eq(schema.venues.isActive, true)));
   }
 
   async findManagersByVenue(venueId: string) {

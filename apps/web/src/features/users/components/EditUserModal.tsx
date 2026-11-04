@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Edit2, AlertCircle } from 'lucide-react';
+import { Edit2, AlertCircle, CreditCard } from 'lucide-react';
 import { UserItem, RoleItem, UpdateUserPayload } from '../types/users.types';
 import { EditUserSchema, EditUserFormValues } from '../schemas/users.schemas';
 import {
@@ -52,6 +52,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
     resolver: zodResolver(EditUserSchema),
     defaultValues: {
       name: '',
+      documentNumber: '',
       email: '',
       roleId: '',
       isActive: true,
@@ -62,6 +63,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
     if (user) {
       form.reset({
         name: user.name,
+        documentNumber: user.documentNumber || '',
         email: user.email || '',
         roleId: user.roleId,
         isActive: user.isActive,
@@ -74,6 +76,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
   const handleSubmit = form.handleSubmit(async (values) => {
     const success = await onSubmit(user.id, {
       name: values.name,
+      documentNumber: values.documentNumber || undefined,
       email: values.email || undefined,
       roleId: values.roleId,
       isActive: values.isActive,
@@ -113,6 +116,27 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
                   <FormLabel>Nombre Completo *</FormLabel>
                   <FormControl>
                     <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="documentNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número de Cédula / Documento</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <CreditCard className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground pointer-events-none" />
+                      <Input
+                        {...field}
+                        placeholder="ej. 10203040"
+                        className="pl-9 font-mono"
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
