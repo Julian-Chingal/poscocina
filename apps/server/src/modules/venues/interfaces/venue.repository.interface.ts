@@ -11,10 +11,10 @@ export interface IVenueRepository {
   checkVenueDependencies(id: string): Promise<any>;
   deleteVenue(id: string): Promise<any>;
   // Staff & Roles
-  getRoles(): Promise<any[]>;
-  getVenueUsers(venueId: string): Promise<any[]>;
-  createUser(venueId: string, data: any, creatorId?: string): Promise<any>;
-  updateUser(id: string, data: any, updaterId?: string): Promise<any>;
-  resetPin(id: string, newPin: string, resetById?: string): Promise<any>;
-  deleteUser(id: string, deletedById?: string): Promise<any>;
+  getRoles(requester?: any): Promise<any[]>;
+  getVenueUsers(requester: any, venueId?: string): Promise<any[]>;
+  createUser(venueId: string, data: any, requester?: any): Promise<any>;
+  updateUser(id: string, data: any, requester?: any): Promise<any>;
+  resetPin(id: string, newPin: string, requester?: any): Promise<any>;
+  deleteUser(id: string, requester?: any): Promise<any>;
 }

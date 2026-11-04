@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Clock, Flame } from 'lucide-react';
 import { HourlySale } from '../types/reports.types';
 import { formatCurrency } from '../utils/formatCurrency';

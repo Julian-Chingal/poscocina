@@ -1,4 +1,4 @@
-export interface KdsItemStation {
+﻿export interface KdsItemStation {
   id: string;
   orderItemId: string;
   stationId: string;

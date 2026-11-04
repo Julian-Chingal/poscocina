@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Shield, KeyRound, Edit2, KeySquare } from 'lucide-react';
 import { UserItem } from '../types/users.types';
 import { Button } from '@/components/ui/button';
@@ -95,6 +95,14 @@ export const UserCard: React.FC<UserCardProps> = ({
               <span>Habilitado (••••)</span>
             </span>
           </div>
+          {isSuperAdmin && (user.companyName || user.venueName) && (
+            <div className="flex justify-between items-center pt-1 border-t border-border/50">
+              <span className="text-muted-foreground/80">Restaurante / Sede:</span>
+              <span className="font-semibold text-primary truncate max-w-[170px]" title={[user.companyName, user.venueName].filter(Boolean).join(' • ')}>
+                {[user.companyName, user.venueName].filter(Boolean).join(' • ')}
+              </span>
+            </div>
+          )}
         </Card>
       </div>
 
@@ -105,7 +113,7 @@ export const UserCard: React.FC<UserCardProps> = ({
             variant="outline"
             size="icon"
             onClick={() => onEdit(user)}
-            title="Editar empleado"
+            title="Editar usuario"
             className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground transition cursor-pointer"
           >
             <Edit2 className="w-3.5 h-3.5" />

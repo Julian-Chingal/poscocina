@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import { api } from '../services/api';
 import { useAuthStore } from './auth.store';
 
@@ -25,6 +25,17 @@ export interface VenueSettings {
   taxId?: string;
   defaultTipPct?: number;
   phone?: string;
+  openingHours?: string;
+  operatingStatus?: 'auto' | 'open' | 'closed';
+  schedule?: Array<{
+    day: number;
+    dayName: string;
+    enabled: boolean;
+    openTime: string;
+    closeTime: string;
+  }>;
+  requireShiftForDelivery?: boolean;
+  isOpen?: boolean;
   paperWidth?: 58 | 80;
   fontFamily?: string;
   fontSize?: string;
@@ -73,6 +84,10 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
     taxId: '900.123.456-7',
     defaultTipPct: 10,
     phone: '+57 300 123 4567',
+    openingHours: 'Lun - Dom: 11:30 AM - 10:00 PM',
+    operatingStatus: 'auto',
+    requireShiftForDelivery: false,
+    isOpen: true,
     paperWidth: 80,
     autoPrintReceipt: true,
     receiptHeader: 'Deliciosos momentos a tu mesa',

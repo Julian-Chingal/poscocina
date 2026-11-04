@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Plus, Minus, Trash2, FileText, SlidersHorizontal } from 'lucide-react';
 import { CartItem } from '../types/pos.types';
 import { Button } from '@/components/ui/button';

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+﻿import { useState, useMemo, useCallback } from 'react';
 import { CartItem, Product } from '../types/pos.types';
 
 export const usePosCart = (taxRate: number = 0.08) => {

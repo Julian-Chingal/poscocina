@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Servicio robusto para gestión, sincronización, persistencia en memoria
  * y transmisión física con impresoras USB y USB-OTG mediante WebUSB y Web Serial.
  */

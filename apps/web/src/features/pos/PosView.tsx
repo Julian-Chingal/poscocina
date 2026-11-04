@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useBrandingStore } from '@/stores/branding.store';
 import { PosViewProps, Product } from './types/pos.types';

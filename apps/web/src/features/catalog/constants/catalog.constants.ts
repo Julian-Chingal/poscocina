@@ -1,4 +1,4 @@
-export const PRESET_COLORS = [
+﻿export const PRESET_COLORS = [
   '#ef4444',
   '#f97316',
   '#f59e0b',

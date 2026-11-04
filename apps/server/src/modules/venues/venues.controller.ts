@@ -66,21 +66,21 @@ export class VenuesController {
   }
 
   // Staff Handlers
-  async getRoles(_request: FastifyRequest, reply: FastifyReply) {
-    return reply.send(await this.useCase.getRoles());
+  async getRoles(request: FastifyRequest, reply: FastifyReply) {
+    return reply.send(await this.useCase.getRoles(request.user));
   }
 
   async getVenueUsers(request: FastifyRequest, reply: FastifyReply) {
     const { venueId } = request.params as { venueId: string };
     const targetVenueId = await resolveVenueId(request, venueId);
-    return reply.send(await this.useCase.getVenueUsers(targetVenueId));
+    return reply.send(await this.useCase.getVenueUsers(request.user, targetVenueId));
   }
 
   async createUser(request: FastifyRequest, reply: FastifyReply) {
     const { venueId } = request.params as { venueId: string };
     const targetVenueId = await resolveVenueId(request, venueId);
     const data = validate(CreateUserSchema, request.body);
-    const newUser = await this.useCase.createUser(targetVenueId, data, request.user?.sub);
+    const newUser = await this.useCase.createUser(targetVenueId, data, request.user);
     request.server.io?.emit('user:created', newUser);
     return reply.status(201).send(newUser);
   }
@@ -88,7 +88,7 @@ export class VenuesController {
   async updateUser(request: FastifyRequest, reply: FastifyReply) {
     const { id } = request.params as { id: string };
     const data = validate(UpdateUserSchema, request.body);
-    const updated = await this.useCase.updateUser(id, data, request.user?.sub);
+    const updated = await this.useCase.updateUser(id, data, request.user);
     request.server.io?.emit('user:updated', updated);
     if (data.isActive === false) {
       request.server.io?.emit('user:deactivated', { userId: id });
@@ -99,14 +99,14 @@ export class VenuesController {
   async resetPin(request: FastifyRequest, reply: FastifyReply) {
     const { id } = request.params as { id: string };
     const data = validate(ResetPinSchema, request.body);
-    const result = await this.useCase.resetPin(id, data.newPin, request.user?.sub);
+    const result = await this.useCase.resetPin(id, data.newPin, request.user);
     request.server.io?.emit('user:pin_reset', { userId: id });
     return reply.send(result);
   }
 
   async deleteUser(request: FastifyRequest, reply: FastifyReply) {
     const { id } = request.params as { id: string };
-    const result = await this.useCase.deleteUser(id, request.user?.sub);
+    const result = await this.useCase.deleteUser(id, request.user);
     request.server.io?.emit('user:deactivated', { userId: id });
     return reply.send(result);
   }

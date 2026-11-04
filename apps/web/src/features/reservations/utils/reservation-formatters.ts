@@ -1,4 +1,4 @@
-export interface RelativeTimeInfo {
+﻿export interface RelativeTimeInfo {
   timeStr: string;
   dateStr: string;
   relative: string;

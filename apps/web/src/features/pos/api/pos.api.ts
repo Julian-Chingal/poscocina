@@ -1,4 +1,4 @@
-import { api } from '@/services/api';
+﻿import { api } from '@/services/api';
 import { Customer, TableItem } from '../types/pos.types';
 import { usbPrinterService } from '@/services/usb-printer.service';
 import type { IssueReceiptInput, SplitEqualPaymentInput, SplitItemsPaymentInput } from '@poscocina/shared';

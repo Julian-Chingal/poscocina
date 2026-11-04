@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { useBrandingStore } from '@/stores/branding.store';
 import { settingsApi } from '../api/settings.api';
 import { PrinterDevice, PrinterFormData, TestPrintResult } from '../types/settings.types';

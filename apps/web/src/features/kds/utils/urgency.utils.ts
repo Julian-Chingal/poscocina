@@ -1,4 +1,4 @@
-import { UrgencyStyles } from '../types/kds.types';
+﻿import { UrgencyStyles } from '../types/kds.types';
 
 export const getUrgencyStyles = (openedAt: string, currentTime: number): UrgencyStyles => {
   const elapsedMinutes = Math.max(

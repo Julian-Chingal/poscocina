@@ -1,4 +1,4 @@
-import { PrinterStation } from '../types/settings.types';
+﻿import { PrinterStation } from '../types/settings.types';
 
 export const COLOR_PRESETS = [
   { name: 'Naranja Gourmet', hex: '#ea580c' },

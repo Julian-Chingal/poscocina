@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { catalogApi } from '../api/catalog.api';
 import { Category, Product, DeleteTarget } from '../types/catalog.types';
 import { CategoryFormValues, ProductFormValues } from '../schemas/catalog.schemas';

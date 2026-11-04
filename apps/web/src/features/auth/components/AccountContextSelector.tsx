@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Store, Briefcase, ArrowRight, Building2 } from 'lucide-react';
 import { ContextOption } from '@/stores/auth.store';
 import { Button } from '@/components/ui/button';

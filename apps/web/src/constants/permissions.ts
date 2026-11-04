@@ -1,4 +1,4 @@
-import { ROLES, RoleName } from '@poscocina/shared';
+﻿import { ROLES, RoleName } from '@poscocina/shared';
 
 export type PermissionAction =
   | 'manage_catalog'

@@ -1,4 +1,4 @@
-export type PaymentMethod = 'cash' | 'card_credit' | 'transfer';
+﻿export type PaymentMethod = 'cash' | 'card_credit' | 'transfer';
 
 export interface ActiveShiftInfo {
   open: boolean;

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
 export const CreateReservationSchema = z.object({
   customerName: z.string().trim().min(2, 'El nombre del cliente es obligatorio'),

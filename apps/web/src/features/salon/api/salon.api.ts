@@ -1,4 +1,4 @@
-import { api } from '@/services/api';
+﻿import { api } from '@/services/api';
 import { FloorPlanItem, TableItem } from '../types/salon.types';
 
 export const salonApi = {

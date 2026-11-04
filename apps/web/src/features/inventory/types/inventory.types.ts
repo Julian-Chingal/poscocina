@@ -1,4 +1,4 @@
-export type InventoryTab = 'stock' | 'purchases' | 'suppliers' | 'recipes' | 'movements' | 'toppings';
+﻿export type InventoryTab = 'stock' | 'purchases' | 'suppliers' | 'recipes' | 'movements' | 'toppings';
 export type MovementType = 'purchase' | 'waste' | 'adjustment';
 export type SupplierDocType = 'NIT' | 'RUT' | 'CC' | 'CE' | 'Passport';
 

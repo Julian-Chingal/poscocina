@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { AlertCircle, Plus } from 'lucide-react';
 import { TableItem } from '../types/salon.types';
 import { TableCard } from './TableCard';

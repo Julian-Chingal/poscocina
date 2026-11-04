@@ -1,4 +1,4 @@
-export type ReportPeriod = 'today' | '7d' | 'month' | 'all';
+﻿export type ReportPeriod = 'today' | '7d' | 'month' | 'all';
 
 export interface AuditLogItem {
   id: string;

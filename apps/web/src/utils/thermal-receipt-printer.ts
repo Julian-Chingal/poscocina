@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Utilidad especializada para impresión física y previsualización de comprobantes térmicos (58mm y 80mm).
  * Garantiza que la impresión del navegador imprima ÚNICAMENTE la tirilla del recibo con márgenes cero,
  * evitando estrictamente que se imprima la interfaz o pantallazos de la aplicación web.

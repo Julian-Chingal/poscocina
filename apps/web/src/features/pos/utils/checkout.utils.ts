@@ -1,4 +1,4 @@
-import { SplitMode, DiscountType } from '../types/pos.types';
+﻿import { SplitMode, DiscountType } from '../types/pos.types';
 
 export interface TotalsCalculationInput {
   baseSubtotal: number;

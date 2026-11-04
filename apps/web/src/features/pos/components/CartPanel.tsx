@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { ShoppingCart, Trash2, Utensils } from 'lucide-react';
 import { CartItem, Customer, TableItem } from '../types/pos.types';
 import { CartItemRow } from './CartItemRow';

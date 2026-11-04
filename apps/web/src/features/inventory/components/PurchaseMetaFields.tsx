@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { CheckCircle, Clock } from 'lucide-react';
 import { Supplier } from '../types/inventory.types';
 import { Label } from '@/components/ui/label';

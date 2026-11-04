@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Coins, Clock, Printer, User, ArrowRight, ShoppingCart } from 'lucide-react';
 import { ActiveShiftInfo } from '../types/cash-shifts.types';
 import { Button } from '@/components/ui/button';

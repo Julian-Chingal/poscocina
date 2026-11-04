@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { Lock, ShieldAlert, KeyRound, CreditCard, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useAuthStore, ContextOption } from '@/stores/auth.store';
 import { AuthMode } from './types/auth.types';

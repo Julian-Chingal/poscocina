@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Search, UserCheck, Sparkles, X } from 'lucide-react';
 import { Customer } from '../types/reservations.types';
 import { useCustomerAutocomplete } from '../hooks/useCustomerAutocomplete';

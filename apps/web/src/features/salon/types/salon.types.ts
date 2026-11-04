@@ -1,4 +1,4 @@
-export type WallKind = 'wall' | 'divider' | 'glass' | 'door';
+﻿export type WallKind = 'wall' | 'divider' | 'glass' | 'door';
 export type FixtureKind = 'bar' | 'cashier' | 'kitchen' | 'restroom' | 'entrance' | 'plant' | 'stage' | 'pillar';
 
 export interface FloorWall {

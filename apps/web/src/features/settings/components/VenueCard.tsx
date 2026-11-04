@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   Store,
   MapPin,
@@ -72,6 +72,7 @@ export const VenueCard: React.FC<Props> = ({
   const city = settings.city || '';
   const managerName = settings.managerName || '';
   const openingHours = settings.openingHours || '';
+  const operatingStatus = settings.operatingStatus || 'auto';
   const slug = venue.slug || settings.slug || venue.name.toLowerCase().replace(/\s+/g, '-');
 
   const copyToClipboard = (text: string, fieldName: string) => {
@@ -206,6 +207,22 @@ export const VenueCard: React.FC<Props> = ({
                   Caja Cerrada
                 </Badge>
               )}
+
+              {operatingStatus === 'closed' ? (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30"
+                >
+                  Domicilios Pausados
+                </Badge>
+              ) : operatingStatus === 'open' ? (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                >
+                  Domicilios Abierto
+                </Badge>
+              ) : null}
             </div>
           </div>
 

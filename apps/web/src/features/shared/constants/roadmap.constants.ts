@@ -1,4 +1,4 @@
-export interface ModuleDetail {
+﻿export interface ModuleDetail {
   title: string;
   subtitle: string;
   phase: string;

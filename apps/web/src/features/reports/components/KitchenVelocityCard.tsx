@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { ChefHat, CheckCircle2, Timer, Clock3, Gauge } from 'lucide-react';
 import { KdsMetrics } from '../types/reports.types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';

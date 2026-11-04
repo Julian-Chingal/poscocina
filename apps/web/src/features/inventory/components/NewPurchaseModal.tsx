@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Receipt, Plus } from 'lucide-react';
 import { Supplier, InventoryItem } from '../types/inventory.types';
 import { PurchaseLineRow } from './PurchaseLineRow';

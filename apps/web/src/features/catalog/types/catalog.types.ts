@@ -1,4 +1,4 @@
-export interface ProductDimensions {
+﻿export interface ProductDimensions {
   diameter?: number | null;
   height?: number | null;
   unit?: string | null;

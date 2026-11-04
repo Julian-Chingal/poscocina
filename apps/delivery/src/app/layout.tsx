@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from 'next';
+﻿import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { CartProvider } from '../context/CartContext';
 import { Navbar } from '../components/Navbar';

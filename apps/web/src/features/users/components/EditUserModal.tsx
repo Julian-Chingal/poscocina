@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+﻿import React, { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Edit2, AlertCircle, CreditCard } from 'lucide-react';
+import { Edit2, AlertCircle, CreditCard, Mail } from 'lucide-react';
+import { useAuthStore } from '@/stores/auth.store';
 import { UserItem, RoleItem, UpdateUserPayload } from '../types/users.types';
 import { EditUserSchema, EditUserFormValues } from '../schemas/users.schemas';
 import {
@@ -48,6 +49,15 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const currentUser = useAuthStore((s) => s.currentUser);
+  const isSuperAdmin = currentUser?.roleName === 'super_admin';
+
+  // Filter roles: only super admin can assign super_admin
+  const availableRoles = useMemo(() => {
+    if (isSuperAdmin) return roles;
+    return roles.filter((r) => r.name !== 'super_admin');
+  }, [roles, isSuperAdmin]);
+
   const form = useForm<EditUserFormValues>({
     resolver: zodResolver(EditUserSchema),
     defaultValues: {
@@ -58,6 +68,10 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
       isActive: true,
     },
   });
+
+  const selectedRoleId = form.watch('roleId');
+  const selectedRole = roles.find((r) => r.id === selectedRoleId);
+  const isManagerRole = selectedRole?.name === 'manager' || selectedRole?.name === 'super_admin';
 
   useEffect(() => {
     if (user) {
@@ -77,7 +91,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
     const success = await onSubmit(user.id, {
       name: values.name,
       documentNumber: values.documentNumber || undefined,
-      email: values.email || undefined,
+      email: isManagerRole ? (values.email || undefined) : undefined,
       roleId: values.roleId,
       isActive: values.isActive,
     });
@@ -94,7 +108,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
             <Edit2 className="w-6 h-6" />
           </div>
           <div>
-            <DialogTitle className="text-lg font-bold">Editar Empleado</DialogTitle>
+            <DialogTitle className="text-lg font-bold">Editar Usuario</DialogTitle>
             <DialogDescription className="text-xs">{user.name}</DialogDescription>
           </div>
         </DialogHeader>
@@ -156,9 +170,9 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {roles.map((r) => (
+                      {availableRoles.map((r) => (
                         <SelectItem key={r.id} value={r.id}>
-                          {r.label} ({r.name})
+                          {r.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -168,19 +182,27 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Correo Electrónico</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="email" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Email - only for Manager and Super Admin */}
+            {isManagerRole && (
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Correo Electrónico <span className="text-muted-foreground font-normal">(Acceso web)</span>
+                    </FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Mail className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground pointer-events-none" />
+                        <Input {...field} type="email" className="pl-9" />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
@@ -214,7 +236,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
                 disabled={submitting || form.formState.isSubmitting}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
               >
-                {submitting ? 'Actualizando...' : 'Actualizar'}
+                {submitting ? 'Actualizando...' : 'Guardar Cambios'}
               </Button>
             </DialogFooter>
           </form>

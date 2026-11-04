@@ -106,15 +106,24 @@ export default async function MultiVenueDirectoryPage() {
                           >
                             {venue.name.charAt(0).toUpperCase()}
                           </div>
-                          {venue.isPrimary ? (
-                            <span className="rounded-full bg-orange-500/15 border border-orange-500/30 px-2.5 py-0.5 text-[11px] font-bold text-orange-300">
-                              Sede Principal
-                            </span>
-                          ) : (
-                            <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300">
-                              Abierto
-                            </span>
-                          )}
+                          <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                            {venue.isPrimary && (
+                              <span className="rounded-full bg-orange-500/15 border border-orange-500/30 px-2.5 py-0.5 text-[11px] font-bold text-orange-300">
+                                Sede Principal
+                              </span>
+                            )}
+                            {venue.isOpen !== false ? (
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                Abierto
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 px-2.5 py-0.5 text-[11px] font-bold text-rose-300">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                                Cerrado
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {/* Title & Info */}
@@ -139,22 +148,33 @@ export default async function MultiVenueDirectoryPage() {
                           </p>
                         )}
 
-                        <div className="mt-4 flex items-center gap-4 text-xs text-slate-400 border-t border-slate-800/80 pt-3">
-                          <div className="flex items-center gap-1.5">
-                            <Clock className="h-3.5 w-3.5 text-orange-400" />
-                            <span>25 - 40 min</span>
+                        <div className="mt-4 flex flex-col gap-2 text-xs text-slate-400 border-t border-slate-800/80 pt-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <Clock className="h-3.5 w-3.5 text-orange-400" />
+                              <span>25 - 40 min</span>
+                            </div>
+                            <span>{venue.currency || "COP"}</span>
                           </div>
-                          <span>•</span>
-                          <span>{venue.currency || "COP"}</span>
+                          {venue.openingHours && (
+                            <p className="text-[11px] text-slate-500 flex items-center gap-1 truncate" title={venue.openingHours}>
+                              <span>Horario:</span>
+                              <span className="text-slate-400 font-medium">{venue.openingHours}</span>
+                            </p>
+                          )}
                         </div>
                       </div>
 
                       {/* CTA Button */}
                       <Link
                         href={`/r/${targetSlug}`}
-                        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600/90 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-orange-500 transition"
+                        className={`mt-6 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition ${
+                          venue.isOpen !== false
+                            ? "bg-orange-600/90 text-white shadow-sm hover:bg-orange-500"
+                            : "bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700/60"
+                        }`}
                       >
-                        <span>Ver Menú & Pedir</span>
+                        <span>{venue.isOpen !== false ? "Ver Menú & Pedir" : "Cerrado • Ver Menú"}</span>
                         <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
                       </Link>
                     </div>

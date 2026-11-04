@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Trophy, UtensilsCrossed } from 'lucide-react';
 import { TopProduct } from '../types/reports.types';
 import { formatCurrency } from '../utils/formatCurrency';

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Customer } from '../types/pos.types';
 import { SplitBillDialog } from './SplitBillDialog';
 

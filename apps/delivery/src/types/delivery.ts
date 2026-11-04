@@ -8,6 +8,16 @@ export interface VenuePublicProfile {
   logoUrl?: string | null;
   primaryColor?: string;
   openingHours?: string;
+  operatingStatus?: 'auto' | 'open' | 'closed';
+  isOpen?: boolean;
+  schedule?: Array<{
+    day: number;
+    dayName: string;
+    enabled: boolean;
+    openTime: string;
+    closeTime: string;
+  }>;
+  requireShiftForDelivery?: boolean;
   currency?: string;
   taxRate?: number;
   isPrimary?: boolean;

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { TrendingUp, Receipt, Percent, HeartHandshake } from 'lucide-react';
 import { OverviewMetrics, CogsMetrics } from '../types/reports.types';
 import { formatCurrency } from '../utils/formatCurrency';

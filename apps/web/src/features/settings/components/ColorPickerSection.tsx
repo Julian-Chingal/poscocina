@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+﻿import React, { useMemo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Check, Sparkles, ShieldCheck, AlertCircle, Wand2, Layers, Sliders } from 'lucide-react';
 import { ColorPickerPopover } from './ColorPickerPopover';

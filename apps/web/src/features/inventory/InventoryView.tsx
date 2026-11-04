@@ -1,4 +1,4 @@
-import React, { useState, Suspense, lazy } from 'react';
+﻿import React, { useState, Suspense, lazy } from 'react';
 import { InventoryTab } from './types/inventory.types';
 import { useInventoryStock } from './hooks/useInventoryStock';
 import { useInventoryMovements } from './hooks/useInventoryMovements';

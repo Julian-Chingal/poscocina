@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   ArrowLeft,
   ChevronRight,
@@ -79,8 +79,8 @@ const VIEW_METADATA: Record<string, ViewMeta> = {
     icon: BarChart3,
   },
   users: {
-    title: "Gestión de Empleados & Roles",
-    shortTitle: "Empleados",
+    title: "Gestión de Usuarios & Roles",
+    shortTitle: "Usuarios",
     icon: Users,
   },
   settings: {

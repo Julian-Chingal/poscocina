@@ -1,4 +1,4 @@
-export interface Customer {
+﻿export interface Customer {
   id: string;
   name: string;
   documentNumber?: string;

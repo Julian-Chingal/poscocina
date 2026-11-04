@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { UserPlus, UserCheck, X, UserSearch, Award } from 'lucide-react';
 import { Customer } from '../types/pos.types';
 import { Input } from '@/components/ui/input';

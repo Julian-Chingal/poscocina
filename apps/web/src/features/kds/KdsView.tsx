@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { GastronomicLoader } from '@/components/common/GastronomicLoader';
 import { KdsViewProps } from './types/kds.types';
 import { useKdsData } from './hooks/useKdsData';
 import { KdsHeader } from './components/KdsHeader';
@@ -64,10 +65,13 @@ export const KdsView: React.FC<KdsViewProps> = ({ venueId }) => {
 
   if (loading && orders.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-96 gap-3">
-        <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-        <span className="text-xs text-muted-foreground font-medium">Cargando comandas en cocina...</span>
-      </div>
+      <GastronomicLoader
+        variant="card"
+        iconType="flame"
+        message="Cargando comandas en cocina..."
+        submessage="Conectando con pantallas KDS y estaciones de preparación"
+        className="my-10 max-w-xl mx-auto"
+      />
     );
   }
 

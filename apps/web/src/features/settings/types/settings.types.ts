@@ -1,4 +1,4 @@
-import { VenueItem } from '@/stores/branding.store';
+﻿import { VenueItem } from '@/stores/branding.store';
 
 export type SettingsTab = 'identity' | 'tax' | 'printer' | 'venues' | 'appearance' | 'workstations';
 export type PrinterStation = 'cashier' | 'kitchen' | 'bar' | 'dessert' | 'expediter';
@@ -7,6 +7,16 @@ export type TaxType = 'INC_8' | 'IVA_19' | 'EXENTO';
 export type PaperWidth = 58 | 80;
 export type EscPosFontFamily = 'font_a' | 'font_b';
 export type EscPosFontSize = 'normal' | 'compact' | 'expanded' | 'double_height';
+
+export interface DaySchedule {
+  day: number;
+  dayName: string;
+  enabled: boolean;
+  openTime: string;
+  closeTime: string;
+}
+
+export type VenueOperatingStatus = 'auto' | 'open' | 'closed';
 
 export interface PrinterDevice {
   id: string;
@@ -50,6 +60,9 @@ export interface NewVenuePayload {
   city?: string;
   managerName?: string;
   openingHours?: string;
+  operatingStatus?: VenueOperatingStatus;
+  schedule?: DaySchedule[];
+  requireShiftForDelivery?: boolean;
   notes?: string;
   timezone?: string;
 }
@@ -62,6 +75,9 @@ export interface UpdateVenuePayload {
   city?: string;
   managerName?: string;
   openingHours?: string;
+  operatingStatus?: VenueOperatingStatus;
+  schedule?: DaySchedule[];
+  requireShiftForDelivery?: boolean;
   notes?: string;
   timezone?: string;
 }

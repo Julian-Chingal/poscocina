@@ -1,4 +1,4 @@
-export { PosView, default } from './PosView';
+﻿export { PosView, default } from './PosView';
 export * from './types/pos.types';
 export {
   PAYMENT_METHOD_OPTIONS,

@@ -30,6 +30,10 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
 
   const handleQuickAdd = (e: React.MouseEvent, product: CatalogProduct) => {
     e.stopPropagation();
+    if (venue.isOpen === false) {
+      alert('El restaurante se encuentra cerrado en este momento. Horario de atención: ' + (venue.openingHours || 'Consultar con el local'));
+      return;
+    }
     const hasModifiers = product.modifierGroups && product.modifierGroups.length > 0;
     if (hasModifiers) {
       setActiveProduct(product);
@@ -78,18 +82,57 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
                     <Clock className="h-3.5 w-3.5" />
                     25-40 min
                   </span>
+                  {venue.openingHours && (
+                    <span className="flex items-center gap-1 text-slate-300 font-medium">
+                      • {venue.openingHours}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
 
-            {venue.isPrimary && (
-              <span className="self-start sm:self-center rounded-full bg-orange-500/15 border border-orange-500/30 px-3 py-1 text-xs font-bold text-orange-300">
-                Sede Principal
-              </span>
-            )}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 self-start sm:self-center">
+              {venue.isPrimary && (
+                <span className="rounded-full bg-orange-500/15 border border-orange-500/30 px-3 py-1 text-xs font-bold text-orange-300">
+                  Sede Principal
+                </span>
+              )}
+              {venue.isOpen !== false ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 text-xs font-bold text-emerald-300">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Abierto Ahora
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 px-3 py-1 text-xs font-bold text-rose-300">
+                  <span className="w-2 h-2 rounded-full bg-rose-400" />
+                  Cerrado Temporalmente
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Closed Venue Alert Banner */}
+      {venue.isOpen === false && (
+        <div className="bg-rose-950/40 border-b border-rose-500/30 px-4 py-3 backdrop-blur-sm">
+          <div className="mx-auto max-w-6xl flex items-center justify-between gap-3 text-xs text-rose-200">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-rose-500/20 text-rose-400 font-bold shrink-0">
+                !
+              </span>
+              <div>
+                <strong>Restaurante cerrado para domicilios en este momento.</strong> Puedes explorar nuestro catálogo, pero la recepción de pedidos a domicilio se encuentra pausada.
+                {venue.openingHours && (
+                  <span className="block sm:inline sm:ml-2 font-semibold text-rose-300">
+                    • Horario de atención: {venue.openingHours}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Category Navigation Bar (Sticky) */}
       {categories.length > 0 && (

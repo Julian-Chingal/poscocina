@@ -4,6 +4,7 @@ import { inArray, eq, and } from 'drizzle-orm';
 import { BadRequestError, NotFoundError } from '../../../errors/app-error.js';
 import { IOrderRepository, CreateOrderPayload } from '../interfaces/order.repository.interface.js';
 import { auditService } from '../../../utils/audit.service.js';
+import { evaluateVenueOpenStatus } from '../../../utils/venue-status.util.js';
 
 export class CreateOrderUseCase {
   constructor(private readonly orderRepo: IOrderRepository) {}
@@ -22,6 +23,24 @@ export class CreateOrderUseCase {
         const activeShift = await this.orderRepo.findActiveShift(venueId, tx);
         if (!activeShift) {
           throw new BadRequestError('Caja cerrada: Debes abrir la caja antes de registrar pedidos');
+        }
+      } else {
+        const [venue] = await tx
+          .select()
+          .from(schema.venues)
+          .where(eq(schema.venues.id, venueId))
+          .limit(1);
+
+        if (!venue || !venue.isActive) {
+          throw new BadRequestError('El restaurante seleccionado no se encuentra disponible.');
+        }
+
+        const activeShift = await this.orderRepo.findActiveShift(venueId, tx);
+        const statusEval = evaluateVenueOpenStatus(venue, !!activeShift);
+        if (!statusEval.isOpen) {
+          throw new BadRequestError(
+            statusEval.reason || 'El restaurante se encuentra cerrado en este momento y no recibe pedidos a domicilio.'
+          );
         }
       }
 

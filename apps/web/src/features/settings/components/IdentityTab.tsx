@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useRef, useState } from 'react';
+﻿import React, { ChangeEvent, useRef, useState } from 'react';
 import {
   Building2,
   Image as ImageIcon,
@@ -14,7 +14,10 @@ import {
   FileCheck2,
   Quote,
   Sparkles,
-  Printer
+  Printer,
+  Clock,
+  CheckCircle2,
+  Ban
 } from 'lucide-react';
 import { IdentityPreviewCard } from './IdentityPreviewCard';
 import { ColorPickerSection, GastronomicThemePreset } from './ColorPickerSection';
@@ -23,7 +26,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import { defaultSchedule } from '../hooks/useSettingsForm';
+import { DaySchedule, VenueOperatingStatus } from '../types/settings.types';
 
 interface Props {
   legalName?: string;
@@ -38,6 +44,10 @@ interface Props {
   email?: string;
   taxId?: string;
   currency?: string;
+  openingHours?: string;
+  operatingStatus?: VenueOperatingStatus;
+  schedule?: DaySchedule[];
+  requireShiftForDelivery?: boolean;
   paperWidth?: 58 | 80;
   receiptHeader?: string;
   receiptFooter?: string;
@@ -60,6 +70,10 @@ export const IdentityTab: React.FC<Props> = ({
   email = '',
   taxId = '900.123.456-7',
   currency = 'COP',
+  openingHours = 'Lun - Dom: 11:30 AM - 10:00 PM',
+  operatingStatus = 'auto',
+  schedule,
+  requireShiftForDelivery = false,
   paperWidth = 80,
   receiptHeader = 'Sabor tradicional & Alta cocina',
   receiptFooter = '¡Gracias por su visita! Síguenos en @poscocina',
@@ -72,6 +86,43 @@ export const IdentityTab: React.FC<Props> = ({
   const [logoInputMode, setLogoInputMode] = useState<'upload' | 'url'>('upload');
   const [isDragging, setIsDragging] = useState(false);
   const [activeStudioTab, setActiveStudioTab] = useState<string>('business');
+
+  const currentSchedule = schedule && schedule.length === 7 ? schedule : defaultSchedule;
+
+  const calculatedStatus = (() => {
+    if (operatingStatus === 'closed') {
+      return { isOpen: false, label: 'Cerrado Temporalmente' };
+    }
+    if (operatingStatus === 'open') {
+      return { isOpen: true, label: 'Abierto Forzado' };
+    }
+    const now = new Date();
+    const day = now.getDay();
+    const today = currentSchedule.find((s) => s.day === day);
+    if (!today || !today.enabled) {
+      return { isOpen: false, label: 'Cerrado hoy según horario' };
+    }
+    const currentH = String(now.getHours()).padStart(2, '0');
+    const currentM = String(now.getMinutes()).padStart(2, '0');
+    const currentTime = `${currentH}:${currentM}`;
+    if (today.closeTime >= today.openTime) {
+      const open = currentTime >= today.openTime && currentTime < today.closeTime;
+      return { isOpen: open, label: open ? 'Abierto según horario' : 'Cerrado según horario' };
+    } else {
+      const open = currentTime >= today.openTime || currentTime < today.closeTime;
+      return { isOpen: open, label: open ? 'Abierto según horario' : 'Cerrado según horario' };
+    }
+  })();
+
+  const handleDayToggle = (day: number, enabled: boolean) => {
+    const updated = currentSchedule.map((s) => (s.day === day ? { ...s, enabled } : s));
+    onFieldChange('schedule', updated);
+  };
+
+  const handleTimeChange = (day: number, field: 'openTime' | 'closeTime', val: string) => {
+    const updated = currentSchedule.map((s) => (s.day === day ? { ...s, [field]: val } : s));
+    onFieldChange('schedule', updated);
+  };
 
   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -286,6 +337,203 @@ export const IdentityTab: React.FC<Props> = ({
                         Envío de facturas y soporte.
                       </span>
                     </div>
+                  </div>
+                </div>
+
+                {/* Fila 4: Operación, Estado de Apertura y Horarios de Atención */}
+                <div className="pt-5 border-t border-border/60 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h4 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+                        <Clock className="w-3.5 h-3.5 text-primary" />
+                        <span>Estado de Apertura & Horarios de Domicilios</span>
+                      </h4>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Controla la disponibilidad del restaurante en la web y programa la atención semanal.
+                      </p>
+                    </div>
+
+                    {/* Live Status Badge */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-muted-foreground">Estado Actual:</span>
+                      {calculatedStatus.isOpen ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          Abierto para Domicilios
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                          <span className="w-2 h-2 rounded-full bg-rose-500" />
+                          Cerrado Temporalmente
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Operational Status Selector */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => onFieldChange('operatingStatus', 'auto')}
+                      className={cn(
+                        'flex flex-col items-start p-3.5 rounded-xl border text-left transition-all cursor-pointer',
+                        (operatingStatus || 'auto') === 'auto'
+                          ? 'border-primary bg-primary/10 shadow-xs ring-1 ring-primary/30'
+                          : 'border-border bg-card/60 hover:bg-muted/40 text-muted-foreground'
+                      )}
+                    >
+                      <div className="flex items-center justify-between w-full mb-1">
+                        <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-primary" />
+                          Automático
+                        </span>
+                        {(operatingStatus || 'auto') === 'auto' && (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                        )}
+                      </div>
+                      <span className="text-[11px] text-muted-foreground leading-tight">
+                        Abre y cierra según la programación semanal.
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onFieldChange('operatingStatus', 'open')}
+                      className={cn(
+                        'flex flex-col items-start p-3.5 rounded-xl border text-left transition-all cursor-pointer',
+                        operatingStatus === 'open'
+                          ? 'border-emerald-500 bg-emerald-500/10 shadow-xs ring-1 ring-emerald-500/30'
+                          : 'border-border bg-card/60 hover:bg-muted/40 text-muted-foreground'
+                      )}
+                    >
+                      <div className="flex items-center justify-between w-full mb-1">
+                        <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                          Forzar Abierto
+                        </span>
+                        {operatingStatus === 'open' && (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                        )}
+                      </div>
+                      <span className="text-[11px] text-muted-foreground leading-tight">
+                        Mantener abierto sin importar la hora o día.
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onFieldChange('operatingStatus', 'closed')}
+                      className={cn(
+                        'flex flex-col items-start p-3.5 rounded-xl border text-left transition-all cursor-pointer',
+                        operatingStatus === 'closed'
+                          ? 'border-rose-500 bg-rose-500/10 shadow-xs ring-1 ring-rose-500/30'
+                          : 'border-border bg-card/60 hover:bg-muted/40 text-muted-foreground'
+                      )}
+                    >
+                      <div className="flex items-center justify-between w-full mb-1">
+                        <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                          <Ban className="w-3.5 h-3.5 text-rose-500" />
+                          Pausar / Cerrado
+                        </span>
+                        {operatingStatus === 'closed' && (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-rose-500" />
+                        )}
+                      </div>
+                      <span className="text-[11px] text-muted-foreground leading-tight">
+                        Cierra la tienda web de inmediato (pico en cocina).
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Horario Resumido de Atención */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-primary" />
+                      Horario Público Resumido (Tickets y Web)
+                    </Label>
+                    <Input
+                      type="text"
+                      value={openingHours || ''}
+                      onChange={(e) => onFieldChange('openingHours', e.target.value)}
+                      placeholder="Ej. Lun - Dom: 11:30 AM - 10:00 PM"
+                      className="h-10 text-sm bg-background font-medium"
+                    />
+                    <span className="text-[10px] text-muted-foreground block truncate">
+                      Texto exhibido a los comensales en el encabezado de la app de delivery y pie de ticket.
+                    </span>
+                  </div>
+
+                  {/* Programación Detallada Semanal */}
+                  <div className="space-y-2 pt-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-bold text-foreground uppercase tracking-wider">
+                        Programación por Día de la Semana
+                      </Label>
+                      <span className="text-[11px] text-muted-foreground">
+                        Aplica en modo <span className="font-semibold text-primary">Automático</span>
+                      </span>
+                    </div>
+
+                    <div className="rounded-xl border border-border/80 divide-y divide-border/60 bg-muted/10 overflow-hidden">
+                      {currentSchedule.map((dayItem) => (
+                        <div
+                          key={dayItem.day}
+                          className={cn(
+                            'p-2.5 px-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs transition-colors',
+                            !dayItem.enabled && 'opacity-60 bg-muted/20'
+                          )}
+                        >
+                          <div className="flex items-center gap-3 min-w-[120px]">
+                            <Switch
+                              checked={dayItem.enabled}
+                              onCheckedChange={(checked) => handleDayToggle(dayItem.day, checked)}
+                            />
+                            <span className={cn('font-bold', dayItem.enabled ? 'text-foreground' : 'text-muted-foreground line-through')}>
+                              {dayItem.dayName}
+                            </span>
+                          </div>
+
+                          {dayItem.enabled ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] text-muted-foreground">Abre:</span>
+                              <Input
+                                type="time"
+                                value={dayItem.openTime}
+                                onChange={(e) => handleTimeChange(dayItem.day, 'openTime', e.target.value)}
+                                className="h-8 w-28 text-xs font-mono bg-background"
+                              />
+                              <span className="text-[11px] text-muted-foreground mx-1">Cierra:</span>
+                              <Input
+                                type="time"
+                                value={dayItem.closeTime}
+                                onChange={(e) => handleTimeChange(dayItem.day, 'closeTime', e.target.value)}
+                                className="h-8 w-28 text-xs font-mono bg-background"
+                              />
+                            </div>
+                          ) : (
+                            <span className="text-[11px] font-semibold text-muted-foreground italic">
+                              Cerrado todo el día
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Requisito de Caja Opcional */}
+                  <div className="flex items-center justify-between p-3.5 rounded-xl border border-border/80 bg-muted/20 text-xs">
+                    <div className="space-y-0.5 pr-4">
+                      <span className="font-bold text-foreground block">
+                        Exigir Turno de Caja Abierto para Domicilios
+                      </span>
+                      <span className="text-[11px] text-muted-foreground block">
+                        Si se activa, el storefront de delivery se pausará automáticamente si la caja física no ha sido abierta por un cajero.
+                      </span>
+                    </div>
+                    <Switch
+                      checked={requireShiftForDelivery || false}
+                      onCheckedChange={(checked) => onFieldChange('requireShiftForDelivery', checked)}
+                    />
                   </div>
                 </div>
               </div>

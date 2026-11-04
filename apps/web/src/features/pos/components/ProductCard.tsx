@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Plus, SlidersHorizontal } from 'lucide-react';
 import { Product } from '../types/pos.types';
 import { Button } from '@/components/ui/button';

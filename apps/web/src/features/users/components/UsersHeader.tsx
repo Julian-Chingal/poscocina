@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Users, UserPlus, Search, CheckCircle, X } from 'lucide-react';
 import { UserFilterStatus } from '../types/users.types';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,7 @@ export const UsersHeader: React.FC<UsersHeaderProps> = ({
               <Users className="w-6 h-6" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl font-bold text-foreground tracking-tight truncate">Gestión de Empleados y Personal</h1>
+              <h1 className="text-xl font-bold text-foreground tracking-tight truncate">Gestión de Usuarios y Accesos</h1>
               <p className="text-xs text-muted-foreground truncate">
                 Administración de accesos, roles operativos (meseros, cajeros, cocina) y credenciales PIN
               </p>
@@ -52,7 +52,7 @@ export const UsersHeader: React.FC<UsersHeaderProps> = ({
           className="py-3 px-5 h-auto rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-md transition flex items-center gap-2 cursor-pointer shrink-0"
         >
           <UserPlus className="w-4 h-4" />
-          <span>Nuevo Empleado</span>
+          <span>Nuevo Usuario</span>
         </Button>
       </div>
 

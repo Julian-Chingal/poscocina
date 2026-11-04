@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { DollarSign, CreditCard, Send } from 'lucide-react';
 import { PaymentMethod } from '../types/pos.types';
 import { Button } from '@/components/ui/button';

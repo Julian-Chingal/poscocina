@@ -1,4 +1,4 @@
-import type { PaymentItem } from '@poscocina/shared';
+﻿import type { PaymentItem } from '@poscocina/shared';
 
 export type PaymentMethodType = PaymentItem['method'];
 

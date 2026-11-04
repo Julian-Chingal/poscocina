@@ -1,4 +1,4 @@
-import React, { useState, FormEvent } from 'react';
+﻿import React, { useState, FormEvent } from 'react';
 import { Unlock, KeyRound, Banknote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

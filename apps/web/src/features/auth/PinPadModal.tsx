@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { LockScreen } from './LockScreen';
 import { PinPadModalProps } from './types/auth.types';
 

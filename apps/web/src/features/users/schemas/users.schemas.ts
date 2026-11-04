@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
 export const CreateUserSchema = z
   .object({
@@ -10,14 +10,17 @@ export const CreateUserSchema = z
       .max(30, 'El documento no puede exceder 30 caracteres')
       .regex(/^[0-9a-zA-Z.-]+$/, 'Solo caracteres alfanuméricos válidos para documento'),
     roleId: z.string().min(1, 'Debes seleccionar un rol'),
+    companyId: z.string().optional(),
+    venueId: z.string().optional(),
     pin: z
       .string()
       .regex(/^\d{4,6}$/, 'El PIN debe ser numérico de 4 a 6 dígitos'),
     email: z
       .string()
       .email('Formato de correo electrónico inválido')
+      .optional()
       .or(z.literal('')),
-    password: z.string(),
+    password: z.string().optional().or(z.literal('')),
   })
   .refine(
     (data) => {

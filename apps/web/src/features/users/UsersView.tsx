@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
 import { UsersViewProps, UserItem } from './types/users.types';
 import { useUsersData } from './hooks/useUsersData';
@@ -149,10 +149,10 @@ export const UsersView: React.FC<UsersViewProps> = ({ venueId }) => {
         <AlertDialogContent className="max-w-sm text-center sm:text-center">
           <AlertDialogHeader className="text-center sm:text-center">
             <AlertDialogTitle className="text-base font-bold">
-              ¿Desactivar Empleado?
+              ¿Desactivar Usuario?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs">
-              ¿Estás seguro de desactivar al empleado <span className="text-foreground font-semibold">"{userToDeactivate?.name}"</span>? No podrá ingresar al sistema mientras esté inactivo.
+              ¿Estás seguro de desactivar al usuario <span className="text-foreground font-semibold">"{userToDeactivate?.name}"</span>? No podrá ingresar al sistema mientras esté inactivo.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="justify-center sm:justify-center mt-4 gap-2">

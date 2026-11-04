@@ -26,7 +26,7 @@ export async function venuesRoutes(fastify: FastifyInstance) {
 
   // Staff / Roles Endpoints
   fastify.get('/api/roles', staffGuard, (req, rep) => venuesController.getRoles(req, rep));
-  fastify.get('/api/venues/:venueId/users', staffGuard, (req, rep) => venuesController.getVenueUsers(req, rep));
+  fastify.get('/api/venues/:venueId/users', managerGuard, (req, rep) => venuesController.getVenueUsers(req, rep));
   fastify.post('/api/venues/:venueId/users', managerGuard, (req, rep) => venuesController.createUser(req, rep));
   fastify.patch('/api/venues/:venueId/users/:id', managerGuard, (req, rep) => venuesController.updateUser(req, rep));
   fastify.post('/api/venues/:venueId/users/:id/reset-pin', managerGuard, (req, rep) => venuesController.resetPin(req, rep));

@@ -202,10 +202,10 @@ export function ProductDetailModal({ product, venue, onClose }: Props) {
           {/* Submit */}
           <button
             onClick={handleAddToCart}
-            disabled={missingRequired}
+            disabled={missingRequired || venue.isOpen === false}
             className="flex-1 rounded-xl bg-orange-600 py-3 px-4 font-bold text-white shadow-lg shadow-orange-600/30 hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm flex items-center justify-center gap-2"
           >
-            <span>Agregar</span>
+            <span>{venue.isOpen === false ? 'Restaurante Cerrado' : 'Agregar'}</span>
             <span>•</span>
             <span>{formatCOP(totalPrice)}</span>
           </button>

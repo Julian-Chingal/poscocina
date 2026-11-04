@@ -1,4 +1,4 @@
-import { useReducer, useCallback } from 'react';
+﻿import { useReducer, useCallback } from 'react';
 import { posApi } from '../api/pos.api';
 import { SplitMode, PaymentMethod, DiscountType } from '../types/pos.types';
 import { calculateOrderTotals } from '../utils/checkout.utils';

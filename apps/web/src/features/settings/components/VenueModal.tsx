@@ -1,10 +1,13 @@
-import React, { useEffect } from 'react';
+﻿import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Store, AlertCircle, MapPin, Phone, Clock, User, Building, FileText, Sparkles } from 'lucide-react';
+import { Store, AlertCircle, MapPin, Phone, Clock, User, Building, FileText, Sparkles, CheckCircle2, Ban } from 'lucide-react';
 import { VenueItem } from '@/stores/branding.store';
 import { NewVenuePayload, UpdateVenuePayload } from '../types/settings.types';
 import { NewVenueSchema, NewVenueFormValues } from '../schemas/settings.schemas';
+import { defaultSchedule } from '../hooks/useSettingsForm';
+import { Switch } from '@/components/ui/switch';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -56,6 +59,9 @@ export const VenueModal: React.FC<Props> = ({
       city: '',
       managerName: '',
       openingHours: '',
+      operatingStatus: 'auto',
+      schedule: defaultSchedule,
+      requireShiftForDelivery: false,
       notes: '',
       timezone: 'America/Bogota',
     },
@@ -74,6 +80,9 @@ export const VenueModal: React.FC<Props> = ({
           city: settings.city || '',
           managerName: settings.managerName || '',
           openingHours: settings.openingHours || '',
+          operatingStatus: settings.operatingStatus || 'auto',
+          schedule: settings.schedule && settings.schedule.length === 7 ? settings.schedule : defaultSchedule,
+          requireShiftForDelivery: settings.requireShiftForDelivery ?? false,
           notes: settings.notes || '',
           timezone: 'America/Bogota',
         });
@@ -86,6 +95,9 @@ export const VenueModal: React.FC<Props> = ({
           city: '',
           managerName: '',
           openingHours: 'Lun - Dom: 11:30 AM - 10:00 PM',
+          operatingStatus: 'auto',
+          schedule: defaultSchedule,
+          requireShiftForDelivery: false,
           notes: '',
           timezone: 'America/Bogota',
         });
@@ -360,6 +372,79 @@ export const VenueModal: React.FC<Props> = ({
                     )}
                   />
                 </div>
+
+                {/* Operating Status Selector */}
+                <FormField
+                  control={form.control}
+                  name="operatingStatus"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1.5">
+                      <FormLabel className="text-xs font-semibold">Estado de Atención Domicilios</FormLabel>
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => field.onChange('auto')}
+                          className={cn(
+                            'p-2 rounded-lg border text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer',
+                            field.value === 'auto'
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-border text-muted-foreground hover:bg-muted/40'
+                          )}
+                        >
+                          <Clock className="w-3 h-3" />
+                          <span>Auto Horario</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => field.onChange('open')}
+                          className={cn(
+                            'p-2 rounded-lg border text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer',
+                            field.value === 'open'
+                              ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                              : 'border-border text-muted-foreground hover:bg-muted/40'
+                          )}
+                        >
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Abierto</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => field.onChange('closed')}
+                          className={cn(
+                            'p-2 rounded-lg border text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer',
+                            field.value === 'closed'
+                              ? 'border-rose-500 bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                              : 'border-border text-muted-foreground hover:bg-muted/40'
+                          )}
+                        >
+                          <Ban className="w-3 h-3" />
+                          <span>Pausado</span>
+                        </button>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="requireShiftForDelivery"
+                  render={({ field }) => (
+                    <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/80 bg-muted/20 text-xs">
+                      <div className="space-y-0.5 pr-2">
+                        <span className="font-semibold text-foreground block">
+                          Exigir turno de caja abierto
+                        </span>
+                        <span className="text-[10px] text-muted-foreground block">
+                          Pausa domicilios automáticamente si la caja física no ha sido abierta.
+                        </span>
+                      </div>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                      />
+                    </div>
+                  )}
+                />
 
                 <FormField
                   control={form.control}

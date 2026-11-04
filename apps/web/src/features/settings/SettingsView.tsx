@@ -1,4 +1,4 @@
-import React, { useState, Suspense, lazy } from 'react';
+﻿import React, { useState, Suspense, lazy } from 'react';
 import { Building2, Receipt, Store, Printer, Save, Check, Type, ChefHat } from 'lucide-react';
 import { useBrandingStore } from '@/stores/branding.store';
 import { useSettingsForm } from './hooks/useSettingsForm';
@@ -121,6 +121,10 @@ export const SettingsView: React.FC = () => {
           email={form.email}
           taxId={form.taxId}
           currency={form.currency}
+          openingHours={form.openingHours}
+          operatingStatus={form.operatingStatus}
+          schedule={form.schedule}
+          requireShiftForDelivery={form.requireShiftForDelivery}
           paperWidth={form.paperWidth}
           receiptHeader={form.receiptHeader}
           receiptFooter={form.receiptFooter}

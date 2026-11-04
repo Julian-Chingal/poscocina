@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { usersApi } from '../api/users.api';
 import { UserItem, CreateUserPayload, UpdateUserPayload } from '../types/users.types';
 
@@ -12,11 +12,11 @@ export const useUserMutations = (venueId: string, onSuccess: () => void) => {
     setSubmitting(true);
     try {
       await usersApi.createUser(venueId, payload);
-      setActionSuccess('Empleado registrado exitosamente');
+      setActionSuccess('Usuario registrado exitosamente');
       onSuccess();
       return true;
     } catch (err: any) {
-      setActionError(err.message || 'Error al registrar el empleado');
+      setActionError(err.message || 'Error al registrar el usuario');
       return false;
     } finally {
       setSubmitting(false);
@@ -28,11 +28,11 @@ export const useUserMutations = (venueId: string, onSuccess: () => void) => {
     setSubmitting(true);
     try {
       await usersApi.updateUser(venueId, userId, payload);
-      setActionSuccess('Datos de empleado actualizados');
+      setActionSuccess('Datos de usuario actualizados');
       onSuccess();
       return true;
     } catch (err: any) {
-      setActionError(err.message || 'Error al actualizar el empleado');
+      setActionError(err.message || 'Error al actualizar el usuario');
       return false;
     } finally {
       setSubmitting(false);

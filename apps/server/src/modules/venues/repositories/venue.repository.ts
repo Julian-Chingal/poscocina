@@ -4,7 +4,8 @@ import { db } from '../../../db/index.js';
 import * as schema from '../../../db/schema.js';
 import { redis } from '../../../config/redis.js';
 import { IVenueRepository } from '../interfaces/venue.repository.interface.js';
-import { NotFoundError, BadRequestError, ConflictError } from '../../../errors/app-error.js';
+import { NotFoundError, BadRequestError, ConflictError, ForbiddenError } from '../../../errors/app-error.js';
+import { evaluateVenueOpenStatus } from '../../../utils/venue-status.util.js';
 
 export class VenueRepository implements IVenueRepository {
   constructor(private readonly database = db) {}
@@ -20,6 +21,7 @@ export class VenueRepository implements IVenueRepository {
         name: schema.venues.name,
         slug: schema.venues.slug,
         address: schema.venues.address,
+        timezone: schema.venues.timezone,
         isPrimary: schema.venues.isPrimary,
         isActive: schema.venues.isActive,
         settings: schema.venues.settings,
@@ -28,8 +30,22 @@ export class VenueRepository implements IVenueRepository {
       .where(eq(schema.venues.isActive, true))
       .orderBy(desc(schema.venues.isPrimary), schema.venues.name);
 
+    const venueIds = rows.map((r) => r.id);
+    const activeShifts = venueIds.length > 0
+      ? await this.database
+          .select({ venueId: schema.cashShifts.venueId })
+          .from(schema.cashShifts)
+          .where(and(inArray(schema.cashShifts.venueId, venueIds), eq(schema.cashShifts.status, 'open')))
+      : [];
+    const activeShiftVenueIds = new Set(activeShifts.map((s) => s.venueId));
+
     return rows.map((v) => {
       const s = (v.settings || {}) as Record<string, any>;
+      const statusEval = evaluateVenueOpenStatus(
+        { timezone: v.timezone, settings: v.settings },
+        activeShiftVenueIds.has(v.id)
+      );
+
       return {
         id: v.id,
         name: v.name,
@@ -40,8 +56,13 @@ export class VenueRepository implements IVenueRepository {
         logoUrl: s.logoUrl || null,
         primaryColor: s.primaryColor || '#ea580c',
         openingHours: s.openingHours || '',
+        operatingStatus: statusEval.operatingStatus,
+        isOpen: statusEval.isOpen,
+        schedule: s.schedule,
+        requireShiftForDelivery: !!s.requireShiftForDelivery,
         isPrimary: v.isPrimary,
         isActive: v.isActive,
+        settings: v.settings,
       };
     });
   }
@@ -80,7 +101,15 @@ export class VenueRepository implements IVenueRepository {
 
     if (!venue) throw new NotFoundError(`Restaurante '${slugOrId}' no encontrado`);
 
+    const [activeShift] = await this.database
+      .select({ id: schema.cashShifts.id })
+      .from(schema.cashShifts)
+      .where(and(eq(schema.cashShifts.venueId, venue.id), eq(schema.cashShifts.status, 'open')))
+      .limit(1);
+
+    const statusEval = evaluateVenueOpenStatus(venue, !!activeShift);
     const s = (venue.settings || {}) as Record<string, any>;
+
     return {
       id: venue.id,
       name: venue.name,
@@ -91,6 +120,10 @@ export class VenueRepository implements IVenueRepository {
       logoUrl: s.logoUrl || null,
       primaryColor: s.primaryColor || '#ea580c',
       openingHours: s.openingHours || '',
+      operatingStatus: statusEval.operatingStatus,
+      isOpen: statusEval.isOpen,
+      schedule: s.schedule,
+      requireShiftForDelivery: !!s.requireShiftForDelivery,
       currency: s.currency || 'COP',
       taxRate: s.taxRate || s.defaultTaxRate || 0.08,
       isPrimary: venue.isPrimary,
@@ -256,6 +289,9 @@ export class VenueRepository implements IVenueRepository {
       ...(data.city !== undefined ? { city: data.city } : {}),
       ...(data.managerName !== undefined ? { managerName: data.managerName } : {}),
       ...(data.openingHours !== undefined ? { openingHours: data.openingHours } : {}),
+      ...(data.operatingStatus !== undefined ? { operatingStatus: data.operatingStatus } : {}),
+      ...(data.schedule !== undefined ? { schedule: data.schedule } : {}),
+      ...(data.requireShiftForDelivery !== undefined ? { requireShiftForDelivery: data.requireShiftForDelivery } : {}),
       ...(data.notes !== undefined ? { notes: data.notes } : {}),
       ...(data.settings || {}),
     };
@@ -344,17 +380,30 @@ export class VenueRepository implements IVenueRepository {
     };
   }
 
-  async getRoles() {
-    return await this.database.select().from(schema.roles).orderBy(desc(schema.roles.hierarchy));
+  async getRoles(requester?: any) {
+    const isSuperAdmin = requester?.role === 'super_admin';
+    if (isSuperAdmin) {
+      return await this.database.select().from(schema.roles).orderBy(desc(schema.roles.hierarchy));
+    }
+    return await this.database
+      .select()
+      .from(schema.roles)
+      .where(sql`${schema.roles.name} != 'super_admin'`)
+      .orderBy(desc(schema.roles.hierarchy));
   }
 
-  async getVenueUsers(venueId: string) {
-    return await this.database
+  async getVenueUsers(requester: any, venueId?: string) {
+    const isSuperAdmin = requester?.role === 'super_admin';
+
+    const baseQuery = this.database
       .select({
         id: schema.users.id,
         name: schema.users.name,
         documentNumber: schema.users.documentNumber,
         companyId: schema.users.companyId,
+        companyName: schema.companies.tradeName,
+        venueId: schema.users.venueId,
+        venueName: schema.venues.name,
         email: schema.users.email,
         avatarUrl: schema.users.avatarUrl,
         isActive: schema.users.isActive,
@@ -366,24 +415,103 @@ export class VenueRepository implements IVenueRepository {
       })
       .from(schema.users)
       .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
-      .where(eq(schema.users.venueId, venueId))
+      .leftJoin(schema.companies, eq(schema.users.companyId, schema.companies.id))
+      .leftJoin(schema.venues, eq(schema.users.venueId, schema.venues.id));
+
+    // 1. Super Admin: sees ALL users across all companies and restaurants
+    if (isSuperAdmin) {
+      return await baseQuery.orderBy(desc(schema.users.createdAt));
+    }
+
+    // 2. Non-Super Admin:
+    // Security: Only users belonging to their linked company/restaurant, and never super_admin
+    let companyId = requester?.companyId;
+    if (!companyId && requester?.venueId) {
+      const [v] = await this.database
+        .select({ companyId: schema.venues.companyId })
+        .from(schema.venues)
+        .where(eq(schema.venues.id, requester.venueId))
+        .limit(1);
+      companyId = v?.companyId;
+    }
+
+    const conditions = [
+      sql`${schema.roles.name} != 'super_admin'`,
+    ];
+
+    if (companyId) {
+      conditions.push(eq(schema.users.companyId, companyId));
+    } else if (requester?.venueId) {
+      conditions.push(eq(schema.users.venueId, requester.venueId));
+    } else {
+      return [];
+    }
+
+    return await baseQuery
+      .where(and(...conditions))
       .orderBy(desc(schema.users.createdAt));
   }
 
-  async createUser(venueId: string, data: any, _creatorId?: string) {
+  async createUser(venueId: string, data: any, requester?: any) {
+    const isSuperAdmin = requester?.role === 'super_admin';
+
+    // Verify role being assigned
+    const [targetRole] = await this.database
+      .select()
+      .from(schema.roles)
+      .where(eq(schema.roles.id, data.roleId))
+      .limit(1);
+
+    if (!targetRole) {
+      throw new BadRequestError('El rol especificado no existe.');
+    }
+
+    if (targetRole.name === 'super_admin' && !isSuperAdmin) {
+      throw new ForbiddenError('No tienes permisos para crear usuarios con rol Super Administrador.');
+    }
+
+    // Role-based restrictions on email: only managers and super_admins can have email
+    if (data.email && targetRole.name !== 'manager' && targetRole.name !== 'super_admin') {
+      throw new BadRequestError('Solo los usuarios con rol Gerente pueden tener correo electrónico.');
+    }
+
+    let rawPassword = data.password;
+    if (data.email && !rawPassword) {
+      rawPassword = Math.random().toString(36).slice(-8) + 'A1!';
+    }
+
     const pinHash = await bcrypt.hash(data.pin, 10);
-    const passwordHash = data.password ? await bcrypt.hash(data.password, 10) : null;
+    const passwordHash = rawPassword ? await bcrypt.hash(rawPassword, 10) : null;
     const normalizedEmail = data.email ? data.email.toLowerCase().trim() : null;
     const normalizedDoc = data.documentNumber ? String(data.documentNumber).trim() : null;
 
     let companyId = data.companyId;
+    let targetVenueId = data.venueId || venueId;
+
     if (!companyId) {
-      const [venue] = await this.database
-        .select({ companyId: schema.venues.companyId })
+      if (!isSuperAdmin && requester?.companyId) {
+        companyId = requester.companyId;
+      } else if (targetVenueId && targetVenueId !== 'default') {
+        const [venue] = await this.database
+          .select({ companyId: schema.venues.companyId })
+          .from(schema.venues)
+          .where(eq(schema.venues.id, targetVenueId))
+          .limit(1);
+        companyId = venue?.companyId || null;
+      }
+    }
+
+    if (companyId && (!targetVenueId || targetVenueId === 'default')) {
+      const [v] = await this.database
+        .select({ id: schema.venues.id })
         .from(schema.venues)
-        .where(eq(schema.venues.id, venueId))
+        .where(eq(schema.venues.companyId, companyId))
         .limit(1);
-      companyId = venue?.companyId || null;
+      if (v) targetVenueId = v.id;
+    }
+
+    if (!isSuperAdmin && requester?.companyId && companyId !== requester.companyId) {
+      throw new ForbiddenError('No tienes permisos para registrar usuarios en otra empresa.');
     }
 
     if (normalizedDoc && companyId) {
@@ -405,8 +533,8 @@ export class VenueRepository implements IVenueRepository {
     const [newUser] = await this.database
       .insert(schema.users)
       .values({
-        companyId,
-        venueId,
+        companyId: companyId || null,
+        venueId: targetVenueId === 'default' ? null : (targetVenueId || null),
         name: data.name.trim(),
         documentNumber: normalizedDoc,
         email: normalizedEmail,
@@ -414,6 +542,7 @@ export class VenueRepository implements IVenueRepository {
         pinHash,
         roleId: data.roleId,
         avatarUrl: data.avatarUrl || null,
+        allVenuesAccess: targetRole.name === 'super_admin' ? true : false,
         isActive: true,
       })
       .returning();
@@ -421,9 +550,39 @@ export class VenueRepository implements IVenueRepository {
     return newUser;
   }
 
-  async updateUser(userId: string, data: any, _updaterId?: string) {
-    const [existing] = await this.database.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
+  async updateUser(userId: string, data: any, requester?: any) {
+    const isSuperAdmin = requester?.role === 'super_admin';
+
+    const [existing] = await this.database
+      .select({
+        user: schema.users,
+        roleName: schema.roles.name,
+      })
+      .from(schema.users)
+      .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
+      .where(eq(schema.users.id, userId))
+      .limit(1);
+
     if (!existing) throw new NotFoundError('Usuario no encontrado');
+
+    if (existing.roleName === 'super_admin' && !isSuperAdmin) {
+      throw new ForbiddenError('No tienes permisos para modificar un usuario Super Administrador.');
+    }
+
+    if (!isSuperAdmin && requester?.companyId && existing.user.companyId !== requester.companyId) {
+      throw new ForbiddenError('No tienes permisos para modificar usuarios de otra empresa.');
+    }
+
+    if (data.roleId && !isSuperAdmin) {
+      const [targetRole] = await this.database
+        .select()
+        .from(schema.roles)
+        .where(eq(schema.roles.id, data.roleId))
+        .limit(1);
+      if (targetRole?.name === 'super_admin') {
+        throw new ForbiddenError('No tienes permisos para asignar el rol Super Administrador.');
+      }
+    }
 
     const updatePayload: Partial<typeof schema.users.$inferInsert> = {};
     if (data.name !== undefined) updatePayload.name = data.name.trim();
@@ -432,15 +591,15 @@ export class VenueRepository implements IVenueRepository {
     if (data.isActive !== undefined) {
       updatePayload.isActive = data.isActive;
       if (data.isActive === false) {
-        updatePayload.tokenVersion = (existing.tokenVersion || 1) + 1;
+        updatePayload.tokenVersion = (existing.user.tokenVersion || 1) + 1;
         await redis.del(`user_token_version:${userId}`);
         await redis.del(`pin_lockout:${userId}`);
       }
     }
     if (data.documentNumber !== undefined) {
       const normalizedDoc = data.documentNumber ? String(data.documentNumber).trim() : null;
-      if (normalizedDoc && normalizedDoc !== existing.documentNumber) {
-        const companyId = existing.companyId;
+      if (normalizedDoc && normalizedDoc !== existing.user.documentNumber) {
+        const companyId = existing.user.companyId;
         if (companyId) {
           const [conflictDoc] = await this.database
             .select({ id: schema.users.id })
@@ -448,7 +607,7 @@ export class VenueRepository implements IVenueRepository {
             .where(and(eq(schema.users.companyId, companyId), eq(schema.users.documentNumber, normalizedDoc)))
             .limit(1);
           if (conflictDoc) {
-            throw new BadRequestError('El número de cédula ya se encuentra en uso por otro empleado en este restaurante.');
+            throw new BadRequestError('El número de cédula ya se encuentra en uso por otro usuario en este restaurante.');
           }
         }
       }
@@ -456,15 +615,15 @@ export class VenueRepository implements IVenueRepository {
     }
     if (data.email !== undefined) {
       const normalized = data.email ? data.email.toLowerCase().trim() : null;
-      if (normalized && normalized !== existing.email) {
+      if (normalized && normalized !== existing.user.email) {
         const [conflict] = await this.database.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.email, normalized)).limit(1);
-        if (conflict) throw new BadRequestError('El correo electrónico ya se encuentra en uso por otro empleado.');
+        if (conflict) throw new BadRequestError('El correo electrónico ya se encuentra en uso por otro usuario.');
       }
       updatePayload.email = normalized;
     }
     if (data.password) {
       updatePayload.passwordHash = await bcrypt.hash(data.password, 10);
-      updatePayload.tokenVersion = (existing.tokenVersion || 1) + 1;
+      updatePayload.tokenVersion = (existing.user.tokenVersion || 1) + 1;
       await redis.del(`user_token_version:${userId}`);
     }
 
@@ -472,9 +631,28 @@ export class VenueRepository implements IVenueRepository {
     return updated;
   }
 
-  async resetPin(userId: string, newPin: string, _resetById?: string) {
-    const [existing] = await this.database.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
+  async resetPin(userId: string, newPin: string, requester?: any) {
+    const isSuperAdmin = requester?.role === 'super_admin';
+
+    const [existing] = await this.database
+      .select({
+        user: schema.users,
+        roleName: schema.roles.name,
+      })
+      .from(schema.users)
+      .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
+      .where(eq(schema.users.id, userId))
+      .limit(1);
+
     if (!existing) throw new NotFoundError('Usuario no encontrado');
+
+    if (existing.roleName === 'super_admin' && !isSuperAdmin) {
+      throw new ForbiddenError('No tienes permisos para restablecer el PIN de un Super Administrador.');
+    }
+
+    if (!isSuperAdmin && requester?.companyId && existing.user.companyId !== requester.companyId) {
+      throw new ForbiddenError('No tienes permisos para modificar usuarios de otra empresa.');
+    }
 
     const pinHash = await bcrypt.hash(newPin, 10);
     await this.database.update(schema.users).set({ pinHash, tokenVersion: sql`${schema.users.tokenVersion} + 1` }).where(eq(schema.users.id, userId));
@@ -485,9 +663,28 @@ export class VenueRepository implements IVenueRepository {
     return { success: true, message: 'PIN actualizado exitosamente' };
   }
 
-  async deleteUser(userId: string, _deletedById?: string) {
-    const [existing] = await this.database.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
+  async deleteUser(userId: string, requester?: any) {
+    const isSuperAdmin = requester?.role === 'super_admin';
+
+    const [existing] = await this.database
+      .select({
+        user: schema.users,
+        roleName: schema.roles.name,
+      })
+      .from(schema.users)
+      .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
+      .where(eq(schema.users.id, userId))
+      .limit(1);
+
     if (!existing) throw new NotFoundError('Usuario no encontrado');
+
+    if (existing.roleName === 'super_admin' && !isSuperAdmin) {
+      throw new ForbiddenError('No tienes permisos para desactivar un Super Administrador.');
+    }
+
+    if (!isSuperAdmin && requester?.companyId && existing.user.companyId !== requester.companyId) {
+      throw new ForbiddenError('No tienes permisos para desactivar usuarios de otra empresa.');
+    }
 
     await this.database.update(schema.users).set({ isActive: false, tokenVersion: sql`${schema.users.tokenVersion} + 1` }).where(eq(schema.users.id, userId));
     await redis.del(`user_token_version:${userId}`);

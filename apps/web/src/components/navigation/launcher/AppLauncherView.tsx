@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { AppLauncherViewProps } from './types/launcher.types';
 import { LauncherHeader } from './components/LauncherHeader';
 import { AppsGrid } from './components/AppsGrid';

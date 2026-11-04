@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Smartphone, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 

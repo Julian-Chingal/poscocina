@@ -1,4 +1,4 @@
-export interface PinPadModalProps {
+﻿export interface PinPadModalProps {
   isOpen: boolean;
   onClose?: () => void;
   isMandatoryLock?: boolean;

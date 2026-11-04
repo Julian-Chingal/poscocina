@@ -1,4 +1,4 @@
-import { api } from '@/services/api';
+﻿import { api } from '@/services/api';
 import { Category, Product, CategoryFormData } from '../types/catalog.types';
 
 export const catalogApi = {

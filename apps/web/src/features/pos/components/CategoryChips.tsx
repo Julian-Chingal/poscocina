@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Search, X, Sparkles, Layers } from 'lucide-react';
 import { Category, Product } from '../types/pos.types';
 import { Input } from '@/components/ui/input';

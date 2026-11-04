@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
 export const CreateRestaurantSchema = z.object({
   tradeName: z.string().trim().min(2, 'El nombre comercial debe tener al menos 2 caracteres'),

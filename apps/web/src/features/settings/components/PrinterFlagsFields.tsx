@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { PrinterFormData } from '../types/settings.types';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';

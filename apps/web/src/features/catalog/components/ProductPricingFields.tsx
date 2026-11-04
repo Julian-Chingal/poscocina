@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { DollarSign } from 'lucide-react';
 import { TAX_RATE_OPTIONS } from '../constants/catalog.constants';
 import { Label } from '@/components/ui/label';

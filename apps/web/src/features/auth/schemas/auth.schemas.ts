@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
 export const PasswordLoginSchema = z.object({
   email: z.string().email('Ingresa un correo electrónico válido'),

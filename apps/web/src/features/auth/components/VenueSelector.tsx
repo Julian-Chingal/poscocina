@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Store, Star } from 'lucide-react';
 import { PublicVenueItem } from '@/stores/auth.store';
 import {

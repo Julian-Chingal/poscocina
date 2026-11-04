@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { posApi } from '../api/pos.api';
 import { Customer } from '../types/pos.types';
 import { toast } from '@/components/ui/sonner';

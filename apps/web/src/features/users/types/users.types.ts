@@ -1,4 +1,4 @@
-export interface RoleItem {
+﻿export interface RoleItem {
   id: string;
   name: string;
   label: string;
@@ -10,6 +10,9 @@ export interface UserItem {
   name: string;
   documentNumber?: string | null;
   companyId?: string | null;
+  companyName?: string | null;
+  venueId?: string | null;
+  venueName?: string | null;
   email?: string | null;
   avatarUrl?: string | null;
   isActive: boolean;
@@ -28,6 +31,8 @@ export interface CreateUserPayload {
   pin: string;
   password?: string;
   avatarUrl?: string;
+  companyId?: string;
+  venueId?: string;
 }
 
 export interface UpdateUserPayload {

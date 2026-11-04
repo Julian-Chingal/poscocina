@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Banknote, CreditCard, QrCode, Wallet, ArrowUpRight } from 'lucide-react';
 import { OverviewMetrics } from '../types/reports.types';
 import { formatCurrency } from '../utils/formatCurrency';

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Coins, TrendingUp, Banknote, ReceiptText } from 'lucide-react';
 
 interface Props {

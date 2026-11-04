@@ -43,27 +43,27 @@ export class ManageVenuesUseCase {
     return await this.repo.deleteVenue(id);
   }
 
-  async getRoles() {
-    return await this.repo.getRoles();
+  async getRoles(requester?: any) {
+    return await this.repo.getRoles(requester);
   }
 
-  async getVenueUsers(venueId: string) {
-    return await this.repo.getVenueUsers(venueId);
+  async getVenueUsers(requester: any, venueId?: string) {
+    return await this.repo.getVenueUsers(requester, venueId);
   }
 
-  async createUser(venueId: string, data: any, creatorId?: string) {
-    return await this.repo.createUser(venueId, data, creatorId);
+  async createUser(venueId: string, data: any, requester?: any) {
+    return await this.repo.createUser(venueId, data, requester);
   }
 
-  async updateUser(id: string, data: any, updaterId?: string) {
-    return await this.repo.updateUser(id, data, updaterId);
+  async updateUser(id: string, data: any, requester?: any) {
+    return await this.repo.updateUser(id, data, requester);
   }
 
-  async resetPin(id: string, newPin: string, resetById?: string) {
-    return await this.repo.resetPin(id, newPin, resetById);
+  async resetPin(id: string, newPin: string, requester?: any) {
+    return await this.repo.resetPin(id, newPin, requester);
   }
 
-  async deleteUser(id: string, deletedById?: string) {
-    return await this.repo.deleteUser(id, deletedById);
+  async deleteUser(id: string, requester?: any) {
+    return await this.repo.deleteUser(id, requester);
   }
 }

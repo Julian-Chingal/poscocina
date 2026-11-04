@@ -1,5 +1,18 @@
 import { z } from 'zod';
 
+export const DayScheduleSchema = z.object({
+  day: z.number().min(0).max(6), // 0: Dom, 1: Lun, 2: Mar, 3: Mié, 4: Jue, 5: Vie, 6: Sáb
+  dayName: z.string(),
+  enabled: z.boolean().default(true),
+  openTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Formato HH:mm requerido'),
+  closeTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Formato HH:mm requerido'),
+});
+
+export type DaySchedule = z.infer<typeof DayScheduleSchema>;
+
+export const VenueOperatingStatusEnum = z.enum(['auto', 'open', 'closed']);
+export type VenueOperatingStatus = z.infer<typeof VenueOperatingStatusEnum>;
+
 export const CreateVenueSchema = z.object({
   name: z.string().min(2, 'El nombre de la sede debe tener al menos 2 caracteres'),
   address: z.string().optional(),
@@ -9,6 +22,9 @@ export const CreateVenueSchema = z.object({
   city: z.string().optional(),
   managerName: z.string().optional(),
   openingHours: z.string().optional(),
+  operatingStatus: VenueOperatingStatusEnum.optional().default('auto'),
+  schedule: z.array(DayScheduleSchema).optional(),
+  requireShiftForDelivery: z.boolean().optional().default(false),
   notes: z.string().optional(),
   settings: z.record(z.unknown()).optional(),
 });
@@ -22,6 +38,9 @@ export const UpdateVenueSchema = z.object({
   city: z.string().optional(),
   managerName: z.string().optional(),
   openingHours: z.string().optional(),
+  operatingStatus: VenueOperatingStatusEnum.optional(),
+  schedule: z.array(DayScheduleSchema).optional(),
+  requireShiftForDelivery: z.boolean().optional(),
   notes: z.string().optional(),
   settings: z.record(z.unknown()).optional(),
 });
@@ -44,6 +63,10 @@ export const PublicVenueSchema = z.object({
   logoUrl: z.string().nullable().optional(),
   primaryColor: z.string().nullable().optional(),
   openingHours: z.string().nullable().optional(),
+  operatingStatus: VenueOperatingStatusEnum.optional(),
+  schedule: z.array(DayScheduleSchema).optional(),
+  isOpen: z.boolean().default(true),
+  requireShiftForDelivery: z.boolean().optional(),
   isPrimary: z.boolean(),
   isActive: z.boolean(),
   settings: z.record(z.unknown()).optional(),

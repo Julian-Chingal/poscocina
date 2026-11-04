@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { CheckCircle2, Printer } from 'lucide-react';
 import { ReceiptData } from '../types/cash-shifts.types';
 import { cashShiftsApi } from '../api/cash-shifts.api';

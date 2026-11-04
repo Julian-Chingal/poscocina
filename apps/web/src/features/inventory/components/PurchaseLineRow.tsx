@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Trash2 } from 'lucide-react';
 import { InventoryItem } from '../types/inventory.types';
 import {

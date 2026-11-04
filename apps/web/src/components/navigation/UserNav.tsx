@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Settings, Lock, LogOut, ShieldCheck } from "lucide-react";
 import { useAuthStore } from "../../stores/auth.store";
 import { usePermissions } from "../../hooks/usePermissions";

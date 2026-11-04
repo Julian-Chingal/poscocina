@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useCatalogData } from './hooks/useCatalogData';
 import { useCatalogMutations } from './hooks/useCatalogMutations';

@@ -1,4 +1,4 @@
-import { api } from '@/services/api';
+﻿import { api } from '@/services/api';
 import {
   UserItem,
   RoleItem,
@@ -14,7 +14,7 @@ export const usersApi = {
     api.get('/roles'),
 
   createUser: (venueId: string, payload: CreateUserPayload): Promise<UserItem> =>
-    api.post(`/venues/${venueId}/users`, payload),
+    api.post(`/venues/${payload.venueId || venueId}/users`, payload),
 
   updateUser: (venueId: string, userId: string, payload: UpdateUserPayload): Promise<UserItem> =>
     api.patch(`/venues/${venueId}/users/${userId}`, payload),

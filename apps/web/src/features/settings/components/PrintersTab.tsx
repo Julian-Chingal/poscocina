@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Plus, Printer, Store, Smartphone } from 'lucide-react';
 import { useHardwarePrinters } from '../hooks/useHardwarePrinters';
 import { localBridgePrinterService } from '@/services/local-bridge-printer.service';

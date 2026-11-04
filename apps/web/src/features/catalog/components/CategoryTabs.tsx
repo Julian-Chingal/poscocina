@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Plus, Pencil, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Category, Product } from '../types/catalog.types';
 import { Button } from '@/components/ui/button';

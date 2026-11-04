@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { KeyRound, Mail } from 'lucide-react';
 import { AuthMode } from '../types/auth.types';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';

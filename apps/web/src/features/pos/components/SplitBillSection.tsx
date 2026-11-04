@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Divide, Tag } from 'lucide-react';
 import { SplitMode, DiscountType } from '../types/pos.types';
 import { Button } from '@/components/ui/button';

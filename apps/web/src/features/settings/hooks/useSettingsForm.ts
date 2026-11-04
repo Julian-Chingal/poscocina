@@ -1,6 +1,6 @@
-import { useReducer, useEffect, useCallback, useState } from 'react';
+﻿import { useReducer, useEffect, useCallback, useState } from 'react';
 import { useBrandingStore, VenueSettings } from '@/stores/branding.store';
-import { TaxType, PaperWidth, EscPosFontFamily, EscPosFontSize } from '../types/settings.types';
+import { TaxType, PaperWidth, EscPosFontFamily, EscPosFontSize, DaySchedule, VenueOperatingStatus } from '../types/settings.types';
 import { settingsApi } from '../api/settings.api';
 import { localBridgePrinterService } from '@/services/local-bridge-printer.service';
 import { toast } from '@/components/ui/sileo';
@@ -21,6 +21,10 @@ export interface FormState {
   phone: string;
   email: string;
   currency: string;
+  openingHours: string;
+  operatingStatus: VenueOperatingStatus;
+  schedule: DaySchedule[];
+  requireShiftForDelivery: boolean;
   regime: 'COMUN' | 'SIMPLIFICADO' | 'NO_RESPONSABLE_IVA' | 'ESPECIAL';
   taxType: TaxType;
   taxRate: string;
@@ -44,6 +48,16 @@ export interface FormState {
   showTaxBreakdown: boolean;
   showResolutionOnReceipt: boolean;
 }
+
+export const defaultSchedule: DaySchedule[] = [
+  { day: 1, dayName: 'Lunes', enabled: true, openTime: '11:30', closeTime: '22:00' },
+  { day: 2, dayName: 'Martes', enabled: true, openTime: '11:30', closeTime: '22:00' },
+  { day: 3, dayName: 'Miércoles', enabled: true, openTime: '11:30', closeTime: '22:00' },
+  { day: 4, dayName: 'Jueves', enabled: true, openTime: '11:30', closeTime: '22:00' },
+  { day: 5, dayName: 'Viernes', enabled: true, openTime: '11:30', closeTime: '23:00' },
+  { day: 6, dayName: 'Sábado', enabled: true, openTime: '11:30', closeTime: '23:00' },
+  { day: 0, dayName: 'Domingo', enabled: true, openTime: '11:30', closeTime: '21:00' },
+];
 
 type FormAction =
   | { type: 'SET_FIELD'; field: keyof FormState; value: any }
@@ -70,6 +84,10 @@ const getInitialState = (settings: VenueSettings, name: string, address: string)
   phone: settings.phone || '+57 300 123 4567',
   email: '',
   currency: settings.currency || 'COP',
+  openingHours: settings.openingHours || 'Lun - Dom: 11:30 AM - 10:00 PM',
+  operatingStatus: (settings.operatingStatus as VenueOperatingStatus) || 'auto',
+  schedule: settings.schedule && settings.schedule.length > 0 ? settings.schedule : defaultSchedule,
+  requireShiftForDelivery: settings.requireShiftForDelivery ?? false,
   regime: 'SIMPLIFICADO',
   taxType: (settings.taxType as TaxType) || 'INC_8',
   taxRate: settings.taxRate !== undefined ? (settings.taxRate * 100).toString() : '8',
@@ -285,6 +303,10 @@ export const useSettingsForm = () => {
           taxRate: numericRate,
           defaultTaxRate: numericRate,
           defaultTipPct: parseFloat(state.defaultTipPct) || 0,
+          openingHours: state.openingHours,
+          operatingStatus: state.operatingStatus,
+          schedule: state.schedule,
+          requireShiftForDelivery: state.requireShiftForDelivery,
         },
       });
 

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Send, Receipt, Sparkles, AlertTriangle, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { TableItem } from '../types/pos.types';
 import { Button } from '@/components/ui/button';

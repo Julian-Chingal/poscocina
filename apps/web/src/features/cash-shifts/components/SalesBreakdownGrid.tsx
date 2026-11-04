@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { DollarSign, CreditCard, Send, Wallet, KeyRound, Printer, ShoppingCart, Users } from 'lucide-react';
 import { ActiveShiftInfo } from '../types/cash-shifts.types';
 import { Badge } from '@/components/ui/badge';

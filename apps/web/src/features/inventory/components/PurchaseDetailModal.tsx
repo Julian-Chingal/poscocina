@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Receipt, Calendar, Building2, CheckCircle, Clock } from 'lucide-react';
 import { Purchase } from '../types/inventory.types';
 import {

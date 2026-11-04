@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Servicio cliente para comunicar la aplicación web de poscocina
  * con el controlador nativo de impresión en Flutter (Zogui Print Bridge).
  * 

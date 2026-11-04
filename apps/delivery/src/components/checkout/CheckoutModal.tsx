@@ -40,6 +40,15 @@ export function CheckoutModal() {
     e.preventDefault();
     setErrorMessage(null);
 
+    if (currentVenue.isOpen === false) {
+      setErrorMessage(
+        'El restaurante se encuentra cerrado en este momento. ' +
+          (currentVenue.openingHours ? `Horario: ${currentVenue.openingHours}. ` : '') +
+          'No es posible confirmar pedidos a domicilio fuera del horario de atención.'
+      );
+      return;
+    }
+
     if (!formData.name.trim() || !formData.phone.trim() || !formData.address.trim()) {
       setErrorMessage('Por favor completa tu nombre, teléfono y dirección de entrega.');
       return;
@@ -249,16 +258,31 @@ export function CheckoutModal() {
             </div>
           </div>
 
+          {currentVenue.isOpen === false && (
+            <div className="rounded-xl border border-rose-500/30 bg-rose-950/40 p-3 text-xs text-rose-300 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+              <span>
+                El restaurante se encuentra cerrado en este momento.
+                {currentVenue.openingHours && ` Horario: ${currentVenue.openingHours}.`}
+              </span>
+            </div>
+          )}
+
           {/* Submit */}
           <button
             type="submit"
-            disabled={isLoading}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 py-3.5 font-bold text-white shadow-lg shadow-orange-600/30 hover:bg-orange-500 disabled:opacity-50 transition text-sm"
+            disabled={isLoading || currentVenue.isOpen === false}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 py-3.5 font-bold text-white shadow-lg shadow-orange-600/30 hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm cursor-pointer"
           >
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Enviando Comanda a Cocina...</span>
+              </>
+            ) : currentVenue.isOpen === false ? (
+              <>
+                <AlertCircle className="h-4 w-4" />
+                <span>Restaurante Cerrado</span>
               </>
             ) : (
               <>

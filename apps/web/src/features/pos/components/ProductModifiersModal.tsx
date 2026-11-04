@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Minus, Check, AlertCircle, Sparkles } from 'lucide-react';
 import { Product, Modifier, ModifierGroup } from '../types/pos.types';
 import {

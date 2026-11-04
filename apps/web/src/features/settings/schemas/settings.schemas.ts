@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
 export const NewVenueSchema = z.object({
   name: z.string().trim().min(2, 'El nombre de la sede debe tener al menos 2 caracteres'),
@@ -12,6 +12,19 @@ export const NewVenueSchema = z.object({
   city: z.string().optional(),
   managerName: z.string().optional(),
   openingHours: z.string().optional(),
+  operatingStatus: z.enum(['auto', 'open', 'closed']).optional(),
+  schedule: z
+    .array(
+      z.object({
+        day: z.number(),
+        dayName: z.string(),
+        enabled: z.boolean(),
+        openTime: z.string(),
+        closeTime: z.string(),
+      })
+    )
+    .optional(),
+  requireShiftForDelivery: z.boolean().optional(),
   notes: z.string().optional(),
   timezone: z.string().optional(),
 });
@@ -30,6 +43,19 @@ export const EditVenueSchema = z.object({
   city: z.string().optional(),
   managerName: z.string().optional(),
   openingHours: z.string().optional(),
+  operatingStatus: z.enum(['auto', 'open', 'closed']).optional(),
+  schedule: z
+    .array(
+      z.object({
+        day: z.number(),
+        dayName: z.string(),
+        enabled: z.boolean(),
+        openTime: z.string(),
+        closeTime: z.string(),
+      })
+    )
+    .optional(),
+  requireShiftForDelivery: z.boolean().optional(),
   notes: z.string().optional(),
   timezone: z.string().optional(),
 });

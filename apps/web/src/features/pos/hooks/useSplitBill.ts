@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+﻿import { useState, useMemo, useCallback, useEffect } from 'react';
 import type { IssueReceiptInput, SplitEqualPaymentInput, SplitItemsPaymentInput, PaymentItem } from '@poscocina/shared';
 import { posApi } from '../api/pos.api';
 import { toast } from '@/components/ui/sonner';

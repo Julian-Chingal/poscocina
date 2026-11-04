@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import { useState, useEffect, useCallback, useMemo } from 'react';
 import { usersApi } from '../api/users.api';
 import { UserItem, RoleItem, UserFilterStatus } from '../types/users.types';
 
@@ -37,6 +37,8 @@ export const useUsersData = (venueId: string) => {
       const matchesSearch =
         u.name.toLowerCase().includes(query) ||
         (u.email && u.email.toLowerCase().includes(query)) ||
+        (u.companyName && u.companyName.toLowerCase().includes(query)) ||
+        (u.venueName && u.venueName.toLowerCase().includes(query)) ||
         u.roleLabel.toLowerCase().includes(query);
 
       if (filterStatus === 'active') return matchesSearch && u.isActive;

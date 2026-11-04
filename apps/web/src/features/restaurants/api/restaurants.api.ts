@@ -1,4 +1,4 @@
-import { api } from '@/services/api';
+﻿import { api } from '@/services/api';
 import { CompanyItem, CreateCompanyPayload } from '../types/restaurants.types';
 
 export const restaurantsApi = {

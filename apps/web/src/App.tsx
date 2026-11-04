@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
+﻿import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { TopBar } from "./components/TopBar";
 import { AppLauncherView } from "./components/navigation/launcher";
 import { ViewLoadingFallback } from "./components/ViewLoadingFallback";

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
 export const NewItemSchema = z.object({
   name: z.string().trim().min(2, 'El nombre del insumo es obligatorio'),

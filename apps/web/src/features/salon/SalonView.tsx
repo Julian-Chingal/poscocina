@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
-import { Skeleton } from '@/components/ui/skeleton';
+import { GastronomicLoader } from '@/components/common/GastronomicLoader';
 import { SalonViewProps } from './types/salon.types';
 import { useSalonData } from './hooks/useSalonData';
 import { useTableMutations } from './hooks/useTableMutations';
@@ -44,21 +44,12 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
 
   if (data.loading && data.tables.length === 0) {
     return (
-      <div className="w-full min-w-0 p-6 sm:p-10 max-w-7xl mx-auto space-y-6">
-        <div className="flex justify-between items-center">
-          <Skeleton className="h-8 w-44" />
-          <Skeleton className="h-9 w-32 rounded-xl" />
-        </div>
-        <div className="flex gap-2">
-          <Skeleton className="h-8 w-24 rounded-lg" />
-          <Skeleton className="h-8 w-24 rounded-lg" />
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 pt-4">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 rounded-2xl" />
-          ))}
-        </div>
-      </div>
+      <GastronomicLoader
+        variant="fullscreen"
+        iconType="cloche"
+        message="Alistando el salón y mesas..."
+        submessage="Sincronizando planos, distribución y estado de comandas"
+      />
     );
   }
 

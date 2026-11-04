@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { FileSpreadsheet, Printer, RefreshCw, PieChart, ShieldAlert } from 'lucide-react';
 import { ReportPeriod } from '../types/reports.types';
 import { Button } from '@/components/ui/button';

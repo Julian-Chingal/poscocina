@@ -1,4 +1,4 @@
-import React, { useState, FormEvent, useMemo } from 'react';
+﻿import React, { useState, FormEvent, useMemo } from 'react';
 import { ArrowRight, Boxes, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
 import { InventoryItem, MovementType } from '../types/inventory.types';
 import {

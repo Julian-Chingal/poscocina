@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { AppItem } from "../types/launcher.types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";

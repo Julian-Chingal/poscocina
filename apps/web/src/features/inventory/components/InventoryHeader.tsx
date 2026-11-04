@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Boxes, Truck, Building2, CookingPot, History, SlidersHorizontal, AlertTriangle } from 'lucide-react';
 import { InventoryTab } from '../types/inventory.types';
 import { Button } from '@/components/ui/button';

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { UserItem } from '../types/users.types';
 import { UserCard } from './UserCard';
 
@@ -24,13 +24,13 @@ export const UsersGrid: React.FC<UsersGridProps> = ({
   onToggleActive,
 }) => {
   if (loading) {
-    return <div className="p-12 text-center text-muted-foreground text-sm">Cargando nómina de empleados...</div>;
+    return <div className="p-12 text-center text-muted-foreground text-sm">Cargando usuarios...</div>;
   }
 
   if (users.length === 0) {
     return (
       <div className="p-12 text-center bg-muted/40 border border-border rounded-3xl text-muted-foreground text-sm">
-        No se encontraron empleados con los filtros actuales.
+        No se encontraron usuarios con los filtros actuales.
       </div>
     );
   }

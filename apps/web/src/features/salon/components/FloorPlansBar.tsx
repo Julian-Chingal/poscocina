@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Plus } from 'lucide-react';
 import { FloorPlanItem, TableItem } from '../types/salon.types';
 import { Button } from '@/components/ui/button';

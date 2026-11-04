@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Printer, UtensilsCrossed, Play, QrCode, FileText, ChefHat, Receipt, Usb, Globe } from 'lucide-react';
 import { PaperWidth, TaxType } from '../types/settings.types';
 import { usbPrinterService } from '@/services/usb-printer.service';

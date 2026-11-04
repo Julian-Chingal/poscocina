@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { SplitMode } from '../types/pos.types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';

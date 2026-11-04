@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Play, Edit2, Trash2, CheckCircle2, AlertTriangle, Cable, Bluetooth, Usb, Globe, Star, Smartphone } from 'lucide-react';
 import { PrinterDevice, TestPrintResult } from '../types/settings.types';
 import { STATION_LABELS } from '../constants/settings.constants';

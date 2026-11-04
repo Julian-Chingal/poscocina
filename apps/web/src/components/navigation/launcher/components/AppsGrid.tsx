@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Search } from "lucide-react";
 import { usePermissions } from "@/hooks/usePermissions";
 import { APPS } from "../constants/launcher.constants";

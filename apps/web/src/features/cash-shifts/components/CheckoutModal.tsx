@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { PendingBill } from '../types/cash-shifts.types';
 import { SplitBillDialog } from '@/features/pos/components/SplitBillDialog';
 

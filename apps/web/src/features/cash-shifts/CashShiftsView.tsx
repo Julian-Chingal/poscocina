@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { GastronomicLoader } from '@/components/common/GastronomicLoader';
 import { useCashShift } from './hooks/useCashShift';
 import { usePendingBills } from './hooks/usePendingBills';
 import { CashShiftsHeader } from './components/CashShiftsHeader';
@@ -44,9 +45,13 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
+      <GastronomicLoader
+        variant="card"
+        iconType="cloche"
+        message="Verificando turno de caja..."
+        submessage="Consultando arqueo, ventas y movimientos del punto de venta"
+        className="my-10 max-w-xl mx-auto"
+      />
     );
   }
 

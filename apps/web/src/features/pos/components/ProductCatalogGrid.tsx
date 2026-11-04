@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { SearchX, PackageOpen, RotateCcw } from "lucide-react";
 import { ProductCard } from "./ProductCard";
 import { Product } from "../types/pos.types";
