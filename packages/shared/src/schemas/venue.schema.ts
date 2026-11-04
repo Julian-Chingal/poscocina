@@ -37,8 +37,15 @@ export type ToggleVenueStatusInput = z.infer<typeof ToggleVenueStatusSchema>;
 export const PublicVenueSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
+  slug: z.string().nullable().optional(),
+  address: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  logoUrl: z.string().nullable().optional(),
+  primaryColor: z.string().nullable().optional(),
+  openingHours: z.string().nullable().optional(),
   isPrimary: z.boolean(),
-  isActive: z.boolean().optional(),
+  isActive: z.boolean(),
+  settings: z.record(z.unknown()).optional(),
 });
 export type PublicVenue = z.infer<typeof PublicVenueSchema>;
-

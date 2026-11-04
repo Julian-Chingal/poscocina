@@ -87,6 +87,7 @@ export const venues = pgTable('venues', {
   id: uuid('id').primaryKey().defaultRandom(),
   companyId: uuid('company_id').references(() => companies.id, { onDelete: 'set null' }),
   name: varchar('name', { length: 100 }).notNull(),
+  slug: varchar('slug', { length: 120 }).unique(),
   address: text('address'),
   timezone: varchar('timezone', { length: 50 }).notNull().default('America/Bogota'),
   settings: jsonb('settings').notNull().default({}),

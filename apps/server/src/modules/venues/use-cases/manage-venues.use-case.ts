@@ -11,6 +11,10 @@ export class ManageVenuesUseCase {
     return await this.repo.listPublicVenues();
   }
 
+  async getPublicVenueBySlugOrId(slugOrId: string) {
+    return await this.repo.getPublicVenueBySlugOrId(slugOrId);
+  }
+
   async getFirstVenue() {
     return await this.repo.getFirstVenue();
   }

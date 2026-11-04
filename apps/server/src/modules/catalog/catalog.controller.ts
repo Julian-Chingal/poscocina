@@ -1,6 +1,7 @@
 import path from 'path';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { catalogRepository } from './repositories/catalog.repository.js';
+import { venueRepository } from '../venues/repositories/venue.repository.js';
 import { ManageCatalogUseCase } from './use-cases/manage-catalog.use-case.js';
 import { resolveVenueId } from '../../utils/tenant.util.js';
 import { validate } from '../../utils/validation.util.js';
@@ -25,6 +26,16 @@ export class CatalogController {
     const targetVenueId = await resolveVenueId(request, venueId);
     const catalog = await this.useCase.getVenueCatalog(targetVenueId);
     return reply.send(catalog);
+  }
+
+  async getPublicCatalog(request: FastifyRequest, reply: FastifyReply) {
+    const { slugOrId } = request.params as { slugOrId: string };
+    const venue = await venueRepository.getPublicVenueBySlugOrId(slugOrId);
+    const catalog = await this.useCase.getVenueCatalog(venue.id);
+    return reply.send({
+      venue,
+      ...catalog,
+    });
   }
 
   async createCategory(request: FastifyRequest, reply: FastifyReply) {

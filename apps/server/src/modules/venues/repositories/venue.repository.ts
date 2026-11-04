@@ -14,16 +14,89 @@ export class VenueRepository implements IVenueRepository {
   }
 
   async listPublicVenues() {
-    return this.database
+    const rows = await this.database
       .select({
         id: schema.venues.id,
         name: schema.venues.name,
+        slug: schema.venues.slug,
+        address: schema.venues.address,
         isPrimary: schema.venues.isPrimary,
         isActive: schema.venues.isActive,
+        settings: schema.venues.settings,
       })
       .from(schema.venues)
       .where(eq(schema.venues.isActive, true))
       .orderBy(desc(schema.venues.isPrimary), schema.venues.name);
+
+    return rows.map((v) => {
+      const s = (v.settings || {}) as Record<string, any>;
+      return {
+        id: v.id,
+        name: v.name,
+        slug: v.slug || s.slug || v.id,
+        address: v.address || s.address || '',
+        phone: s.phone || '',
+        city: s.city || '',
+        logoUrl: s.logoUrl || null,
+        primaryColor: s.primaryColor || '#ea580c',
+        openingHours: s.openingHours || '',
+        isPrimary: v.isPrimary,
+        isActive: v.isActive,
+      };
+    });
+  }
+
+  async getPublicVenueBySlugOrId(slugOrId: string) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId);
+
+    let venue;
+    if (isUuid) {
+      const [byUuid] = await this.database
+        .select()
+        .from(schema.venues)
+        .where(and(eq(schema.venues.id, slugOrId), eq(schema.venues.isActive, true)))
+        .limit(1);
+      venue = byUuid;
+    }
+
+    if (!venue) {
+      const [bySlug] = await this.database
+        .select()
+        .from(schema.venues)
+        .where(and(eq(schema.venues.slug, slugOrId), eq(schema.venues.isActive, true)))
+        .limit(1);
+      venue = bySlug;
+    }
+
+    if (!venue) {
+      const allActive = await this.database
+        .select()
+        .from(schema.venues)
+        .where(eq(schema.venues.isActive, true));
+      venue = allActive.find(
+        (v) => (v.settings as any)?.slug === slugOrId || v.slug === slugOrId || v.id === slugOrId
+      );
+    }
+
+    if (!venue) throw new NotFoundError(`Restaurante '${slugOrId}' no encontrado`);
+
+    const s = (venue.settings || {}) as Record<string, any>;
+    return {
+      id: venue.id,
+      name: venue.name,
+      slug: venue.slug || s.slug || venue.id,
+      address: venue.address || s.address || '',
+      phone: s.phone || '',
+      city: s.city || '',
+      logoUrl: s.logoUrl || null,
+      primaryColor: s.primaryColor || '#ea580c',
+      openingHours: s.openingHours || '',
+      currency: s.currency || 'COP',
+      taxRate: s.taxRate || s.defaultTaxRate || 0.08,
+      isPrimary: venue.isPrimary,
+      isActive: venue.isActive,
+      settings: venue.settings,
+    };
   }
 
   async getFirstVenue() {
@@ -112,13 +185,21 @@ export class VenueRepository implements IVenueRepository {
         ...(data.settings || {}),
       };
 
+      const computedSlug =
+        data.slug ||
+        data.name
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '');
+
       const [newVenue] = await tx
         .insert(schema.venues)
         .values({
           name: data.name,
+          slug: computedSlug,
           address: data.address || '',
           timezone: data.timezone || 'America/Bogota',
-          settings: defaultSettings,
+          settings: { ...defaultSettings, slug: computedSlug },
         })
         .returning();
 

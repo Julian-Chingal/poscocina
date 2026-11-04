@@ -10,6 +10,7 @@ export async function catalogRoutes(fastify: FastifyInstance) {
 
   // 1. Get full menu catalog
   fastify.get('/api/venues/:venueId/catalog', staffGuard, (req, rep) => catalogController.getVenueCatalog(req, rep));
+  fastify.get('/api/public/venues/:slugOrId/catalog', (req, rep) => catalogController.getPublicCatalog(req, rep));
 
   // 2. Category CRUD
   fastify.post('/api/venues/:venueId/categories', managerGuard, (req, rep) => catalogController.createCategory(req, rep));

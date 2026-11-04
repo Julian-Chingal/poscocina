@@ -14,6 +14,8 @@ export async function venuesRoutes(fastify: FastifyInstance) {
   // Venues Endpoints
   fastify.get('/api/venues', (req, rep) => venuesController.listVenues(req, rep));
   fastify.get('/api/venues/public', (req, rep) => venuesController.listPublicVenues(req, rep));
+  fastify.get('/api/public/venues', (req, rep) => venuesController.listPublicVenues(req, rep));
+  fastify.get('/api/public/venues/:slugOrId', (req, rep) => venuesController.getPublicVenue(req, rep));
   fastify.get('/api/venues/first', (req, rep) => venuesController.getFirstVenue(req, rep));
   fastify.get('/api/venues/:id', (req, rep) => venuesController.getVenueById(req, rep));
   fastify.get('/api/venues/:id/summary', staffGuard, (req, rep) => venuesController.getVenueSummary(req, rep));

@@ -16,6 +16,11 @@ export class VenuesController {
     return reply.send(await this.useCase.listPublicVenues());
   }
 
+  async getPublicVenue(request: FastifyRequest, reply: FastifyReply) {
+    const { slugOrId } = request.params as { slugOrId: string };
+    return reply.send(await this.useCase.getPublicVenueBySlugOrId(slugOrId));
+  }
+
   async getFirstVenue(_request: FastifyRequest, reply: FastifyReply) {
     return reply.send(await this.useCase.getFirstVenue());
   }

@@ -9,6 +9,7 @@ import { validate } from '../../utils/validation.util.js';
 import { resolveVenueId } from '../../utils/tenant.util.js';
 import {
   CreateOrderSchema,
+  CreateDeliveryOrderSchema,
   UpdateItemStatusSchema,
   AppendOrderItemsSchema,
   UpdateOrderStatusSchema,
@@ -45,6 +46,26 @@ export class OrdersController {
         currentOrderId: result.order.id,
       });
     }
+    return reply.status(201).send(result);
+  }
+
+  async createDeliveryOrder(request: FastifyRequest, reply: FastifyReply) {
+    const data = validate(CreateDeliveryOrderSchema, request.body);
+    const result = await this.createUseCase.execute({
+      venueId: data.venueId,
+      orderType: 'delivery',
+      customer: data.customer,
+      guestName: data.customer.name,
+      notes: [
+        data.deliveryNotes,
+        `Dirección: ${data.customer.address}`,
+        `Teléfono: ${data.customer.phone}`,
+        `Pago: ${data.paymentMethod}${data.cashPaymentAmount ? ` (Paga con: $${data.cashPaymentAmount})` : ''}`,
+      ].filter(Boolean).join(' | '),
+      items: data.items,
+    });
+
+    this.emitToVenue(request, data.venueId, 'order:created', result);
     return reply.status(201).send(result);
   }
 

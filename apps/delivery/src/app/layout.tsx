@@ -1,9 +1,13 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { CartProvider } from '../context/CartContext';
+import { Navbar } from '../components/Navbar';
+import { CartDrawer } from '../components/cart/CartDrawer';
+import { CheckoutModal } from '../components/checkout/CheckoutModal';
 
 export const metadata: Metadata = {
   title: 'poscocina Domicilios — Menú y Pedidos en Línea',
-  description: 'Explora nuestra carta gastronómica, pide tus platos favoritos a domicilio o pasa a recogerlos sin filas.',
+  description: 'Explora nuestra red de restaurantes, pide tus platos favoritos a domicilio o pasa a recogerlos sin filas.',
   keywords: ['domicilios', 'restaurante', 'pedir comida', 'menu online', 'gastronomia', 'poscocina'],
   authors: [{ name: 'poscocina' }],
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3001'),
@@ -52,8 +56,13 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/pwa-192x192.png" />
       </head>
-      <body className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-orange-500 selection:text-white">
-        {children}
+      <body className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-orange-500 selection:text-white flex flex-col">
+        <CartProvider>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <CartDrawer />
+          <CheckoutModal />
+        </CartProvider>
       </body>
     </html>
   );

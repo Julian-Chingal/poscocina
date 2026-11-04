@@ -12,11 +12,21 @@ export interface CreateOrderPayload {
   venueId: string;
   tableId?: string | null;
   customerId?: string | null;
+  customer?: {
+    name: string;
+    phone: string;
+    address?: string;
+    email?: string;
+    notes?: string;
+  };
   orderType?: 'dine_in' | 'takeout' | 'delivery';
   waiterId?: string | null;
   guestCount?: number;
   guestName?: string | null;
   notes?: string;
+  paymentMethod?: string;
+  cashPaymentAmount?: number;
+  deliveryNotes?: string;
   items: CreateOrderItemInput[];
 }
 

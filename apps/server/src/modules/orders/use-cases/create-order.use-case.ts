@@ -18,9 +18,45 @@ export class CreateOrderUseCase {
     }
 
     return await db.transaction(async (tx) => {
-      const activeShift = await this.orderRepo.findActiveShift(venueId, tx);
-      if (!activeShift) {
-        throw new BadRequestError('Caja cerrada: Debes abrir la caja antes de registrar pedidos');
+      if (orderType !== 'delivery') {
+        const activeShift = await this.orderRepo.findActiveShift(venueId, tx);
+        if (!activeShift) {
+          throw new BadRequestError('Caja cerrada: Debes abrir la caja antes de registrar pedidos');
+        }
+      }
+
+      let resolvedCustomerId = customerId || null;
+      if (!resolvedCustomerId && data.customer) {
+        const [existingCustomer] = await tx
+          .select()
+          .from(schema.customers)
+          .where(and(eq(schema.customers.venueId, venueId), eq(schema.customers.phone, data.customer.phone)))
+          .limit(1);
+
+        if (existingCustomer) {
+          resolvedCustomerId = existingCustomer.id;
+          if (data.customer.address) {
+            await tx
+              .update(schema.customers)
+              .set({ address: data.customer.address, updatedAt: new Date() })
+              .where(eq(schema.customers.id, existingCustomer.id));
+          }
+        } else {
+          const [newCustomer] = await tx
+            .insert(schema.customers)
+            .values({
+              venueId,
+              name: data.customer.name,
+              phone: data.customer.phone,
+              address: data.customer.address || '',
+              email: data.customer.email || null,
+              notes: data.customer.notes || null,
+              documentType: 'CC',
+              documentNumber: data.customer.phone.replace(/\D/g, '') || '0000000000',
+            })
+            .returning();
+          resolvedCustomerId = newCustomer.id;
+        }
       }
 
       // Resolve product data (price + taxRate) from DB — never trust client-supplied prices
@@ -59,7 +95,7 @@ export class CreateOrderUseCase {
       const order = await this.orderRepo.createOrder({
         venueId,
         tableId: tableId || null,
-        customerId: customerId || null,
+        customerId: resolvedCustomerId,
         waiterId: waiterId || null,
         orderType,
         status: 'sent_to_kitchen',
