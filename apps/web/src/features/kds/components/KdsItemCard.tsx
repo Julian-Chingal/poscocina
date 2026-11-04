@@ -1,29 +1,66 @@
 import React from 'react';
 import { AlertTriangle, Undo2, Sparkles, Flame, CheckCircle, PackageCheck } from 'lucide-react';
-import { KdsItem } from '../types/kds.types';
+import { KdsItem, StationFilter } from '../types/kds.types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 interface KdsItemCardProps {
   item: KdsItem;
+  activeStation?: StationFilter;
   onNextStatus: (item: KdsItem) => void;
   onUndoStatus?: (item: KdsItem) => void;
+  onNextStationStatus?: (item: KdsItem, stationId: string, status?: any) => void;
+  onUndoStationStatus?: (item: KdsItem, stationId: string) => void;
   showDelivered?: boolean;
 }
 
 export const KdsItemCard: React.FC<KdsItemCardProps> = ({
   item,
+  activeStation,
   onNextStatus,
   onUndoStatus,
+  onNextStationStatus,
+  onUndoStationStatus,
   showDelivered = false,
 }) => {
-  const isReady = item.status === 'ready';
-  const isCooking = item.status === 'in_preparation';
-  const isDelivered = item.status === 'delivered';
-  const canUndo = (isCooking || isReady || isDelivered) && Boolean(onUndoStatus);
+  const isPerStationView = activeStation && activeStation !== 'all' && activeStation !== 'history';
+
+  const currentStationEntry = isPerStationView
+    ? (item.stations || []).find(
+        (s) => s.stationId === activeStation || s.station?.code === activeStation
+      )
+    : null;
+
+  const effectiveStatus = currentStationEntry ? currentStationEntry.status : item.status;
+  const isReady = effectiveStatus === 'ready';
+  const isCooking = effectiveStatus === 'in_preparation';
+  const isDelivered = effectiveStatus === 'delivered';
+  const canUndo =
+    (isCooking || isReady || isDelivered) &&
+    Boolean(currentStationEntry ? onUndoStationStatus : onUndoStatus);
 
   if (isDelivered && !showDelivered) return null;
+
+  const handleActionClick = () => {
+    if (currentStationEntry && onNextStationStatus) {
+      onNextStationStatus(item, currentStationEntry.stationId);
+    } else {
+      onNextStatus(item);
+    }
+  };
+
+  const handleUndoClick = () => {
+    if (currentStationEntry && onUndoStationStatus) {
+      onUndoStationStatus(item, currentStationEntry.stationId);
+    } else {
+      onUndoStatus?.(item);
+    }
+  };
+
+  const otherStations = isPerStationView
+    ? (item.stations || []).filter((s) => s.stationId !== currentStationEntry?.stationId)
+    : [];
 
   return (
     <Card
@@ -80,6 +117,74 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({
                 })}
               </div>
             )}
+
+            {/* Sibling stations in single station view */}
+            {otherStations.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {otherStations.map((sibling) => (
+                  <span
+                    key={sibling.id || sibling.stationId}
+                    className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md border font-medium bg-muted/40 text-muted-foreground border-border/60"
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: sibling.station?.color || '#ea580c' }}
+                    />
+                    <span>{sibling.station?.name}:</span>
+                    <strong className="text-foreground">
+                      {sibling.status === 'ready'
+                        ? 'Listo ✓'
+                        : sibling.status === 'in_preparation'
+                        ? 'Preparando'
+                        : sibling.status === 'delivered'
+                        ? 'Despachado'
+                        : 'Pendiente'}
+                    </strong>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Multi-Station breakdown chips in 'All' view */}
+            {!isPerStationView && item.stations && item.stations.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2.5">
+                {item.stations.map((st) => (
+                  <button
+                    key={st.id || st.stationId}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onNextStationStatus?.(item, st.stationId);
+                    }}
+                    className={`inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-lg border font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer ${
+                      st.status === 'ready'
+                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
+                        : st.status === 'in_preparation'
+                        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30'
+                        : st.status === 'delivered'
+                        ? 'bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30'
+                        : 'bg-muted/80 text-muted-foreground border-border'
+                    }`}
+                    title="Clic para avanzar esta estación"
+                  >
+                    <span
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: st.station?.color || '#ea580c' }}
+                    />
+                    <span>{st.station?.name || 'Estación'}:</span>
+                    <span className="font-bold">
+                      {st.status === 'ready'
+                        ? 'Listo ✓'
+                        : st.status === 'in_preparation'
+                        ? 'Cocinando 🔥'
+                        : st.status === 'delivered'
+                        ? 'Despachado'
+                        : 'Pendiente'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -91,7 +196,7 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({
               variant="outline"
               size="icon"
               title="Deshacer estado anterior"
-              onClick={() => onUndoStatus?.(item)}
+              onClick={handleUndoClick}
               className="size-8 rounded-lg border-border/80 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer shrink-0 transition-transform active:scale-90"
             >
               <Undo2 className="size-3.5" />
@@ -103,7 +208,7 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({
             <Button
               type="button"
               size="sm"
-              onClick={() => onNextStatus(item)}
+              onClick={handleActionClick}
               className={`text-xs h-8 sm:h-9 px-3.5 rounded-xl font-bold transition-all cursor-pointer shrink-0 shadow-xs active:scale-95 flex items-center gap-1.5 ${
                 isReady
                   ? 'bg-blue-600 hover:bg-blue-500 text-white'
@@ -130,7 +235,10 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({
               )}
             </Button>
           ) : (
-            <Badge variant="outline" className="text-xs font-semibold text-muted-foreground border-border/60 py-0.5 px-2">
+            <Badge
+              variant="outline"
+              className="text-xs font-semibold text-muted-foreground border-border/60 py-0.5 px-2"
+            >
               Despachado
             </Badge>
           )}
@@ -147,4 +255,4 @@ export const KdsItemCard: React.FC<KdsItemCardProps> = ({
     </Card>
   );
 };
-
+export default KdsItemCard;

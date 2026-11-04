@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { KdsViewProps, StationFilter } from './types/kds.types';
+import { KdsViewProps } from './types/kds.types';
 import { useKdsData } from './hooks/useKdsData';
 import { KdsHeader } from './components/KdsHeader';
 import { KdsStationTabs } from './components/KdsStationTabs';
@@ -16,6 +16,8 @@ export const KdsView: React.FC<KdsViewProps> = ({ venueId }) => {
     currentTime,
     handleNextStatus,
     handleUndoStatus,
+    handleNextStationStatus,
+    handleUndoStationStatus,
     handleCompleteOrder,
     refreshOrders,
   } = useKdsData(venueId);
@@ -34,16 +36,30 @@ export const KdsView: React.FC<KdsViewProps> = ({ venueId }) => {
     }).length;
   }, [orders, currentTime]);
 
-  const stationCounts = useMemo<Record<StationFilter, number>>(() => {
-    return {
+  const stationCounts = useMemo<Record<string, number>>(() => {
+    const counts: Record<string, number> = {
       all: orders.length,
-      kitchen: orders.filter((o) =>
-        o.items.some((i) => !i.product?.station || i.product.station === 'kitchen')
-      ).length,
-      bar: orders.filter((o) => o.items.some((i) => i.product?.station === 'bar')).length,
-      dessert: orders.filter((o) => o.items.some((i) => i.product?.station === 'dessert')).length,
       history: 0,
     };
+    for (const ord of orders) {
+      const seenStationsInOrder = new Set<string>();
+      for (const item of ord.items) {
+        if (item.stations && item.stations.length > 0) {
+          for (const st of item.stations) {
+            seenStationsInOrder.add(st.stationId);
+            if (st.station?.code) seenStationsInOrder.add(st.station.code);
+          }
+        } else if (item.product?.printerStation) {
+          seenStationsInOrder.add(item.product.printerStation);
+        } else {
+          seenStationsInOrder.add('kitchen');
+        }
+      }
+      for (const stId of seenStationsInOrder) {
+        counts[stId] = (counts[stId] || 0) + 1;
+      }
+    }
+    return counts;
   }, [orders]);
 
   if (loading && orders.length === 0) {
@@ -78,6 +94,8 @@ export const KdsView: React.FC<KdsViewProps> = ({ venueId }) => {
         currentTime={currentTime}
         onNextStatus={handleNextStatus}
         onUndoStatus={handleUndoStatus}
+        onNextStationStatus={handleNextStationStatus}
+        onUndoStationStatus={handleUndoStationStatus}
         onCompleteOrder={handleCompleteOrder}
       />
     </div>

@@ -1,3 +1,20 @@
+export interface KdsItemStation {
+  id: string;
+  orderItemId: string;
+  stationId: string;
+  status: 'pending' | 'in_preparation' | 'ready' | 'delivered';
+  sentAt?: string | null;
+  readyAt?: string | null;
+  deliveredAt?: string | null;
+  station?: {
+    id: string;
+    name: string;
+    code: string;
+    color?: string;
+    icon?: string;
+  };
+}
+
 export interface KdsItem {
   id: string;
   quantity: number;
@@ -10,8 +27,10 @@ export interface KdsItem {
   wasModifiedHot?: boolean;
   product?: {
     name: string;
-    station?: 'kitchen' | 'bar' | 'dessert';
+    station?: string;
+    printerStation?: string;
   };
+  stations?: KdsItemStation[];
   modifiers?: Array<{
     modifierId: string;
   }>;
@@ -34,7 +53,7 @@ export interface KdsOrder {
   items: KdsItem[];
 }
 
-export type StationFilter = 'all' | 'kitchen' | 'bar' | 'dessert' | 'history';
+export type StationFilter = 'all' | 'history' | string;
 
 export interface UrgencyStyles {
   badge: string;

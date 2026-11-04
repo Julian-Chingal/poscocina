@@ -1,5 +1,5 @@
 import React, { useState, Suspense, lazy } from 'react';
-import { Building2, Receipt, Store, Printer, Save, Check, Type } from 'lucide-react';
+import { Building2, Receipt, Store, Printer, Save, Check, Type, ChefHat } from 'lucide-react';
 import { useBrandingStore } from '@/stores/branding.store';
 import { useSettingsForm } from './hooks/useSettingsForm';
 import { SettingsTab } from './types/settings.types';
@@ -11,6 +11,7 @@ import { AppearanceTab } from './components/AppearanceTab';
 
 const PrintersTab = lazy(() => import('./components/PrintersTab'));
 const VenuesTab = lazy(() => import('./components/VenuesTab'));
+const WorkstationsTab = lazy(() => import('./components/WorkstationsTab'));
 
 const TabSkeleton: React.FC = () => (
   <div className="w-full py-16 flex flex-col items-center justify-center space-y-3 text-muted-foreground">
@@ -62,11 +63,16 @@ export const SettingsView: React.FC = () => {
           label: 'Impresoras Térmicas ESC/POS',
           icon: Printer,
         },
+        {
+          id: 'workstations',
+          label: 'Estaciones de Trabajo (KDS)',
+          icon: ChefHat,
+        },
       ],
     },
   ];
 
-  const headerActions = activeTab !== 'venues' && activeTab !== 'appearance' ? (
+  const headerActions = activeTab !== 'venues' && activeTab !== 'appearance' && activeTab !== 'workstations' ? (
     <Button
       type="button"
       onClick={saveSettings}
@@ -198,6 +204,12 @@ export const SettingsView: React.FC = () => {
       )}
 
       {activeTab === 'appearance' && <AppearanceTab />}
+
+      {activeTab === 'workstations' && (
+        <Suspense fallback={<TabSkeleton />}>
+          <WorkstationsTab />
+        </Suspense>
+      )}
     </SubNavLayout>
   );
 };

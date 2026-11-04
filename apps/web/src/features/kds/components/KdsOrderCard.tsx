@@ -1,6 +1,6 @@
 import React from 'react';
 import { Clock, ShoppingBag, Utensils, User, CheckCheck, PackageCheck } from 'lucide-react';
-import { KdsOrder, KdsItem } from '../types/kds.types';
+import { KdsOrder, KdsItem, StationFilter } from '../types/kds.types';
 import { getUrgencyStyles } from '../utils/urgency.utils';
 import { KdsItemCard } from './KdsItemCard';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
@@ -9,8 +9,11 @@ import { Button } from '@/components/ui/button';
 interface KdsOrderCardProps {
   order: KdsOrder;
   currentTime: number;
+  activeStation?: StationFilter;
   onNextStatus: (item: KdsItem) => void;
   onUndoStatus?: (item: KdsItem) => void;
+  onNextStationStatus?: (item: KdsItem, stationId: string, status?: any) => void;
+  onUndoStationStatus?: (item: KdsItem, stationId: string) => void;
   onCompleteOrder?: (order: KdsOrder) => void;
   showDelivered?: boolean;
 }
@@ -18,8 +21,11 @@ interface KdsOrderCardProps {
 export const KdsOrderCard: React.FC<KdsOrderCardProps> = ({
   order,
   currentTime,
+  activeStation,
   onNextStatus,
   onUndoStatus,
+  onNextStationStatus,
+  onUndoStationStatus,
   onCompleteOrder,
   showDelivered = false,
 }) => {
@@ -102,21 +108,10 @@ export const KdsOrderCard: React.FC<KdsOrderCardProps> = ({
           </div>
         </div>
 
-        {/* Progress Bar for multi-item orders */}
-        {totalItems > 1 && (
-          <div className="pt-1 space-y-1">
-            <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
-              <span>Progreso de comanda:</span>
-              <span className="font-semibold text-foreground">
-                {completedItems} de {totalItems} listos
-              </span>
-            </div>
-            <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-              <div
-                className="h-full rounded-full bg-emerald-500 transition-all duration-300"
-                style={{ width: `${Math.round((completedItems / totalItems) * 100)}%` }}
-              />
-            </div>
+        {/* Guest Count */}
+        {order.guestName && !isTakeout && (
+          <div className="text-xs font-medium text-muted-foreground">
+            Cliente: <span className="text-foreground font-semibold">{order.guestName}</span>
           </div>
         )}
       </CardHeader>
@@ -127,8 +122,11 @@ export const KdsOrderCard: React.FC<KdsOrderCardProps> = ({
           <KdsItemCard
             key={item.id}
             item={item}
+            activeStation={activeStation}
             onNextStatus={onNextStatus}
             onUndoStatus={onUndoStatus}
+            onNextStationStatus={onNextStationStatus}
+            onUndoStationStatus={onUndoStationStatus}
             showDelivered={showDelivered}
           />
         ))}
@@ -164,4 +162,3 @@ export const KdsOrderCard: React.FC<KdsOrderCardProps> = ({
     </Card>
   );
 };
-

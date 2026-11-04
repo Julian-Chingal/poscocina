@@ -20,6 +20,8 @@ export interface Product {
   dimensions?: ProductDimensions | null;
   displayMedia?: DisplayMediaType | null;
   printerStation?: string | null;
+  stationIds?: string[];
+  productStations?: Array<{ productId: string; stationId: string; isPrimary: boolean; station?: any }>;
   prepTimeMin?: number | null;
   trackInventory?: boolean;
   isAvailable: boolean;
@@ -33,6 +35,8 @@ export interface Category {
   color?: string | null;
   icon?: string | null;
   printerStation?: string | null;
+  stationIds?: string[];
+  productStations?: Array<{ productId: string; stationId: string; isPrimary: boolean; station?: any }>;
   sortOrder?: number;
 }
 

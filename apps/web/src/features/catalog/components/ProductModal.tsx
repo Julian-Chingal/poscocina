@@ -5,8 +5,6 @@ import {
   UtensilsCrossed,
   Clock,
   Boxes,
-  ChefHat,
-  Coffee,
   Camera,
   Image as ImageIcon,
   Rotate3d,
@@ -18,6 +16,7 @@ import { Product, Category, ProductDimensions, DisplayMediaType } from '../types
 import { ProductSchema, ProductFormValues } from '../schemas/catalog.schemas';
 import { TAX_RATE_OPTIONS } from '../constants/catalog.constants';
 import { catalogApi } from '../api/catalog.api';
+import { api } from '@/services/api';
 import { toast } from '@/components/ui/sonner';
 import { Product3dScannerModal } from './Product3dScannerModal';
 import { Product3dViewer } from './Product3dViewer';
@@ -78,6 +77,39 @@ export const ProductModal: React.FC<Props> = ({
   const [showScannerModal, setShowScannerModal] = useState(false);
   const [show3dPreviewModal, setShow3dPreviewModal] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [workstations, setWorkstations] = useState<Array<{ id: string; name: string; code: string; color: string; icon: string }>>([]);
+  const [primaryStationId, setPrimaryStationId] = useState<string>('');
+  const [secondaryStationId, setSecondaryStationId] = useState<string>('none');
+
+  useEffect(() => {
+    if (isOpen) {
+      api.get<Array<{ id: string; name: string; code: string; color: string; icon: string }>>('/api/stations')
+        .then((res) => {
+          setWorkstations(res || []);
+        })
+        .catch(() => {});
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (editingProduct) {
+      const ids = editingProduct.stationIds || (editingProduct.productStations || []).map((ps: any) => ps.stationId) || [];
+      if (ids.length > 0) {
+        setPrimaryStationId(ids[0]);
+        setSecondaryStationId(ids[1] || 'none');
+      } else if (editingProduct.printerStation && workstations.length > 0) {
+        const matched = workstations.find((w) => w.code === editingProduct.printerStation);
+        setPrimaryStationId(matched ? matched.id : workstations[0]?.id || '');
+        setSecondaryStationId('none');
+      } else if (workstations.length > 0) {
+        setPrimaryStationId(workstations[0]?.id || '');
+        setSecondaryStationId('none');
+      }
+    } else if (workstations.length > 0 && !primaryStationId) {
+      setPrimaryStationId(workstations[0]?.id || '');
+      setSecondaryStationId('none');
+    }
+  }, [editingProduct, workstations, isOpen]);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const modelInputRef = useRef<HTMLInputElement>(null);
 
@@ -206,7 +238,17 @@ export const ProductModal: React.FC<Props> = ({
   };
 
   const handleSubmit = form.handleSubmit(async (values) => {
-    await onSubmit(values);
+    const stationIds: string[] = [];
+    if (primaryStationId) stationIds.push(primaryStationId);
+    if (secondaryStationId && secondaryStationId !== 'none' && secondaryStationId !== primaryStationId) {
+      stationIds.push(secondaryStationId);
+    }
+    const primarySt = workstations.find((w) => w.id === primaryStationId);
+    await onSubmit({
+      ...values,
+      stationIds: stationIds.length > 0 ? stationIds : undefined,
+      printerStation: primarySt ? primarySt.code : values.printerStation || 'kitchen',
+    });
   });
 
   return (
@@ -385,49 +427,93 @@ export const ProductModal: React.FC<Props> = ({
               />
             </div>
 
-            {/* Grid Row 3: Estación de Comanda & Tiempo Estimado */}
+            {/* Grid Row 3: Estaciones de Preparación KDS */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="printerStation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-bold text-foreground">
-                      Estación de Comanda
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-border/80 text-xs font-semibold">
-                          <div className="flex items-center gap-2">
-                            {field.value === 'bar' ? (
-                              <Coffee className="size-3.5 text-amber-500" />
-                            ) : (
-                              <ChefHat className="size-3.5 text-primary" />
-                            )}
-                            <SelectValue placeholder="Seleccionar estación" />
-                          </div>
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="rounded-xl border-border/80">
-                        <SelectItem value="kitchen" className="text-xs font-semibold cursor-pointer py-2">
-                          <div className="flex items-center gap-2">
-                            <ChefHat className="size-3.5 text-primary" />
-                            <span>Cocina Principal (KDS)</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="bar" className="text-xs font-semibold cursor-pointer py-2">
-                          <div className="flex items-center gap-2">
-                            <Coffee className="size-3.5 text-amber-500" />
-                            <span>Barra de Bebidas (Bar)</span>
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage className="text-xs font-medium" />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground">
+                  Estación Principal (KDS) <span className="text-destructive">*</span>
+                </label>
+                <Select
+                  value={primaryStationId}
+                  onValueChange={(val) => {
+                    setPrimaryStationId(val);
+                    if (secondaryStationId === val) {
+                      setSecondaryStationId('none');
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-border/80 text-xs font-semibold">
+                    <div className="flex items-center gap-2">
+                      {workstations.find((w) => w.id === primaryStationId) && (
+                        <span
+                          className="size-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: workstations.find((w) => w.id === primaryStationId)?.color || '#ea580c' }}
+                        />
+                      )}
+                      <SelectValue placeholder="Seleccionar estación principal" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-border/80 max-h-56">
+                    {workstations.map((st) => (
+                      <SelectItem key={st.id} value={st.id} className="text-xs font-semibold cursor-pointer py-2">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="size-2 rounded-full shrink-0"
+                            style={{ backgroundColor: st.color || '#ea580c' }}
+                          />
+                          <span>{st.name}</span>
+                          <span className="text-[10px] text-muted-foreground font-mono">({st.code})</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground">
+                  Estación Secundaria (Opcional)
+                </label>
+                <Select
+                  value={secondaryStationId}
+                  onValueChange={setSecondaryStationId}
+                >
+                  <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-border/80 text-xs font-semibold">
+                    <div className="flex items-center gap-2">
+                      {secondaryStationId !== 'none' && workstations.find((w) => w.id === secondaryStationId) && (
+                        <span
+                          className="size-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: workstations.find((w) => w.id === secondaryStationId)?.color || '#ea580c' }}
+                        />
+                      )}
+                      <SelectValue placeholder="Ninguna (Solo principal)" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-border/80 max-h-56">
+                    <SelectItem value="none" className="text-xs font-semibold cursor-pointer py-2">
+                      <span className="text-muted-foreground">Ninguna (Solo estación principal)</span>
+                    </SelectItem>
+                    {workstations
+                      .filter((st) => st.id !== primaryStationId)
+                      .map((st) => (
+                        <SelectItem key={st.id} value={st.id} className="text-xs font-semibold cursor-pointer py-2">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="size-2 rounded-full shrink-0"
+                              style={{ backgroundColor: st.color || '#ea580c' }}
+                            />
+                            <span>{st.name}</span>
+                            <span className="text-[10px] text-muted-foreground font-mono">({st.code})</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Grid Row 4: Tiempo Estimado de Cocina */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="prepTimeMin"

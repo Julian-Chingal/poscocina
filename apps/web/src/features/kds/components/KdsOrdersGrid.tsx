@@ -10,6 +10,8 @@ interface KdsOrdersGridProps {
   currentTime: number;
   onNextStatus: (item: KdsItem) => void;
   onUndoStatus?: (item: KdsItem) => void;
+  onNextStationStatus?: (item: KdsItem, stationId: string, status?: any) => void;
+  onUndoStationStatus?: (item: KdsItem, stationId: string) => void;
   onCompleteOrder?: (order: KdsOrder) => void;
 }
 
@@ -19,6 +21,8 @@ export const KdsOrdersGrid: React.FC<KdsOrdersGridProps> = ({
   currentTime,
   onNextStatus,
   onUndoStatus,
+  onNextStationStatus,
+  onUndoStationStatus,
   onCompleteOrder,
 }) => {
   const isHistory = activeStation === 'history';
@@ -47,8 +51,11 @@ export const KdsOrdersGrid: React.FC<KdsOrdersGridProps> = ({
           key={order.id}
           order={order}
           currentTime={currentTime}
+          activeStation={activeStation}
           onNextStatus={onNextStatus}
           onUndoStatus={onUndoStatus}
+          onNextStationStatus={onNextStationStatus}
+          onUndoStationStatus={onUndoStationStatus}
           onCompleteOrder={onCompleteOrder}
           showDelivered={isHistory}
         />
@@ -56,3 +63,4 @@ export const KdsOrdersGrid: React.FC<KdsOrdersGridProps> = ({
     </div>
   );
 };
+export default KdsOrdersGrid;

@@ -15,6 +15,13 @@ export const kdsApi = {
   updateItemStatus: (itemId: string, status: KdsItem['status']): Promise<any> =>
     api.patch(`/order-items/${itemId}/status`, { status }),
 
+  updateItemStationStatus: (
+    itemId: string,
+    stationId: string,
+    status: 'pending' | 'in_preparation' | 'ready' | 'delivered'
+  ): Promise<any> =>
+    api.patch(`/order-items/${itemId}/stations/${stationId}/status`, { status }),
+
   modifyItem: (itemId: string, data: any): Promise<any> =>
     api.patch(`/order-items/${itemId}`, data),
 

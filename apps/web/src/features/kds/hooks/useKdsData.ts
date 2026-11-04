@@ -84,6 +84,7 @@ export const useKdsData = (venueId: string) => {
     socket.on('order:items_appended', refreshHandler);
     socket.on('kds:new_items', refreshHandler);
     socket.on('order_item:updated', refreshHandler);
+    socket.on('order_item:station_updated', refreshHandler);
     socket.on('order:status_updated', refreshHandler);
     socket.on('kds:item_updated', refreshHandler);
     socket.on('kds:item_removed', refreshHandler);
@@ -110,6 +111,7 @@ export const useKdsData = (venueId: string) => {
       socket.off('order:items_appended', refreshHandler);
       socket.off('kds:new_items', refreshHandler);
       socket.off('order_item:updated', refreshHandler);
+      socket.off('order_item:station_updated', refreshHandler);
       socket.off('order:status_updated', refreshHandler);
       socket.off('kds:item_updated', refreshHandler);
       socket.off('kds:item_removed', refreshHandler);
@@ -183,6 +185,85 @@ export const useKdsData = (venueId: string) => {
     }
   };
 
+  const handleNextStationStatus = async (
+    item: KdsItem,
+    stationId: string,
+    targetStatus?: 'pending' | 'in_preparation' | 'ready' | 'delivered'
+  ) => {
+    const stationEntry = item.stations?.find((s) => s.stationId === stationId);
+    const currentStatus = stationEntry ? stationEntry.status : item.status;
+
+    let nextStatus: 'pending' | 'in_preparation' | 'ready' | 'delivered' = targetStatus || 'in_preparation';
+    if (!targetStatus) {
+      if (currentStatus === 'pending') {
+        nextStatus = 'in_preparation';
+      } else if (currentStatus === 'in_preparation') {
+        nextStatus = 'ready';
+      } else if (currentStatus === 'ready') {
+        nextStatus = 'delivered';
+      }
+    }
+
+    setOrders((prevOrders) =>
+      prevOrders.map((ord) => ({
+        ...ord,
+        items: ord.items.map((i) => {
+          if (i.id !== item.id) return i;
+          const updatedStations = (i.stations || []).map((s) =>
+            s.stationId === stationId ? { ...s, status: nextStatus } : s
+          );
+          const allReady =
+            updatedStations.length > 0 &&
+            updatedStations.every((s) => s.status === 'ready' || s.status === 'delivered');
+          const allDelivered =
+            updatedStations.length > 0 && updatedStations.every((s) => s.status === 'delivered');
+          const anyInPrep = updatedStations.some((s) => s.status === 'in_preparation' || s.status === 'ready');
+          const newItemStatus = allDelivered
+            ? 'delivered'
+            : allReady
+            ? 'ready'
+            : anyInPrep
+            ? 'in_preparation'
+            : i.status;
+
+          return {
+            ...i,
+            status: newItemStatus,
+            stations: updatedStations,
+          };
+        }),
+      }))
+    );
+
+    try {
+      await kdsApi.updateItemStationStatus(item.id, stationId, nextStatus);
+      fetchOrders(true);
+    } catch (err: any) {
+      console.error('Error advancing station status:', err);
+      fetchOrders();
+    }
+  };
+
+  const handleUndoStationStatus = async (item: KdsItem, stationId: string) => {
+    const stationEntry = item.stations?.find((s) => s.stationId === stationId);
+    if (!stationEntry) return;
+
+    let prevStatus: 'pending' | 'in_preparation' | 'ready' | 'delivered' | null = null;
+    if (stationEntry.status === 'delivered') prevStatus = 'ready';
+    else if (stationEntry.status === 'ready') prevStatus = 'in_preparation';
+    else if (stationEntry.status === 'in_preparation') prevStatus = 'pending';
+
+    if (!prevStatus) return;
+
+    try {
+      await kdsApi.updateItemStationStatus(item.id, stationId, prevStatus);
+      fetchOrders(true);
+    } catch (err) {
+      console.error('Error rolling back station status:', err);
+      fetchOrders();
+    }
+  };
+
   // Mark all unready items in an order ready, or if all ready, mark all delivered
   const handleCompleteOrder = async (order: KdsOrder) => {
     const hasUnready = order.items.some(
@@ -232,6 +313,8 @@ export const useKdsData = (venueId: string) => {
     currentTime,
     handleNextStatus,
     handleUndoStatus,
+    handleNextStationStatus,
+    handleUndoStationStatus,
     handleCompleteOrder,
     refreshOrders: fetchOrders,
   };

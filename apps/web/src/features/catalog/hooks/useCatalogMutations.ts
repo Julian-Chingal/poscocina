@@ -87,6 +87,7 @@ export const useCatalogMutations = (venueId: string, onSuccess: () => void) => {
         model3dType: data.model3dType ?? 'glb',
         dimensions: data.dimensions ?? {},
         displayMedia: data.displayMedia ?? 'both',
+        stationIds: (data as any).stationIds,
       };
 
       if (editingProduct) {
