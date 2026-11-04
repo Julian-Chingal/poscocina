@@ -17,10 +17,18 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   HOST: z.string().default('0.0.0.0'),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL es obligatoria para arrancar el servidor'),
+  VALKEY_URL: z.string().optional(),
   REDIS_URL: z.string().default('redis://localhost:6379'),
   JWT_SECRET: z.string().min(16, 'JWT_SECRET debe tener al menos 16 caracteres para seguridad criptográfica'),
   JWT_EXPIRES_IN: z.string().default('12h'),
   CORS_ORIGIN: z.string().default('http://localhost:5173,http://localhost:5174,http://localhost:3000'),
+}).transform((data) => {
+  const resolvedCacheUrl = data.VALKEY_URL || data.REDIS_URL;
+  return {
+    ...data,
+    VALKEY_URL: resolvedCacheUrl,
+    REDIS_URL: resolvedCacheUrl,
+  };
 });
 
 const parseEnv = () => {

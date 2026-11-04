@@ -1,8 +1,8 @@
-﻿import React, { useState } from 'react';
-import { Plus, Minus, Trash2, FileText, SlidersHorizontal } from 'lucide-react';
-import { CartItem } from '../types/pos.types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+﻿import React, { useState } from "react";
+import { Plus, Minus, Trash2, FileText, SlidersHorizontal } from "lucide-react";
+import { CartItem } from "../types/pos.types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface Props {
   item: CartItem;
@@ -20,19 +20,22 @@ export const CartItemRow: React.FC<Props> = ({
   onCustomizeItem,
 }) => {
   const [showNotesInput, setShowNotesInput] = useState(Boolean(item.notes));
-  const unitPrice = parseFloat(item.product.price || '0');
-  const modsDelta = item.modifiers?.reduce((acc, m) => acc + (m.priceDelta || 0), 0) || 0;
+  const unitPrice = parseFloat(item.product.price || "0");
+  const modsDelta =
+    item.modifiers?.reduce((acc, m) => acc + (m.priceDelta || 0), 0) || 0;
   const lineTotal = (unitPrice + modsDelta) * item.quantity;
   const hasModifiersInProduct = Boolean(
-    item.product.modifierGroups && item.product.modifierGroups.length > 0
+    item.product.modifierGroups && item.product.modifierGroups.length > 0,
   );
-  const hasSelectedModifiers = Boolean(item.modifiers && item.modifiers.length > 0);
+  const hasSelectedModifiers = Boolean(
+    item.modifiers && item.modifiers.length > 0,
+  );
 
   return (
     <div className="p-3 bg-card hover:bg-card/90 rounded-xl border border-border/80 space-y-2.5 transition-all shadow-2xs">
       <div className="flex items-start justify-between gap-2.5">
         <div className="flex-1 min-w-0">
-          <h5 className="text-xs sm:text-sm font-bold text-foreground leading-snug break-words">
+          <h5 className="text-xs sm:text-sm font-bold text-foreground leading-snug wrap-break-word">
             {item.product.name}
           </h5>
           <span className="text-[11px] font-mono tabular-nums text-muted-foreground mt-0.5 block">
@@ -48,14 +51,15 @@ export const CartItemRow: React.FC<Props> = ({
                   item.product.modifierGroups
                     ?.flatMap((g) => g.modifiers || [])
                     .find((m) => m.id === mod.modifierId)?.name ||
-                  'Adición';
+                  "Adición";
                 return (
                   <span
                     key={`${mod.modifierId}-${mIdx}`}
                     className="inline-flex items-center text-[10px] bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.2 rounded-md font-semibold"
                   >
                     +{modName}
-                    {mod.priceDelta > 0 && ` (+$${mod.priceDelta.toLocaleString()})`}
+                    {mod.priceDelta > 0 &&
+                      ` (+$${mod.priceDelta.toLocaleString()})`}
                   </span>
                 );
               })}
@@ -99,23 +103,24 @@ export const CartItemRow: React.FC<Props> = ({
         </div>
 
         <div className="flex items-center gap-1">
-          {(hasModifiersInProduct || hasSelectedModifiers) && onCustomizeItem && (
-            <Button
-              variant="ghost"
-              size="sm"
-              type="button"
-              onClick={() => onCustomizeItem(index)}
-              className={`h-6.5 px-2 text-[10px] rounded-lg flex items-center gap-1 transition-colors ${
-                hasSelectedModifiers
-                  ? 'text-primary font-bold bg-primary/10 hover:bg-primary/20'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-              title="Personalizar adiciones y opciones"
-            >
-              <SlidersHorizontal className="size-3" />
-              <span>{hasSelectedModifiers ? 'Opciones' : '+ Opciones'}</span>
-            </Button>
-          )}
+          {(hasModifiersInProduct || hasSelectedModifiers) &&
+            onCustomizeItem && (
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
+                onClick={() => onCustomizeItem(index)}
+                className={`h-6.5 px-2 text-[10px] rounded-lg flex items-center gap-1 transition-colors ${
+                  hasSelectedModifiers
+                    ? "text-primary font-bold bg-primary/10 hover:bg-primary/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+                title="Personalizar adiciones y opciones"
+              >
+                <SlidersHorizontal className="size-3" />
+                <span>{hasSelectedModifiers ? "Opciones" : "+ Opciones"}</span>
+              </Button>
+            )}
 
           <Button
             variant="ghost"
@@ -124,13 +129,13 @@ export const CartItemRow: React.FC<Props> = ({
             onClick={() => setShowNotesInput(!showNotesInput)}
             className={`h-6.5 px-2 text-[10px] rounded-lg flex items-center gap-1 transition-colors ${
               item.notes
-                ? 'text-primary font-bold bg-primary/10'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                ? "text-primary font-bold bg-primary/10"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
             title="Añadir nota o instrucción para cocina"
           >
             <FileText className="size-3" />
-            <span>{item.notes ? 'Nota' : '+ Nota'}</span>
+            <span>{item.notes ? "Nota" : "+ Nota"}</span>
           </Button>
         </div>
       </div>

@@ -4,12 +4,12 @@ export class CheckHealthUseCase {
   constructor(private readonly repo: IHealthRepository) {}
 
   async execute(): Promise<HealthStatus> {
-    const [dbOk, redisOk] = await Promise.all([
+    const [dbOk, cacheOk] = await Promise.all([
       this.repo.checkDatabase(3000),
-      this.repo.checkRedis(3000),
+      this.repo.checkValkey(3000),
     ]);
 
-    const isHealthy = dbOk && redisOk;
+    const isHealthy = dbOk && cacheOk;
 
     return {
       status: isHealthy ? 'ok' : 'degraded',
@@ -17,7 +17,8 @@ export class CheckHealthUseCase {
       service: 'poscocina-server',
       version: '0.1.0',
       database: dbOk ? 'up' : 'down',
-      redis: redisOk ? 'up' : 'down',
+      valkey: cacheOk ? 'up' : 'down',
+      redis: cacheOk ? 'up' : 'down',
     };
   }
 }

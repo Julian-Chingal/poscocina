@@ -20,27 +20,27 @@ export const socketPlugin = fp(async (fastify: FastifyInstance) => {
     },
   });
 
-  // Redis Adapter for WebSocket scaling (with fallback if Redis is unreachable)
+  // Valkey/Redis Adapter for WebSocket scaling (with fallback if cache is unreachable)
   try {
-    const pubClient = new Redis(env.REDIS_URL, {
+    const pubClient = new Redis(env.VALKEY_URL, {
       lazyConnect: true,
       maxRetriesPerRequest: null,
       retryStrategy: (times) => Math.min(times * 200, 2000),
     });
     pubClient.on('error', (err) => {
-      fastify.log.warn(`⚠️ Socket.IO Redis pubClient error: ${err.message}`);
+      fastify.log.warn(`⚠️ Socket.IO Valkey pubClient error: ${err.message}`);
     });
 
     const subClient = pubClient.duplicate();
     subClient.on('error', (err) => {
-      fastify.log.warn(`⚠️ Socket.IO Redis subClient error: ${err.message}`);
+      fastify.log.warn(`⚠️ Socket.IO Valkey subClient error: ${err.message}`);
     });
 
     await Promise.all([pubClient.connect(), subClient.connect()]);
     io.adapter(createAdapter(pubClient, subClient));
-    fastify.log.info('🔌 Socket.IO connected with Redis adapter');
+    fastify.log.info('🔌 Socket.IO connected with Valkey adapter');
   } catch (err: any) {
-    fastify.log.warn(`⚠️ Redis not available for Socket.IO adapter (${err.message}), using in-memory adapter fallback`);
+    fastify.log.warn(`⚠️ Valkey not available for Socket.IO adapter (${err.message}), using in-memory adapter fallback`);
   }
 
   io.on('connection', (socket) => {

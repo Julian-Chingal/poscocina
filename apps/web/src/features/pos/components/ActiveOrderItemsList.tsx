@@ -1,24 +1,44 @@
-﻿import React, { useState } from 'react';
-import { ChefHat, Edit3, Trash2, AlertTriangle, CheckCircle2, Clock, Flame, UtensilsCrossed } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { toast } from '@/components/ui/sonner';
-import { posApi } from '../api/pos.api';
-import { ManagerPinAuthModal } from './ManagerPinAuthModal';
+﻿import React, { useState } from "react";
+import {
+  ChefHat,
+  Edit3,
+  Trash2,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Flame,
+  UtensilsCrossed,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { toast } from "@/components/ui/sonner";
+import { posApi } from "../api/pos.api";
+import { ManagerPinAuthModal } from "./ManagerPinAuthModal";
 
 interface ActiveOrderItemsListProps {
   order: any;
   onRefreshOrder: () => void;
 }
 
-export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ order, onRefreshOrder }) => {
+export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({
+  order,
+  onRefreshOrder,
+}) => {
   const [editingItem, setEditingItem] = useState<any | null>(null);
   const [itemToVoid, setItemToVoid] = useState<any | null>(null);
-  const [newNotes, setNewNotes] = useState<string>('');
+  const [newNotes, setNewNotes] = useState<string>("");
   const [newQuantity, setNewQuantity] = useState<number>(1);
-  const [isConsultingKitchen, setIsConsultingKitchen] = useState<boolean>(false);
+  const [isConsultingKitchen, setIsConsultingKitchen] =
+    useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const items = order?.items || [];
@@ -26,31 +46,43 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'pending':
-      case 'sent':
+      case "pending":
+      case "sent":
         return (
-          <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 text-[10px] gap-1">
+          <Badge
+            variant="outline"
+            className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 text-[10px] gap-1"
+          >
             <Clock className="size-2.5" />
             En cola
           </Badge>
         );
-      case 'in_preparation':
+      case "in_preparation":
         return (
-          <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px] gap-1">
+          <Badge
+            variant="outline"
+            className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px] gap-1"
+          >
             <Flame className="size-2.5" />
             En preparación
           </Badge>
         );
-      case 'ready':
+      case "ready":
         return (
-          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px] gap-1">
+          <Badge
+            variant="outline"
+            className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px] gap-1"
+          >
             <CheckCircle2 className="size-2.5" />
             ¡Listo!
           </Badge>
         );
-      case 'delivered':
+      case "delivered":
         return (
-          <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-[10px] gap-1">
+          <Badge
+            variant="outline"
+            className="bg-muted text-muted-foreground border-border text-[10px] gap-1"
+          >
             <UtensilsCrossed className="size-2.5" />
             Servido
           </Badge>
@@ -66,9 +98,11 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
 
   const handleOpenEdit = (item: any) => {
     setEditingItem(item);
-    setNewNotes(item.notes || '');
+    setNewNotes(item.notes || "");
     setNewQuantity(item.quantity || 1);
-    const isAdvanced = ['in_preparation', 'ready', 'delivered'].includes(item.status);
+    const isAdvanced = ["in_preparation", "ready", "delivered"].includes(
+      item.status,
+    );
     setIsConsultingKitchen(isAdvanced);
   };
 
@@ -81,14 +115,17 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
         quantity: newQuantity,
         kitchenApproved: isConsultingKitchen,
       });
-      toast.success('Ítem actualizado correctamente en comanda');
+      toast.success("Ítem actualizado correctamente en comanda");
       setEditingItem(null);
       onRefreshOrder();
     } catch (err: any) {
       if (err.statusCode === 409 || err.response?.status === 409) {
-        toast.error(err.message || 'El ítem ya se encuentra en preparación o despachado; consulte con cocina.');
+        toast.error(
+          err.message ||
+            "El ítem ya se encuentra en preparación o despachado; consulte con cocina.",
+        );
       } else {
-        toast.error(err.message || 'Error al actualizar el ítem');
+        toast.error(err.message || "Error al actualizar el ítem");
       }
     } finally {
       setIsSubmitting(false);
@@ -99,9 +136,15 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
     setItemToVoid(item);
   };
 
-  const handleAuthorizedVoid = async (authInfo: { managerId: string; managerName: string; reason: string }) => {
+  const handleAuthorizedVoid = async (authInfo: {
+    managerId: string;
+    managerName: string;
+    reason: string;
+  }) => {
     if (!itemToVoid) return;
-    const isAdvanced = ['in_preparation', 'ready', 'delivered'].includes(itemToVoid.status);
+    const isAdvanced = ["in_preparation", "ready", "delivered"].includes(
+      itemToVoid.status,
+    );
 
     try {
       await posApi.deleteOrderItem(itemToVoid.id, isAdvanced);
@@ -110,9 +153,12 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
       onRefreshOrder();
     } catch (err: any) {
       if (err.statusCode === 409 || err.response?.status === 409) {
-        toast.error(err.message || 'El ítem ya se encuentra en preparación o despachado; consulte con cocina.');
+        toast.error(
+          err.message ||
+            "El ítem ya se encuentra en preparación o despachado; consulte con cocina.",
+        );
       } else {
-        toast.error(err.message || 'Error al eliminar el ítem');
+        toast.error(err.message || "Error al eliminar el ítem");
       }
     }
   };
@@ -141,8 +187,8 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
                   >
                     {item.quantity}x
                   </Badge>
-                  <span className="font-bold text-sm sm:text-base text-foreground leading-snug whitespace-normal break-words">
-                    {item.product?.name || 'Producto'}
+                  <span className="font-bold text-sm sm:text-base text-foreground leading-snug whitespace-normal wrap-break-word">
+                    {item.product?.name || "Producto"}
                   </span>
                 </div>
                 <div className="shrink-0 pt-0.5">
@@ -154,15 +200,18 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
               {item.modifiers && item.modifiers.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {item.modifiers.map((mod: any, mIdx: number) => {
-                    const modName = mod.modifier?.name || mod.name || 'Extra';
-                    const priceDelta = parseFloat(mod.priceDelta || mod.modifier?.priceDelta || '0');
+                    const modName = mod.modifier?.name || mod.name || "Extra";
+                    const priceDelta = parseFloat(
+                      mod.priceDelta || mod.modifier?.priceDelta || "0",
+                    );
                     return (
                       <span
                         key={`${mod.id || mod.modifierId || mIdx}`}
-                        className="inline-flex items-center text-xs bg-primary/10 text-primary border border-primary/25 px-2 py-0.5 rounded-md font-semibold whitespace-normal break-words"
+                        className="inline-flex items-center text-xs bg-primary/10 text-primary border border-primary/25 px-2 py-0.5 rounded-md font-semibold whitespace-normal wrap-break-word"
                       >
                         +{modName}
-                        {priceDelta > 0 && ` (+$${priceDelta.toLocaleString()})`}
+                        {priceDelta > 0 &&
+                          ` (+$${priceDelta.toLocaleString()})`}
                       </span>
                     );
                   })}
@@ -170,7 +219,7 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
               )}
 
               {item.notes && (
-                <p className="text-xs text-muted-foreground whitespace-normal break-words mt-1.5 italic bg-muted/40 p-1.5 rounded-md border border-border/50">
+                <p className="text-xs text-muted-foreground whitespace-normal wrap-break-word mt-1.5 italic bg-muted/40 p-1.5 rounded-md border border-border/50">
                   Nota: {item.notes}
                 </p>
               )}
@@ -204,7 +253,10 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
 
       {/* Edit Item Modal */}
       {editingItem && (
-        <Dialog open={Boolean(editingItem)} onOpenChange={(open) => !open && setEditingItem(null)}>
+        <Dialog
+          open={Boolean(editingItem)}
+          onOpenChange={(open) => !open && setEditingItem(null)}
+        >
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="text-base font-bold flex items-center gap-2">
@@ -212,7 +264,8 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
                 Modificar Ítem en Comanda
               </DialogTitle>
               <DialogDescription className="text-xs">
-                Modifica notas o cantidad para <strong>{editingItem.product?.name}</strong>.
+                Modifica notas o cantidad para{" "}
+                <strong>{editingItem.product?.name}</strong>.
               </DialogDescription>
             </DialogHeader>
 
@@ -221,7 +274,9 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
                 <div className="p-2.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-start gap-2">
                   <AlertTriangle className="size-4 text-amber-600 shrink-0 mt-0.5" />
                   <span>
-                    El ítem ya está <strong>{editingItem.status}</strong>. Solo debe modificarse si cocina lo autoriza para recalcular la orden.
+                    El ítem ya está <strong>{editingItem.status}</strong>. Solo
+                    debe modificarse si cocina lo autoriza para recalcular la
+                    orden.
                   </span>
                 </div>
               )}
@@ -232,13 +287,17 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
                   type="number"
                   min={1}
                   value={newQuantity}
-                  onChange={(e) => setNewQuantity(parseInt(e.target.value) || 1)}
+                  onChange={(e) =>
+                    setNewQuantity(parseInt(e.target.value) || 1)
+                  }
                   className="h-8 text-xs"
                 />
               </div>
 
               <div>
-                <label className="font-semibold block mb-1">Notas para cocina</label>
+                <label className="font-semibold block mb-1">
+                  Notas para cocina
+                </label>
                 <Input
                   type="text"
                   placeholder="ej. sin cebolla, término medio..."
@@ -266,7 +325,7 @@ export const ActiveOrderItemsList: React.FC<ActiveOrderItemsListProps> = ({ orde
                 onClick={handleSaveEdit}
                 className="text-xs font-bold bg-primary text-primary-foreground"
               >
-                {isSubmitting ? 'Guardando...' : 'Aplicar Modificación'}
+                {isSubmitting ? "Guardando..." : "Aplicar Modificación"}
               </Button>
             </DialogFooter>
           </DialogContent>

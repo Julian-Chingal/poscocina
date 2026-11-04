@@ -1,12 +1,12 @@
-﻿import React from 'react';
-import { ShoppingCart, Trash2, Utensils } from 'lucide-react';
-import { CartItem, Customer, TableItem } from '../types/pos.types';
-import { CartItemRow } from './CartItemRow';
-import { CustomerSelectDropdown } from './CustomerSelectDropdown';
-import { CartFooter } from './CartFooter';
-import { ActiveOrderItemsList } from './ActiveOrderItemsList';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+﻿import React from "react";
+import { ShoppingCart, Trash2, Utensils } from "lucide-react";
+import { CartItem, Customer, TableItem } from "../types/pos.types";
+import { CartItemRow } from "./CartItemRow";
+import { CustomerSelectDropdown } from "./CustomerSelectDropdown";
+import { CartFooter } from "./CartFooter";
+import { ActiveOrderItemsList } from "./ActiveOrderItemsList";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface Props {
   cart: CartItem[];
@@ -64,7 +64,7 @@ export const CartPanel: React.FC<Props> = ({
   const totalItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <div className="bg-card/95 backdrop-blur-sm border border-border/80 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between h-[calc(100vh-140px)] min-h-[580px] shadow-xs">
+    <div className="bg-card/95 backdrop-blur-sm border border-border/80 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between h-[calc(100vh-140px)] min-h-145 shadow-xs">
       <div className="space-y-3 overflow-hidden flex flex-col flex-1">
         {/* Ticket Header */}
         <div className="flex items-center justify-between pb-2.5 border-b border-border/80">
@@ -75,14 +75,16 @@ export const CartPanel: React.FC<Props> = ({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-xs sm:text-sm font-bold text-foreground">
-                  {currentTable ? `Comanda Mesa ${currentTable.label}` : 'Comanda para Llevar'}
+                  {currentTable
+                    ? `Comanda Mesa ${currentTable.label}`
+                    : "Comanda para Llevar"}
                 </span>
                 {totalItemCount > 0 && (
                   <Badge
                     variant="outline"
                     className="px-1.5 py-0.2 bg-primary/15 text-primary border-primary/30 text-[10px] font-bold tabular-nums"
                   >
-                    {totalItemCount} {totalItemCount === 1 ? 'ítem' : 'ítems'}
+                    {totalItemCount} {totalItemCount === 1 ? "ítem" : "ítems"}
                   </Badge>
                 )}
               </div>
@@ -134,8 +136,10 @@ export const CartPanel: React.FC<Props> = ({
               <div className="size-8 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground/60 mb-0.5">
                 <Utensils className="size-4" />
               </div>
-              <span className="font-semibold text-foreground/80">Comanda vacía</span>
-              <span className="text-[11px] text-muted-foreground max-w-[220px]">
+              <span className="font-semibold text-foreground/80">
+                Comanda vacía
+              </span>
+              <span className="text-[11px] text-muted-foreground max-w-55">
                 Toca productos en el menú para agregarlos a la orden.
               </span>
             </div>
@@ -143,7 +147,10 @@ export const CartPanel: React.FC<Props> = ({
 
           {/* Existing order items sent to kitchen */}
           {activeOrder && onRefreshOrder && (
-            <ActiveOrderItemsList order={activeOrder} onRefreshOrder={onRefreshOrder} />
+            <ActiveOrderItemsList
+              order={activeOrder}
+              onRefreshOrder={onRefreshOrder}
+            />
           )}
         </div>
       </div>

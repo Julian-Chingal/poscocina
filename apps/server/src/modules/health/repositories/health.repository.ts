@@ -1,12 +1,12 @@
 import { sql } from 'drizzle-orm';
 import { db } from '../../../db/index.js';
-import { redis } from '../../../config/redis.js';
+import { valkey } from '../../../config/valkey.js';
 import { IHealthRepository } from '../interfaces/health.interface.js';
 
 export class HealthRepository implements IHealthRepository {
   constructor(
     private readonly database = db,
-    private readonly cache = redis
+    private readonly cache = valkey
   ) {}
 
   async checkDatabase(timeoutMs = 3000): Promise<boolean> {
@@ -22,17 +22,21 @@ export class HealthRepository implements IHealthRepository {
     }
   }
 
-  async checkRedis(timeoutMs = 3000): Promise<boolean> {
+  async checkValkey(timeoutMs = 3000): Promise<boolean> {
     try {
-      const redisPromise = this.cache.ping();
+      const valkeyPromise = this.cache.ping();
       const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Redis Timeout')), timeoutMs)
+        setTimeout(() => reject(new Error('Valkey Timeout')), timeoutMs)
       );
-      const pong = await Promise.race([redisPromise, timeout]);
+      const pong = await Promise.race([valkeyPromise, timeout]);
       return pong === 'PONG';
     } catch {
       return false;
     }
+  }
+
+  async checkRedis(timeoutMs = 3000): Promise<boolean> {
+    return this.checkValkey(timeoutMs);
   }
 }
 

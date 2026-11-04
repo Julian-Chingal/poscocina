@@ -1,4 +1,4 @@
-﻿import React from 'react';
+﻿import React from "react";
 import {
   Users,
   AlertTriangle,
@@ -7,8 +7,8 @@ import {
   ShoppingBag,
   ArrowRight,
   Sparkles,
-} from 'lucide-react';
-import { TableItem } from '../types/pos.types';
+} from "lucide-react";
+import { TableItem } from "../types/pos.types";
 import {
   Select,
   SelectContent,
@@ -16,9 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
   SelectSeparator,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
 interface Props {
   currentTable: TableItem | null;
@@ -35,20 +35,20 @@ const TABLE_STATUS_CONFIG: Record<
   string,
   { label: string; dotClass: string; badgeVariant?: string }
 > = {
-  occupied: { label: 'Ocupada', dotClass: 'bg-amber-500' },
-  paid_waiting_food: { label: 'Pagada (Cocina)', dotClass: 'bg-blue-500' },
-  check_requested: { label: 'Pidiendo Cuenta', dotClass: 'bg-rose-500' },
-  free: { label: 'Libre', dotClass: 'bg-emerald-500' },
+  occupied: { label: "Ocupada", dotClass: "bg-amber-500" },
+  paid_waiting_food: { label: "Pagada (Cocina)", dotClass: "bg-blue-500" },
+  check_requested: { label: "Pidiendo Cuenta", dotClass: "bg-rose-500" },
+  free: { label: "Libre", dotClass: "bg-emerald-500" },
 };
 
-const TAKEOUT_VALUE = '__takeout__';
+const TAKEOUT_VALUE = "__takeout__";
 
 export const PosHeader: React.FC<Props> = ({
   currentTable,
   allTables,
   isCashShiftOpen,
   waiterName,
-  guestName = '',
+  guestName = "",
   onSelectTable,
   onGuestNameChange,
   onNavigateToShifts,
@@ -57,14 +57,14 @@ export const PosHeader: React.FC<Props> = ({
     if (onNavigateToShifts) {
       onNavigateToShifts();
     } else {
-      window.location.hash = '#/shifts';
+      window.location.hash = "#/shifts";
     }
   };
 
   const currentStatusConfig = currentTable
     ? TABLE_STATUS_CONFIG[currentTable.status] || {
-        label: 'Libre',
-        dotClass: 'bg-emerald-500',
+        label: "Libre",
+        dotClass: "bg-emerald-500",
       }
     : null;
 
@@ -77,7 +77,7 @@ export const PosHeader: React.FC<Props> = ({
           {currentTable ? (
             <div className="flex items-center gap-1.5 shrink-0">
               <span
-                className={`size-2 rounded-full ${currentStatusConfig?.dotClass || 'bg-emerald-500'} ring-2 ring-background`}
+                className={`size-2 rounded-full ${currentStatusConfig?.dotClass || "bg-emerald-500"} ring-2 ring-background`}
                 aria-hidden="true"
               />
               <Users className="w-3.5 h-3.5 text-primary" />
@@ -88,7 +88,7 @@ export const PosHeader: React.FC<Props> = ({
 
           <div className="flex items-center gap-1">
             <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider hidden sm:inline">
-              {currentTable ? 'Mesa' : 'Destino'}:
+              {currentTable ? "Mesa" : "Destino"}:
             </span>
 
             <Select
@@ -102,11 +102,14 @@ export const PosHeader: React.FC<Props> = ({
                 }
               }}
             >
-              <SelectTrigger className="h-7 text-xs font-bold border-none bg-transparent shadow-none focus:ring-0 px-1 w-auto min-w-[140px] text-foreground">
+              <SelectTrigger className="h-7 text-xs font-bold border-none bg-transparent shadow-none focus:ring-0 px-1 w-auto min-w-35 text-foreground">
                 <SelectValue placeholder="Para Llevar / Barra" />
               </SelectTrigger>
               <SelectContent className="max-h-72">
-                <SelectItem value={TAKEOUT_VALUE} className="text-xs font-semibold py-2">
+                <SelectItem
+                  value={TAKEOUT_VALUE}
+                  className="text-xs font-semibold py-2"
+                >
                   <div className="flex items-center gap-2">
                     <ShoppingBag className="size-3.5 text-primary" />
                     <span>Para Llevar / Sin Mesa</span>
@@ -115,11 +118,15 @@ export const PosHeader: React.FC<Props> = ({
                 <SelectSeparator />
                 {allTables.map((t) => {
                   const statusInfo = TABLE_STATUS_CONFIG[t.status] || {
-                    label: 'Libre',
-                    dotClass: 'bg-emerald-500',
+                    label: "Libre",
+                    dotClass: "bg-emerald-500",
                   };
                   return (
-                    <SelectItem key={t.id} value={t.id} className="text-xs py-1.5">
+                    <SelectItem
+                      key={t.id}
+                      value={t.id}
+                      className="text-xs py-1.5"
+                    >
                       <div className="flex items-center justify-between w-full gap-3">
                         <div className="flex items-center gap-2">
                           <span
@@ -153,7 +160,7 @@ export const PosHeader: React.FC<Props> = ({
             {guestName && (
               <button
                 type="button"
-                onClick={() => onGuestNameChange('')}
+                onClick={() => onGuestNameChange("")}
                 className="text-[10px] text-muted-foreground hover:text-foreground px-1 py-0.5 rounded cursor-pointer"
                 title="Limpiar nombre"
               >
@@ -181,7 +188,10 @@ export const PosHeader: React.FC<Props> = ({
           <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-muted/40 border border-border/60 text-xs">
             <span className="size-2 rounded-full bg-primary/60 shrink-0" />
             <span className="text-muted-foreground font-medium text-[11px]">
-              Atiende: <strong className="text-foreground font-semibold">{waiterName}</strong>
+              Atiende:{" "}
+              <strong className="text-foreground font-semibold">
+                {waiterName}
+              </strong>
             </span>
           </div>
         )}

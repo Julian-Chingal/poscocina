@@ -28,26 +28,28 @@ services:
     # ports:
     #   - "${DB_PORT:-5432}:5432"
 
-  redis:
-    image: redis:7-alpine
-    container_name: poscocina-redis
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: poscocina-valkey
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ["valkey-server", "--appendonly", "yes"]
     volumes:
-      - redis_data:/data
+      - valkey_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "valkey-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
       poscocina-network:
         aliases:
+          - poscocina-valkey
+          - valkey
           - poscocina-redis
           - redis
-    # En producción / Dokploy no se expone Redis al exterior:
+    # En producción / Dokploy no se expone Valkey al exterior:
     # ports:
-    #   - "${REDIS_PORT:-6379}:6379"
+    #   - "${VALKEY_PORT:-${REDIS_PORT:-6379}}:6379"
 
   server:
     build:
@@ -60,9 +62,10 @@ services:
       PORT: 3000
       HOST: 0.0.0.0
       DATABASE_URL: ${DOCKER_DATABASE_URL:-${DATABASE_URL:-postgresql://${DB_USER:-posuser}:${DB_PASSWORD:-pospassword}@postgres:5432/${DB_NAME:-poscocina}}}
-      REDIS_URL: ${DOCKER_REDIS_URL:-${REDIS_URL:-redis://redis:6379}}
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
+      VALKEY_URL: ${DOCKER_VALKEY_URL:-${VALKEY_URL:-${DOCKER_REDIS_URL:-${REDIS_URL:-redis://valkey:6379}}}}
+      REDIS_URL: ${DOCKER_VALKEY_URL:-${VALKEY_URL:-${DOCKER_REDIS_URL:-${REDIS_URL:-redis://valkey:6379}}}}
+      VALKEY_HOST: ${VALKEY_HOST:-${REDIS_HOST:-valkey}}
+      VALKEY_PORT: ${VALKEY_PORT:-${REDIS_PORT:-6379}}
       JWT_SECRET: ${JWT_SECRET:-poscocina_jwt_super_secret_production_key_2026}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-12h}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
@@ -85,7 +88,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
+      valkey:
         condition: service_healthy
     expose:
       - "3000"
@@ -122,8 +125,8 @@ networks:
 volumes:
   postgres_data:
     name: poscocina_postgres_data
-  redis_data:
-    name: poscocina_redis_data
+  valkey_data:
+    name: poscocina_valkey_data
   server_uploads:
     name: poscocina_server_uploads
 

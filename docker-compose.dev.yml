@@ -4,8 +4,8 @@
 # Uso:
 #   - Levantar todo en dev (hot-reload completo):
 #       pnpm docker:dev  O  docker compose -f docker-compose.dev.yml up -d
-#   - Levantar solo infraestructura (BD + Redis para correr pnpm dev:all en host):
-#       pnpm docker:dev:db  O  docker compose -f docker-compose.dev.yml up -d postgres redis
+#   - Levantar solo infraestructura (BD + Valkey para correr pnpm dev:all en host):
+#       pnpm docker:dev:db  O  docker compose -f docker-compose.dev.yml up -d postgres valkey
 #   - Ver logs:
 #       pnpm docker:dev:logs
 #   - Apagar:
@@ -40,23 +40,25 @@ services:
           - poscocina-postgres-dev
           - postgres
 
-  redis:
-    image: redis:7-alpine
-    container_name: poscocina-redis-dev
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: poscocina-valkey-dev
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ["valkey-server", "--appendonly", "yes"]
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${VALKEY_PORT:-${REDIS_PORT:-6379}}:6379"
     volumes:
-      - redis_dev_data:/data
+      - valkey_dev_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "valkey-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
       poscocina-dev-network:
         aliases:
+          - poscocina-valkey-dev
+          - valkey
           - poscocina-redis-dev
           - redis
 
@@ -71,9 +73,10 @@ services:
       PORT: 3000
       HOST: 0.0.0.0
       DATABASE_URL: postgresql://${DB_USER:-posuser}:${DB_PASSWORD:-pospassword_seguro_produccion_2026}@postgres:5432/${DB_NAME:-poscocina}
-      REDIS_URL: redis://redis:6379
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      VALKEY_URL: ${VALKEY_URL:-${REDIS_URL:-redis://valkey:6379}}
+      REDIS_URL: ${VALKEY_URL:-${REDIS_URL:-redis://valkey:6379}}
+      VALKEY_HOST: ${VALKEY_HOST:-${REDIS_HOST:-valkey}}
+      VALKEY_PORT: ${VALKEY_PORT:-${REDIS_PORT:-6379}}
       JWT_SECRET: ${JWT_SECRET:-poscocina_super_secret_production_key_32_chars_2026!}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-12h}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173,http://localhost:5174,http://localhost:3000,*}
@@ -102,7 +105,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
+      valkey:
         condition: service_healthy
     networks:
       poscocina-dev-network:
@@ -144,7 +147,7 @@ networks:
 volumes:
   postgres_dev_data:
     name: poscocina_postgres_dev_data
-  redis_dev_data:
-    name: poscocina_redis_dev_data
+  valkey_dev_data:
+    name: poscocina_valkey_dev_data
   server_dev_uploads:
     name: poscocina_server_dev_uploads

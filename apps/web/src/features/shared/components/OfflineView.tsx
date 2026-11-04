@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { WifiOff, RefreshCw, AlertTriangle } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 import { Button } from '@/components/ui/button';
@@ -21,9 +21,10 @@ export const OfflineView: React.FC<OfflineViewProps> = ({ onRetry }) => {
         await onRetry();
       } else if (res.status === 503) {
         const data = await res.json().catch(() => ({}));
-        const diagMsg = `Servicio degradado (503): DB ${data.database === 'up' ? 'OK' : 'CAÍDA'} | Redis ${data.redis === 'up' ? 'OK' : 'CAÍDO'}`;
+        const cacheStatus = data.valkey || data.redis;
+        const diagMsg = `Servicio degradado (503): DB ${data.database === 'up' ? 'OK' : 'CAÍDA'} | Valkey ${cacheStatus === 'up' ? 'OK' : 'CAÍDO'}`;
         setDiagnostics(diagMsg);
-        toast.error('El servidor está activo pero la base de datos o Redis no responden');
+        toast.error('El servidor está activo pero la base de datos o Valkey no responden');
       } else {
         setDiagnostics(`Error del servidor (${res.status}): ${res.statusText}`);
         toast.error('El servidor respondió con un código no disponible');

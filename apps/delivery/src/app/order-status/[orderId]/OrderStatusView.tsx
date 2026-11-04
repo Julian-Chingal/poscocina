@@ -1,7 +1,7 @@
-﻿'use client';
+﻿"use client";
 
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   CheckCircle2,
   Clock,
@@ -12,7 +12,7 @@ import {
   ArrowLeft,
   AlertCircle,
   RefreshCw,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface OrderItem {
   id: string;
@@ -58,7 +58,7 @@ export function OrderStatusView({ initialOrder }: Props) {
           setOrder(updated);
         }
       } catch (e) {
-        console.warn('Failed to poll order status', e);
+        console.warn("Failed to poll order status", e);
       }
     }, 15000);
 
@@ -79,8 +79,12 @@ export function OrderStatusView({ initialOrder }: Props) {
   };
 
   const formatCOP = (num: number | string) => {
-    const val = typeof num === 'string' ? parseFloat(num) : num;
-    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
+    const val = typeof num === "string" ? parseFloat(num) : num;
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      maximumFractionDigits: 0,
+    }).format(val);
   };
 
   // Determine active step (0 to 3)
@@ -89,19 +93,35 @@ export function OrderStatusView({ initialOrder }: Props) {
   // Step 2: Listo para Despacho / Ready
   // Step 3: Entregado / Closed
   let currentStep = 0;
-  if (order.status === 'closed') {
+  if (order.status === "closed") {
     currentStep = 3;
-  } else if (order.kitchenStatus === 'ready') {
+  } else if (order.kitchenStatus === "ready") {
     currentStep = 2;
-  } else if (order.kitchenStatus === 'cooking' || order.status === 'sent_to_kitchen' || order.kitchenStatus === 'partially_ready') {
+  } else if (
+    order.kitchenStatus === "cooking" ||
+    order.status === "sent_to_kitchen" ||
+    order.kitchenStatus === "partially_ready"
+  ) {
     currentStep = 1;
   }
 
   const steps = [
-    { title: 'Pedido Recibido', desc: 'Comanda registrada en el sistema', icon: CheckCircle2 },
-    { title: 'En Preparación', desc: 'Nuestros cocineros están con tu plato', icon: ChefHat },
-    { title: 'Listo para Despacho', desc: 'Empacado y listo para salir', icon: Bike },
-    { title: 'Entregado', desc: '¡Que disfrutes tu comida!', icon: Home },
+    {
+      title: "Pedido Recibido",
+      desc: "Comanda registrada en el sistema",
+      icon: CheckCircle2,
+    },
+    {
+      title: "En Preparación",
+      desc: "Nuestros cocineros están con tu plato",
+      icon: ChefHat,
+    },
+    {
+      title: "Listo para Despacho",
+      desc: "Empacado y listo para salir",
+      icon: Bike,
+    },
+    { title: "Entregado", desc: "¡Que disfrutes tu comida!", icon: Home },
   ];
 
   return (
@@ -121,8 +141,12 @@ export function OrderStatusView({ initialOrder }: Props) {
             <span className="inline-block rounded-full bg-orange-500/15 border border-orange-500/30 px-3 py-0.5 text-xs font-bold text-orange-400 mb-1.5">
               Domicilio Activo
             </span>
-            <h1 className="text-xl sm:text-2xl font-black text-white">Seguimiento de tu Pedido</h1>
-            <p className="text-xs text-slate-400 mt-1 font-mono">ID: #{order.id.slice(0, 8)}</p>
+            <h1 className="text-xl sm:text-2xl font-black text-white">
+              Seguimiento de tu Pedido
+            </h1>
+            <p className="text-xs text-slate-400 mt-1 font-mono">
+              ID: #{order.id.slice(0, 8)}
+            </p>
           </div>
           <button
             onClick={refreshStatus}
@@ -130,7 +154,9 @@ export function OrderStatusView({ initialOrder }: Props) {
             className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-slate-400 hover:text-white hover:border-orange-500/50 transition disabled:opacity-50"
             title="Actualizar estado"
           >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin text-orange-500' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 ${isRefreshing ? "animate-spin text-orange-500" : ""}`}
+            />
           </button>
         </div>
 
@@ -138,9 +164,9 @@ export function OrderStatusView({ initialOrder }: Props) {
         <div className="py-8">
           <div className="relative flex justify-between">
             {/* Background Line */}
-            <div className="absolute top-4 left-6 right-6 h-0.5 bg-slate-800 -z-0" />
+            <div className="absolute top-4 left-6 right-6 h-0.5 bg-slate-800 z-0" />
             <div
-              className="absolute top-4 left-6 h-0.5 bg-orange-500 transition-all duration-500 -z-0"
+              className="absolute top-4 left-6 h-0.5 bg-orange-500 transition-all duration-500 z-0"
               style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
             />
 
@@ -150,19 +176,26 @@ export function OrderStatusView({ initialOrder }: Props) {
               const Icon = s.icon;
 
               return (
-                <div key={s.title} className="flex flex-col items-center relative z-10 text-center w-24">
+                <div
+                  key={s.title}
+                  className="flex flex-col items-center relative z-10 text-center w-24"
+                >
                   <div
                     className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all ${
                       isDone
-                        ? 'border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/30'
-                        : 'border-slate-800 bg-slate-950 text-slate-600'
+                        ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/30"
+                        : "border-slate-800 bg-slate-950 text-slate-600"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
                   </div>
                   <span
                     className={`mt-2.5 text-xs font-bold ${
-                      isCurrent ? 'text-orange-400' : isDone ? 'text-slate-200' : 'text-slate-500'
+                      isCurrent
+                        ? "text-orange-400"
+                        : isDone
+                          ? "text-slate-200"
+                          : "text-slate-500"
                     }`}
                   >
                     {s.title}
@@ -175,21 +208,30 @@ export function OrderStatusView({ initialOrder }: Props) {
 
         {/* Order Details & Items */}
         <div className="rounded-xl border border-slate-800/80 bg-slate-950/60 p-5 space-y-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Detalles de la Comanda</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            Detalles de la Comanda
+          </h3>
 
           <div className="divide-y divide-slate-800/60">
             {order.items?.map((item) => (
-              <div key={item.id} className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between text-sm">
+              <div
+                key={item.id}
+                className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between text-sm"
+              >
                 <div>
                   <span className="font-semibold text-white">
-                    {item.quantity}x {item.product?.name || 'Plato'}
+                    {item.quantity}x {item.product?.name || "Plato"}
                   </span>
                   {item.notes && (
-                    <p className="text-[11px] text-orange-300/80 italic">"{item.notes}"</p>
+                    <p className="text-[11px] text-orange-300/80 italic">
+                      "{item.notes}"
+                    </p>
                   )}
                 </div>
                 <span className="font-medium text-slate-300">
-                  {formatCOP(parseFloat(item.unitPrice as string) * item.quantity)}
+                  {formatCOP(
+                    parseFloat(item.unitPrice as string) * item.quantity,
+                  )}
                 </span>
               </div>
             ))}
@@ -204,11 +246,15 @@ export function OrderStatusView({ initialOrder }: Props) {
             )}
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span className="text-slate-200">{formatCOP(order.subtotal)}</span>
+              <span className="text-slate-200">
+                {formatCOP(order.subtotal)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Impuesto al Consumo</span>
-              <span className="text-slate-200">{formatCOP(order.taxTotal)}</span>
+              <span className="text-slate-200">
+                {formatCOP(order.taxTotal)}
+              </span>
             </div>
             <div className="flex justify-between border-t border-slate-800 pt-2 text-sm font-black text-white">
               <span>Total a Pagar</span>
@@ -222,8 +268,12 @@ export function OrderStatusView({ initialOrder }: Props) {
           <div className="flex items-center gap-3">
             <MessageCircle className="h-6 w-6 text-emerald-400 shrink-0" />
             <div>
-              <p className="text-xs font-bold text-emerald-200">¿Dudas con tu entrega?</p>
-              <p className="text-[11px] text-emerald-300/80">Comunícate con el equipo de la sede por WhatsApp</p>
+              <p className="text-xs font-bold text-emerald-200">
+                ¿Dudas con tu entrega?
+              </p>
+              <p className="text-[11px] text-emerald-300/80">
+                Comunícate con el equipo de la sede por WhatsApp
+              </p>
             </div>
           </div>
           <a

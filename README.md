@@ -5,7 +5,7 @@
 [![Fastify](https://img.shields.io/badge/Fastify-5.2-black.svg)](https://fastify.dev/)
 [![Drizzle ORM](https://img.shields.io/badge/Drizzle_ORM-0.40-C5F74F.svg)](https://orm.drizzle.team/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791.svg)](https://www.postgresql.org/)
-[![Redis](https://img.shields.io/badge/Redis-7-DC382D.svg)](https://redis.io/)
+[![Valkey](https://img.shields.io/badge/Valkey-8-blueviolet.svg)](https://valkey.io/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8.svg)](https://tailwindcss.com/)
 [![Turborepo](https://img.shields.io/badge/Turborepo-2.4-EF4444.svg)](https://turbo.build/)
 [![pnpm](https://img.shields.io/badge/pnpm-12.4-f69220.svg)](https://pnpm.io/)
@@ -54,7 +54,7 @@
 - **Descuentos controlados**: Descuentos manuales protegidos por validación de PIN de supervisor o gerente.
 
 ### 👨‍🍳 Kitchen Display System (KDS) en Tiempo Real
-- **Sincronización instantánea**: Alimentado por WebSockets con Socket.IO y Redis PubSub para latencia cero entre meseros y cocina.
+- **Sincronización instantánea**: Alimentado por WebSockets con Socket.IO y Valkey PubSub para latencia cero entre meseros y cocina.
 - **Enrutamiento por estaciones de trabajo**: Filtrado automático de ítems por estación de preparación asignada (Cocina Caliente, Cocina Fría, Barra/Bar, Repostería, Estación de Despacho/Expediter).
 - **Semáforo de tiempos de preparación**: Alertas visuales y temporizadores de avance para prevenir retrasos en mesa.
 - **Transición de estados**: Ciclo completo de ítem (`pending` ➔ `sent` ➔ `in_preparation` ➔ `ready` ➔ `delivered`).
@@ -179,7 +179,7 @@ poscocina/
 | **Backend** | [Fastify 5.2](https://fastify.dev/) | Framework Node.js de mínimo overhead y alto rendimiento. |
 | **Lenguaje** | [TypeScript 5.8](https://www.typescriptlang.org/) | Tipado estricto extremo de extremo a extremo (E2E). |
 | **Base de Datos** | [PostgreSQL 16](https://www.postgresql.org/) + [Drizzle ORM](https://orm.drizzle.team/) | Consultas SQL declarativas con inferencia automática de tipos. |
-| **Caché & Sockets** | [Redis 7](https://redis.io/) + [Socket.IO 4.8](https://socket.io/) | Publicación/Suscripción escalable con `@socket.io/redis-adapter`. |
+| **Caché & Sockets** | [Valkey 8](https://valkey.io/) + [Socket.IO 4.8](https://socket.io/) | Publicación/Suscripción escalable con `@socket.io/redis-adapter` (protocolo RESP). |
 | **Frontend** | [React 19](https://react.dev/) + [Vite 6](https://vite.dev/) | Renderizado concurrente de última generación y HMR instantáneo. |
 | **Estilos** | [Tailwind CSS v4](https://tailwindcss.com/) | Motor CSS de última generación sin configuración pesada. |
 | **Componentes UI**| [Radix UI](https://www.radix-ui.com/) + [Motion](https://motion.dev/) | Primitivas accesibles sin estilos con animaciones fluidas. |
@@ -196,7 +196,7 @@ Antes de comenzar, asegúrate de contar con las siguientes herramientas instalad
 
 1. **Node.js**: Versión `v22.x` o superior.
 2. **pnpm**: Versión `12.x` (se puede habilitar con `corepack enable`).
-3. **Docker & Docker Compose**: Para levantar PostgreSQL y Redis en local.
+3. **Docker & Docker Compose**: Para levantar PostgreSQL y Valkey en local.
 
 ---
 
@@ -215,11 +215,11 @@ cp .env.example .env
 ```
 *(Revisa los valores en `.env`. Los valores predeterminados funcionan de inmediato para entornos locales).*
 
-### 3. Iniciar servicios base con Docker (PostgreSQL y Redis)
+### 3. Iniciar servicios base con Docker (PostgreSQL y Valkey)
 ```bash
 pnpm docker:up
 ```
-> Esto iniciará los contenedores de `poscocina-postgres` (puerto 5432) y `poscocina-redis` (puerto 6379) en segundo plano.
+> Esto iniciará los contenedores de `poscocina-postgres` (puerto 5432) y `poscocina-valkey` (puerto 6379) en segundo plano.
 
 ### 4. Instalar dependencias del workspace
 ```bash
@@ -311,7 +311,7 @@ Principales variables configurables en el archivo `.env`:
 | `NODE_ENV` | `development` \| `production` | Modo de ejecución del servidor. |
 | `PORT` | `3000` | Puerto de escucha de Fastify. |
 | `DATABASE_URL` | `postgresql://posuser:pass@localhost:5432/poscocina` | Cadena de conexión principal a PostgreSQL. |
-| `REDIS_URL` | `redis://localhost:6379` | Cadena de conexión para Redis. |
+| `VALKEY_URL` (o `REDIS_URL`) | `redis://localhost:6379` | Cadena de conexión para Valkey/Redis. |
 | `JWT_SECRET` | *(string criptográfico >= 32 chars)* | Clave para firma y verificación de tokens JWT. |
 | `JWT_EXPIRES_IN` | `12h` | Tiempo de vida de los tokens de sesión. |
 | `CORS_ORIGIN` | `http://localhost:5173,http://localhost:3000` | Lista separada por comas de orígenes permitidos. |
@@ -331,7 +331,7 @@ Principales variables configurables en el archivo `.env`:
 El proyecto cuenta con un archivo [`docker-compose.yml`](file:///d:/dev/Zogui.cloud/poscocina/docker-compose.yml) listo para producción, compuesto por 4 servicios aislados en su propia red interna `poscocina-network`:
 
 1. **`poscocina-postgres`**: Base de datos PostgreSQL 16 con volumen persistente (`postgres_data`).
-2. **`poscocina-redis`**: Servidor Redis 7 con persistencia AOF (`redis_data`).
+2. **`poscocina-valkey`**: Servidor Valkey 8 con persistencia AOF (`valkey_data`).
 3. **`poscocina-server`**: Backend Fastify construido con imagen *multi-stage* y usuario sin privilegios (`node`).
 4. **`poscocina-client`**: Frontend Nginx que sirve el bundle estático compilado y actúa de proxy reverso hacia el backend.
 

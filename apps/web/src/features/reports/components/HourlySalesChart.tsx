@@ -1,15 +1,23 @@
-﻿import React, { useState } from 'react';
-import { Clock, Flame } from 'lucide-react';
-import { HourlySale } from '../types/reports.types';
-import { formatCurrency } from '../utils/formatCurrency';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+﻿import React, { useState } from "react";
+import { Clock, Flame } from "lucide-react";
+import { HourlySale } from "../types/reports.types";
+import { formatCurrency } from "../utils/formatCurrency";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface HourlySalesChartProps {
   hourly: HourlySale[];
 }
 
-export const HourlySalesChart: React.FC<HourlySalesChartProps> = ({ hourly }) => {
+export const HourlySalesChart: React.FC<HourlySalesChartProps> = ({
+  hourly,
+}) => {
   const [hoveredHour, setHoveredHour] = useState<HourlySale | null>(null);
 
   // Guarantee all 24 hours (0..23) are accounted for
@@ -21,10 +29,10 @@ export const HourlySalesChart: React.FC<HourlySalesChartProps> = ({ hourly }) =>
     complete24Hours.push(
       hourMap.get(i) || {
         hour: i,
-        hourLabel: `${String(i).padStart(2, '0')}:00`,
+        hourLabel: `${String(i).padStart(2, "0")}:00`,
         sales: 0,
         tickets: 0,
-      }
+      },
     );
   }
 
@@ -32,7 +40,7 @@ export const HourlySalesChart: React.FC<HourlySalesChartProps> = ({ hourly }) =>
   const maxHourlySale = Math.max(...complete24Hours.map((h) => h.sales), 1);
   const peakHour = complete24Hours.reduce(
     (max, h) => (h.sales > max.sales ? h : max),
-    complete24Hours[0]
+    complete24Hours[0],
   );
   const activeHoursCount = complete24Hours.filter((h) => h.sales > 0).length;
 
@@ -49,7 +57,8 @@ export const HourlySalesChart: React.FC<HourlySalesChartProps> = ({ hourly }) =>
                 Curva de Ventas por Hora del Día
               </CardTitle>
               <CardDescription className="text-[11px] text-muted-foreground mt-0.5">
-                Flujo horario (00:00 a 23:00) para optimización de personal y cocina
+                Flujo horario (00:00 a 23:00) para optimización de personal y
+                cocina
               </CardDescription>
             </div>
           </div>
@@ -74,14 +83,20 @@ export const HourlySalesChart: React.FC<HourlySalesChartProps> = ({ hourly }) =>
           <span>
             {activeHoursCount > 0
               ? `${activeHoursCount} horas con actividad comercial`
-              : 'Sin transacciones en este período'}
+              : "Sin transacciones en este período"}
           </span>
           {hoveredHour && hoveredHour.sales > 0 ? (
             <span className="font-semibold text-foreground">
-              {hoveredHour.hourLabel} — {formatCurrency(hoveredHour.sales)} ({hoveredHour.tickets} tickets)
+              {hoveredHour.hourLabel} — {formatCurrency(hoveredHour.sales)} (
+              {hoveredHour.tickets} tickets)
             </span>
           ) : (
-            <span>Total ventas: <strong className="text-foreground">{formatCurrency(totalDaySales)}</strong></span>
+            <span>
+              Total ventas:{" "}
+              <strong className="text-foreground">
+                {formatCurrency(totalDaySales)}
+              </strong>
+            </span>
           )}
         </div>
 
@@ -90,8 +105,13 @@ export const HourlySalesChart: React.FC<HourlySalesChartProps> = ({ hourly }) =>
           {complete24Hours.map((h) => {
             const isPeak = h.hour === peakHour?.hour && h.sales > 0;
             const hasSales = h.sales > 0;
-            const heightPct = hasSales ? Math.max((h.sales / maxHourlySale) * 100, 10) : 0;
-            const pctOfDay = totalDaySales > 0 ? Math.round((h.sales / totalDaySales) * 100) : 0;
+            const heightPct = hasSales
+              ? Math.max((h.sales / maxHourlySale) * 100, 10)
+              : 0;
+            const pctOfDay =
+              totalDaySales > 0
+                ? Math.round((h.sales / totalDaySales) * 100)
+                : 0;
 
             return (
               <div
@@ -102,11 +122,18 @@ export const HourlySalesChart: React.FC<HourlySalesChartProps> = ({ hourly }) =>
               >
                 {/* Floating tooltip */}
                 <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition-all duration-150 bg-popover/95 backdrop-blur-xs border border-border text-popover-foreground text-[10px] py-1 px-2.5 rounded-lg pointer-events-none whitespace-nowrap z-30 shadow-md flex flex-col items-center">
-                  <span className="font-bold">{h.hourLabel} - {String(h.hour).padStart(2, '0')}:59</span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                    {formatCurrency(h.sales)} {h.tickets > 0 ? `(${h.tickets} ped.)` : ''}
+                  <span className="font-bold">
+                    {h.hourLabel} - {String(h.hour).padStart(2, "0")}:59
                   </span>
-                  {hasSales && <span className="text-[9px] text-muted-foreground">{pctOfDay}% del volumen</span>}
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                    {formatCurrency(h.sales)}{" "}
+                    {h.tickets > 0 ? `(${h.tickets} ped.)` : ""}
+                  </span>
+                  {hasSales && (
+                    <span className="text-[9px] text-muted-foreground">
+                      {pctOfDay}% del volumen
+                    </span>
+                  )}
                 </div>
 
                 {/* Column background track */}
@@ -114,10 +141,10 @@ export const HourlySalesChart: React.FC<HourlySalesChartProps> = ({ hourly }) =>
                   {hasSales ? (
                     <div
                       style={{ height: `${heightPct}%` }}
-                      className={`w-full max-w-[14px] rounded-t-md transition-all duration-300 ${
+                      className={`w-full max-w-3.5 rounded-t-md transition-all duration-300 ${
                         isPeak
-                          ? 'bg-amber-500 shadow-xs'
-                          : 'bg-primary/80 group-hover:bg-primary'
+                          ? "bg-amber-500 shadow-xs"
+                          : "bg-primary/80 group-hover:bg-primary"
                       }`}
                     />
                   ) : (
@@ -143,4 +170,3 @@ export const HourlySalesChart: React.FC<HourlySalesChartProps> = ({ hourly }) =>
     </Card>
   );
 };
-
