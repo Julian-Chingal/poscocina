@@ -19,11 +19,22 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1, 'DATABASE_URL es obligatoria para arrancar el servidor'),
   VALKEY_URL: z.string().optional(),
   REDIS_URL: z.string().default('redis://localhost:6379'),
+  VALKEY_HOST: z.string().optional(),
+  REDIS_HOST: z.string().optional(),
+  VALKEY_PORT: z.coerce.number().optional(),
+  REDIS_PORT: z.coerce.number().optional(),
   JWT_SECRET: z.string().min(16, 'JWT_SECRET debe tener al menos 16 caracteres para seguridad criptográfica'),
   JWT_EXPIRES_IN: z.string().default('12h'),
   CORS_ORIGIN: z.string().default('http://localhost:5173,http://localhost:5174,http://localhost:3000'),
 }).transform((data) => {
-  const resolvedCacheUrl = data.VALKEY_URL || data.REDIS_URL;
+  const host = process.env.VALKEY_HOST || process.env.REDIS_HOST;
+  const port = process.env.VALKEY_PORT || process.env.REDIS_PORT || 6379;
+  const resolvedCacheUrl =
+    (host && host !== 'localhost' ? `redis://${host}:${port}` : null) ||
+    (process.env.REDIS_URL && !process.env.REDIS_URL.includes('localhost') ? process.env.REDIS_URL : null) ||
+    data.VALKEY_URL ||
+    data.REDIS_URL;
+
   return {
     ...data,
     VALKEY_URL: resolvedCacheUrl,
