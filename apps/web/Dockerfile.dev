@@ -1,0 +1,33 @@
+# syntax=docker/dockerfile:1
+FROM node:22-alpine
+
+WORKDIR /app
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable && corepack prepare pnpm@12.4.1 --activate
+
+# Copiar manifiestos
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+COPY packages/tsconfig/package.json ./packages/tsconfig/
+COPY packages/tsconfig/base.json ./packages/tsconfig/
+COPY packages/shared/package.json ./packages/shared/
+COPY apps/server/package.json ./apps/server/
+COPY apps/web/package.json ./apps/web/
+
+RUN pnpm install
+
+# Copiar paquetes compartidos y frontend
+COPY packages/tsconfig/ ./packages/tsconfig/
+COPY packages/shared/ ./packages/shared/
+COPY apps/web/ ./apps/web/
+
+RUN pnpm --filter @poscocina/shared build
+
+EXPOSE 5173
+
+ENV PORT=5173 \
+    HOST=0.0.0.0 \
+    NODE_ENV=development
+
+CMD ["pnpm", "--filter", "@poscocina/web", "dev", "--host", "0.0.0.0"]

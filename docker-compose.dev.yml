@@ -1,0 +1,150 @@
+# ==============================================================================
+# poscocina - Entorno de Desarrollo (Docker Compose)
+# ==============================================================================
+# Uso:
+#   - Levantar todo en dev (hot-reload completo):
+#       pnpm docker:dev  O  docker compose -f docker-compose.dev.yml up -d
+#   - Levantar solo infraestructura (BD + Redis para correr pnpm dev:all en host):
+#       pnpm docker:dev:db  O  docker compose -f docker-compose.dev.yml up -d postgres redis
+#   - Ver logs:
+#       pnpm docker:dev:logs
+#   - Apagar:
+#       pnpm docker:dev:down
+# ==============================================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: poscocina-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-posuser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-pospassword_seguro_produccion_2026}
+      POSTGRES_DB: ${DB_NAME:-poscocina}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER:-posuser} -d ${DB_NAME:-poscocina}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      poscocina-dev-network:
+        aliases:
+          - poscocina-postgres-dev
+          - postgres
+
+  redis:
+    image: redis:7-alpine
+    container_name: poscocina-redis-dev
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_dev_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      poscocina-dev-network:
+        aliases:
+          - poscocina-redis-dev
+          - redis
+
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile.dev
+    container_name: poscocina-server-dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      HOST: 0.0.0.0
+      DATABASE_URL: postgresql://${DB_USER:-posuser}:${DB_PASSWORD:-pospassword_seguro_produccion_2026}@postgres:5432/${DB_NAME:-poscocina}
+      REDIS_URL: redis://redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-poscocina_super_secret_production_key_32_chars_2026!}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-12h}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173,http://localhost:5174,http://localhost:3000,*}
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
+      RUN_SEED: ${RUN_SEED:-false}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@poscocina.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      ADMIN_PIN: ${ADMIN_PIN:-1234}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-catastrocol-cargues}
+      STORAGE_PATH: ${STORAGE_PATH:-gastropos}
+      GARAGE_S3_ENDPOINT: ${GARAGE_S3_ENDPOINT:-http://garage:3900}
+      GARAGE_S3_REGION: ${GARAGE_S3_REGION:-garage}
+      GARAGE_S3_BUCKET: ${STORAGE_BUCKET:-catastrocol-cargues}
+      GARAGE_ACCESS_KEY_ID: ${GARAGE_ACCESS_KEY_ID:-}
+      GARAGE_SECRET_ACCESS_KEY: ${GARAGE_SECRET_ACCESS_KEY:-}
+      PUBLIC_STORAGE_URL: ${PUBLIC_STORAGE_URL:-}
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/server/node_modules
+      - /app/apps/web/node_modules
+      - /app/packages/shared/node_modules
+      - server_dev_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      poscocina-dev-network:
+        aliases:
+          - poscocina-server-dev
+          - server
+
+  client:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile.dev
+    container_name: poscocina-client-dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      VITE_PROXY_TARGET: http://server:3000
+      VITE_USE_POLLING: "true"
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/server/node_modules
+      - /app/apps/web/node_modules
+      - /app/packages/shared/node_modules
+    depends_on:
+      - server
+    networks:
+      poscocina-dev-network:
+        aliases:
+          - poscocina-client-dev
+          - client
+
+networks:
+  poscocina-dev-network:
+    name: poscocina-dev-network
+    driver: bridge
+
+volumes:
+  postgres_dev_data:
+    name: poscocina_postgres_dev_data
+  redis_dev_data:
+    name: poscocina_redis_dev_data
+  server_dev_uploads:
+    name: poscocina_server_dev_uploads
