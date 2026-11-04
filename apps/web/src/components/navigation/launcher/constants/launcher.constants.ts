@@ -1,4 +1,4 @@
-﻿import {
+import {
   LayoutGrid,
   ShoppingBag,
   ChefHat,
@@ -10,6 +10,7 @@
   Users,
   CalendarDays,
   Building2,
+  CreditCard,
 } from 'lucide-react';
 import { AppItem } from '../types/launcher.types';
 
@@ -114,6 +115,16 @@ export const APPS: AppItem[] = [
     icon: Building2,
     icon3d: '/icons/modules/dining-table.webp',
     gradient: 'from-amber-500 to-rose-600',
+    category: 'config',
+  },
+  {
+    id: 'subscriptions',
+    name: 'Suscripciones & SaaS',
+    subtitle: 'Planes, cupones y cortesías 100%',
+    icon: CreditCard,
+    icon3d: '/icons/modules/safe.webp',
+    gradient: 'from-violet-500 to-purple-700',
+    badgeColor: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
     category: 'config',
   },
 ];
