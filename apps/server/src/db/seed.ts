@@ -124,6 +124,55 @@ async function seed() {
     console.log(`  ℹ️ Usuario Administrador ya existente: ${adminEmail}`);
   }
 
+  // 5. Estación de Trabajo por Defecto (Cocina Principal)
+  console.log('  -> Configurando estación de trabajo por defecto (Cocina Principal)...');
+  const allVenues = await db.select().from(schema.venues);
+  for (const v of allVenues) {
+    let [kitchenStation] = await db
+      .select()
+      .from(schema.workstations)
+      .where(eq(schema.workstations.venueId, v.id))
+      .limit(1);
+
+    if (!kitchenStation) {
+      const [newStation] = await db
+        .insert(schema.workstations)
+        .values({
+          venueId: v.id,
+          name: 'Cocina Principal',
+          code: 'kitchen',
+          description: 'Estación principal de preparación en cocina',
+          color: '#ea580c',
+          icon: 'ChefHat',
+          isActive: true,
+          sortOrder: 0,
+        })
+        .onConflictDoNothing()
+        .returning();
+      kitchenStation = newStation;
+    }
+
+    if (kitchenStation) {
+      const venueProducts = await db
+        .select({ product: schema.products })
+        .from(schema.products)
+        .innerJoin(schema.categories, eq(schema.products.categoryId, schema.categories.id))
+        .where(eq(schema.categories.venueId, v.id));
+
+      for (const row of venueProducts) {
+        await db
+          .insert(schema.productStations)
+          .values({
+            productId: row.product.id,
+            stationId: kitchenStation.id,
+            isPrimary: true,
+            sortOrder: 0,
+          })
+          .onConflictDoNothing();
+      }
+    }
+  }
+
   console.log('✅ Semilla completada exitosamente: Sistema listo con un Venue vacío y cuenta Administrador.');
   await queryClient.end();
 }

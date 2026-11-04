@@ -25,6 +25,9 @@ export class OrderRepository implements IOrderRepository {
           with: {
             product: true,
             modifiers: { with: { modifier: true } },
+            stations: {
+              with: { station: true },
+            },
           },
         },
         receipts: { with: { payments: true } },
@@ -91,7 +94,14 @@ export class OrderRepository implements IOrderRepository {
       : rawOrders
           .map((ord) => ({
             ...ord,
-            items: ord.items.filter((item: any) => item.product?.printerStation === station),
+            items: ord.items.filter((item: any) => {
+              if (item.stations && item.stations.length > 0) {
+                return item.stations.some(
+                  (s: any) => s.stationId === station || s.station?.code === station
+                );
+              }
+              return item.product?.printerStation === station;
+            }),
           }))
           .filter((ord) => ord.items.length > 0);
 
@@ -225,6 +235,40 @@ export class OrderRepository implements IOrderRepository {
       .update(schema.tables)
       .set({ status, updatedAt: new Date() })
       .where(eq(schema.tables.id, tableId));
+  }
+
+  async insertOrderItemStations(stations: any[], tx = this.database) {
+    if (stations.length > 0) {
+      await tx.insert(schema.orderItemStations).values(stations);
+    }
+  }
+
+  async findOrderItemStations(orderItemId: string, tx = this.database) {
+    return await tx
+      .select({
+        id: schema.orderItemStations.id,
+        orderItemId: schema.orderItemStations.orderItemId,
+        stationId: schema.orderItemStations.stationId,
+        status: schema.orderItemStations.status,
+        sentAt: schema.orderItemStations.sentAt,
+        readyAt: schema.orderItemStations.readyAt,
+        deliveredAt: schema.orderItemStations.deliveredAt,
+        createdAt: schema.orderItemStations.createdAt,
+        updatedAt: schema.orderItemStations.updatedAt,
+        station: schema.workstations,
+      })
+      .from(schema.orderItemStations)
+      .innerJoin(schema.workstations, eq(schema.orderItemStations.stationId, schema.workstations.id))
+      .where(eq(schema.orderItemStations.orderItemId, orderItemId));
+  }
+
+  async updateOrderItemStationStatus(orderItemId: string, stationId: string, status: any, extra?: Record<string, any>, tx = this.database) {
+    const [updated] = await tx
+      .update(schema.orderItemStations)
+      .set({ status, updatedAt: new Date(), ...(extra || {}) })
+      .where(and(eq(schema.orderItemStations.orderItemId, orderItemId), eq(schema.orderItemStations.stationId, stationId)))
+      .returning();
+    return updated;
   }
 
   async updateOrderTotals(

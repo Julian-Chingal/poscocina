@@ -12,3 +12,4 @@ export * from './schemas/reservations.schema.js';
 export * from './schemas/purchases.schema.js';
 export * from './schemas/hardware.schema.js';
 export * from './schemas/company.schema.js';
+export * from './schemas/station.schema.js';

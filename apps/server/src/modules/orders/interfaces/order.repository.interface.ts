@@ -40,4 +40,7 @@ export interface IOrderRepository {
   updateOrderKitchenStatus(orderId: string, kitchenStatus: string, extra?: Record<string, any>, tx?: any): Promise<any>;
   freeTable(tableId: string, tx?: any): Promise<void>;
   setTableStatus(tableId: string, status: any, tx?: any): Promise<void>;
+  insertOrderItemStations(stations: any[], tx?: any): Promise<void>;
+  findOrderItemStations(orderItemId: string, tx?: any): Promise<any[]>;
+  updateOrderItemStationStatus(orderItemId: string, stationId: string, status: any, extra?: Record<string, any>, tx?: any): Promise<any>;
 }

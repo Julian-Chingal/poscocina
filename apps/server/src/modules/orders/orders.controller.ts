@@ -4,6 +4,7 @@ import { CreateOrderUseCase } from './use-cases/create-order.use-case.js';
 import { AppendOrderItemsUseCase } from './use-cases/append-order-items.use-case.js';
 import { UpdateOrderStatusUseCase } from './use-cases/update-order-status.use-case.js';
 import { ModifyOrderItemUseCase } from './use-cases/modify-order-item.use-case.js';
+import { UpdateOrderItemStationStatusUseCase } from './use-cases/update-order-item-station-status.use-case.js';
 import { validate } from '../../utils/validation.util.js';
 import { resolveVenueId } from '../../utils/tenant.util.js';
 import {
@@ -12,6 +13,7 @@ import {
   AppendOrderItemsSchema,
   UpdateOrderStatusSchema,
   ModifyOrderItemSchema,
+  UpdateOrderItemStationStatusSchema,
 } from '@poscocina/shared';
 
 export class OrdersController {
@@ -19,6 +21,7 @@ export class OrdersController {
   private readonly appendUseCase = new AppendOrderItemsUseCase(orderRepository);
   private readonly statusUseCase = new UpdateOrderStatusUseCase(orderRepository);
   private readonly modifyUseCase = new ModifyOrderItemUseCase(orderRepository);
+  private readonly stationStatusUseCase = new UpdateOrderItemStationStatusUseCase(orderRepository);
 
   private emitToVenue(request: FastifyRequest, venueId: string | undefined, event: string, payload: any) {
     if (!request.server.io) return;
@@ -86,6 +89,32 @@ export class OrdersController {
     const includeRecentCompleted = history === 'true' || history === '1';
     const activeOrders = await this.statusUseCase.getKdsOrders(targetVenueId, station, includeRecentCompleted);
     return reply.send(activeOrders);
+  }
+
+  async updateOrderItemStationStatus(request: FastifyRequest, reply: FastifyReply) {
+    const { id, stationId } = request.params as { id: string; stationId: string };
+    const { status } = validate(UpdateOrderItemStationStatusSchema, request.body);
+    const result = await this.stationStatusUseCase.execute(id, stationId, status);
+
+    const venueId = result.venueId;
+    this.emitToVenue(request, venueId, 'order_item:station_updated', {
+      orderItemId: id,
+      stationId,
+      status: result.stationStatus,
+      itemStatus: result.itemStatus,
+      updatedItem: result.updatedItem,
+    });
+    this.emitToVenue(request, venueId, 'order_item:updated', result.updatedItem);
+    this.emitToVenue(request, venueId, 'order:status_updated', {
+      id: result.orderId,
+      kitchenStatus: result.kitchenStatus,
+    });
+    this.emitToVenue(request, venueId, 'kds:item_updated', {
+      orderId: result.orderId,
+      item: result.updatedItem,
+    });
+
+    return reply.send(result);
   }
 
   async updateOrderItemStatus(request: FastifyRequest, reply: FastifyReply) {

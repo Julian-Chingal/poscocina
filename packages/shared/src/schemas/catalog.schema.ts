@@ -29,6 +29,7 @@ export const CreateProductSchema = z.object({
   dimensions: z.record(z.any()).optional().nullable(),
   displayMedia: z.enum(['image', 'model3d', 'both']).default('both').optional(),
   printerStation: z.string().optional().nullable(),
+  stationIds: z.array(z.string().uuid()).min(1, 'Debe asignar al menos una estación').max(2, 'Máximo dos estaciones por producto').optional(),
   prepTimeMin: z.number().int().min(0).optional().nullable(),
   trackInventory: z.boolean().default(false),
   isAvailable: z.boolean().default(true),
@@ -47,6 +48,7 @@ export const UpdateProductSchema = z.object({
   dimensions: z.record(z.any()).optional().nullable(),
   displayMedia: z.enum(['image', 'model3d', 'both']).optional(),
   printerStation: z.string().optional().nullable(),
+  stationIds: z.array(z.string().uuid()).min(1, 'Debe asignar al menos una estación').max(2, 'Máximo dos estaciones por producto').optional(),
   prepTimeMin: z.number().int().min(0).optional().nullable(),
   trackInventory: z.boolean().optional(),
   isAvailable: z.boolean().optional(),
@@ -91,4 +93,3 @@ export type UpdateModifierGroupInput = z.infer<typeof UpdateModifierGroupSchema>
 export type CreateModifierInput = z.infer<typeof CreateModifierSchema>;
 export type UpdateModifierInput = z.infer<typeof UpdateModifierSchema>;
 export type LinkProductModifierGroupInput = z.infer<typeof LinkProductModifierGroupSchema>;
-

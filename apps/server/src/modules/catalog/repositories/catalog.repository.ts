@@ -20,6 +20,12 @@ export class CatalogRepository implements ICatalogRepository {
           orderBy: (products, { asc }) => [asc(products.sortOrder)],
           with: {
             category: true,
+            productStations: {
+              with: {
+                station: true,
+              },
+              orderBy: (ps, { asc }) => [asc(ps.sortOrder)],
+            },
             // modifierGroups here resolves to the PIVOT table (productModifierGroups).
             // We must go one level deeper to get the actual modifierGroup entity.
             modifierGroups: {
@@ -48,6 +54,7 @@ export class CatalogRepository implements ICatalogRepository {
         isRequired: pivot.isRequired ?? pivot.modifierGroup.isRequired,
         sortOrder: pivot.sortOrder,
       })),
+      stationIds: ((product as any).productStations || []).map((ps: any) => ps.stationId),
     }));
 
     return { categories, products };
@@ -74,42 +81,86 @@ export class CatalogRepository implements ICatalogRepository {
   async findProductById(id: string) {
     return await this.database.query.products.findFirst({
       where: (products, { eq }) => eq(products.id, id),
-      with: { category: true },
+      with: {
+        category: true,
+        productStations: {
+          with: { station: true },
+          orderBy: (ps, { asc }) => [asc(ps.sortOrder)],
+        },
+      },
     });
   }
 
   async createProduct(data: any) {
-    const [created] = await this.database
-      .insert(schema.products)
-      .values({
-        categoryId: data.categoryId,
-        name: data.name.trim(),
-        description: data.description,
-        price: data.price.toFixed(2),
-        taxRate: data.taxRate !== undefined ? data.taxRate.toFixed(4) : '0.0800',
-        imageUrl: data.imageUrl,
-        model3dUrl: data.model3dUrl,
-        model3dType: data.model3dType || 'glb',
-        dimensions: data.dimensions || {},
-        displayMedia: data.displayMedia || 'both',
-        printerStation: data.printerStation,
-        prepTimeMin: data.prepTimeMin,
-        trackInventory: data.trackInventory ?? false,
-        isAvailable: data.isAvailable ?? true,
-        sortOrder: data.sortOrder ?? 0,
-      })
-      .returning();
-    return created;
+    const { stationIds, ...rest } = data;
+    return await this.database.transaction(async (tx) => {
+      const [created] = await tx
+        .insert(schema.products)
+        .values({
+          categoryId: rest.categoryId,
+          name: rest.name.trim(),
+          description: rest.description,
+          price: rest.price.toFixed(2),
+          taxRate: rest.taxRate !== undefined ? rest.taxRate.toFixed(4) : '0.0800',
+          imageUrl: rest.imageUrl,
+          model3dUrl: rest.model3dUrl,
+          model3dType: rest.model3dType || 'glb',
+          dimensions: rest.dimensions || {},
+          displayMedia: rest.displayMedia || 'both',
+          printerStation: rest.printerStation,
+          prepTimeMin: rest.prepTimeMin,
+          trackInventory: rest.trackInventory ?? false,
+          isAvailable: rest.isAvailable ?? true,
+          sortOrder: rest.sortOrder ?? 0,
+        })
+        .returning();
+
+      if (stationIds && Array.isArray(stationIds) && stationIds.length > 0) {
+        for (let i = 0; i < stationIds.length; i++) {
+          await tx.insert(schema.productStations).values({
+            productId: created.id,
+            stationId: stationIds[i],
+            isPrimary: i === 0,
+            sortOrder: i,
+          }).onConflictDoNothing();
+        }
+      }
+
+      return created;
+    });
   }
 
   async updateProduct(id: string, data: any) {
-    const updatePayload: Record<string, any> = { ...data };
-    if (data.price !== undefined) updatePayload.price = data.price.toFixed(2);
-    if (data.costPrice !== undefined) updatePayload.costPrice = data.costPrice.toFixed(2);
-    if (data.taxRate !== undefined) updatePayload.taxRate = data.taxRate.toFixed(4);
+    const { stationIds, ...rest } = data;
+    const updatePayload: Record<string, any> = { ...rest };
+    if (rest.price !== undefined) updatePayload.price = rest.price.toFixed(2);
+    if (rest.costPrice !== undefined) updatePayload.costPrice = rest.costPrice.toFixed(2);
+    if (rest.taxRate !== undefined) updatePayload.taxRate = rest.taxRate.toFixed(4);
 
-    const [updated] = await this.database.update(schema.products).set(updatePayload).where(eq(schema.products.id, id)).returning();
-    return updated;
+    return await this.database.transaction(async (tx) => {
+      let updated;
+      if (Object.keys(updatePayload).length > 0) {
+        const [u] = await tx.update(schema.products).set(updatePayload).where(eq(schema.products.id, id)).returning();
+        updated = u;
+      } else {
+        const [current] = await tx.select().from(schema.products).where(eq(schema.products.id, id));
+        updated = current;
+      }
+
+      if (stationIds !== undefined && Array.isArray(stationIds)) {
+        await tx.delete(schema.productStations).where(eq(schema.productStations.productId, id));
+        for (let i = 0; i < stationIds.length; i++) {
+          await tx.insert(schema.productStations).values({
+            productId: id,
+            stationId: stationIds[i],
+            isPrimary: i === 0,
+            sortOrder: i,
+          }).onConflictDoNothing();
+        }
+      }
+
+      return updated;
+    });
   }
 
   async deleteProduct(id: string): Promise<void> {

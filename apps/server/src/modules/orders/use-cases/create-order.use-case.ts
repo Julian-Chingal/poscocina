@@ -1,6 +1,6 @@
 import { db } from '../../../db/index.js';
 import * as schema from '../../../db/schema.js';
-import { inArray } from 'drizzle-orm';
+import { inArray, eq, and } from 'drizzle-orm';
 import { BadRequestError, NotFoundError } from '../../../errors/app-error.js';
 import { IOrderRepository, CreateOrderPayload } from '../interfaces/order.repository.interface.js';
 import { auditService } from '../../../utils/audit.service.js';
@@ -105,6 +105,51 @@ export class CreateOrderUseCase {
         }
       }
       await this.orderRepo.insertItemModifiers(modifiersToInsert, tx);
+
+      // Multi-station routing: Resolve stations for inserted items
+      const assignedProductStations = await tx
+        .select()
+        .from(schema.productStations)
+        .where(inArray(schema.productStations.productId, productIds))
+        .orderBy(schema.productStations.sortOrder);
+
+      let defaultStationId: string | null = null;
+      const [firstStation] = await tx
+        .select()
+        .from(schema.workstations)
+        .where(and(eq(schema.workstations.venueId, venueId), eq(schema.workstations.isActive, true)))
+        .orderBy(schema.workstations.sortOrder)
+        .limit(1);
+      if (firstStation) {
+        defaultStationId = firstStation.id;
+      }
+
+      const stationRowsToInsert = [];
+      const now = new Date();
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const inserted = insertedItems[i];
+        const prodStations = assignedProductStations.filter((ps) => ps.productId === item.productId);
+
+        if (prodStations.length > 0) {
+          for (const ps of prodStations) {
+            stationRowsToInsert.push({
+              orderItemId: inserted.id,
+              stationId: ps.stationId,
+              status: 'pending',
+              sentAt: now,
+            });
+          }
+        } else if (defaultStationId) {
+          stationRowsToInsert.push({
+            orderItemId: inserted.id,
+            stationId: defaultStationId,
+            status: 'pending',
+            sentAt: now,
+          });
+        }
+      }
+      await this.orderRepo.insertOrderItemStations(stationRowsToInsert, tx);
 
       if (tableId) {
         await this.orderRepo.updateTableOccupied(tableId, order.id, tx);

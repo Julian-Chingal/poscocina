@@ -34,6 +34,13 @@ export async function ordersRoutes(fastify: FastifyInstance) {
     ordersController.updateOrderItemStatus(req, rep)
   );
 
+  // 6.1 Update KDS item station status (per-workstation independent advance)
+  fastify.patch(
+    '/api/order-items/:id/stations/:stationId/status',
+    { preHandler: [fastify.authenticate] },
+    (req, rep) => ordersController.updateOrderItemStationStatus(req, rep)
+  );
+
   // 7. Hot modification of order item (change product, notes, modifiers, quantity)
   fastify.patch('/api/order-items/:id', staffGuard, (req, rep) =>
     ordersController.modifyOrderItem(req, rep)

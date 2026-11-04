@@ -13,6 +13,7 @@ import {
   serial,
   primaryKey,
   pgEnum,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -44,6 +45,7 @@ export const tableStatusEnum = pgEnum('table_status', [
   'paid_waiting_food',
   'reserved',
   'blocked',
+  'maintenance',
 ]);
 
 // 0. Companies & Corporate Fiscal Settings (Global)
@@ -414,6 +416,7 @@ export const venuesRelations = relations(venues, ({ many }) => ({
   categories: many(categories),
   orders: many(orders),
   cashShifts: many(cashShifts),
+  workstations: many(workstations),
 }));
 
 export const floorPlansRelations = relations(floorPlans, ({ one, many }) => ({
@@ -434,6 +437,7 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
 export const productsRelations = relations(products, ({ one, many }) => ({
   category: one(categories, { fields: [products.categoryId], references: [categories.id] }),
   modifierGroups: many(productModifierGroups),
+  productStations: many(productStations),
 }));
 
 // ⚠️ These two relations are REQUIRED so Drizzle can navigate the N:M bridge.
@@ -492,6 +496,7 @@ export const orderItemsRelations = relations(orderItems, ({ one, many }) => ({
   order: one(orders, { fields: [orderItems.orderId], references: [orders.id] }),
   product: one(products, { fields: [orderItems.productId], references: [products.id] }),
   modifiers: many(orderItemModifiers),
+  stations: many(orderItemStations),
 }));
 
 export const orderItemModifiersRelations = relations(orderItemModifiers, ({ one }) => ({
@@ -559,7 +564,77 @@ export const printers = pgTable('printers', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const printersRelations = relations(printers, ({ one }) => ({
+export const printersRelations = relations(printers, ({ one, many }) => ({
   venue: one(venues, { fields: [printers.venueId], references: [venues.id] }),
+  workstations: many(workstations),
 }));
 
+// 13. Workstations & Multi-Station Routing
+export const workstations = pgTable(
+  'workstations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    venueId: uuid('venue_id').notNull().references(() => venues.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 100 }).notNull(),
+    code: varchar('code', { length: 50 }).notNull(),
+    description: text('description'),
+    color: varchar('color', { length: 20 }).notNull().default('#ea580c'),
+    icon: varchar('icon', { length: 50 }).notNull().default('ChefHat'),
+    printerId: uuid('printer_id').references(() => printers.id, { onDelete: 'set null' }),
+    isActive: boolean('is_active').notNull().default(true),
+    sortOrder: smallint('sort_order').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('workstations_venue_code_idx').on(t.venueId, t.code),
+  ]
+);
+
+export const productStations = pgTable(
+  'product_stations',
+  {
+    productId: uuid('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    stationId: uuid('station_id').notNull().references(() => workstations.id, { onDelete: 'restrict' }),
+    isPrimary: boolean('is_primary').notNull().default(true),
+    sortOrder: smallint('sort_order').notNull().default(0),
+  },
+  (t) => [
+    primaryKey({ columns: [t.productId, t.stationId] }),
+  ]
+);
+
+export const orderItemStations = pgTable(
+  'order_item_stations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    orderItemId: uuid('order_item_id').notNull().references(() => orderItems.id, { onDelete: 'cascade' }),
+    stationId: uuid('station_id').notNull().references(() => workstations.id, { onDelete: 'restrict' }),
+    status: itemStatusEnum('status').notNull().default('pending'),
+    sentAt: timestamp('sent_at', { withTimezone: true }),
+    readyAt: timestamp('ready_at', { withTimezone: true }),
+    deliveredAt: timestamp('delivered_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('order_item_station_unique_idx').on(t.orderItemId, t.stationId),
+  ]
+);
+
+export const workstationsRelations = relations(workstations, ({ one, many }) => ({
+  venue: one(venues, { fields: [workstations.venueId], references: [venues.id] }),
+  printer: one(printers, { fields: [workstations.printerId], references: [printers.id] }),
+  productStations: many(productStations),
+  orderItemStations: many(orderItemStations),
+}));
+
+export const productStationsRelations = relations(productStations, ({ one }) => ({
+  product: one(products, { fields: [productStations.productId], references: [products.id] }),
+  station: one(workstations, { fields: [productStations.stationId], references: [workstations.id] }),
+}));
+
+export const orderItemStationsRelations = relations(orderItemStations, ({ one }) => ({
+  orderItem: one(orderItems, { fields: [orderItemStations.orderItemId], references: [orderItems.id] }),
+  station: one(workstations, { fields: [orderItemStations.stationId], references: [workstations.id] }),
+}));
