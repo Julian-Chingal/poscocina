@@ -6,6 +6,7 @@ import { redis } from '../../../config/redis.js';
 import { IVenueRepository } from '../interfaces/venue.repository.interface.js';
 import { NotFoundError, BadRequestError, ConflictError, ForbiddenError } from '../../../errors/app-error.js';
 import { evaluateVenueOpenStatus } from '../../../utils/venue-status.util.js';
+import { emailService } from '../../../services/email.service.js';
 
 export class VenueRepository implements IVenueRepository {
   constructor(private readonly database = db) {}
@@ -547,6 +548,28 @@ export class VenueRepository implements IVenueRepository {
       })
       .returning();
 
+    // Trigger welcome email for manager or admin with credentials
+    if (newUser.email && rawPassword && (targetRole.name === 'manager' || targetRole.name === 'super_admin')) {
+      let companyName = undefined;
+      if (companyId) {
+        const [comp] = await this.database
+          .select({ tradeName: schema.companies.tradeName, legalName: schema.companies.legalName })
+          .from(schema.companies)
+          .where(eq(schema.companies.id, companyId))
+          .limit(1);
+        if (comp) companyName = comp.tradeName || comp.legalName;
+      }
+
+      emailService
+        .sendManagerWelcomeEmail({
+          to: newUser.email,
+          name: newUser.name,
+          rawPassword,
+          companyName,
+        })
+        .catch((err) => console.error('[venue.repository] Error enviando correo de bienvenida a gerente:', err));
+    }
+
     return newUser;
   }
 
@@ -628,6 +651,32 @@ export class VenueRepository implements IVenueRepository {
     }
 
     const [updated] = await this.database.update(schema.users).set(updatePayload).where(eq(schema.users.id, userId)).returning();
+
+    // Trigger password changed notification if password was modified and user has email
+    if (data.password && (updated.email || existing.user.email)) {
+      const recipientEmail = updated.email || existing.user.email;
+      const recipientName = updated.name || existing.user.name;
+      let companyName = undefined;
+
+      if (existing.user.companyId) {
+        const [comp] = await this.database
+          .select({ tradeName: schema.companies.tradeName })
+          .from(schema.companies)
+          .where(eq(schema.companies.id, existing.user.companyId))
+          .limit(1);
+        if (comp) companyName = comp.tradeName;
+      }
+
+      emailService
+        .sendPasswordChangedEmail({
+          to: recipientEmail!,
+          name: recipientName,
+          newPassword: data.password,
+          companyName,
+        })
+        .catch((err) => console.error('[venue.repository] Error enviando alerta de cambio de contraseña:', err));
+    }
+
     return updated;
   }
 

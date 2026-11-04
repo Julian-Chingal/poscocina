@@ -26,6 +26,9 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(16, 'JWT_SECRET debe tener al menos 16 caracteres para seguridad criptográfica'),
   JWT_EXPIRES_IN: z.string().default('12h'),
   CORS_ORIGIN: z.string().default('http://localhost:5173,http://localhost:5174,http://localhost:3000'),
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().default('PosCocina <onboarding@resend.dev>'),
+  APP_URL: z.string().default('http://localhost:5173'),
 }).transform((data) => {
   const host = process.env.VALKEY_HOST || process.env.REDIS_HOST;
   const port = process.env.VALKEY_PORT || process.env.REDIS_PORT || 6379;
