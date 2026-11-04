@@ -77,6 +77,7 @@ async function seed() {
       .values({
         companyId: company?.id ?? null,
         name: 'Sede Principal',
+        slug: 'sede-principal',
         address: 'Calle Principal # 1-01',
         timezone: 'America/Bogota',
         isPrimary: true,
@@ -92,6 +93,8 @@ async function seed() {
       })
       .returning();
     venue = newVenue;
+  } else if (!venue.slug) {
+    await db.update(schema.venues).set({ slug: 'sede-principal' }).where(eq(schema.venues.id, venue.id));
   }
 
   // 4. Usuario Único Administrador (Super Admin)
