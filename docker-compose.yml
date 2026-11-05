@@ -61,9 +61,9 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
       HOST: 0.0.0.0
-      DATABASE_URL: ${DOCKER_DATABASE_URL:-${DATABASE_URL:-postgresql://${DB_USER:-posuser}:${DB_PASSWORD:-pospassword}@postgres:5432/${DB_NAME:-poscocina}}}
-      VALKEY_URL: ${DOCKER_VALKEY_URL:-${VALKEY_URL:-${DOCKER_REDIS_URL:-${REDIS_URL:-redis://valkey:6379}}}}
-      REDIS_URL: ${DOCKER_VALKEY_URL:-${VALKEY_URL:-${DOCKER_REDIS_URL:-${REDIS_URL:-redis://valkey:6379}}}}
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql://${DB_USER:-posuser}:${DB_PASSWORD:-pospassword}@postgres:5432/${DB_NAME:-poscocina}}
+      VALKEY_URL: ${DOCKER_VALKEY_URL:-redis://valkey:6379}
+      REDIS_URL: ${DOCKER_VALKEY_URL:-redis://valkey:6379}
       VALKEY_HOST: ${VALKEY_HOST:-${REDIS_HOST:-valkey}}
       VALKEY_PORT: ${VALKEY_PORT:-${REDIS_PORT:-6379}}
       JWT_SECRET: ${JWT_SECRET:-poscocina_jwt_super_secret_production_key_2026}
