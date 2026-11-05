@@ -100,6 +100,9 @@ export async function authRoutes(fastify: FastifyInstance) {
     (req, rep) => authController.loginWithGoogle(req, rep)
   );
 
+  // 6.1 Get configured Google Client ID for frontend
+  fastify.get('/api/auth/google/client-id', (req, rep) => authController.getGoogleClientId(req, rep));
+
   // 7. Google Account Linking (Authenticated)
   fastify.post(
     '/api/auth/google/link',

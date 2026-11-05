@@ -7,6 +7,7 @@ import path from 'path';
 const backendUrl = process.env.VITE_PROXY_TARGET || 'http://localhost:3000';
 
 export default defineConfig({
+  envDir: path.resolve(__dirname, '../../'),
   plugins: [
     react(),
     tailwindcss(),

@@ -53,8 +53,22 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
-  const clientId =
-    (import.meta.env.VITE_GOOGLE_CLIENT_ID as string) || '';
+  const [clientId, setClientId] = useState<string>(
+    (import.meta.env.VITE_GOOGLE_CLIENT_ID as string) || ''
+  );
+
+  useEffect(() => {
+    if (!clientId) {
+      fetch('/api/auth/google/client-id')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.clientId) {
+            setClientId(data.clientId);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [clientId]);
 
   const handleCredentialResponse = useCallback(
     async (response: { credential: string }) => {

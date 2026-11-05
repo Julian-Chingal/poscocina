@@ -1,7 +1,7 @@
-﻿import * as React from "react"
+import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 
-import { cn } from "@/lib/utils"
+import { cn, isMobileDevice } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
 const AlertDialog = AlertDialogPrimitive.Root
@@ -28,7 +28,7 @@ AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName
 const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
->(({ className, ...props }, ref) => (
+>(({ className, onOpenAutoFocus, ...props }, ref) => (
   <AlertDialogPortal>
     <AlertDialogOverlay />
     <AlertDialogPrimitive.Content
@@ -37,6 +37,18 @@ const AlertDialogContent = React.forwardRef<
         "fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border bg-background p-6 shadow-2xl data-[state=open]:animate-dialog-in data-[state=closed]:animate-dialog-out sm:rounded-2xl",
         className
       )}
+      onOpenAutoFocus={(e) => {
+        if (isMobileDevice()) {
+          e.preventDefault();
+          if (
+            document.activeElement instanceof HTMLInputElement ||
+            document.activeElement instanceof HTMLTextAreaElement
+          ) {
+            document.activeElement.blur();
+          }
+        }
+        onOpenAutoFocus?.(e);
+      }}
       {...props}
     />
   </AlertDialogPortal>

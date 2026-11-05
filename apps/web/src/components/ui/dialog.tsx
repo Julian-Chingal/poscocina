@@ -1,10 +1,10 @@
-﻿"use client"
+"use client"
 
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn, isMobileDevice } from "@/lib/utils"
 
 const Dialog = DialogPrimitive.Root
 
@@ -46,7 +46,7 @@ export interface DialogContentProps
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, maxWidth, onClose, ...props }, ref) => (
+>(({ className, children, maxWidth, onClose, onOpenAutoFocus, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
@@ -56,6 +56,18 @@ const DialogContent = React.forwardRef<
         maxWidth && (maxWidthClasses[maxWidth] || maxWidth),
         className
       )}
+      onOpenAutoFocus={(e) => {
+        if (isMobileDevice()) {
+          e.preventDefault();
+          if (
+            document.activeElement instanceof HTMLInputElement ||
+            document.activeElement instanceof HTMLTextAreaElement
+          ) {
+            document.activeElement.blur();
+          }
+        }
+        onOpenAutoFocus?.(e);
+      }}
       {...props}
     >
       {children}

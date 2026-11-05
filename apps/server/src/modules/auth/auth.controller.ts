@@ -279,6 +279,11 @@ export class AuthController {
     });
   }
 
+  async getGoogleClientId(_request: FastifyRequest, reply: FastifyReply) {
+    const clientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '';
+    return reply.send({ clientId });
+  }
+
   async linkGoogle(request: FastifyRequest, reply: FastifyReply) {
     if (!request.user?.sub) {
       return reply.status(401).send({ statusCode: 401, error: 'Unauthorized', message: 'No autenticado' });
