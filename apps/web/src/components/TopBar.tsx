@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Lock, Maximize2, Minimize2 } from "lucide-react";
 import { useAuthStore } from "../stores/auth.store";
 import { BrandLink } from "./navigation/BrandLink";
@@ -59,11 +59,14 @@ export const TopBar: React.FC<TopBarProps> = ({
   };
 
   return (
-    <header className="h-14 bg-card/90 backdrop-blur-xl border-b border-border/80 flex items-center justify-between px-2.5 sm:px-4 text-foreground select-none shadow-2xs z-30 sticky top-0 gap-2 sm:gap-3 transition-colors w-full min-w-0">
+    <header className="h-14 bg-card/90 backdrop-blur-xl border-b border-border/80 flex items-center justify-between px-2 sm:px-4 text-foreground select-none shadow-2xs z-30 sticky top-0 gap-1.5 sm:gap-3 transition-colors w-full min-w-0">
       {/* Left section: Brand, Venue & Breadcrumb Navigation with Back button */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 justify-start overflow-hidden flex-1 sm:flex-initial">
         <BrandLink isHome={isHome} onNavigate={onNavigate} />
-        <VenueSelector onNavigateSettings={() => onNavigate("settings")} />
+        <VenueSelector
+          onNavigateSettings={() => onNavigate("settings")}
+          className={!isHome ? "hidden md:flex" : undefined}
+        />
 
         {!isHome && (
           <BreadcrumbNav

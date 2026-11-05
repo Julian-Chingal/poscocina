@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from '../components/ui/sonner';
 import { useAuthStore } from '../stores/auth.store';
 import { usePermissions } from './usePermissions';
@@ -16,6 +16,7 @@ const VIEW_NAMES: Record<string, string> = {
   users: 'Gestión de Usuarios',
   settings: 'Ajustes del Sistema',
   restaurants: 'Restaurantes',
+  subscriptions: 'Planes y Suscripciones',
 };
 
 const getViewFromHash = (): string => {

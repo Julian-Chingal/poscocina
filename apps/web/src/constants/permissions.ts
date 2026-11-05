@@ -1,4 +1,4 @@
-﻿import { ROLES, RoleName } from '@poscocina/shared';
+import { ROLES, RoleName } from '@poscocina/shared';
 
 export type PermissionAction =
   | 'manage_catalog'
@@ -41,6 +41,7 @@ export const MODULE_PERMISSIONS: Record<string, RoleName[]> = {
   users: [ROLES.SUPER_ADMIN, ROLES.MANAGER],
   settings: [ROLES.SUPER_ADMIN, ROLES.MANAGER],
   restaurants: [ROLES.SUPER_ADMIN],
+  subscriptions: [ROLES.SUPER_ADMIN],
 };
 
 export const ACTION_PERMISSIONS: Record<PermissionAction, RoleName[]> = {

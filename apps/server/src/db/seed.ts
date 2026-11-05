@@ -216,6 +216,116 @@ async function seed() {
     }
   }
 
+    // 9. Planes y Cupones SaaS
+  console.log('  -> Configurando planes SaaS y cupones base...');
+  const basePlans = [
+    {
+      name: 'Plan Emprendedor',
+      slug: 'starter',
+      description: 'Ideal para cafeterías, food trucks y restaurantes individuales.',
+      price: '69000.00',
+      currency: 'COP',
+      billingInterval: 'month' as const,
+      trialDays: 14,
+      features: { kds: false, inventory: true, delivery: true, reservations: false, advancedReports: false, multiStation: false, customBranding: false, apiAccess: false },
+      limits: { maxVenues: 1, maxTables: 15, maxUsers: 3, maxProducts: 100, maxOrdersPerMonth: 500 },
+      isActive: true,
+      isPublic: true,
+      sortOrder: 1,
+    },
+    {
+      name: 'Plan Crecimiento Pro',
+      slug: 'pro',
+      description: 'Para restaurantes consolidados con alto volumen y cocina KDS.',
+      price: '149000.00',
+      currency: 'COP',
+      billingInterval: 'month' as const,
+      trialDays: 14,
+      features: { kds: true, inventory: true, delivery: true, reservations: true, advancedReports: true, multiStation: true, customBranding: false, apiAccess: false },
+      limits: { maxVenues: 3, maxTables: 50, maxUsers: 10, maxProducts: -1, maxOrdersPerMonth: -1 },
+      isActive: true,
+      isPublic: true,
+      sortOrder: 2,
+    },
+    {
+      name: 'Plan Franquicia Enterprise',
+      slug: 'enterprise',
+      description: 'Múltiples sedes, control total de inventario y máxima potencia.',
+      price: '299000.00',
+      currency: 'COP',
+      billingInterval: 'month' as const,
+      trialDays: 30,
+      features: { kds: true, inventory: true, delivery: true, reservations: true, advancedReports: true, multiStation: true, customBranding: true, apiAccess: true },
+      limits: { maxVenues: -1, maxTables: -1, maxUsers: -1, maxProducts: -1, maxOrdersPerMonth: -1 },
+      isActive: true,
+      isPublic: true,
+      sortOrder: 3,
+    },
+    {
+      name: 'Plan Cortesía Total (VIP)',
+      slug: 'complimentary-vip',
+      description: 'Acceso total bonificado al 100% sin cobro recurrente para aliados.',
+      price: '0.00',
+      currency: 'COP',
+      billingInterval: 'month' as const,
+      trialDays: 0,
+      features: { kds: true, inventory: true, delivery: true, reservations: true, advancedReports: true, multiStation: true, customBranding: true, apiAccess: true },
+      limits: { maxVenues: -1, maxTables: -1, maxUsers: -1, maxProducts: -1, maxOrdersPerMonth: -1 },
+      isActive: true,
+      isPublic: false,
+      sortOrder: 99,
+    },
+  ];
+
+  for (const plan of basePlans) {
+    const existing = await db.select().from(schema.saasPlans).where(eq(schema.saasPlans.slug, plan.slug)).limit(1);
+    if (!existing.length) {
+      await db.insert(schema.saasPlans).values(plan);
+    }
+  }
+
+  const baseCoupons = [
+    {
+      code: 'ZOGUI50',
+      name: '50% Descuento Primeros 3 Meses',
+      discountType: 'percentage' as const,
+      discountValue: '50.00',
+      currency: 'COP',
+      duration: 'repeating' as const,
+      durationInMonths: 3,
+      maxRedemptions: 100,
+      isActive: true,
+    },
+    {
+      code: 'BIENVENIDA100',
+      name: 'Primer Mes 100% Gratis',
+      discountType: 'percentage' as const,
+      discountValue: '100.00',
+      currency: 'COP',
+      duration: 'once' as const,
+      durationInMonths: 1,
+      maxRedemptions: 50,
+      isActive: true,
+    },
+    {
+      code: 'LIFETIME100',
+      name: 'Cortesía Vitalicia 100%',
+      discountType: 'percentage' as const,
+      discountValue: '100.00',
+      currency: 'COP',
+      duration: 'forever' as const,
+      maxRedemptions: 10,
+      isActive: true,
+    },
+  ];
+
+  for (const coupon of baseCoupons) {
+    const existing = await db.select().from(schema.saasCoupons).where(eq(schema.saasCoupons.code, coupon.code)).limit(1);
+    if (!existing.length) {
+      await db.insert(schema.saasCoupons).values(coupon);
+    }
+  }
+
   console.log('✅ Semilla completada exitosamente: Sistema listo con un Venue vacío y cuentas base.');
   await queryClient.end();
 }

@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { AppItem } from "../types/launcher.types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,10 @@ const getIconAnimation = (appId: string) => {
       return 'group-hover:animate-icon-wobble';
     case 'settings':
       return 'group-hover:rotate-180 group-hover:scale-115 transition-transform duration-700 ease-out';
+    case 'restaurants':
+      return 'group-hover:animate-icon-bounce';
+    case 'subscriptions':
+      return 'group-hover:animate-icon-pulse';
     default:
       return 'group-hover:scale-115 transition-transform duration-200';
   }

@@ -1,5 +1,5 @@
-﻿import React, { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
+import React, { useEffect, useState } from "react";
+import { useTheme } from "../theme/ThemeProvider";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";

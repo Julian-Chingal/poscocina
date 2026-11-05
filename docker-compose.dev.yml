@@ -93,6 +93,9 @@ services:
       GARAGE_ACCESS_KEY_ID: ${GARAGE_ACCESS_KEY_ID:-}
       GARAGE_SECRET_ACCESS_KEY: ${GARAGE_SECRET_ACCESS_KEY:-}
       PUBLIC_STORAGE_URL: ${PUBLIC_STORAGE_URL:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-poscocina <onboarding@resend.dev>}
+      APP_URL: ${APP_URL:-http://localhost:5173}
     ports:
       - "${DEV_PORT:-3001}:3000"
     volumes:
