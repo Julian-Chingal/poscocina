@@ -1,7 +1,15 @@
-import type { NextConfig } from 'next';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const nextConfig: NextConfig = {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   transpilePackages: ['@poscocina/shared'],
+  turbopack: {
+    root: path.resolve(__dirname, '../../'),
+  },
   async rewrites() {
     return [
       {
