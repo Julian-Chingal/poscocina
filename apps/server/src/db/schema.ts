@@ -137,6 +137,8 @@ export const users = pgTable(
     passwordHash: varchar('password_hash', { length: 72 }),
     roleId: uuid('role_id').notNull().references(() => roles.id),
     avatarUrl: text('avatar_url'),
+    googleId: varchar('google_id', { length: 255 }),
+    googleEmail: varchar('google_email', { length: 150 }),
     tokenVersion: smallint('token_version').notNull().default(1),
     allVenuesAccess: boolean('all_venues_access').notNull().default(false),
     isActive: boolean('is_active').notNull().default(true),
@@ -144,6 +146,7 @@ export const users = pgTable(
   },
   (t) => [
     uniqueIndex('users_company_document_idx').on(t.companyId, t.documentNumber),
+    uniqueIndex('users_google_id_idx').on(t.googleId),
   ]
 );
 

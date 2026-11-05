@@ -137,7 +137,10 @@ export const TopBar: React.FC<TopBarProps> = ({
           </Button>
         )}
 
-        <UserNav onNavigateSettings={() => onNavigate("settings")} />
+        <UserNav
+          onNavigateSettings={() => onNavigate("settings")}
+          onNavigateAccount={() => onNavigate("account")}
+        />
       </div>
     </header>
   );

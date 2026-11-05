@@ -9,12 +9,17 @@ export interface AuthenticatedUser {
   role: string;
   hierarchy: number;
   tokenVersion: number;
+  googleId?: string | null;
+  googleEmail?: string | null;
 }
 
 export interface IAuthRepository {
   findVenueUsers(venueId: string): Promise<any[]>;
   findUserWithRoleById(userId: string): Promise<any>;
   findUserWithRoleByEmail(email: string): Promise<any>;
+  findUserWithRoleByGoogleId(googleId: string): Promise<any>;
+  linkGoogleAccount(userId: string, googleId: string, googleEmail: string): Promise<void>;
+  unlinkGoogleAccount(userId: string): Promise<void>;
   findUsersWithRoleByDocument(documentNumber: string): Promise<any[]>;
   findManagersByVenue(venueId: string): Promise<any[]>;
   incrementTokenVersion(userId: string): Promise<void>;

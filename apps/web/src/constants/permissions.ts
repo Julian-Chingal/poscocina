@@ -42,6 +42,14 @@ export const MODULE_PERMISSIONS: Record<string, RoleName[]> = {
   settings: [ROLES.SUPER_ADMIN, ROLES.MANAGER],
   restaurants: [ROLES.SUPER_ADMIN],
   subscriptions: [ROLES.SUPER_ADMIN],
+  account: [
+    ROLES.SUPER_ADMIN,
+    ROLES.MANAGER,
+    ROLES.CASHIER,
+    ROLES.WAITER,
+    ROLES.KITCHEN,
+    ROLES.KDS_DISPLAY,
+  ],
 };
 
 export const ACTION_PERMISSIONS: Record<PermissionAction, RoleName[]> = {

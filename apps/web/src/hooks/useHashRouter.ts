@@ -17,6 +17,7 @@ const VIEW_NAMES: Record<string, string> = {
   settings: 'Ajustes del Sistema',
   restaurants: 'Restaurantes',
   subscriptions: 'Planes y Suscripciones',
+  account: 'Mi Cuenta',
 };
 
 const getViewFromHash = (): string => {

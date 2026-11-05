@@ -1,4 +1,4 @@
-﻿import { create } from 'zustand';
+import { create } from 'zustand';
 
 export interface UserInfo {
   id: string;
@@ -39,6 +39,25 @@ export interface DocumentLoginResponse {
   error?: string;
 }
 
+export interface AccountProfile {
+  id: string;
+  name: string;
+  email?: string | null;
+  documentNumber?: string | null;
+  roleName: string;
+  roleHierarchy: number;
+  companyId?: string | null;
+  companyName?: string | null;
+  companyLogo?: string | null;
+  venueId?: string;
+  venueName?: string;
+  allVenuesAccess?: boolean;
+  hasGoogleLinked: boolean;
+  googleEmail?: string | null;
+  hasPassword: boolean;
+  hasPin: boolean;
+}
+
 interface AuthState {
   venueId: string | null;
   setVenueId: (id: string) => void;
@@ -53,6 +72,8 @@ interface AuthState {
   venueUsers: UserInfo[];
   isLoading: boolean;
   error: string | null;
+  accountProfile: AccountProfile | null;
+  fetchAccountProfile: () => Promise<AccountProfile | null>;
   setCurrentUser: (user: UserInfo) => void;
   logout: () => void;
   checkSession: () => Promise<boolean>;
@@ -61,6 +82,9 @@ interface AuthState {
   loginWithDocument: (documentNumber: string, pin: string, companyId?: string, venueId?: string) => Promise<DocumentLoginResponse>;
   selectAuthContext: (selectionToken: string, userId: string, companyId: string, venueId: string) => Promise<boolean>;
   loginWithPassword: (email: string, password: string) => Promise<boolean>;
+  loginWithGoogle: (idToken: string) => Promise<boolean>;
+  linkGoogleAccount: (idToken: string) => Promise<{ success: boolean; error?: string }>;
+  unlinkGoogleAccount: () => Promise<{ success: boolean; error?: string }>;
   lockScreen: () => void;
   unlockScreen: () => void;
   unlockWithPin: (userId: string, pin: string, venueId?: string) => Promise<boolean>;
@@ -157,6 +181,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   venueUsers: [],
   isLoading: false,
   error: null,
+  accountProfile: null,
+
+  fetchAccountProfile: async () => {
+    const token = get().token;
+    if (!token) return null;
+    try {
+      const res = await fetch('/api/auth/account', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        const profile: AccountProfile = await res.json();
+        set({ accountProfile: profile });
+        return profile;
+      }
+      return null;
+    } catch (e) {
+      console.error('Error fetching account profile:', e);
+      return null;
+    }
+  },
 
   setCurrentUser: (user) => {
     if (typeof window !== 'undefined') {
@@ -570,6 +616,117 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (err) {
       set({ error: 'Error de conexión con el servidor', isLoading: false });
       return false;
+    }
+  },
+
+  loginWithGoogle: async (idToken: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        set({ error: data.error || data.message || 'Error al iniciar sesión con Google', isLoading: false });
+        return false;
+      }
+
+      const data = await res.json();
+      const userData: UserInfo = {
+        id: data.user.id,
+        name: data.user.name,
+        companyId: data.user.companyId,
+        venueId: data.user.venueId,
+        documentNumber: data.user.documentNumber,
+        email: data.user.email,
+        roleName: data.user.role,
+        roleLabel:
+          data.user.role === 'manager'
+            ? 'Gerente'
+            : data.user.role === 'cashier'
+            ? 'Cajero'
+            : data.user.role === 'waiter'
+            ? 'Mesero'
+            : 'Administrador',
+        role: data.user.role,
+        hierarchy: data.user.hierarchy,
+      };
+
+      const finalVenueId = data.user.venueId || (data.availableVenues?.[0]?.id) || 'default';
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('poscocina_token', data.token);
+        localStorage.setItem('poscocina_user', JSON.stringify(userData));
+        localStorage.setItem('poscocina_venue_id', finalVenueId);
+        if (data.company?.id) {
+          localStorage.setItem('poscocina_company_id', data.company.id);
+        }
+        sessionStorage.removeItem('poscocina_locked');
+      }
+
+      set({
+        currentUser: userData,
+        user: userData,
+        venueId: finalVenueId,
+        selectedVenueId: finalVenueId,
+        availableVenues: data.availableVenues || [],
+        token: data.token,
+        isLocked: false,
+        isLoading: false,
+        error: null,
+      });
+      return true;
+    } catch (err) {
+      set({ error: 'Error de conexión con el servidor', isLoading: false });
+      return false;
+    }
+  },
+
+  linkGoogleAccount: async (idToken: string) => {
+    const token = get().token;
+    if (!token) return { success: false, error: 'No autenticado' };
+    try {
+      const res = await fetch('/api/auth/google/link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ idToken }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.error || data.message || 'Error al vincular cuenta de Google' };
+      }
+      await get().fetchAccountProfile();
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error de red' };
+    }
+  },
+
+  unlinkGoogleAccount: async () => {
+    const token = get().token;
+    if (!token) return { success: false, error: 'No autenticado' };
+    try {
+      const res = await fetch('/api/auth/google/unlink', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.error || data.message || 'Error al desvincular cuenta de Google' };
+      }
+      await get().fetchAccountProfile();
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error de red' };
     }
   },
 

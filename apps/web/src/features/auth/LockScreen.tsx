@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Lock, ShieldAlert, KeyRound, CreditCard, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useAuthStore, ContextOption } from '@/stores/auth.store';
 import { AuthMode } from './types/auth.types';
@@ -194,6 +194,19 @@ export const LockScreen: React.FC<LockScreenProps> = ({ onUnlocked }) => {
     } else {
       const serverErr = useAuthStore.getState().error;
       setLocalError(serverErr || 'Credenciales incorrectas o usuario inactivo');
+    }
+  };
+
+  const handleGoogleLogin = async (idToken: string) => {
+    setLocalError(null);
+    const success = await useAuthStore.getState().loginWithGoogle(idToken);
+    if (success) {
+      setLocalError(null);
+      unlockScreen();
+      if (onUnlocked) onUnlocked();
+    } else {
+      const serverErr = useAuthStore.getState().error;
+      setLocalError(serverErr || 'Error al autenticarse con Google');
     }
   };
 
@@ -450,6 +463,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ onUnlocked }) => {
 
             <PasswordLoginForm
               onSubmit={handlePasswordSubmit}
+              onGoogleSuccess={handleGoogleLogin}
               isLoading={isLoading}
               error={localError}
             />
