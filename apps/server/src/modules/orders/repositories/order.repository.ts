@@ -84,6 +84,9 @@ export class OrderRepository implements IOrderRepository {
           with: {
             product: true,
             modifiers: { with: { modifier: true } },
+            stations: {
+              with: { station: true },
+            },
           },
         },
       },
@@ -105,18 +108,13 @@ export class OrderRepository implements IOrderRepository {
           }))
           .filter((ord) => ord.items.length > 0);
 
-    // FIFO (First In, First Out) strict sorting by the earliest sentAt / openedAt
+    // FIFO (First In, First Out) strict sorting by order creation time (openedAt):
+    // The oldest order stays first and its position never changes upon item or order state transitions.
     return filtered.sort((a, b) => {
-      const getEarliestTime = (ord: any) => {
-        const times = ord.items
-          .map((it: any) => (it.sentAt ? new Date(it.sentAt).getTime() : null))
-          .filter(Boolean);
-        if (times.length > 0) {
-          return Math.min(...times);
-        }
-        return new Date(ord.openedAt).getTime();
-      };
-      return getEarliestTime(a) - getEarliestTime(b);
+      const timeA = new Date(a.openedAt).getTime();
+      const timeB = new Date(b.openedAt).getTime();
+      if (timeA !== timeB) return timeA - timeB;
+      return a.id.localeCompare(b.id);
     });
   }
 
