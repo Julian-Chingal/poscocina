@@ -1,4 +1,4 @@
-﻿import React, { useEffect } from "react";
+import React, { useEffect } from "react";
 import { Store, ChevronDown, Check, Plus } from "lucide-react";
 import { useAuthStore } from "../../stores/auth.store";
 import { useBrandingStore, VenueItem } from "../../stores/branding.store";
@@ -67,7 +67,7 @@ export const VenueSelector: React.FC<VenueSelectorProps> = ({
       <div
         title={`Sede asignada: ${currentVenue.name}`}
         className={cn(
-          "h-8 flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs select-none min-w-[100px] max-w-[170px]",
+          "h-8 flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded-lg text-xs select-none min-w-0 max-w-[120px] sm:max-w-[170px]",
           "bg-muted/60 border border-border/80 text-foreground shadow-2xs",
           className
         )}
@@ -98,7 +98,7 @@ export const VenueSelector: React.FC<VenueSelectorProps> = ({
           title="Cambiar de Sede / Sucursal"
           aria-label={`Sede actual: ${currentVenue.name}. Clic para cambiar de sede.`}
           className={cn(
-            "group h-8 flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs transition-all cursor-pointer select-none min-w-[100px] max-w-[170px]",
+            "group h-8 flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded-lg text-xs transition-all cursor-pointer select-none min-w-0 max-w-[120px] sm:max-w-[170px]",
             "bg-muted/80 hover:bg-muted border border-border text-foreground hover:text-foreground shadow-2xs",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
             "data-[state=open]:bg-muted data-[state=open]:border-primary/50",

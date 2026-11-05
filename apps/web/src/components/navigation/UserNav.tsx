@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { Settings, Lock, LogOut, ShieldCheck } from "lucide-react";
 import { useAuthStore } from "../../stores/auth.store";
 import { usePermissions } from "../../hooks/usePermissions";
@@ -59,7 +59,7 @@ export const UserNav: React.FC<UserNavProps> = ({
           title="Menú de Usuario y Configuración (Ctrl+L para bloquear)"
           aria-label="Menú de Usuario y Configuración"
           className={cn(
-            "group h-8 flex items-center gap-2 p-1 pl-1.5 pr-2 rounded-xl transition-all cursor-pointer select-none text-left min-w-[100px] sm:min-w-[130px] max-w-[170px]",
+            "group h-8 flex items-center gap-1.5 sm:gap-2 p-1 rounded-xl transition-all cursor-pointer select-none text-left sm:pl-1.5 sm:pr-2 sm:min-w-[120px] sm:max-w-[170px]",
             "border border-transparent hover:border-border hover:bg-muted/70",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
             "data-[state=open]:bg-muted/80 data-[state=open]:border-border",
@@ -72,7 +72,7 @@ export const UserNav: React.FC<UserNavProps> = ({
             </AvatarFallback>
           </Avatar>
 
-          <div className="flex flex-col min-w-0 text-left flex-1">
+          <div className="hidden sm:flex flex-col min-w-0 text-left flex-1">
             <span className="font-semibold text-xs text-foreground truncate leading-tight">
               {currentUser.name}
             </span>
