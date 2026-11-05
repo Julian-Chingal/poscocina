@@ -44,3 +44,11 @@ export const ManagerPinOverrideSchema = z.object({
 });
 
 export type ManagerPinOverrideInput = z.infer<typeof ManagerPinOverrideSchema>;
+
+export const GoogleAuthSchema = z.object({
+  idToken: z.string().min(10, 'Token de Google requerido'),
+  deviceId: z.string().optional(),
+});
+
+export type GoogleAuthInput = z.infer<typeof GoogleAuthSchema>;
+

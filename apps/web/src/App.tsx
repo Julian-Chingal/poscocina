@@ -27,6 +27,7 @@ const UsersView = lazy(() => import("./features/users"));
 const ReservationsView = lazy(() => import("./features/reservations"));
 const RestaurantsView = lazy(() => import("./features/restaurants"));
 const SaasSubscriptionsView = lazy(() => import("./features/saas-subscriptions"));
+const AccountView = lazy(() => import("./features/account"));
 const ModulePlaceholder = lazy(
   () => import("./features/shared/components/ModulePlaceholder"),
 );
@@ -127,6 +128,8 @@ export const App: React.FC = () => {
         return <RestaurantsView />;
       case "subscriptions":
         return <SaasSubscriptionsView />;
+      case "account":
+        return <AccountView />;
       case "reservations":
         return (
           <ReservationsView

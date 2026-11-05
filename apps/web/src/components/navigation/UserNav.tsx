@@ -1,5 +1,5 @@
 import React from "react";
-import { Settings, Lock, LogOut, ShieldCheck } from "lucide-react";
+import { Settings, Lock, LogOut, ShieldCheck, User } from "lucide-react";
 import { useAuthStore } from "../../stores/auth.store";
 import { usePermissions } from "../../hooks/usePermissions";
 import { Avatar, AvatarFallback } from "../ui/avatar";
@@ -18,11 +18,13 @@ import { cn } from "@/lib/utils";
 
 interface UserNavProps {
   onNavigateSettings: () => void;
+  onNavigateAccount?: () => void;
   className?: string;
 }
 
 export const UserNav: React.FC<UserNavProps> = ({
   onNavigateSettings,
+  onNavigateAccount,
   className,
 }) => {
   // Atomic Zustand selectors
@@ -120,6 +122,24 @@ export const UserNav: React.FC<UserNavProps> = ({
         <DropdownMenuSeparator className="my-1.5 bg-border" />
 
         <DropdownMenuGroup>
+          {/* Account & Security */}
+          {onNavigateAccount && (
+            <DropdownMenuItem
+              onSelect={onNavigateAccount}
+              className="cursor-pointer gap-2.5 p-2 rounded-lg text-foreground focus:bg-muted focus:text-foreground text-xs"
+            >
+              <div className="p-1 rounded-md bg-muted text-primary shrink-0">
+                <User className="size-3.5 shrink-0" strokeWidth={2} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium leading-none truncate">Mi Cuenta & Seguridad</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                  Google, credenciales y perfil
+                </div>
+              </div>
+            </DropdownMenuItem>
+          )}
+
           {/* Settings Option for Managers / Super Admins */}
           {isManager && (
             <DropdownMenuItem

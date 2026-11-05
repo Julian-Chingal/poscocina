@@ -54,6 +54,8 @@ export class AuthRepository implements IAuthRepository {
         venueName: schema.venues.name,
         venueIsActive: schema.venues.isActive,
         email: schema.users.email,
+        googleId: schema.users.googleId,
+        googleEmail: schema.users.googleEmail,
         pinHash: schema.users.pinHash,
         passwordHash: schema.users.passwordHash,
         tokenVersion: schema.users.tokenVersion,
@@ -82,6 +84,8 @@ export class AuthRepository implements IAuthRepository {
         companyLogo: schema.companies.logoUrl,
         allVenuesAccess: schema.users.allVenuesAccess,
         email: schema.users.email,
+        googleId: schema.users.googleId,
+        googleEmail: schema.users.googleEmail,
         venueId: schema.users.venueId,
         venueName: schema.venues.name,
         venueIsActive: schema.venues.isActive,
@@ -100,6 +104,59 @@ export class AuthRepository implements IAuthRepository {
       .limit(1);
 
     return user || null;
+  }
+
+  async findUserWithRoleByGoogleId(googleId: string) {
+    const [user] = await this.database
+      .select({
+        id: schema.users.id,
+        name: schema.users.name,
+        documentNumber: schema.users.documentNumber,
+        companyId: schema.users.companyId,
+        companyName: schema.companies.tradeName,
+        companyLogo: schema.companies.logoUrl,
+        allVenuesAccess: schema.users.allVenuesAccess,
+        email: schema.users.email,
+        googleId: schema.users.googleId,
+        googleEmail: schema.users.googleEmail,
+        venueId: schema.users.venueId,
+        venueName: schema.venues.name,
+        venueIsActive: schema.venues.isActive,
+        passwordHash: schema.users.passwordHash,
+        pinHash: schema.users.pinHash,
+        tokenVersion: schema.users.tokenVersion,
+        roleName: schema.roles.name,
+        roleHierarchy: schema.roles.hierarchy,
+        isActive: schema.users.isActive,
+      })
+      .from(schema.users)
+      .innerJoin(schema.roles, eq(schema.users.roleId, schema.roles.id))
+      .leftJoin(schema.venues, eq(schema.users.venueId, schema.venues.id))
+      .leftJoin(schema.companies, eq(schema.users.companyId, schema.companies.id))
+      .where(eq(schema.users.googleId, googleId))
+      .limit(1);
+
+    return user || null;
+  }
+
+  async linkGoogleAccount(userId: string, googleId: string, googleEmail: string): Promise<void> {
+    await this.database
+      .update(schema.users)
+      .set({
+        googleId,
+        googleEmail,
+      })
+      .where(eq(schema.users.id, userId));
+  }
+
+  async unlinkGoogleAccount(userId: string): Promise<void> {
+    await this.database
+      .update(schema.users)
+      .set({
+        googleId: null,
+        googleEmail: null,
+      })
+      .where(eq(schema.users.id, userId));
   }
 
   async findUsersWithRoleByDocument(documentNumber: string) {

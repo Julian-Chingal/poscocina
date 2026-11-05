@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Mail, Lock, LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
@@ -13,15 +13,18 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { GoogleAuthButton } from './GoogleAuthButton';
 
 interface PasswordLoginFormProps {
   onSubmit: (values: PasswordLoginFormValues) => Promise<void>;
+  onGoogleSuccess?: (idToken: string) => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
 
 export const PasswordLoginForm: React.FC<PasswordLoginFormProps> = ({
   onSubmit,
+  onGoogleSuccess,
   isLoading,
   error,
 }) => {
@@ -114,6 +117,22 @@ export const PasswordLoginForm: React.FC<PasswordLoginFormProps> = ({
           <LogIn className="w-4 h-4" />
           <span>{isLoading || form.formState.isSubmitting ? 'Ingresando...' : 'Iniciar Sesión'}</span>
         </Button>
+
+        {onGoogleSuccess && (
+          <div className="pt-2 space-y-3">
+            <div className="relative flex items-center justify-center">
+              <div className="border-t border-border w-full" />
+              <span className="bg-card px-2 text-[10px] uppercase font-semibold text-muted-foreground tracking-wider absolute">
+                o continuar con
+              </span>
+            </div>
+            <GoogleAuthButton
+              mode="login"
+              onSuccess={onGoogleSuccess}
+              disabled={isLoading || form.formState.isSubmitting}
+            />
+          </div>
+        )}
       </form>
     </Form>
   );
