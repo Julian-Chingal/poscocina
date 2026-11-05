@@ -29,6 +29,8 @@ COPY apps/web/ ./apps/web/
 # Variables de entorno en tiempo de compilación (Vite embebe variables VITE_*)
 ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 
 # Compilar dependencias compartidas y bundle del frontend
 RUN pnpm --filter @poscocina/shared build
