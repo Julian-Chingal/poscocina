@@ -14,3 +14,4 @@ export * from './schemas/hardware.schema.js';
 export * from './schemas/company.schema.js';
 export * from './schemas/station.schema.js';
 export * from './schemas/delivery.schema.js';
+export * from './schemas/saas-subscription.schema.js';

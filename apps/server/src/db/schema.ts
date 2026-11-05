@@ -649,3 +649,147 @@ export const orderItemStationsRelations = relations(orderItemStations, ({ one })
   orderItem: one(orderItems, { fields: [orderItemStations.orderItemId], references: [orderItems.id] }),
   station: one(workstations, { fields: [orderItemStations.stationId], references: [workstations.id] }),
 }));
+
+// 14. SaaS Subscription & Monetization Engine
+export const subscriptionStatusEnum = pgEnum('subscription_status', [
+  'trialing',
+  'active',
+  'past_due',
+  'canceled',
+  'complimentary',
+]);
+
+export const discountTypeEnum = pgEnum('discount_type', [
+  'percentage',
+  'fixed_amount',
+]);
+
+export const couponDurationEnum = pgEnum('coupon_duration', [
+  'once',
+  'repeating',
+  'forever',
+]);
+
+export const billingIntervalEnum = pgEnum('billing_interval', [
+  'month',
+  'year',
+]);
+
+export const saasInvoiceStatusEnum = pgEnum('saas_invoice_status', [
+  'draft',
+  'open',
+  'paid',
+  'void',
+  'free_waiver',
+]);
+
+export const saasPlans = pgTable('saas_plans', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 100 }).notNull(),
+  slug: varchar('slug', { length: 50 }).notNull().unique(),
+  description: text('description'),
+  price: numeric('price', { precision: 12, scale: 2 }).notNull().default('0'),
+  currency: varchar('currency', { length: 10 }).notNull().default('COP'),
+  billingInterval: billingIntervalEnum('billing_interval').notNull().default('month'),
+  trialDays: integer('trial_days').notNull().default(14),
+  features: jsonb('features').notNull().default({}),
+  limits: jsonb('limits').notNull().default({}),
+  isActive: boolean('is_active').notNull().default(true),
+  isPublic: boolean('is_public').notNull().default(true),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const saasCoupons = pgTable('saas_coupons', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  code: varchar('code', { length: 50 }).notNull().unique(),
+  name: varchar('name', { length: 100 }).notNull(),
+  discountType: discountTypeEnum('discount_type').notNull().default('percentage'),
+  discountValue: numeric('discount_value', { precision: 12, scale: 2 }).notNull(),
+  currency: varchar('currency', { length: 10 }).notNull().default('COP'),
+  duration: couponDurationEnum('duration').notNull().default('once'),
+  durationInMonths: integer('duration_in_months'),
+  maxRedemptions: integer('max_redemptions'),
+  timesRedeemed: integer('times_redeemed').notNull().default(0),
+  validFrom: timestamp('valid_from', { withTimezone: true }),
+  validUntil: timestamp('valid_until', { withTimezone: true }),
+  applicablePlanIds: jsonb('applicable_plan_ids'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const saasSubscriptions = pgTable('saas_subscriptions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }).unique(),
+  planId: uuid('plan_id').notNull().references(() => saasPlans.id, { onDelete: 'restrict' }),
+  status: subscriptionStatusEnum('status').notNull().default('trialing'),
+  billingInterval: billingIntervalEnum('billing_interval').notNull().default('month'),
+  currentPeriodStart: timestamp('current_period_start', { withTimezone: true }).notNull().defaultNow(),
+  currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }).notNull(),
+  cancelAtPeriodEnd: boolean('cancel_at_period_end').notNull().default(false),
+  canceledAt: timestamp('canceled_at', { withTimezone: true }),
+  trialStart: timestamp('trial_start', { withTimezone: true }),
+  trialEnd: timestamp('trial_end', { withTimezone: true }),
+  activeCouponId: uuid('active_coupon_id').references(() => saasCoupons.id, { onDelete: 'set null' }),
+  customLimits: jsonb('custom_limits'),
+  customFeatures: jsonb('custom_features'),
+  isComplimentary: boolean('is_complimentary').notNull().default(false),
+  complimentaryReason: text('complimentary_reason'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const saasCouponRedemptions = pgTable('saas_coupon_redemptions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  couponId: uuid('coupon_id').notNull().references(() => saasCoupons.id, { onDelete: 'cascade' }),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
+  subscriptionId: uuid('subscription_id').notNull().references(() => saasSubscriptions.id, { onDelete: 'cascade' }),
+  redeemedAt: timestamp('redeemed_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const saasInvoices = pgTable('saas_invoices', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
+  subscriptionId: uuid('subscription_id').notNull().references(() => saasSubscriptions.id, { onDelete: 'cascade' }),
+  amountDue: numeric('amount_due', { precision: 12, scale: 2 }).notNull().default('0'),
+  amountPaid: numeric('amount_paid', { precision: 12, scale: 2 }).notNull().default('0'),
+  discountAmount: numeric('discount_amount', { precision: 12, scale: 2 }).notNull().default('0'),
+  currency: varchar('currency', { length: 10 }).notNull().default('COP'),
+  status: saasInvoiceStatusEnum('status').notNull().default('paid'),
+  paymentProvider: varchar('payment_provider', { length: 50 }).notNull().default('manual'),
+  paymentReference: varchar('payment_reference', { length: 100 }),
+  notes: text('notes'),
+  paidAt: timestamp('paid_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const saasPlansRelations = relations(saasPlans, ({ many }) => ({
+  subscriptions: many(saasSubscriptions),
+}));
+
+export const saasCouponsRelations = relations(saasCoupons, ({ many }) => ({
+  redemptions: many(saasCouponRedemptions),
+  subscriptions: many(saasSubscriptions),
+}));
+
+export const saasSubscriptionsRelations = relations(saasSubscriptions, ({ one, many }) => ({
+  company: one(companies, { fields: [saasSubscriptions.companyId], references: [companies.id] }),
+  plan: one(saasPlans, { fields: [saasSubscriptions.planId], references: [saasPlans.id] }),
+  activeCoupon: one(saasCoupons, { fields: [saasSubscriptions.activeCouponId], references: [saasCoupons.id] }),
+  redemptions: many(saasCouponRedemptions),
+  invoices: many(saasInvoices),
+}));
+
+export const saasCouponRedemptionsRelations = relations(saasCouponRedemptions, ({ one }) => ({
+  coupon: one(saasCoupons, { fields: [saasCouponRedemptions.couponId], references: [saasCoupons.id] }),
+  company: one(companies, { fields: [saasCouponRedemptions.companyId], references: [companies.id] }),
+  subscription: one(saasSubscriptions, { fields: [saasCouponRedemptions.subscriptionId], references: [saasSubscriptions.id] }),
+}));
+
+export const saasInvoicesRelations = relations(saasInvoices, ({ one }) => ({
+  company: one(companies, { fields: [saasInvoices.companyId], references: [companies.id] }),
+  subscription: one(saasSubscriptions, { fields: [saasInvoices.subscriptionId], references: [saasSubscriptions.id] }),
+}));
+

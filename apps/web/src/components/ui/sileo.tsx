@@ -1,11 +1,11 @@
-﻿import React from 'react';
+import React from 'react';
 import {
   Toaster as SileoBaseToaster,
   sileo,
   type SileoOptions,
   type SileoPosition,
 } from 'sileo';
-import { useTheme } from 'next-themes';
+import { useTheme } from '../theme/ThemeProvider';
 
 export type ToastOptions = Partial<SileoOptions> & {
   id?: string;

@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +20,7 @@ export const BrandLink: React.FC<BrandLinkProps> = ({
       title="Ir al Menú Principal de Aplicaciones [Esc]"
       aria-label="Ir al Menú Principal de Aplicaciones [Esc]"
       className={cn(
-        "h-auto group flex items-center gap-2.5 px-2 py-1 rounded-xl transition-all cursor-pointer select-none text-left",
+        "h-auto group flex items-center gap-1.5 sm:gap-2.5 px-1.5 sm:px-2 py-1 rounded-xl transition-all cursor-pointer select-none text-left",
         "border border-transparent hover:border-border hover:bg-muted/70",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
         isHome && "bg-muted/80 border-border shadow-2xs",
@@ -47,7 +47,7 @@ export const BrandLink: React.FC<BrandLinkProps> = ({
         <span className="font-bold text-xs sm:text-sm text-foreground tracking-tight truncate leading-tight group-hover:text-primary transition-colors">
           PosCocina
         </span>
-        <span className="text-[10px] text-muted-foreground font-medium leading-none flex items-center gap-1 mt-0.5">
+        <span className="hidden sm:flex text-[10px] text-muted-foreground font-medium leading-none items-center gap-1 mt-0.5">
           <LayoutGrid
             className="size-2.5 shrink-0 text-muted-foreground/80 group-hover:text-primary transition-colors"
             strokeWidth={2}

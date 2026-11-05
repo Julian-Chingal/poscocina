@@ -1,6 +1,6 @@
-﻿import React from "react";
+import React from "react";
 import ReactDOM from "react-dom/client";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { registerSW } from "virtual:pwa-register";
 import { App } from "./App";
 import "./index.css";

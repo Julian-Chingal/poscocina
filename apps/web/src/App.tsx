@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { TopBar } from "./components/TopBar";
 import { AppLauncherView } from "./components/navigation/launcher";
 import { ViewLoadingFallback } from "./components/ViewLoadingFallback";
@@ -26,6 +26,7 @@ const ReportsView = lazy(() => import("./features/reports"));
 const UsersView = lazy(() => import("./features/users"));
 const ReservationsView = lazy(() => import("./features/reservations"));
 const RestaurantsView = lazy(() => import("./features/restaurants"));
+const SaasSubscriptionsView = lazy(() => import("./features/saas-subscriptions"));
 const ModulePlaceholder = lazy(
   () => import("./features/shared/components/ModulePlaceholder"),
 );
@@ -124,6 +125,8 @@ export const App: React.FC = () => {
         return <UsersView venueId={venueId || ""} />;
       case "restaurants":
         return <RestaurantsView />;
+      case "subscriptions":
+        return <SaasSubscriptionsView />;
       case "reservations":
         return (
           <ReservationsView
