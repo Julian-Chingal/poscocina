@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import {
   Clock,
   ShoppingBag,
@@ -45,19 +45,7 @@ export const KdsOrderCard: React.FC<KdsOrderCardProps> = ({
   onCompleteOrder,
   showDelivered = false,
 }) => {
-  // Use earliest sentAt if available, fallback to openedAt for FIFO accuracy
-  const itemTimes = order.items
-    .map((it) => (it.sentAt ? new Date(it.sentAt).getTime() : null))
-    .filter(Boolean) as number[];
-
-  const earliestKitchenTimestamp =
-    itemTimes.length > 0
-      ? Math.min(...itemTimes)
-      : new Date(order.openedAt).getTime();
-  const urgency = getUrgencyStyles(
-    new Date(earliestKitchenTimestamp).toISOString(),
-    currentTime,
-  );
+  const urgency = getUrgencyStyles(order.openedAt, currentTime);
 
   const totalItems = order.items.length;
   const completedItems = order.items.filter(
