@@ -5,7 +5,7 @@ echo "🚀 [poscocina-server-dev] Iniciando contenedor de desarrollo..."
 
 # 1. Asegurar compilación de paquetes compartidos
 echo "📦 [poscocina-server-dev] Compilando @poscocina/shared..."
-pnpm --filter @poscocina/shared build
+pnpm --offline --filter @poscocina/shared build || pnpm --filter @poscocina/shared build
 
 # 2. Comprobación opcional de migraciones
 if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
