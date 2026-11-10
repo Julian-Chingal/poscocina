@@ -1,9 +1,13 @@
 # ==============================================================================
-# poscocina - Entorno de Desarrollo (Docker Compose)
+# poscocina - Entorno de Desarrollo / QA / Staging (Docker Compose)
 # ==============================================================================
+# Ejecuta imágenes compiladas de producción (Fastify compilado y Nginx para Web)
+# pero manteniendo los puertos y configuraciones parametrizadas con variables
+# de entorno para evitar colisiones en QA, VPS o con servicios locales.
+#
 # Uso:
-#   - Levantar todo en dev (hot-reload completo):
-#       pnpm docker:dev  O  docker compose -f docker-compose.dev.yml up -d
+#   - Levantar todo (Server compilado + Nginx + BD + Valkey):
+#       pnpm docker:dev  O  docker compose -f docker-compose.dev.yml up -d --build
 #   - Levantar solo infraestructura (BD + Valkey para correr pnpm dev:all en host):
 #       pnpm docker:dev:db  O  docker compose -f docker-compose.dev.yml up -d postgres valkey
 #   - Ver logs:
@@ -65,14 +69,14 @@ services:
   server:
     build:
       context: .
-      dockerfile: apps/server/Dockerfile.dev
+      dockerfile: apps/server/Dockerfile
     container_name: poscocina-server-dev
     restart: unless-stopped
     environment:
-      NODE_ENV: development
+      NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
       HOST: 0.0.0.0
-      DATABASE_URL: postgresql://${DB_USER:-posuser}:${DB_PASSWORD:-pospassword_seguro_produccion_2026}@postgres:5432/${DB_NAME:-poscocina}
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql://${DB_USER:-posuser}:${DB_PASSWORD:-pospassword_seguro_produccion_2026}@postgres:5432/${DB_NAME:-poscocina}}
       VALKEY_URL: ${VALKEY_URL:-${REDIS_URL:-redis://valkey:6379}}
       REDIS_URL: ${VALKEY_URL:-${REDIS_URL:-redis://valkey:6379}}
       VALKEY_HOST: ${VALKEY_HOST:-${REDIS_HOST:-valkey}}
@@ -85,11 +89,11 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@poscocina.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
       ADMIN_PIN: ${ADMIN_PIN:-1234}
-      STORAGE_BUCKET: ${STORAGE_BUCKET:-catastrocol-cargues}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-${GARAGE_S3_BUCKET:-catastrocol-cargues}}
       STORAGE_PATH: ${STORAGE_PATH:-gastropos}
       GARAGE_S3_ENDPOINT: ${GARAGE_S3_ENDPOINT:-http://garage:3900}
       GARAGE_S3_REGION: ${GARAGE_S3_REGION:-garage}
-      GARAGE_S3_BUCKET: ${STORAGE_BUCKET:-catastrocol-cargues}
+      GARAGE_S3_BUCKET: ${STORAGE_BUCKET:-${GARAGE_S3_BUCKET:-catastrocol-cargues}}
       GARAGE_ACCESS_KEY_ID: ${GARAGE_ACCESS_KEY_ID:-}
       GARAGE_SECRET_ACCESS_KEY: ${GARAGE_SECRET_ACCESS_KEY:-}
       PUBLIC_STORAGE_URL: ${PUBLIC_STORAGE_URL:-}
@@ -98,13 +102,8 @@ services:
       APP_URL: ${APP_URL:-http://localhost:5173}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     ports:
-      - "${DEV_PORT:-3001}:3000"
+      - "${DEV_PORT:-${PORT:-3001}}:3000"
     volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/apps/server/node_modules
-      - /app/apps/web/node_modules
-      - /app/packages/shared/node_modules
       - server_dev_uploads:/app/uploads
     depends_on:
       postgres:
@@ -115,33 +114,28 @@ services:
       poscocina-dev-network:
         aliases:
           - poscocina-server-dev
+          - poscocina-server
           - server
 
   client:
     build:
       context: .
-      dockerfile: apps/web/Dockerfile.dev
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-${GOOGLE_CLIENT_ID:-}}
     container_name: poscocina-client-dev
     restart: unless-stopped
-    environment:
-      NODE_ENV: development
-      VITE_PROXY_TARGET: http://server:3000
-      VITE_USE_POLLING: "true"
-      VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-${GOOGLE_CLIENT_ID:-}}
     ports:
-      - "${DEV_CLIENT_PORT:-5173}:5173"
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/apps/server/node_modules
-      - /app/apps/web/node_modules
-      - /app/packages/shared/node_modules
+      - "${DEV_CLIENT_PORT:-${CLIENT_PORT:-5173}}:80"
     depends_on:
-      - server
+      server:
+        condition: service_healthy
     networks:
       poscocina-dev-network:
         aliases:
           - poscocina-client-dev
+          - poscocina-client
           - client
 
 networks:
