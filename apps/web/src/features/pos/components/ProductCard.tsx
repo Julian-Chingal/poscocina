@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Plus, SlidersHorizontal } from 'lucide-react';
 import { Product } from '../types/pos.types';
 import { Button } from '@/components/ui/button';
@@ -34,7 +34,7 @@ export const ProductCard: React.FC<Props> = React.memo(
             handleClick();
           }
         }}
-        className="group relative h-full bg-card hover:bg-card/90 border border-border/80 hover:border-primary/50 rounded-2xl p-3 sm:p-3.5 text-left flex flex-col justify-between space-y-2.5 transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] w-full select-none"
+        className="group relative h-full min-h-[110px] bg-card hover:bg-card/90 border border-border/80 hover:border-primary/50 rounded-2xl p-3 sm:p-3.5 text-left flex flex-col justify-between space-y-2.5 transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] w-full select-none"
       >
         <div className="space-y-1.5">
           <div className="flex items-start justify-between gap-1.5">

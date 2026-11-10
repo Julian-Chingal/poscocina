@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import {
   Users,
   AlertTriangle,
@@ -183,11 +183,11 @@ export const PosHeader: React.FC<Props> = ({
       </div>
 
       {/* Right side: Waiter badge and Cash Shift Status */}
-      <div className="flex items-center justify-between md:justify-end gap-2.5">
+      <div className="flex items-center justify-between md:justify-end gap-2 sm:gap-2.5">
         {waiterName && (
-          <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-muted/40 border border-border/60 text-xs">
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-xl bg-muted/40 border border-border/60 text-xs shrink min-w-0">
             <span className="size-2 rounded-full bg-primary/60 shrink-0" />
-            <span className="text-muted-foreground font-medium text-[11px]">
+            <span className="text-muted-foreground font-medium text-[11px] truncate">
               Atiende:{" "}
               <strong className="text-foreground font-semibold">
                 {waiterName}
@@ -202,10 +202,11 @@ export const PosHeader: React.FC<Props> = ({
             type="button"
             onClick={handleOpenShifts}
             title="Haz clic para abrir el turno de caja o presiona F4"
-            className="group flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/30 text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95"
+            className="group flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/30 text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95 shrink-0"
           >
             <AlertTriangle className="size-3.5 text-rose-600 dark:text-rose-400 shrink-0 group-hover:animate-bounce" />
-            <span>Caja Cerrada · Abrir Turno [F4]</span>
+            <span className="hidden sm:inline">Caja Cerrada · Abrir Turno [F4]</span>
+            <span className="sm:hidden">Caja Cerrada [F4]</span>
             <ArrowRight className="size-3.5 opacity-70 group-hover:translate-x-0.5 transition-transform" />
           </button>
         ) : isCashShiftOpen === true ? (
