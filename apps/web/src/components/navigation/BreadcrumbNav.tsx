@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import {
   ArrowLeft,
   ChevronRight,
@@ -151,7 +151,7 @@ export const BreadcrumbNav: React.FC<BreadcrumbNavProps> = ({
       {/* Migas de pan navegables */}
       <ol className="flex items-center gap-1 sm:gap-1.5 min-w-0 list-none p-0 m-0">
         {/* Nivel 1: Inicio / Apps */}
-        <li className="flex items-center shrink-0">
+        <li className="hidden sm:flex items-center shrink-0">
           <button
             type="button"
             onClick={() => onNavigate("home")}
@@ -174,7 +174,7 @@ export const BreadcrumbNav: React.FC<BreadcrumbNavProps> = ({
 
         {/* Separador Chevron */}
         <li
-          className="flex items-center text-muted-foreground/50 shrink-0"
+          className="hidden sm:flex items-center text-muted-foreground/50 shrink-0"
           aria-hidden="true"
         >
           <ChevronRight className="size-3.5" strokeWidth={2.2} />

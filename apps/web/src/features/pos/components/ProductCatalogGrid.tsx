@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { SearchX, PackageOpen, RotateCcw } from "lucide-react";
 import { ProductCard } from "./ProductCard";
 import { Product } from "../types/pos.types";
@@ -69,7 +69,7 @@ export const ProductCatalogGrid: React.FC<Props> = ({
   }
 
   return (
-    <div className="w-full min-w-0 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3.5 max-h-[calc(100vh-260px)] min-h-90 overflow-y-auto pr-1 pb-4 custom-scrollbar auto-rows-fr">
+    <div className="w-full min-w-0 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3.5 max-h-[calc(100vh-260px)] min-h-90 overflow-y-auto pr-1 pb-4 custom-scrollbar">
       {products.map((p) => (
         <ProductCard
           key={p.id}
