@@ -16,7 +16,7 @@ COPY apps/server/package.json ./apps/server/
 COPY apps/web/package.json ./apps/web/
 
 # Instalar dependencias en el contenedor
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 # Copiar código fuente
 COPY packages/tsconfig/ ./packages/tsconfig/

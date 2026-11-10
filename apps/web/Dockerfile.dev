@@ -15,7 +15,7 @@ COPY packages/shared/package.json ./packages/shared/
 COPY apps/server/package.json ./apps/server/
 COPY apps/web/package.json ./apps/web/
 
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 # Copiar paquetes compartidos y frontend
 COPY packages/tsconfig/ ./packages/tsconfig/
