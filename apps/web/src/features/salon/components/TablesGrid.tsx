@@ -89,6 +89,24 @@ export const TablesGrid: React.FC<Props> = ({
           onOpenQrCard={onOpenQrCard}
         />
       ))}
+
+      {isManager && (
+        <button
+          type="button"
+          onClick={onOpenCreateTable}
+          className="group flex flex-col items-center justify-center min-h-[170px] p-6 rounded-2xl border-2 border-dashed border-border/80 hover:border-emerald-500/80 bg-card/40 hover:bg-emerald-500/5 transition-all text-muted-foreground hover:text-emerald-500 cursor-pointer text-center focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-muted/60 group-hover:bg-emerald-500/20 group-hover:text-emerald-500 flex items-center justify-center transition-all mb-3 text-muted-foreground shadow-sm">
+            <Plus className="w-6 h-6 transition-transform group-hover:scale-110" />
+          </div>
+          <span className="text-sm font-bold text-foreground group-hover:text-emerald-500 transition-colors">
+            Agregar Mesa
+          </span>
+          <span className="text-xs text-muted-foreground mt-1">
+            Nueva mesa en esta zona
+          </span>
+        </button>
+      )}
     </div>
   );
 };

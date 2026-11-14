@@ -149,16 +149,14 @@ export const SalonHeader: React.FC<Props> = ({
                   </Button>
                 )}
 
-                {isEditMode && (
-                  <Button
-                    type="button"
-                    onClick={onOpenCreateTable}
-                    className="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3.5 h-9 rounded-xl shadow transition"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Nueva Mesa</span>
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  onClick={onOpenCreateTable}
+                  className="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 h-9 rounded-xl shadow transition"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Nueva Mesa</span>
+                </Button>
               </>
             )}
           </div>
