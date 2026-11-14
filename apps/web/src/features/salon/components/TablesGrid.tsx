@@ -16,6 +16,7 @@ interface Props {
   onDeleteTable: (table: TableItem) => void;
   onStartTransfer: (table: TableItem) => void;
   onStartMerge: (table: TableItem) => void;
+  onOpenQrCard?: (table: TableItem) => void;
 }
 
 export const TablesGrid: React.FC<Props> = ({
@@ -30,6 +31,7 @@ export const TablesGrid: React.FC<Props> = ({
   onDeleteTable,
   onStartTransfer,
   onStartMerge,
+  onOpenQrCard,
 }) => {
   if (tables.length === 0) {
     if (!hasFloorPlans) {
@@ -84,6 +86,7 @@ export const TablesGrid: React.FC<Props> = ({
           onDelete={onDeleteTable}
           onStartTransfer={onStartTransfer}
           onStartMerge={onStartMerge}
+          onOpenQrCard={onOpenQrCard}
         />
       ))}
     </div>

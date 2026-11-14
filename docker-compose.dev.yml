@@ -76,9 +76,9 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
       HOST: 0.0.0.0
-      DATABASE_URL: ${DATABASE_URL:-${DOCKER_DATABASE_URL:-postgresql://${DB_USER:-posuser}:${DB_PASSWORD:-pospassword_seguro_produccion_2026}@postgres:5432/${DB_NAME:-poscocina}}}
-      VALKEY_URL: ${VALKEY_URL:-${REDIS_URL:-redis://valkey:6379}}
-      REDIS_URL: ${VALKEY_URL:-${REDIS_URL:-redis://valkey:6379}}
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql://${DB_USER:-posuser}:${DB_PASSWORD:-pospassword_seguro_produccion_2026}@postgres:5432/${DB_NAME:-poscocina}}
+      VALKEY_URL: ${DOCKER_VALKEY_URL:-redis://valkey:6379}
+      REDIS_URL: ${DOCKER_VALKEY_URL:-redis://valkey:6379}
       VALKEY_HOST: ${VALKEY_HOST:-${REDIS_HOST:-valkey}}
       VALKEY_PORT: ${VALKEY_PORT:-${REDIS_PORT:-6379}}
       JWT_SECRET: ${JWT_SECRET:-poscocina_super_secret_production_key_32_chars_2026!}
@@ -107,7 +107,7 @@ services:
       APP_URL: ${APP_URL:-http://localhost:5173}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     ports:
-      - "${DEV_PORT:-3001}:3000"
+      - "${DEV_PORT:-${PORT:-3000}}:3000"
     volumes:
       - server_dev_uploads:/app/uploads
     depends_on:
@@ -142,6 +142,32 @@ services:
           - poscocina-client-dev
           - poscocina-client
           - client
+
+  delivery:
+    container_name: poscocina-delivery-dev
+    build:
+      context: .
+      dockerfile: apps/delivery/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3001
+      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://poscocina-server-dev:3000}
+      BACKEND_API_URL: ${BACKEND_API_URL:-http://poscocina-server-dev:3000/api}
+      BACKEND_UPLOADS_URL: ${BACKEND_UPLOADS_URL:-http://poscocina-server-dev:3000/uploads}
+    ports:
+      - "${DEV_DELIVERY_PORT:-${DELIVERY_PORT:-3001}}:3001"
+    depends_on:
+      server:
+        condition: service_healthy
+    networks:
+      poscocina-dev-network:
+        aliases:
+          - poscocina-delivery-dev
+          - poscocina-delivery
+          - delivery
 
 networks:
   poscocina-dev-network:

@@ -26,18 +26,6 @@ export const ProductSchema = z.object({
   trackInventory: z.boolean(),
   isAvailable: z.boolean(),
   imageUrl: z.string().optional().nullable(),
-  model3dUrl: z.string().optional().nullable(),
-  model3dType: z.string().optional().nullable(),
-  dimensions: z
-    .object({
-      diameter: z.number().optional().nullable(),
-      height: z.number().optional().nullable(),
-      unit: z.string().optional().nullable(),
-      portion: z.string().optional().nullable(),
-    })
-    .optional()
-    .nullable(),
-  displayMedia: z.enum(['image', 'model3d', 'both']).optional().nullable(),
 });
 
 export type ProductFormValues = z.infer<typeof ProductSchema>;

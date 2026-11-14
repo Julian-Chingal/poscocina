@@ -20,6 +20,8 @@ const getIconAnimation = (appId: string) => {
       return 'group-hover:animate-icon-bounce';
     case 'kds':
       return 'group-hover:animate-icon-wobble';
+    case 'delivery':
+      return 'group-hover:animate-icon-bounce';
     case 'catalog':
       return 'group-hover:animate-icon-tilt';
     case 'inventory':

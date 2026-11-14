@@ -1,4 +1,4 @@
-﻿import { Settings2, Plus, Map as MapIcon, LayoutGrid } from 'lucide-react';
+﻿import { Settings2, Plus, Map as MapIcon, LayoutGrid, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -11,6 +11,7 @@ interface Props {
   onToggleEditMode: () => void;
   onOpenCreateTable: () => void;
   onOpenNewFloorPlan?: () => void;
+  onOpenQrCards?: () => void;
 }
 
 export const SalonHeader: React.FC<Props> = ({
@@ -22,6 +23,7 @@ export const SalonHeader: React.FC<Props> = ({
   onToggleEditMode,
   onOpenCreateTable,
   onOpenNewFloorPlan,
+  onOpenQrCards,
 }) => {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 mb-6 border-b border-border gap-4">
@@ -97,6 +99,19 @@ export const SalonHeader: React.FC<Props> = ({
         {/* Manager Controls */}
         {isManager && (
           <div className="flex items-center space-x-2">
+            {onOpenQrCards && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onOpenQrCards}
+                className="flex items-center space-x-1.5 bg-card border-border hover:bg-muted text-foreground text-xs font-semibold px-3 h-9 rounded-xl shadow-sm transition"
+                title="Generar e imprimir tarjetas QR de mesas"
+              >
+                <QrCode className="w-3.5 h-3.5 text-primary" />
+                <span className="hidden sm:inline">Tarjetas QR</span>
+              </Button>
+            )}
+
             {!hasFloorPlans && onOpenNewFloorPlan ? (
               <Button
                 type="button"

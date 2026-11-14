@@ -9,6 +9,7 @@ import {
   RectangleHorizontal,
   ArrowRightLeft,
   GitMerge,
+  QrCode,
 } from 'lucide-react';
 import { TableItem } from '../types/salon.types';
 import { TableStatusBadge } from '@/components/common/status-badge';
@@ -23,6 +24,7 @@ interface Props {
   onDelete: (table: TableItem) => void;
   onStartTransfer: (table: TableItem) => void;
   onStartMerge: (table: TableItem) => void;
+  onOpenQrCard?: (table: TableItem) => void;
 }
 
 const getStatusColor = (status: TableItem['status']) => {
@@ -52,6 +54,7 @@ export const TableCard: React.FC<Props> = ({
   onDelete,
   onStartTransfer,
   onStartMerge,
+  onOpenQrCard,
 }) => {
   const ShapeIcon =
     table.shape === 'circle' ? CircleIcon : table.shape === 'square' ? Square : RectangleHorizontal;
@@ -71,6 +74,18 @@ export const TableCard: React.FC<Props> = ({
 
         {isEditMode ? (
           <div className="flex items-center space-x-1" onClick={(e) => e.stopPropagation()}>
+            {onOpenQrCard && (
+              <Button
+                variant="ghost"
+                size="icon"
+                type="button"
+                onClick={() => onOpenQrCard(table)}
+                title="Generar tarjeta QR de esta mesa"
+                className="h-7 w-7 p-1 rounded-lg bg-muted hover:bg-primary/20 text-foreground hover:text-primary"
+              >
+                <QrCode className="w-3.5 h-3.5" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"

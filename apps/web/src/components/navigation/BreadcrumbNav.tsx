@@ -13,6 +13,7 @@ import {
   Users,
   Settings,
   HelpCircle,
+  Bike,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -57,6 +58,11 @@ const VIEW_METADATA: Record<string, ViewMeta> = {
     title: "Cocina KDS (F3)",
     shortTitle: "Cocina KDS",
     icon: ChefHat,
+  },
+  delivery: {
+    title: "Delivery & Pedidos Online",
+    shortTitle: "Delivery",
+    icon: Bike,
   },
   catalog: {
     title: "Menú y Catálogo",

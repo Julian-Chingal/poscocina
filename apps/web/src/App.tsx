@@ -18,6 +18,7 @@ import type { TableItem } from "./features/pos/types/pos.types";
 const SalonView = lazy(() => import("./features/salon"));
 const PosView = lazy(() => import("./features/pos"));
 const KdsView = lazy(() => import("./features/kds"));
+const DeliveryView = lazy(() => import("./features/delivery"));
 const CatalogView = lazy(() => import("./features/catalog"));
 const SettingsView = lazy(() => import("./features/settings"));
 const InventoryView = lazy(() => import("./features/inventory"));
@@ -112,6 +113,8 @@ export const App: React.FC = () => {
         );
       case "kds":
         return <KdsView venueId={venueId || ""} />;
+      case "delivery":
+        return <DeliveryView venueId={venueId || ""} />;
       case "catalog":
         return <CatalogView venueId={venueId || ""} />;
       case "settings":
