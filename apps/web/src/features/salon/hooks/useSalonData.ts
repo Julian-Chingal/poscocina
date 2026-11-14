@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect, useCallback, useMemo } from 'react';
-import { io } from 'socket.io-client';
 import { salonApi } from '../api/salon.api';
 import { TableItem, FloorPlanItem } from '../types/salon.types';
+import { getAppSocket } from '@/lib/socket';
 
 export const useSalonData = (venueId: string) => {
   const [floorPlans, setFloorPlans] = useState<FloorPlanItem[]>([]);
@@ -29,34 +29,46 @@ export const useSalonData = (venueId: string) => {
   useEffect(() => {
     fetchData();
 
-    const socket = io();
+    const socket = getAppSocket();
     const handleUpdate = () => fetchData();
-
-    socket.on('table:created', handleUpdate);
-    socket.on('table:updated', (updated: TableItem) => {
+    const handleTableUpdated = (updated: TableItem) => {
       setTables((prev) => prev.map((t) => (t.id === updated.id ? { ...t, ...updated } : t)));
-    });
-    socket.on('tables:batch_updated', (batch: TableItem[]) => {
+    };
+    const handleBatchUpdated = (batch: TableItem[]) => {
       const map = new Map(batch.map((b) => [b.id, b]));
       setTables((prev) => prev.map((t) => (map.has(t.id) ? { ...t, ...map.get(t.id) } : t)));
-    });
-    socket.on('table:deleted', ({ id }: { id: string }) => {
+    };
+    const handleTableDeleted = ({ id }: { id: string }) => {
       setTables((prev) => prev.filter((t) => t.id !== id));
-    });
-    socket.on('table:status_changed', (payload: { tableId: string; status: TableItem['status'] }) => {
+    };
+    const handleStatusChanged = (payload: { tableId: string; status: TableItem['status'] }) => {
       setTables((prev) =>
         prev.map((t) => (t.id === payload.tableId ? { ...t, status: payload.status } : t))
       );
-    });
-    socket.on('floor_plan:updated', (updated: FloorPlanItem) => {
+    };
+    const handleFloorPlanUpdated = (updated: FloorPlanItem) => {
       setFloorPlans((prev) => prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
-    });
-    socket.on('floor_plan:deleted', ({ id }: { id: string }) => {
+    };
+    const handleFloorPlanDeleted = ({ id }: { id: string }) => {
       setFloorPlans((prev) => prev.filter((p) => p.id !== id));
-    });
+    };
+
+    socket.on('table:created', handleUpdate);
+    socket.on('table:updated', handleTableUpdated);
+    socket.on('tables:batch_updated', handleBatchUpdated);
+    socket.on('table:deleted', handleTableDeleted);
+    socket.on('table:status_changed', handleStatusChanged);
+    socket.on('floor_plan:updated', handleFloorPlanUpdated);
+    socket.on('floor_plan:deleted', handleFloorPlanDeleted);
 
     return () => {
-      socket.disconnect();
+      socket.off('table:created', handleUpdate);
+      socket.off('table:updated', handleTableUpdated);
+      socket.off('tables:batch_updated', handleBatchUpdated);
+      socket.off('table:deleted', handleTableDeleted);
+      socket.off('table:status_changed', handleStatusChanged);
+      socket.off('floor_plan:updated', handleFloorPlanUpdated);
+      socket.off('floor_plan:deleted', handleFloorPlanDeleted);
     };
   }, [venueId, fetchData]);
 

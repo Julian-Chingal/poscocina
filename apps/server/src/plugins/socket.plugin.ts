@@ -18,6 +18,7 @@ export const socketPlugin = fp(async (fastify: FastifyInstance) => {
       origin: '*',
       methods: ['GET', 'POST', 'PATCH'],
     },
+    transports: ['websocket', 'polling'],
   });
 
   // Valkey/Redis Adapter for WebSocket scaling (with fallback if cache is unreachable)

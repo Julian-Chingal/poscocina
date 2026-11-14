@@ -1,8 +1,8 @@
 ﻿import { useEffect, useRef } from 'react';
-import { io } from 'socket.io-client';
 import { toast } from '../components/ui/sonner';
 import { useAuthStore } from '../stores/auth.store';
 import { useBrandingStore } from '../stores/branding.store';
+import { getAppSocket } from '../lib/socket';
 
 export const useAppSocketEvents = (onNavigateHome: () => void) => {
   // Atomic Zustand selectors
@@ -14,7 +14,7 @@ export const useAppSocketEvents = (onNavigateHome: () => void) => {
   onNavigateHomeRef.current = onNavigateHome;
 
   useEffect(() => {
-    const socket = io();
+    const socket = getAppSocket();
 
     const handleSettingsUpdated = () => {
       if (venueId) {
@@ -35,10 +35,9 @@ export const useAppSocketEvents = (onNavigateHome: () => void) => {
     socket.on('user:deactivated', handleUserDeactivated);
 
     return () => {
-      // Explicitly detach event listeners before disconnecting socket
+      // Explicitly detach event listeners without disconnecting shared socket
       socket.off('venue:settings_updated', handleSettingsUpdated);
       socket.off('user:deactivated', handleUserDeactivated);
-      socket.disconnect();
     };
   }, [venueId, loadBranding, logout]);
 };

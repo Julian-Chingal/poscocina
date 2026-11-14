@@ -1,5 +1,5 @@
 ﻿import { useEffect } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { getAppSocket } from '@/lib/socket';
 
 interface PosSocketCallbacks {
   onShiftOpened?: () => void;
@@ -10,7 +10,7 @@ interface PosSocketCallbacks {
 
 export const usePosSocket = (callbacks: PosSocketCallbacks) => {
   useEffect(() => {
-    const socket: Socket = io();
+    const socket = getAppSocket();
 
     if (callbacks.onShiftOpened) {
       socket.on('cash_shift:opened', callbacks.onShiftOpened);
@@ -26,7 +26,18 @@ export const usePosSocket = (callbacks: PosSocketCallbacks) => {
     }
 
     return () => {
-      socket.disconnect();
+      if (callbacks.onShiftOpened) {
+        socket.off('cash_shift:opened', callbacks.onShiftOpened);
+      }
+      if (callbacks.onShiftClosed) {
+        socket.off('cash_shift:closed', callbacks.onShiftClosed);
+      }
+      if (callbacks.onOrderUpdated) {
+        socket.off('order:updated', callbacks.onOrderUpdated);
+      }
+      if (callbacks.onTableUpdated) {
+        socket.off('table:updated', callbacks.onTableUpdated);
+      }
     };
   }, [callbacks.onShiftOpened, callbacks.onShiftClosed, callbacks.onOrderUpdated, callbacks.onTableUpdated]);
 };

@@ -1,7 +1,8 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import { kdsApi } from '../api/kds.api';
 import { KdsOrder, KdsItem, StationFilter } from '../types/kds.types';
+import { getAppSocket } from '@/lib/socket';
 
 export const useKdsData = (venueId: string) => {
   const [orders, setOrders] = useState<KdsOrder[]>([]);
@@ -50,33 +51,35 @@ export const useKdsData = (venueId: string) => {
   useEffect(() => {
     if (!venueId) return;
 
-    // 1. Singleton Socket.IO initialization with exponential backoff
-    const socket = io({
-      reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 20000,
-    });
+    // 1. Shared Socket.IO singleton
+    const socket = getAppSocket();
     socketRef.current = socket;
 
-    socket.on('connect', () => {
+    const onConnect = () => {
       setIsConnected(true);
       socket.emit('join:venue', venueId);
       socket.emit('join:kds', activeStationRef.current);
       fetchOrders(true);
-    });
+    };
 
-    socket.on('disconnect', () => {
+    const onDisconnect = () => {
       setIsConnected(false);
-    });
+    };
 
-    socket.on('reconnect', () => {
+    const onReconnect = () => {
       setIsConnected(true);
       socket.emit('join:venue', venueId);
       socket.emit('join:kds', activeStationRef.current);
       fetchOrders(true);
-    });
+    };
+
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+    socket.on('reconnect', onReconnect);
+
+    if (socket.connected) {
+      onConnect();
+    }
 
     const refreshHandler = () => fetchOrders(true);
 
@@ -107,6 +110,9 @@ export const useKdsData = (venueId: string) => {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('online', handleOnline);
 
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      socket.off('reconnect', onReconnect);
       socket.off('order:created', refreshHandler);
       socket.off('order:items_appended', refreshHandler);
       socket.off('kds:new_items', refreshHandler);
@@ -116,7 +122,6 @@ export const useKdsData = (venueId: string) => {
       socket.off('kds:item_updated', refreshHandler);
       socket.off('kds:item_removed', refreshHandler);
       socket.off('order:totals_updated', refreshHandler);
-      socket.disconnect();
       socketRef.current = null;
     };
   }, [venueId, fetchOrders]);

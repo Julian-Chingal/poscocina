@@ -1,8 +1,8 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
-import { io } from 'socket.io-client';
 import { cashShiftsApi } from '../api/cash-shifts.api';
 import { PendingBill, ReceiptData, PaymentMethod } from '../types/cash-shifts.types';
 import { toast } from '@/components/ui/sonner';
+import { getAppSocket } from '@/lib/socket';
 
 export const usePendingBills = (venueId: string, onPaymentSuccess?: () => void) => {
   const [pendingBills, setPendingBills] = useState<PendingBill[]>([]);
@@ -22,7 +22,7 @@ export const usePendingBills = (venueId: string, onPaymentSuccess?: () => void) 
 
   useEffect(() => {
     fetchPendingBills();
-    const socket = io();
+    const socket = getAppSocket();
     const handleRefresh = () => fetchPendingBills();
 
     socket.on('order:created', handleRefresh);
@@ -35,7 +35,6 @@ export const usePendingBills = (venueId: string, onPaymentSuccess?: () => void) 
       socket.off('order:items_appended', handleRefresh);
       socket.off('order:status_updated', handleRefresh);
       socket.off('table:status_changed', handleRefresh);
-      socket.disconnect();
     };
   }, [venueId, fetchPendingBills]);
 

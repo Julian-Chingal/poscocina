@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { io, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import {
   MessageSquare,
   Send,
@@ -25,6 +25,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { toast } from '@/components/ui/sonner';
 import { kdsApi } from '@/features/kds/api/kds.api';
 import { KdsOrder } from '@/features/kds/types/kds.types';
+import { getAppSocket } from '@/lib/socket';
 
 export const WhatsAppChatView: React.FC = () => {
   const venueId = useAuthStore((s) => s.venueId);
@@ -141,12 +142,7 @@ export const WhatsAppChatView: React.FC = () => {
     checkSession();
     loadOrders();
 
-    const socket = io({
-      reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-    });
+    const socket = getAppSocket();
     socketRef.current = socket;
 
     const joinRoom = () => {
@@ -160,7 +156,7 @@ export const WhatsAppChatView: React.FC = () => {
     socket.on('reconnect', joinRoom);
 
     // Real-time incoming / sync message event
-    socket.on('whatsapp:message:received', (data: { chatId: string; message: WhatsAppMessage }) => {
+    const handleReceived = (data: { chatId: string; message: WhatsAppMessage }) => {
       if (selectedChatRef.current && selectedChatRef.current.id === data.chatId) {
         setMessages((prev) => {
           if (
@@ -201,9 +197,9 @@ export const WhatsAppChatView: React.FC = () => {
           (a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime()
         );
       });
-    });
+    };
 
-    socket.on('whatsapp:message:sent', (data: { chatId: string; message: WhatsAppMessage }) => {
+    const handleSent = (data: { chatId: string; message: WhatsAppMessage }) => {
       if (selectedChatRef.current && selectedChatRef.current.id === data.chatId) {
         setMessages((prev) => {
           if (
@@ -231,7 +227,10 @@ export const WhatsAppChatView: React.FC = () => {
             : c
         )
       );
-    });
+    };
+
+    socket.on('whatsapp:message:received', handleReceived);
+    socket.on('whatsapp:message:sent', handleSent);
 
     // Heartbeat fallback polling every 4s + window focus to guarantee zero-refresh sync
     const pollInterval = setInterval(() => {
@@ -252,7 +251,10 @@ export const WhatsAppChatView: React.FC = () => {
     return () => {
       clearInterval(pollInterval);
       window.removeEventListener('focus', onFocus);
-      socket.disconnect();
+      socket.off('connect', joinRoom);
+      socket.off('reconnect', joinRoom);
+      socket.off('whatsapp:message:received', handleReceived);
+      socket.off('whatsapp:message:sent', handleSent);
     };
   }, [venueId, loadChats, checkSession, loadOrders, loadMessages]);
 

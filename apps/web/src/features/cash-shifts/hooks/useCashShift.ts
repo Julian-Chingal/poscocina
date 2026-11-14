@@ -1,10 +1,10 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
-import { io } from 'socket.io-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { useShiftStore } from '@/stores/shift.store';
 import { cashShiftsApi } from '../api/cash-shifts.api';
 import { ActiveShiftInfo, CloseShiftReportData } from '../types/cash-shifts.types';
 import { toast } from '@/components/ui/sonner';
+import { getAppSocket } from '@/lib/socket';
 
 export const useCashShift = (venueId: string) => {
   const user = useAuthStore((s) => s.currentUser);
@@ -32,7 +32,7 @@ export const useCashShift = (venueId: string) => {
 
   useEffect(() => {
     fetchShift();
-    const socket = io();
+    const socket = getAppSocket();
     const handleRefresh = () => fetchShift();
 
     socket.on('order:created', handleRefresh);
@@ -45,7 +45,6 @@ export const useCashShift = (venueId: string) => {
       socket.off('order:items_appended', handleRefresh);
       socket.off('order:status_updated', handleRefresh);
       socket.off('table:status_changed', handleRefresh);
-      socket.disconnect();
     };
   }, [venueId, fetchShift]);
 

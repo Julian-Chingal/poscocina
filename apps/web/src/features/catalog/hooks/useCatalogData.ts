@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect, useCallback, useMemo } from 'react';
-import { io } from 'socket.io-client';
 import { catalogApi } from '../api/catalog.api';
 import { Category, Product } from '../types/catalog.types';
+import { getAppSocket } from '@/lib/socket';
 
 export const useCatalogData = (venueId: string) => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -30,7 +30,7 @@ export const useCatalogData = (venueId: string) => {
   useEffect(() => {
     fetchCatalog();
 
-    const socket = io();
+    const socket = getAppSocket();
     const refresh = () => fetchCatalog();
 
     socket.on('catalog:category_created', refresh);
@@ -41,7 +41,12 @@ export const useCatalogData = (venueId: string) => {
     socket.on('catalog:product_deleted', refresh);
 
     return () => {
-      socket.disconnect();
+      socket.off('catalog:category_created', refresh);
+      socket.off('catalog:category_updated', refresh);
+      socket.off('catalog:category_deleted', refresh);
+      socket.off('catalog:product_created', refresh);
+      socket.off('catalog:product_updated', refresh);
+      socket.off('catalog:product_deleted', refresh);
     };
   }, [venueId, fetchCatalog]);
 

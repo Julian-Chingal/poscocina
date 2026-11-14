@@ -1,7 +1,7 @@
 ﻿import { create } from 'zustand';
-import { io, Socket } from 'socket.io-client';
 import { api } from '@/services/api';
 import { useAuthStore } from './auth.store';
+import { getAppSocket } from '@/lib/socket';
 
 interface ShiftState {
   isOpen: boolean;
@@ -66,7 +66,7 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
 
 
   initSocket: (venueId?: string) => {
-    const socket: Socket = io();
+    const socket = getAppSocket();
 
     const handleShiftOpened = (shift: any) => {
       set({
@@ -100,7 +100,6 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
       socket.off('shift:opened', handleShiftOpened);
       socket.off('cash_shift:closed', handleShiftClosed);
       socket.off('shift:closed', handleShiftClosed);
-      socket.disconnect();
     };
   },
 }));

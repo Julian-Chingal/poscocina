@@ -1,8 +1,8 @@
 ﻿import { useState, useEffect, useCallback, useMemo } from 'react';
-import { io } from 'socket.io-client';
 import { inventoryApi } from '../api/inventory.api';
 import { InventoryItem } from '../types/inventory.types';
 import { toast } from '@/components/ui/sonner';
+import { getAppSocket } from '@/lib/socket';
 
 export const useInventoryStock = (venueId: string) => {
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -25,12 +25,13 @@ export const useInventoryStock = (venueId: string) => {
 
   useEffect(() => {
     fetchItems();
-    const socket = io();
+    const socket = getAppSocket();
     socket.on('stock:alert', fetchItems);
     socket.on('order:status_changed', fetchItems);
 
     return () => {
-      socket.disconnect();
+      socket.off('stock:alert', fetchItems);
+      socket.off('order:status_changed', fetchItems);
     };
   }, [venueId, fetchItems]);
 
