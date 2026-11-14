@@ -234,17 +234,19 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
       {categories.length > 0 && (
         <VStack className="sticky top-15.25 z-30 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md w-full">
           <VStack className="mx-auto max-w-6xl px-4 sm:px-6 w-full">
-            <HStack className="flex items-center gap-2 overflow-x-auto py-3 no-scrollbar w-full">
+            <HStack className="flex items-center gap-2.5 overflow-x-auto py-3 no-scrollbar w-full">
               <Button
                 label="Todos los productos"
                 onClick={() => setSelectedCategoryId("all")}
-                className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition cursor-pointer ${
+                className={`shrink-0 rounded-full px-4.5 py-2 text-sm font-semibold transition cursor-pointer ${
                   selectedCategoryId === "all"
-                    ? "bg-orange-600 text-white shadow-sm"
-                    : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
+                    ? "bg-orange-600 text-white shadow-md shadow-orange-600/30 border border-orange-500"
+                    : "bg-slate-900/90 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700"
                 }`}
               >
-                <Text weight="bold" className="text-xs">Todos ({products.length})</Text>
+                <Text weight="bold" className={`text-sm ${selectedCategoryId === "all" ? "text-white" : "text-slate-300"}`}>
+                  Todos ({products.length})
+                </Text>
               </Button>
 
               {categories.map((cat) => {
@@ -257,14 +259,16 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
                     key={cat.id}
                     label={cat.name}
                     onClick={() => setSelectedCategoryId(cat.id)}
-                    className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    className={`shrink-0 rounded-full px-4.5 py-2 text-sm font-semibold transition flex items-center gap-1.5 cursor-pointer ${
                       isSelected
-                        ? "bg-orange-600 text-white shadow-sm"
-                        : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
+                        ? "bg-orange-600 text-white shadow-md shadow-orange-600/30 border border-orange-500"
+                        : "bg-slate-900/90 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700"
                     }`}
                   >
-                    <Text weight="bold" className="text-xs">{cat.name}</Text>
-                    <Text className="text-[10px] opacity-75">({count})</Text>
+                    <Text weight="bold" className={`text-sm ${isSelected ? "text-white" : "text-slate-300"}`}>
+                      {cat.name}
+                    </Text>
+                    <Text className="text-xs opacity-75">({count})</Text>
                   </Button>
                 );
               })}

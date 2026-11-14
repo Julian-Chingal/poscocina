@@ -138,7 +138,7 @@ export function DirectoryView({ initialVenues }: Props) {
           </VStack>
 
           {/* Category Filter Pills */}
-          <HStack className="flex items-center justify-center gap-2 overflow-x-auto pt-3 pb-2 no-scrollbar w-full">
+          <HStack className="flex items-center justify-center gap-2.5 overflow-x-auto pt-4 pb-2 no-scrollbar w-full">
             {CATEGORIES.map((cat) => {
               const Icon = cat.icon;
               const isSelected = selectedCategory === cat.id;
@@ -147,14 +147,16 @@ export function DirectoryView({ initialVenues }: Props) {
                   key={cat.id}
                   label={cat.label}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition shrink-0 cursor-pointer ${
+                  className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition shrink-0 cursor-pointer ${
                     isSelected
-                      ? "bg-orange-600 text-white shadow-md shadow-orange-600/20"
-                      : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800 hover:border-slate-700"
+                      ? "bg-orange-600 text-white shadow-lg shadow-orange-600/30 border border-orange-500"
+                      : "bg-slate-900/90 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 hover:bg-slate-800/80"
                   }`}
                 >
-                  <Icon className="h-3.5 w-3.5" />
-                  <Text weight="bold" className="text-xs">{cat.label}</Text>
+                  <Icon className={`h-4 w-4 ${isSelected ? "text-white" : "text-orange-400"}`} />
+                  <Text weight="bold" className={`text-sm ${isSelected ? "text-white" : "text-slate-300"}`}>
+                    {cat.label}
+                  </Text>
                 </Button>
               );
             })}

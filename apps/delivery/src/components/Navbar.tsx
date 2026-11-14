@@ -2,12 +2,16 @@
 
 import React from "react";
 import Link from "next/link";
-import { ShoppingBag, MapPin, Store, Sparkles, Building2 } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { ShoppingBag, Store, Sparkles, Building2 } from "lucide-react";
 import { HStack, Text, Badge, Button } from "@astryxdesign/core";
 import { useCart } from "../context/CartContext";
 
 export function Navbar() {
+  const pathname = usePathname();
   const { currentVenue, itemCount, total, setIsCartOpen } = useCart();
+
+  const isStorefront = pathname ? pathname.startsWith("/r/") : false;
 
   const formatCOP = (num: number) =>
     new Intl.NumberFormat("es-CO", {
@@ -27,7 +31,7 @@ export function Navbar() {
           href="/"
           className="flex items-center gap-2.5 transition hover:opacity-95"
         >
-          <HStack className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-amber-600 shadow-md shadow-orange-600/30">
+          <HStack className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 shadow-md shadow-orange-600/30 shrink-0">
             <ShoppingBag className="h-5 w-5 text-white" />
           </HStack>
           <HStack className="flex items-center">
@@ -41,51 +45,58 @@ export function Navbar() {
           </HStack>
         </Link>
 
-        {/* Center: Current Store or Directory Link */}
-        <HStack className="hidden md:flex items-center gap-4">
-          {currentVenue ? (
-            <Link
-              href="/"
-              className="flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/80 px-3.5 py-1.5 text-xs text-slate-300 hover:border-orange-500/50 hover:text-white transition"
-              title="Cambiar de comercio"
-            >
+        {/* Center: Contextual Navigation */}
+        <HStack className="hidden md:flex items-center gap-5">
+          {isStorefront && currentVenue ? (
+            <HStack className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/80 px-3.5 py-1.5 text-xs text-slate-300">
               <Store className="h-3.5 w-3.5 text-orange-400" />
               <Text className="text-xs text-slate-300">
-                Negocio:{" "}
+                Local:{" "}
                 <Text weight="bold" className="text-white font-bold">
                   {currentVenue.name}
                 </Text>
               </Text>
-              <Text className="text-[10px] text-slate-500 underline ml-1">
-                Cambiar
-              </Text>
-            </Link>
+              <Link
+                href="/"
+                className="text-[10px] text-orange-400 hover:text-orange-300 font-semibold underline ml-1.5"
+              >
+                Ver todos
+              </Link>
+            </HStack>
           ) : (
             <Link
               href="/"
-              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-orange-400 transition"
+              className={`flex items-center gap-1.5 text-xs font-semibold transition ${
+                pathname === "/"
+                  ? "text-orange-400"
+                  : "text-slate-400 hover:text-white"
+              }`}
             >
-              <MapPin className="h-3.5 w-3.5 text-orange-400" />
-              <Text className="text-xs text-slate-400">
-                Directorio de Negocios
+              <Store className="h-3.5 w-3.5" />
+              <Text className="text-xs font-semibold">
+                Directorio de Comercios
               </Text>
             </Link>
           )}
 
           <Link
             href="/para-negocios"
-            className="flex items-center gap-1 text-xs text-slate-400 hover:text-orange-400 transition"
+            className={`flex items-center gap-1.5 text-xs font-semibold transition ${
+              pathname === "/para-negocios"
+                ? "text-orange-400"
+                : "text-slate-400 hover:text-white"
+            }`}
           >
             <Building2 className="h-3.5 w-3.5 text-slate-500" />
-            <Text className="text-xs text-slate-400">¿Tienes un negocio?</Text>
+            <Text className="text-xs font-semibold">¿Tienes un negocio?</Text>
           </Link>
         </HStack>
 
         {/* Right: Actions */}
-        <HStack className="flex items-center gap-2.5">
+        <HStack className="flex items-center gap-3">
           <Link
             href="/para-negocios"
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-xs font-bold text-orange-300 hover:bg-orange-500/20 hover:text-white transition"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-3.5 py-1.5 text-xs font-bold text-orange-300 hover:bg-orange-500/20 hover:text-white transition"
           >
             <Sparkles className="h-3.5 w-3.5 text-orange-400" />
             <Text className="text-xs font-bold text-orange-300">
@@ -94,30 +105,26 @@ export function Navbar() {
           </Link>
 
           <Button
-            label="Ver canasta de compras"
+            label={`Ver canasta de compras con ${itemCount} productos por ${formatCOP(total)}`}
             onClick={() => setIsCartOpen(true)}
-            className="flex items-center gap-2 rounded-xl bg-slate-900 border border-slate-800 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:border-orange-500/50 hover:bg-slate-800 transition cursor-pointer"
+            className="flex items-center gap-2 rounded-xl bg-slate-900 border border-slate-700/80 px-3.5 py-2 text-xs font-bold text-white shadow-md hover:border-orange-500 hover:bg-slate-800 transition cursor-pointer"
           >
             <HStack className="relative flex items-center justify-center">
-              <ShoppingBag className="h-4 w-4 text-orange-500" />
+              <ShoppingBag className="h-4.5 w-4.5 text-orange-400" />
               {itemCount > 0 && (
-                <Text className="absolute -top-1.5 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-orange-600 text-[10px] font-bold text-white shadow-sm">
-                  {itemCount}
-                </Text>
+                <HStack
+                  as="span"
+                  className="absolute -top-2 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-600 px-1 text-[9px] font-black text-white shadow-sm border border-slate-900"
+                >
+                  <Text weight="bold" className="text-[9px] text-white leading-none">
+                    {itemCount}
+                  </Text>
+                </HStack>
               )}
             </HStack>
-            <Text className="hidden xs:inline text-xs text-white">Canasta</Text>
-            {itemCount > 0 && (
-              <>
-                <Text className="text-slate-600">•</Text>
-                <Text
-                  weight="bold"
-                  className="font-bold text-orange-400 text-xs"
-                >
-                  {formatCOP(total)}
-                </Text>
-              </>
-            )}
+            <Text weight="bold" className="text-xs font-bold text-white ml-0.5">
+              {itemCount > 0 ? formatCOP(total) : "Canasta"}
+            </Text>
           </Button>
         </HStack>
       </HStack>
