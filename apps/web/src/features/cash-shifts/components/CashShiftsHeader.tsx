@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { ReceiptText, Lock, AlertTriangle, ShieldCheck, KeyRound, Printer } from 'lucide-react';
+import { ReceiptText, Lock, AlertTriangle, ShieldCheck, KeyRound, Printer, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -8,6 +8,8 @@ interface Props {
   onOpenCloseModal: () => void;
   onOpenDrawer?: () => void;
   onPrintSummary?: () => void;
+  hideSensitiveAmounts?: boolean;
+  onToggleHideAmounts?: () => void;
 }
 
 export const CashShiftsHeader: React.FC<Props> = ({
@@ -15,6 +17,8 @@ export const CashShiftsHeader: React.FC<Props> = ({
   onOpenCloseModal,
   onOpenDrawer,
   onPrintSummary,
+  hideSensitiveAmounts = true,
+  onToggleHideAmounts,
 }) => (
   <header className="bg-card/90 backdrop-blur-sm border border-border/80 rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all">
     <div className="space-y-1">
@@ -29,7 +33,7 @@ export const CashShiftsHeader: React.FC<Props> = ({
         <span className="text-xs text-muted-foreground hidden sm:inline">•</span>
         <span className="text-xs text-muted-foreground hidden sm:inline flex items-center gap-1">
           <ShieldCheck className="size-3 text-emerald-500" />
-          Auditoría ciega activa
+          <span>Auditoría ciega {hideSensitiveAmounts ? 'activa (Cifras protegidas)' : 'activa'}</span>
         </span>
       </div>
 
@@ -44,6 +48,33 @@ export const CashShiftsHeader: React.FC<Props> = ({
     <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end flex-wrap">
       {isShiftOpen ? (
         <>
+          {onToggleHideAmounts && (
+            <Button
+              variant="outline"
+              size="sm"
+              type="button"
+              onClick={onToggleHideAmounts}
+              className={`h-9 px-3 rounded-xl text-xs font-semibold gap-1.5 border transition-all cursor-pointer shadow-2xs ${
+                hideSensitiveAmounts
+                  ? 'border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20'
+                  : 'border-border/80 text-foreground hover:bg-muted'
+              }`}
+              title={hideSensitiveAmounts ? 'Clic para revelar cifras en pantalla' : 'Clic para ocultar cifras por privacidad'}
+            >
+              {hideSensitiveAmounts ? (
+                <>
+                  <EyeOff className="size-3.5" />
+                  <span>Cifras Ocultas</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="size-3.5" />
+                  <span>Cifras Visibles</span>
+                </>
+              )}
+            </Button>
+          )}
+
           {onOpenDrawer && (
             <Button
               variant="outline"

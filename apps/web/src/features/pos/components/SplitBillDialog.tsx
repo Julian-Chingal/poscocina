@@ -3,6 +3,9 @@ import {
   Sparkles,
   Receipt,
   Users,
+  CreditCard,
+  SlidersHorizontal,
+  ListChecks,
   Divide,
   Plus,
   Tag,
@@ -131,102 +134,96 @@ export const SplitBillDialog: React.FC<SplitBillDialogProps> = ({
             </Alert>
           )}
 
-          {/* Selector de Modo de División (shadcn Buttons) */}
+          {/* Selector de Modo de División */}
           <div className="space-y-2">
             <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
               <Divide className="size-3.5 text-primary" />
               <span>Modalidad de Cobro / División:</span>
             </Label>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 rounded-xl bg-muted/40 border border-border/60">
-              <Button
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 rounded-2xl bg-muted/40 border border-border/70">
+              <button
                 type="button"
-                size="sm"
-                variant={splitMode === 'single' ? 'default' : 'ghost'}
                 onClick={() => setSplitMode('single')}
-                className={`h-8 text-xs font-semibold rounded-lg ${
+                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   splitMode === 'single'
-                    ? 'bg-primary text-primary-foreground shadow-2xs font-bold'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
                 }`}
               >
-                Cuenta Completa
-              </Button>
+                <CreditCard className="size-3.5" />
+                <span>Cuenta Completa</span>
+              </button>
 
-              <Button
+              <button
                 type="button"
-                size="sm"
-                variant={splitMode === 'equal' ? 'default' : 'ghost'}
                 onClick={() => setSplitMode('equal')}
-                className={`h-8 text-xs font-semibold rounded-lg ${
+                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   splitMode === 'equal'
-                    ? 'bg-primary text-primary-foreground shadow-2xs font-bold'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
                 }`}
               >
-                Partes Iguales
-              </Button>
+                <Users className="size-3.5" />
+                <span>Partes Iguales</span>
+              </button>
 
-              <Button
+              <button
                 type="button"
-                size="sm"
-                variant={splitMode === 'custom' ? 'default' : 'ghost'}
                 onClick={() => setSplitMode('custom')}
-                className={`h-8 text-xs font-semibold rounded-lg ${
+                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   splitMode === 'custom'
-                    ? 'bg-primary text-primary-foreground shadow-2xs font-bold'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
                 }`}
               >
-                Monto Manual
-              </Button>
+                <SlidersHorizontal className="size-3.5" />
+                <span>Monto Manual</span>
+              </button>
 
-              <Button
+              <button
                 type="button"
-                size="sm"
-                variant={splitMode === 'items' ? 'default' : 'ghost'}
                 onClick={() => setSplitMode('items')}
-                className={`h-8 text-xs font-semibold rounded-lg ${
+                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   splitMode === 'items'
-                    ? 'bg-primary text-primary-foreground shadow-2xs font-bold'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
                 }`}
               >
-                Por Ítems
-              </Button>
+                <ListChecks className="size-3.5" />
+                <span>Por Ítems</span>
+              </button>
             </div>
           </div>
 
           {/* Opciones contextuales según el modo seleccionado */}
           {splitMode === 'equal' && (
-            <div className="p-3 bg-muted/30 border border-border/70 rounded-xl flex items-center justify-between gap-3">
-              <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                <Users className="size-3.5 text-primary" />
-                <span>Dividir en cuántas partes:</span>
+            <div className="p-3.5 bg-muted/30 border border-border/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <span className="text-xs font-bold text-foreground flex items-center gap-2">
+                <Users className="size-4 text-primary" />
+                <span>Dividir en cuántas partes iguales:</span>
               </span>
               <div className="flex items-center gap-1.5">
                 {[2, 3, 4, 5, 6, 8].map((cnt) => (
-                  <Button
+                  <button
                     key={cnt}
                     type="button"
-                    size="sm"
-                    variant={equalCount === cnt ? 'default' : 'secondary'}
                     onClick={() => setEqualCount(cnt)}
-                    className={`size-7 p-0 rounded-md font-mono text-xs font-bold ${
+                    className={`size-8 sm:size-9 rounded-xl font-mono text-xs sm:text-sm font-black transition-all cursor-pointer border ${
                       equalCount === cnt
-                        ? 'bg-primary text-primary-foreground shadow-2xs'
-                        : 'bg-background hover:bg-muted text-foreground'
+                        ? 'bg-primary text-primary-foreground border-primary shadow-xs scale-105'
+                        : 'bg-background hover:bg-muted text-foreground border-border/80'
                     }`}
                   >
                     {cnt}
-                  </Button>
+                  </button>
                 ))}
               </div>
             </div>
           )}
 
           {splitMode === 'custom' && (
-            <div className="flex items-center justify-between p-2.5 bg-muted/20 border border-border/70 rounded-xl">
+            <div className="flex items-center justify-between p-3 bg-muted/20 border border-border/70 rounded-2xl">
               <span className="text-xs text-muted-foreground">
                 Asigna el monto a pagar manualmente para cada comensal o persona.
               </span>
@@ -235,7 +232,7 @@ export const SplitBillDialog: React.FC<SplitBillDialogProps> = ({
                 size="sm"
                 variant="outline"
                 onClick={addCustomPart}
-                className="h-7 text-xs font-semibold gap-1 text-primary border-primary/40 hover:bg-primary/10"
+                className="h-8 text-xs font-bold gap-1 text-primary border-primary/40 hover:bg-primary/10 rounded-xl cursor-pointer"
               >
                 <Plus className="size-3.5" />
                 <span>Agregar Persona</span>
@@ -273,22 +270,20 @@ export const SplitBillDialog: React.FC<SplitBillDialogProps> = ({
 
               {/* Selector Rápido de Propina */}
               <div className="flex items-center gap-1.5">
-                <span className="text-[11px] text-muted-foreground">Propina:</span>
+                <span className="text-xs font-medium text-muted-foreground">Propina:</span>
                 {[0, 5, 10, 15].map((pct) => (
-                  <Button
+                  <button
                     key={pct}
                     type="button"
-                    size="sm"
-                    variant={tipPct === pct ? 'default' : 'outline'}
                     onClick={() => setTipPct(pct)}
-                    className={`h-6 px-2 text-[10px] font-mono rounded-md ${
+                    className={`h-7 px-2.5 text-xs font-mono font-bold rounded-lg transition-all cursor-pointer border ${
                       tipPct === pct
-                        ? 'bg-primary text-primary-foreground font-bold'
-                        : 'text-muted-foreground'
+                        ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                        : 'bg-background hover:bg-muted text-muted-foreground hover:text-foreground border-border/80'
                     }`}
                   >
                     {pct}%
-                  </Button>
+                  </button>
                 ))}
               </div>
             </div>

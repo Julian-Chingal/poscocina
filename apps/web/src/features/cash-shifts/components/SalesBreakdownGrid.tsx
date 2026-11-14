@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button';
 
 interface Props {
   salesByMethod?: ActiveShiftInfo['salesByMethod'];
+  hideSensitiveAmounts?: boolean;
   onOpenDrawer?: () => void;
   onPrintSummary?: () => void;
 }
 
 export const SalesBreakdownGrid: React.FC<Props> = ({
   salesByMethod = [],
+  hideSensitiveAmounts = true,
   onOpenDrawer,
   onPrintSummary,
 }) => {
@@ -53,12 +55,12 @@ export const SalesBreakdownGrid: React.FC<Props> = ({
             variant="outline"
             className="text-xs font-mono font-black tabular-nums bg-primary/10 text-primary border-primary/25 px-2.5 py-0.5"
           >
-            ${grandTotal.toLocaleString()} COP
+            {hideSensitiveAmounts ? '$ ••••••' : `$${grandTotal.toLocaleString()} COP`}
           </Badge>
         </div>
 
         {/* Visual Mini Progress Bar */}
-        {grandTotal > 0 && (
+        {grandTotal > 0 && !hideSensitiveAmounts && (
           <div className="space-y-1">
             <div className="h-2 w-full rounded-full bg-muted flex overflow-hidden">
               {cashPercent > 0 && (
@@ -101,10 +103,10 @@ export const SalesBreakdownGrid: React.FC<Props> = ({
             </div>
             <div className="text-right">
               <span className="text-sm font-black font-mono tabular-nums text-foreground block">
-                ${cashTotal.toLocaleString()}
+                {hideSensitiveAmounts ? '$ ••••••' : `$${cashTotal.toLocaleString()}`}
               </span>
               <span className="text-[10px] text-muted-foreground font-mono">
-                {cashPercent}% del total
+                {hideSensitiveAmounts ? 'Protegido' : `${cashPercent}% del total`}
               </span>
             </div>
           </div>
@@ -122,10 +124,10 @@ export const SalesBreakdownGrid: React.FC<Props> = ({
             </div>
             <div className="text-right">
               <span className="text-sm font-black font-mono tabular-nums text-foreground block">
-                ${cardTotal.toLocaleString()}
+                {hideSensitiveAmounts ? '$ ••••••' : `$${cardTotal.toLocaleString()}`}
               </span>
               <span className="text-[10px] text-muted-foreground font-mono">
-                {cardPercent}% del total
+                {hideSensitiveAmounts ? 'Protegido' : `${cardPercent}% del total`}
               </span>
             </div>
           </div>
@@ -143,10 +145,10 @@ export const SalesBreakdownGrid: React.FC<Props> = ({
             </div>
             <div className="text-right">
               <span className="text-sm font-black font-mono tabular-nums text-foreground block">
-                ${transferTotal.toLocaleString()}
+                {hideSensitiveAmounts ? '$ ••••••' : `$${transferTotal.toLocaleString()}`}
               </span>
               <span className="text-[10px] text-muted-foreground font-mono">
-                {transferPercent}% del total
+                {hideSensitiveAmounts ? 'Protegido' : `${transferPercent}% del total`}
               </span>
             </div>
           </div>

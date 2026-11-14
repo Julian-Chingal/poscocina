@@ -43,13 +43,13 @@ export const SplitPartCard: React.FC<SplitPartCardProps> = ({
   const isShort = diff > 0.01;
 
   return (
-    <Card className="border border-border/80 bg-card/60 shadow-xs overflow-hidden transition-all">
-      <CardHeader className="py-2.5 px-4 bg-muted/30 border-b border-border/60">
+    <Card className="border border-border/80 bg-card/90 shadow-2xs rounded-2xl overflow-hidden transition-all">
+      <CardHeader className="py-3 px-4 bg-muted/30 border-b border-border/60">
         <div className="flex flex-wrap items-center justify-between gap-2">
           {/* Nombre de la Parte / Persona */}
-          <div className="flex items-center gap-2">
-            <div className="size-6 rounded-full bg-primary/15 text-primary flex items-center justify-center font-bold text-xs shrink-0">
-              {splitMode === 'single' ? <User className="size-3.5" /> : index + 1}
+          <div className="flex items-center gap-2.5">
+            <div className="size-7 rounded-xl bg-primary/15 text-primary flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+              {splitMode === 'single' ? <User className="size-4" /> : index + 1}
             </div>
 
             {splitMode === 'custom' ? (
@@ -57,13 +57,20 @@ export const SplitPartCard: React.FC<SplitPartCardProps> = ({
                 type="text"
                 value={part.name}
                 onChange={(e) => onUpdatePartName(part.id, e.target.value)}
-                className="h-7 w-36 text-xs font-semibold"
+                className="h-8 w-40 text-xs font-bold bg-background"
                 placeholder="Nombre persona"
               />
             ) : (
-              <span className="text-xs font-bold text-foreground">
-                {part.name}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-foreground">
+                  {part.name}
+                </span>
+                {splitMode === 'single' && (
+                  <Badge variant="secondary" className="text-[10px] font-medium">
+                    Pago Único
+                  </Badge>
+                )}
+              </div>
             )}
           </div>
 
@@ -71,9 +78,9 @@ export const SplitPartCard: React.FC<SplitPartCardProps> = ({
           <div className="flex items-center gap-2">
             {splitMode === 'custom' ? (
               <div className="flex items-center gap-1.5">
-                <span className="text-[11px] text-muted-foreground">Cuota:</span>
-                <div className="relative w-28">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
+                <span className="text-xs text-muted-foreground font-medium">Cuota:</span>
+                <div className="relative w-32">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground font-mono">
                     $
                   </span>
                   <Input
@@ -82,12 +89,12 @@ export const SplitPartCard: React.FC<SplitPartCardProps> = ({
                     min="0"
                     value={part.targetAmount || ''}
                     onChange={(e) => onUpdatePartTarget(part.id, parseFloat(e.target.value) || 0)}
-                    className="h-7 pl-5 text-xs font-mono font-bold text-right"
+                    className="h-8 pl-6 text-xs font-mono font-bold text-right bg-background"
                   />
                 </div>
               </div>
             ) : (
-              <Badge variant="outline" className="text-xs font-mono font-bold bg-background">
+              <Badge variant="outline" className="text-xs font-mono font-bold bg-background/80 px-2.5 py-1">
                 Cuota: ${target.toLocaleString()}
               </Badge>
             )}
@@ -96,25 +103,25 @@ export const SplitPartCard: React.FC<SplitPartCardProps> = ({
             {isExact ? (
               <Badge
                 variant="outline"
-                className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-[10px] gap-1"
+                className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-xs font-bold gap-1 px-2.5 py-0.5"
               >
-                <CheckCircle2 className="size-3" />
-                Cubierto
+                <CheckCircle2 className="size-3.5" />
+                <span>Cubierto</span>
               </Badge>
             ) : isShort ? (
               <Badge
                 variant="outline"
-                className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px] gap-1"
+                className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 text-xs font-bold gap-1 px-2.5 py-0.5"
               >
-                <AlertCircle className="size-3" />
-                Falta ${diff.toLocaleString()}
+                <AlertCircle className="size-3.5" />
+                <span>Falta ${diff.toLocaleString()}</span>
               </Badge>
             ) : (
               <Badge
                 variant="destructive"
-                className="text-[10px] gap-1"
+                className="text-xs font-bold gap-1 px-2.5 py-0.5"
               >
-                Excede ${Math.abs(diff).toLocaleString()}
+                <span>Excede ${Math.abs(diff).toLocaleString()}</span>
               </Badge>
             )}
 
@@ -126,16 +133,16 @@ export const SplitPartCard: React.FC<SplitPartCardProps> = ({
                 size="icon"
                 title="Eliminar esta persona"
                 onClick={() => onRemovePart(part.id)}
-                className="size-7 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                className="size-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-lg cursor-pointer"
               >
-                <Trash2 className="size-3.5" />
+                <Trash2 className="size-4" />
               </Button>
             )}
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="p-3 space-y-2.5">
+      <CardContent className="p-3 sm:p-4 space-y-3 bg-card/40">
         {part.payments.map((line) => (
           <PaymentLineRow
             key={line.id}
@@ -149,23 +156,25 @@ export const SplitPartCard: React.FC<SplitPartCardProps> = ({
         ))}
       </CardContent>
 
-      <CardFooter className="py-2 px-3 bg-muted/10 border-t border-border/40 flex items-center justify-between">
+      <CardFooter className="py-2.5 px-4 bg-muted/20 border-t border-border/50 flex flex-wrap items-center justify-between gap-2">
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={() => onAddPaymentLine(part.id)}
-          className="h-7 text-xs font-semibold gap-1.5 border-dashed hover:border-primary text-primary"
+          className="h-8 text-xs font-semibold gap-1.5 border-dashed hover:border-primary text-primary hover:bg-primary/5 rounded-xl cursor-pointer"
         >
           <Plus className="size-3.5" />
-          <span>Dividir / Agregar otro método</span>
+          <span>Dividir / Agregar otro método de pago</span>
         </Button>
 
-        <span className="text-[11px] text-muted-foreground font-mono">
+        <span className="text-xs text-muted-foreground font-mono">
           Asignado a {part.name}:{' '}
-          <strong className="text-foreground">${roundedCovered.toLocaleString()}</strong>
+          <strong className="text-foreground text-sm font-bold">${roundedCovered.toLocaleString()}</strong>
         </span>
       </CardFooter>
     </Card>
   );
 };
+
+export default SplitPartCard;
