@@ -1,15 +1,29 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { MapPin, Phone, Clock, ArrowLeft, Plus, Sparkles, ChefHat, UtensilsCrossed, Navigation } from 'lucide-react';
-import { VenuePublicProfile, CatalogCategory, CatalogProduct } from '../../../types/delivery';
-import { ProductDetailModal } from '../../../components/modals/ProductDetailModal';
-import { BusinessLocationModal } from '../../../components/storefront/BusinessLocationModal';
-import { BusinessSocialLinks } from '../../../components/storefront/BusinessSocialLinks';
-import { useCart } from '../../../context/CartContext';
-import { sileo } from 'sileo';
+import React, { useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import {
+  MapPin,
+  Phone,
+  Clock,
+  ArrowLeft,
+  Plus,
+  Sparkles,
+  ChefHat,
+  UtensilsCrossed,
+  Navigation,
+} from "lucide-react";
+import {
+  VenuePublicProfile,
+  CatalogCategory,
+  CatalogProduct,
+} from "../../../types/delivery";
+import { ProductDetailModal } from "../../../components/modals/ProductDetailModal";
+import { BusinessLocationModal } from "../../../components/storefront/BusinessLocationModal";
+import { BusinessSocialLinks } from "../../../components/storefront/BusinessSocialLinks";
+import { useCart } from "../../../context/CartContext";
+import { sileo } from "sileo";
 
 interface Props {
   venue: VenuePublicProfile;
@@ -19,20 +33,30 @@ interface Props {
 
 export function RestaurantStorefront({ venue, categories, products }: Props) {
   const searchParams = useSearchParams();
-  const tableParam = searchParams ? searchParams.get('table') || searchParams.get('mesa') : null;
+  const tableParam = searchParams
+    ? searchParams.get("table") || searchParams.get("mesa")
+    : null;
 
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | 'all'>('all');
-  const [activeProduct, setActiveProduct] = useState<CatalogProduct | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | "all">(
+    "all",
+  );
+  const [activeProduct, setActiveProduct] = useState<CatalogProduct | null>(
+    null,
+  );
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const { addItem } = useCart();
 
   const formatCOP = (num: number | string) => {
-    const val = typeof num === 'string' ? parseFloat(num) : num;
-    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
+    const val = typeof num === "string" ? parseFloat(num) : num;
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      maximumFractionDigits: 0,
+    }).format(val);
   };
 
   const filteredProducts =
-    selectedCategoryId === 'all'
+    selectedCategoryId === "all"
       ? products
       : products.filter((p) => p.categoryId === selectedCategoryId);
 
@@ -40,20 +64,23 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
     e.stopPropagation();
     if (venue.isOpen === false) {
       sileo.warning({
-        title: 'Comercio cerrado',
+        title: "Comercio cerrado",
         description: `El comercio no está recibiendo pedidos en este momento.${
-          venue.openingHours ? ` Horario de atención: ${venue.openingHours}` : ''
+          venue.openingHours
+            ? ` Horario de atención: ${venue.openingHours}`
+            : ""
         }`,
       });
       return;
     }
-    const hasModifiers = product.modifierGroups && product.modifierGroups.length > 0;
+    const hasModifiers =
+      product.modifierGroups && product.modifierGroups.length > 0;
     if (hasModifiers) {
       setActiveProduct(product);
     } else {
-      addItem(product, 1, [], '', venue);
+      addItem(product, 1, [], "", venue);
       sileo.success({
-        title: 'Agregado a la canasta',
+        title: "Agregado a la canasta",
         description: `1x ${product.name}`,
       });
     }
@@ -83,7 +110,7 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
               ) : (
                 <div
                   className="flex h-16 w-16 items-center justify-center rounded-2xl font-black text-white text-2xl shadow-lg shrink-0"
-                  style={{ backgroundColor: venue.primaryColor || '#ea580c' }}
+                  style={{ backgroundColor: venue.primaryColor || "#ea580c" }}
                 >
                   {(venue.restaurantName || venue.name).charAt(0).toUpperCase()}
                 </div>
@@ -100,7 +127,10 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
                       className="inline-flex items-center gap-1 text-slate-300 hover:text-orange-400 hover:underline transition"
                     >
                       <MapPin className="h-3.5 w-3.5 text-orange-500 shrink-0" />
-                      <span>{venue.address}{venue.city ? `, ${venue.city}` : ''}</span>
+                      <span>
+                        {venue.address}
+                        {venue.city ? `, ${venue.city}` : ""}
+                      </span>
                     </button>
                   )}
                   {venue.phone && (
@@ -167,7 +197,11 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
                 !
               </span>
               <div>
-                <strong>Restaurante cerrado para domicilios en este momento.</strong> Puedes explorar nuestro catálogo, pero la recepción de pedidos a domicilio se encuentra pausada.
+                <strong>
+                  Restaurante cerrado para domicilios en este momento.
+                </strong>{" "}
+                Puedes explorar nuestro catálogo, pero la recepción de pedidos a
+                domicilio se encuentra pausada.
                 {venue.openingHours && (
                   <span className="block sm:inline sm:ml-2 font-semibold text-rose-300">
                     • Horario de atención: {venue.openingHours}
@@ -181,22 +215,24 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
 
       {/* Category Navigation Bar (Sticky) */}
       {categories.length > 0 && (
-        <div className="sticky top-[61px] z-30 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
+        <div className="sticky top-15.25 z-30 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="flex items-center gap-2 overflow-x-auto py-3 no-scrollbar">
               <button
-                onClick={() => setSelectedCategoryId('all')}
+                onClick={() => setSelectedCategoryId("all")}
                 className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition ${
-                  selectedCategoryId === 'all'
-                    ? 'bg-orange-600 text-white shadow-sm'
-                    : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                  selectedCategoryId === "all"
+                    ? "bg-orange-600 text-white shadow-sm"
+                    : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
                 }`}
               >
                 Todos ({products.length})
               </button>
 
               {categories.map((cat) => {
-                const count = products.filter((p) => p.categoryId === cat.id).length;
+                const count = products.filter(
+                  (p) => p.categoryId === cat.id,
+                ).length;
                 const isSelected = selectedCategoryId === cat.id;
                 return (
                   <button
@@ -204,8 +240,8 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
                     onClick={() => setSelectedCategoryId(cat.id)}
                     className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition flex items-center gap-1.5 ${
                       isSelected
-                        ? 'bg-orange-600 text-white shadow-sm'
-                        : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                        ? "bg-orange-600 text-white shadow-sm"
+                        : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
                     }`}
                   >
                     <span>{cat.name}</span>
@@ -223,7 +259,9 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
         {filteredProducts.length === 0 ? (
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-12 text-center max-w-md mx-auto">
             <ChefHat className="h-12 w-12 text-slate-700 mx-auto" />
-            <h3 className="mt-3 font-bold text-slate-200">No hay productos disponibles</h3>
+            <h3 className="mt-3 font-bold text-slate-200">
+              No hay productos disponibles
+            </h3>
             <p className="mt-1 text-xs text-slate-500">
               Esta categoría aún no cuenta con productos activos para delivery.
             </p>
@@ -231,7 +269,8 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredProducts.map((product) => {
-              const hasModifiers = product.modifierGroups && product.modifierGroups.length > 0;
+              const hasModifiers =
+                product.modifierGroups && product.modifierGroups.length > 0;
 
               return (
                 <div
@@ -269,7 +308,9 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
                         {formatCOP(product.price)}
                       </span>
                       {hasModifiers && (
-                        <span className="text-[10px] text-slate-500">Personalizable</span>
+                        <span className="text-[10px] text-slate-500">
+                          Personalizable
+                        </span>
                       )}
                     </div>
 
@@ -279,7 +320,7 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
                       className="flex items-center gap-1.5 rounded-xl bg-orange-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-500 transition"
                     >
                       <Plus className="h-3.5 w-3.5" />
-                      <span>{hasModifiers ? 'Opciones' : 'Agregar'}</span>
+                      <span>{hasModifiers ? "Opciones" : "Agregar"}</span>
                     </button>
                   </div>
                 </div>

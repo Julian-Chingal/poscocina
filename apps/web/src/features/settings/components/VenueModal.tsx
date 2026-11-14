@@ -1,20 +1,38 @@
-﻿import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Store, AlertCircle, MapPin, Phone, Clock, User, Building, FileText, Sparkles, CheckCircle2, Ban, Share2, Globe, MessageCircle } from 'lucide-react';
-import { VenueItem } from '@/stores/branding.store';
-import { NewVenuePayload, UpdateVenuePayload } from '../types/settings.types';
-import { NewVenueSchema, NewVenueFormValues } from '../schemas/settings.schemas';
-import { defaultSchedule } from '../hooks/useSettingsForm';
-import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
+﻿import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Store,
+  AlertCircle,
+  MapPin,
+  Phone,
+  Clock,
+  User,
+  Building,
+  FileText,
+  Sparkles,
+  CheckCircle2,
+  Ban,
+  Share2,
+  Globe,
+  MessageCircle,
+} from "lucide-react";
+import { VenueItem } from "@/stores/branding.store";
+import { NewVenuePayload, UpdateVenuePayload } from "../types/settings.types";
+import {
+  NewVenueSchema,
+  NewVenueFormValues,
+} from "../schemas/settings.schemas";
+import { defaultSchedule } from "../hooks/useSettingsForm";
+import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Form,
   FormField,
@@ -23,19 +41,23 @@ import {
   FormControl,
   FormMessage,
   FormDescription,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { LocationPickerMap } from './LocationPickerMap';
-import { COLOMBIA_DEPARTMENTS, findDepartmentByName, findMunicipality } from '@/lib/colombia-geo';
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { LocationPickerMap } from "./LocationPickerMap";
+import {
+  COLOMBIA_DEPARTMENTS,
+  findDepartmentByName,
+  findMunicipality,
+} from "@/lib/colombia-geo";
 
 interface Props {
   isOpen: boolean;
@@ -62,26 +84,26 @@ export const VenueModal: React.FC<Props> = ({
   const form = useForm<NewVenueFormValues>({
     resolver: zodResolver(NewVenueSchema),
     defaultValues: {
-      name: '',
-      slug: '',
-      address: '',
-      phone: '',
-      department: '',
-      city: '',
+      name: "",
+      slug: "",
+      address: "",
+      phone: "",
+      department: "",
+      city: "",
       latitude: null,
       longitude: null,
-      managerName: '',
-      openingHours: '',
-      operatingStatus: 'auto',
+      managerName: "",
+      openingHours: "",
+      operatingStatus: "auto",
       schedule: defaultSchedule,
       requireShiftForDelivery: false,
-      notes: '',
-      timezone: 'America/Bogota',
-      instagram: '',
-      facebook: '',
-      whatsapp: '',
-      tiktok: '',
-      website: '',
+      notes: "",
+      timezone: "America/Bogota",
+      instagram: "",
+      facebook: "",
+      whatsapp: "",
+      tiktok: "",
+      website: "",
     },
   });
 
@@ -90,55 +112,60 @@ export const VenueModal: React.FC<Props> = ({
     if (isOpen) {
       if (editingVenue) {
         const settings = (editingVenue.settings || {}) as Record<string, any>;
-        const lat = typeof settings.latitude === 'number' ? settings.latitude : null;
-        const lng = typeof settings.longitude === 'number' ? settings.longitude : null;
+        const lat =
+          typeof settings.latitude === "number" ? settings.latitude : null;
+        const lng =
+          typeof settings.longitude === "number" ? settings.longitude : null;
         form.reset({
-          name: editingVenue.name || '',
-          slug: editingVenue.slug || settings.slug || '',
-          address: editingVenue.address || '',
-          phone: editingVenue.phone || settings.phone || '',
-          department: settings.department || '',
-          city: settings.city || '',
+          name: editingVenue.name || "",
+          slug: editingVenue.slug || settings.slug || "",
+          address: editingVenue.address || "",
+          phone: editingVenue.phone || settings.phone || "",
+          department: settings.department || "",
+          city: settings.city || "",
           latitude: lat,
           longitude: lng,
-          managerName: settings.managerName || '',
-          openingHours: settings.openingHours || '',
-          operatingStatus: settings.operatingStatus || 'auto',
-          schedule: settings.schedule && settings.schedule.length === 7 ? settings.schedule : defaultSchedule,
+          managerName: settings.managerName || "",
+          openingHours: settings.openingHours || "",
+          operatingStatus: settings.operatingStatus || "auto",
+          schedule:
+            settings.schedule && settings.schedule.length === 7
+              ? settings.schedule
+              : defaultSchedule,
           requireShiftForDelivery: settings.requireShiftForDelivery ?? false,
-          notes: settings.notes || '',
-          timezone: 'America/Bogota',
-          instagram: settings.instagram || '',
-          facebook: settings.facebook || '',
-          whatsapp: settings.whatsapp || '',
-          tiktok: settings.tiktok || '',
-          website: settings.website || '',
+          notes: settings.notes || "",
+          timezone: "America/Bogota",
+          instagram: settings.instagram || "",
+          facebook: settings.facebook || "",
+          whatsapp: settings.whatsapp || "",
+          tiktok: settings.tiktok || "",
+          website: settings.website || "",
         });
         if (lat && lng) {
           setFlyToCoords([lat, lng]);
         }
       } else {
         form.reset({
-          name: '',
-          slug: '',
-          address: '',
-          phone: '',
-          department: '',
-          city: '',
+          name: "",
+          slug: "",
+          address: "",
+          phone: "",
+          department: "",
+          city: "",
           latitude: null,
           longitude: null,
-          managerName: '',
-          openingHours: 'Lun - Dom: 11:30 AM - 10:00 PM',
-          operatingStatus: 'auto',
+          managerName: "",
+          openingHours: "Lun - Dom: 11:30 AM - 10:00 PM",
+          operatingStatus: "auto",
           schedule: defaultSchedule,
           requireShiftForDelivery: false,
-          notes: '',
-          timezone: 'America/Bogota',
-          instagram: '',
-          facebook: '',
-          whatsapp: '',
-          tiktok: '',
-          website: '',
+          notes: "",
+          timezone: "America/Bogota",
+          instagram: "",
+          facebook: "",
+          whatsapp: "",
+          tiktok: "",
+          website: "",
         });
         setFlyToCoords(null);
       }
@@ -146,18 +173,29 @@ export const VenueModal: React.FC<Props> = ({
   }, [isOpen, editingVenue, form]);
 
   const handleNameChange = (val: string) => {
-    form.setValue('name', val);
+    form.setValue("name", val);
     // Auto-generate slug only when creating a new venue and slug hasn't been manually tailored
     if (!isEditing) {
-      const currentSlug = form.getValues('slug');
-      if (!currentSlug || currentSlug.trim() === '' || currentSlug.startsWith('sede-')) {
+      const currentSlug = form.getValues("slug");
+      if (
+        !currentSlug ||
+        currentSlug.trim() === "" ||
+        currentSlug.startsWith("sede-")
+      ) {
         const generated = val
           .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/\s+/g, '-')
-          .replace(/[^a-z0-9-]/g, '');
-        form.setValue('slug', generated ? (generated.startsWith('sede-') ? generated : `sede-${generated}`) : '');
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "");
+        form.setValue(
+          "slug",
+          generated
+            ? generated.startsWith("sede-")
+              ? generated
+              : `sede-${generated}`
+            : "",
+        );
       }
     }
   };
@@ -165,15 +203,21 @@ export const VenueModal: React.FC<Props> = ({
   const handleDepartmentChange = (deptName: string) => {
     const dept = findDepartmentByName(deptName);
     if (dept) {
-      const currentCity = form.getValues('city');
-      const exists = dept.municipalities.some((m) => m.name.toLowerCase() === currentCity?.toLowerCase());
+      const currentCity = form.getValues("city");
+      const exists = dept.municipalities.some(
+        (m) => m.name.toLowerCase() === currentCity?.toLowerCase(),
+      );
       if (!exists && dept.municipalities.length > 0) {
         const defaultMuni = dept.municipalities[0];
-        form.setValue('city', defaultMuni.name);
+        form.setValue("city", defaultMuni.name);
         setFlyToCoords(defaultMuni.coords);
-        if (!form.getValues('latitude') || !form.getValues('longitude')) {
-          form.setValue('latitude', defaultMuni.coords[0], { shouldDirty: true });
-          form.setValue('longitude', defaultMuni.coords[1], { shouldDirty: true });
+        if (!form.getValues("latitude") || !form.getValues("longitude")) {
+          form.setValue("latitude", defaultMuni.coords[0], {
+            shouldDirty: true,
+          });
+          form.setValue("longitude", defaultMuni.coords[1], {
+            shouldDirty: true,
+          });
         }
       } else {
         setFlyToCoords(dept.defaultCoords);
@@ -182,12 +226,12 @@ export const VenueModal: React.FC<Props> = ({
   };
 
   const handleMunicipalityChange = (muniName: string) => {
-    const deptName = form.getValues('department');
+    const deptName = form.getValues("department");
     const muni = findMunicipality(deptName, muniName);
     if (muni) {
       setFlyToCoords(muni.coords);
-      form.setValue('latitude', muni.coords[0], { shouldDirty: true });
-      form.setValue('longitude', muni.coords[1], { shouldDirty: true });
+      form.setValue("latitude", muni.coords[0], { shouldDirty: true });
+      form.setValue("longitude", muni.coords[1], { shouldDirty: true });
     }
   };
 
@@ -195,24 +239,24 @@ export const VenueModal: React.FC<Props> = ({
     const payload = {
       name: values.name.trim(),
       slug: values.slug.trim(),
-      address: values.address?.trim() || '',
-      phone: values.phone?.trim() || '',
-      department: values.department?.trim() || '',
-      city: values.city?.trim() || '',
-      latitude: typeof values.latitude === 'number' ? values.latitude : null,
-      longitude: typeof values.longitude === 'number' ? values.longitude : null,
-      managerName: values.managerName?.trim() || '',
-      openingHours: values.openingHours?.trim() || '',
+      address: values.address?.trim() || "",
+      phone: values.phone?.trim() || "",
+      department: values.department?.trim() || "",
+      city: values.city?.trim() || "",
+      latitude: typeof values.latitude === "number" ? values.latitude : null,
+      longitude: typeof values.longitude === "number" ? values.longitude : null,
+      managerName: values.managerName?.trim() || "",
+      openingHours: values.openingHours?.trim() || "",
       operatingStatus: values.operatingStatus,
       schedule: values.schedule,
       requireShiftForDelivery: values.requireShiftForDelivery,
-      notes: values.notes?.trim() || '',
-      timezone: values.timezone?.trim() || 'America/Bogota',
-      instagram: values.instagram?.trim() || '',
-      facebook: values.facebook?.trim() || '',
-      whatsapp: values.whatsapp?.trim() || '',
-      tiktok: values.tiktok?.trim() || '',
-      website: values.website?.trim() || '',
+      notes: values.notes?.trim() || "",
+      timezone: values.timezone?.trim() || "America/Bogota",
+      instagram: values.instagram?.trim() || "",
+      facebook: values.facebook?.trim() || "",
+      whatsapp: values.whatsapp?.trim() || "",
+      tiktok: values.tiktok?.trim() || "",
+      website: values.website?.trim() || "",
     };
 
     if (isEditing && editingVenue) {
@@ -224,20 +268,28 @@ export const VenueModal: React.FC<Props> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent maxWidth="2xl" onClose={onClose} className="p-0 overflow-hidden">
+      <DialogContent
+        maxWidth="2xl"
+        onClose={onClose}
+        className="p-0 overflow-hidden"
+      >
         {/* Header with visual branding */}
-        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-6 py-5 border-b border-border/80">
+        <div className="bg-linear-to-r from-primary/10 via-primary/5 to-transparent px-6 py-5 border-b border-border/80">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2.5 text-lg font-bold text-foreground">
               <div className="w-9 h-9 rounded-xl bg-primary/20 text-primary flex items-center justify-center shadow-sm">
                 <Store className="w-5 h-5" />
               </div>
               <div>
-                <span>{isEditing ? 'Editar Sucursal' : 'Nueva Sucursal de la Cadena'}</span>
+                <span>
+                  {isEditing
+                    ? "Editar Sucursal"
+                    : "Nueva Sucursal de la Cadena"}
+                </span>
                 <p className="text-xs font-normal text-muted-foreground mt-0.5">
                   {isEditing
                     ? `Modifica los datos operativos y de contacto de "${editingVenue?.name}".`
-                    : 'Registra un nuevo punto de venta para expandir la operación de tu negocio.'}
+                    : "Registra un nuevo punto de venta para expandir la operación de tu negocio."}
                 </p>
               </div>
             </DialogTitle>
@@ -253,7 +305,11 @@ export const VenueModal: React.FC<Props> = ({
           )}
 
           <Form {...form}>
-            <form id="venue-modal-form" onSubmit={onSubmit} className="space-y-5">
+            <form
+              id="venue-modal-form"
+              onSubmit={onSubmit}
+              className="space-y-5"
+            >
               {/* Section 1: Identidad de la Sede */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-primary tracking-wide">
@@ -267,7 +323,9 @@ export const VenueModal: React.FC<Props> = ({
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-semibold">Nombre de la Sede *</FormLabel>
+                        <FormLabel className="text-xs font-semibold">
+                          Nombre de la Sede *
+                        </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -288,7 +346,9 @@ export const VenueModal: React.FC<Props> = ({
                       <FormItem>
                         <FormLabel className="text-xs font-semibold flex items-center justify-between">
                           <span>Slug URL / Código *</span>
-                          <span className="text-[10px] text-muted-foreground font-mono font-normal">único</span>
+                          <span className="text-[10px] text-muted-foreground font-mono font-normal">
+                            único
+                          </span>
                         </FormLabel>
                         <FormControl>
                           <div className="relative">
@@ -299,7 +359,9 @@ export const VenueModal: React.FC<Props> = ({
                               {...field}
                               placeholder="sede-el-poblado"
                               className="font-mono text-xs pl-6 h-9"
-                              onChange={(e) => field.onChange(e.target.value.toLowerCase())}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toLowerCase())
+                              }
                             />
                           </div>
                         </FormControl>
@@ -324,9 +386,11 @@ export const VenueModal: React.FC<Props> = ({
                     name="department"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-semibold">Departamento (Colombia)</FormLabel>
+                        <FormLabel className="text-xs font-semibold">
+                          Departamento (Colombia)
+                        </FormLabel>
                         <Select
-                          value={field.value || ''}
+                          value={field.value || ""}
                           onValueChange={(val) => {
                             field.onChange(val);
                             handleDepartmentChange(val);
@@ -337,9 +401,13 @@ export const VenueModal: React.FC<Props> = ({
                               <SelectValue placeholder="Selecciona departamento..." />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="max-h-60 z-[60]">
+                          <SelectContent className="max-h-60 z-60">
                             {COLOMBIA_DEPARTMENTS.map((dept) => (
-                              <SelectItem key={dept.id} value={dept.name} className="text-xs">
+                              <SelectItem
+                                key={dept.id}
+                                value={dept.name}
+                                className="text-xs"
+                              >
                                 {dept.name}
                               </SelectItem>
                             ))}
@@ -354,16 +422,19 @@ export const VenueModal: React.FC<Props> = ({
                     control={form.control}
                     name="city"
                     render={({ field }) => {
-                      const selectedDeptName = form.watch('department');
-                      const selectedDept = findDepartmentByName(selectedDeptName);
+                      const selectedDeptName = form.watch("department");
+                      const selectedDept =
+                        findDepartmentByName(selectedDeptName);
                       const municipalities = selectedDept?.municipalities || [];
 
                       return (
                         <FormItem>
-                          <FormLabel className="text-xs font-semibold">Municipio / Ciudad</FormLabel>
+                          <FormLabel className="text-xs font-semibold">
+                            Municipio / Ciudad
+                          </FormLabel>
                           {municipalities.length > 0 ? (
                             <Select
-                              value={field.value || ''}
+                              value={field.value || ""}
                               onValueChange={(val) => {
                                 field.onChange(val);
                                 handleMunicipalityChange(val);
@@ -374,9 +445,13 @@ export const VenueModal: React.FC<Props> = ({
                                   <SelectValue placeholder="Selecciona municipio..." />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent className="max-h-60 z-[60]">
+                              <SelectContent className="max-h-60 z-60">
                                 {municipalities.map((muni) => (
-                                  <SelectItem key={muni.name} value={muni.name} className="text-xs">
+                                  <SelectItem
+                                    key={muni.name}
+                                    value={muni.name}
+                                    className="text-xs"
+                                  >
                                     {muni.name}
                                   </SelectItem>
                                 ))}
@@ -388,8 +463,8 @@ export const VenueModal: React.FC<Props> = ({
                                 {...field}
                                 placeholder={
                                   selectedDeptName
-                                    ? 'Escribe el municipio o ciudad'
-                                    : 'Primero selecciona departamento'
+                                    ? "Escribe el municipio o ciudad"
+                                    : "Primero selecciona departamento"
                                 }
                                 className="text-xs h-9"
                               />
@@ -408,7 +483,9 @@ export const VenueModal: React.FC<Props> = ({
                   name="address"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold">Dirección Física / Nomenclatura</FormLabel>
+                      <FormLabel className="text-xs font-semibold">
+                        Dirección Física / Nomenclatura
+                      </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -428,9 +505,10 @@ export const VenueModal: React.FC<Props> = ({
                       <MapPin className="w-3.5 h-3.5 text-primary" />
                       Punto Geográfico de la Sede
                     </span>
-                    {form.watch('latitude') && form.watch('longitude') ? (
+                    {form.watch("latitude") && form.watch("longitude") ? (
                       <span className="font-mono text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded-md font-semibold">
-                        Lat: {form.watch('latitude')?.toFixed(5)}, Lng: {form.watch('longitude')?.toFixed(5)}
+                        Lat: {form.watch("latitude")?.toFixed(5)}, Lng:{" "}
+                        {form.watch("longitude")?.toFixed(5)}
                       </span>
                     ) : (
                       <span className="text-[11px] text-muted-foreground italic">
@@ -440,14 +518,18 @@ export const VenueModal: React.FC<Props> = ({
                   </div>
 
                   <LocationPickerMap
-                    latitude={form.watch('latitude')}
-                    longitude={form.watch('longitude')}
-                    departmentName={form.watch('department')}
-                    municipalityName={form.watch('city')}
+                    latitude={form.watch("latitude")}
+                    longitude={form.watch("longitude")}
+                    departmentName={form.watch("department")}
+                    municipalityName={form.watch("city")}
                     flyToCoords={flyToCoords}
                     onChange={(coords) => {
-                      form.setValue('latitude', coords.latitude, { shouldDirty: true });
-                      form.setValue('longitude', coords.longitude, { shouldDirty: true });
+                      form.setValue("latitude", coords.latitude, {
+                        shouldDirty: true,
+                      });
+                      form.setValue("longitude", coords.longitude, {
+                        shouldDirty: true,
+                      });
                     }}
                     className="h-64 sm:h-72 w-full rounded-xl border border-border shadow-inner"
                   />
@@ -511,7 +593,9 @@ export const VenueModal: React.FC<Props> = ({
                     name="openingHours"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-semibold">Horario de Atención</FormLabel>
+                        <FormLabel className="text-xs font-semibold">
+                          Horario de Atención
+                        </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -532,7 +616,9 @@ export const VenueModal: React.FC<Props> = ({
                     name="timezone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-semibold">Zona Horaria</FormLabel>
+                        <FormLabel className="text-xs font-semibold">
+                          Zona Horaria
+                        </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -555,16 +641,18 @@ export const VenueModal: React.FC<Props> = ({
                   name="operatingStatus"
                   render={({ field }) => (
                     <FormItem className="space-y-1.5">
-                      <FormLabel className="text-xs font-semibold">Estado de Atención Domicilios</FormLabel>
+                      <FormLabel className="text-xs font-semibold">
+                        Estado de Atención Domicilios
+                      </FormLabel>
                       <div className="grid grid-cols-3 gap-2">
                         <button
                           type="button"
-                          onClick={() => field.onChange('auto')}
+                          onClick={() => field.onChange("auto")}
                           className={cn(
-                            'p-2 rounded-lg border text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer',
-                            field.value === 'auto'
-                              ? 'border-primary bg-primary/10 text-primary'
-                              : 'border-border text-muted-foreground hover:bg-muted/40'
+                            "p-2 rounded-lg border text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer",
+                            field.value === "auto"
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border text-muted-foreground hover:bg-muted/40",
                           )}
                         >
                           <Clock className="w-3 h-3" />
@@ -572,12 +660,12 @@ export const VenueModal: React.FC<Props> = ({
                         </button>
                         <button
                           type="button"
-                          onClick={() => field.onChange('open')}
+                          onClick={() => field.onChange("open")}
                           className={cn(
-                            'p-2 rounded-lg border text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer',
-                            field.value === 'open'
-                              ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                              : 'border-border text-muted-foreground hover:bg-muted/40'
+                            "p-2 rounded-lg border text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer",
+                            field.value === "open"
+                              ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                              : "border-border text-muted-foreground hover:bg-muted/40",
                           )}
                         >
                           <CheckCircle2 className="w-3 h-3" />
@@ -585,12 +673,12 @@ export const VenueModal: React.FC<Props> = ({
                         </button>
                         <button
                           type="button"
-                          onClick={() => field.onChange('closed')}
+                          onClick={() => field.onChange("closed")}
                           className={cn(
-                            'p-2 rounded-lg border text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer',
-                            field.value === 'closed'
-                              ? 'border-rose-500 bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                              : 'border-border text-muted-foreground hover:bg-muted/40'
+                            "p-2 rounded-lg border text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer",
+                            field.value === "closed"
+                              ? "border-rose-500 bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                              : "border-border text-muted-foreground hover:bg-muted/40",
                           )}
                         >
                           <Ban className="w-3 h-3" />
@@ -611,7 +699,8 @@ export const VenueModal: React.FC<Props> = ({
                           Exigir turno de caja abierto
                         </span>
                         <span className="text-[10px] text-muted-foreground block">
-                          Pausa domicilios automáticamente si la caja física no ha sido abierta.
+                          Pausa domicilios automáticamente si la caja física no
+                          ha sido abierta.
                         </span>
                       </div>
                       <Switch
@@ -761,7 +850,13 @@ export const VenueModal: React.FC<Props> = ({
         </div>
 
         <DialogFooter className="px-6 py-4 bg-muted/20 border-t border-border flex items-center justify-between sm:justify-between">
-          <Button variant="ghost" type="button" onClick={onClose} disabled={isSaving} className="text-xs">
+          <Button
+            variant="ghost"
+            type="button"
+            onClick={onClose}
+            disabled={isSaving}
+            className="text-xs"
+          >
             Cancelar
           </Button>
 
@@ -774,10 +869,10 @@ export const VenueModal: React.FC<Props> = ({
             {isSaving ? (
               <span className="flex items-center gap-2">
                 <span className="w-3.5 h-3.5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                {isEditing ? 'Guardando...' : 'Creando Sede...'}
+                {isEditing ? "Guardando..." : "Creando Sede..."}
               </span>
             ) : isEditing ? (
-              'Guardar Cambios'
+              "Guardar Cambios"
             ) : (
               <span className="flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" />

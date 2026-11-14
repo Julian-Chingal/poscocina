@@ -19,6 +19,7 @@ export const CreateDeliveryOrderSchema = z.object({
     name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
     phone: z.string().min(7, 'El teléfono es obligatorio para coordinar la entrega'),
     address: z.string().min(5, 'La dirección de entrega es obligatoria'),
+    neighborhood: z.string().optional(),
     email: z.string().email().optional().or(z.literal('')),
     notes: z.string().max(300).optional(),
   }),

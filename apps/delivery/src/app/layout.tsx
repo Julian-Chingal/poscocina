@@ -1,5 +1,6 @@
 ﻿import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import 'leaflet/dist/leaflet.css';
 import { CartProvider } from '../context/CartContext';
 import { Navbar } from '../components/Navbar';
 import { CartDrawer } from '../components/cart/CartDrawer';

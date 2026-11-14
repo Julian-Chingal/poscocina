@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useState, useMemo } from 'react';
-import Link from 'next/link';
+import React, { useState, useMemo } from "react";
+import Link from "next/link";
 import {
   Store,
   MapPin,
@@ -15,45 +15,63 @@ import {
   HeartPulse,
   Wine,
   Building2,
-} from 'lucide-react';
-import { VenuePublicProfile } from '../../types/delivery';
-import { BusinessSocialLinks } from '../storefront/BusinessSocialLinks';
+} from "lucide-react";
+import { VenuePublicProfile } from "../../types/delivery";
+import { BusinessSocialLinks } from "../storefront/BusinessSocialLinks";
 
 interface Props {
   initialVenues: VenuePublicProfile[];
 }
 
-type BusinessCategory = 'all' | 'restaurant' | 'store' | 'pharmacy' | 'drinks';
+type BusinessCategory = "all" | "restaurant" | "store" | "pharmacy" | "drinks";
 
-const CATEGORIES: Array<{ id: BusinessCategory; label: string; icon: React.ElementType }> = [
-  { id: 'all', label: 'Todos', icon: Store },
-  { id: 'restaurant', label: 'Restaurantes', icon: UtensilsCrossed },
-  { id: 'store', label: 'Tiendas & Mercados', icon: ShoppingBag },
-  { id: 'pharmacy', label: 'Farmacias', icon: HeartPulse },
-  { id: 'drinks', label: 'Bebidas & Licores', icon: Wine },
+const CATEGORIES: Array<{
+  id: BusinessCategory;
+  label: string;
+  icon: React.ElementType;
+}> = [
+  { id: "all", label: "Todos", icon: Store },
+  { id: "restaurant", label: "Restaurantes", icon: UtensilsCrossed },
+  { id: "store", label: "Tiendas & Mercados", icon: ShoppingBag },
+  { id: "pharmacy", label: "Farmacias", icon: HeartPulse },
+  { id: "drinks", label: "Bebidas & Licores", icon: Wine },
 ];
 
 export function DirectoryView({ initialVenues }: Props) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<BusinessCategory>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] =
+    useState<BusinessCategory>("all");
 
   const filteredVenues = useMemo(() => {
     return initialVenues.filter((venue) => {
       // Category filter (if venue specifies businessType, match it; if 'all', pass; default matches 'restaurant' or general)
-      const bType = (venue.businessType || 'restaurant').toLowerCase();
+      const bType = (venue.businessType || "restaurant").toLowerCase();
       const matchesCategory =
-        selectedCategory === 'all' ||
-        (selectedCategory === 'restaurant' && (bType.includes('restaurant') || bType.includes('comida') || !venue.businessType)) ||
-        (selectedCategory === 'store' && (bType.includes('store') || bType.includes('tienda') || bType.includes('mercado'))) ||
-        (selectedCategory === 'pharmacy' && (bType.includes('pharmacy') || bType.includes('farmacia') || bType.includes('salud'))) ||
-        (selectedCategory === 'drinks' && (bType.includes('drinks') || bType.includes('licor') || bType.includes('bebida')));
+        selectedCategory === "all" ||
+        (selectedCategory === "restaurant" &&
+          (bType.includes("restaurant") ||
+            bType.includes("comida") ||
+            !venue.businessType)) ||
+        (selectedCategory === "store" &&
+          (bType.includes("store") ||
+            bType.includes("tienda") ||
+            bType.includes("mercado"))) ||
+        (selectedCategory === "pharmacy" &&
+          (bType.includes("pharmacy") ||
+            bType.includes("farmacia") ||
+            bType.includes("salud"))) ||
+        (selectedCategory === "drinks" &&
+          (bType.includes("drinks") ||
+            bType.includes("licor") ||
+            bType.includes("bebida")));
 
       // Text search filter
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
         venue.name.toLowerCase().includes(q) ||
-        (venue.restaurantName && venue.restaurantName.toLowerCase().includes(q)) ||
+        (venue.restaurantName &&
+          venue.restaurantName.toLowerCase().includes(q)) ||
         (venue.address && venue.address.toLowerCase().includes(q)) ||
         (venue.city && venue.city.toLowerCase().includes(q));
 
@@ -64,7 +82,7 @@ export function DirectoryView({ initialVenues }: Props) {
   return (
     <div className="relative overflow-hidden">
       {/* Background glow accent */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-orange-600/15 via-amber-600/5 to-transparent pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-linear-to-b from-orange-600/15 via-amber-600/5 to-transparent pointer-events-none" />
 
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-14">
         {/* Hero Section */}
@@ -79,8 +97,8 @@ export function DirectoryView({ initialVenues }: Props) {
           </h1>
 
           <p className="text-sm sm:text-base text-slate-400 leading-relaxed max-w-2xl mx-auto">
-            Pide comida preparada, compras y productos locales de tu ciudad con entrega rápida
-            y despacho sincronizado en tiempo real.
+            Pide comida preparada, compras y productos locales de tu ciudad con
+            entrega rápida y despacho sincronizado en tiempo real.
           </p>
 
           {/* Quick Search Bar */}
@@ -96,7 +114,7 @@ export function DirectoryView({ initialVenues }: Props) {
               />
               {searchQuery && (
                 <button
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => setSearchQuery("")}
                   className="absolute right-3 text-xs text-slate-500 hover:text-white px-2 py-1"
                 >
                   Limpiar
@@ -116,8 +134,8 @@ export function DirectoryView({ initialVenues }: Props) {
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition shrink-0 ${
                     isSelected
-                      ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
-                      : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800 hover:border-slate-700'
+                      ? "bg-orange-600 text-white shadow-md shadow-orange-600/20"
+                      : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800 hover:border-slate-700"
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
@@ -146,13 +164,13 @@ export function DirectoryView({ initialVenues }: Props) {
               <p className="mt-1 text-xs text-slate-400">
                 {searchQuery
                   ? `No hay resultados para "${searchQuery}". Prueba con otro término.`
-                  : 'Próximamente más restaurantes y tiendas en tu localidad.'}
+                  : "Próximamente más restaurantes y tiendas en tu localidad."}
               </p>
               {searchQuery && (
                 <button
                   onClick={() => {
-                    setSearchQuery('');
-                    setSelectedCategory('all');
+                    setSearchQuery("");
+                    setSelectedCategory("all");
                   }}
                   className="mt-4 inline-flex items-center gap-1 text-xs text-orange-400 hover:underline"
                 >
@@ -165,15 +183,15 @@ export function DirectoryView({ initialVenues }: Props) {
               {filteredVenues.map((venue) => {
                 const targetSlug = venue.slug || venue.id;
                 // Category label
-                const bType = venue.businessType || 'restaurant';
+                const bType = venue.businessType || "restaurant";
                 const categoryBadge =
-                  bType === 'store'
-                    ? 'Tienda & Mercado'
-                    : bType === 'pharmacy'
-                    ? 'Farmacia'
-                    : bType === 'drinks'
-                    ? 'Licores'
-                    : 'Restaurante';
+                  bType === "store"
+                    ? "Tienda & Mercado"
+                    : bType === "pharmacy"
+                      ? "Farmacia"
+                      : bType === "drinks"
+                        ? "Licores"
+                        : "Restaurante";
 
                 return (
                   <div
@@ -193,10 +211,12 @@ export function DirectoryView({ initialVenues }: Props) {
                           <div
                             className="flex h-12 w-12 items-center justify-center rounded-xl font-black text-white shadow-md text-lg shrink-0"
                             style={{
-                              backgroundColor: venue.primaryColor || '#ea580c',
+                              backgroundColor: venue.primaryColor || "#ea580c",
                             }}
                           >
-                            {(venue.restaurantName || venue.name).charAt(0).toUpperCase()}
+                            {(venue.restaurantName || venue.name)
+                              .charAt(0)
+                              .toUpperCase()}
                           </div>
                         )}
 
@@ -229,7 +249,7 @@ export function DirectoryView({ initialVenues }: Props) {
                           <MapPin className="h-4 w-4 shrink-0 text-orange-500/80 mt-0.5" />
                           <span>
                             {venue.address}
-                            {venue.city ? `, ${venue.city}` : ''}
+                            {venue.city ? `, ${venue.city}` : ""}
                           </span>
                         </p>
                       )}
@@ -248,7 +268,9 @@ export function DirectoryView({ initialVenues }: Props) {
                             <Clock className="h-3.5 w-3.5 text-orange-400" />
                             <span>25 - 40 min</span>
                           </div>
-                          <span className="font-semibold text-slate-300">{venue.currency || 'COP'}</span>
+                          <span className="font-semibold text-slate-300">
+                            {venue.currency || "COP"}
+                          </span>
                         </div>
                         {venue.openingHours && (
                           <p
@@ -256,11 +278,16 @@ export function DirectoryView({ initialVenues }: Props) {
                             title={venue.openingHours}
                           >
                             <span>Horario:</span>
-                            <span className="text-slate-400 font-medium">{venue.openingHours}</span>
+                            <span className="text-slate-400 font-medium">
+                              {venue.openingHours}
+                            </span>
                           </p>
                         )}
                         <div className="pt-1">
-                          <BusinessSocialLinks venue={venue} variant="compact" />
+                          <BusinessSocialLinks
+                            venue={venue}
+                            variant="compact"
+                          />
                         </div>
                       </div>
                     </div>
@@ -270,11 +297,15 @@ export function DirectoryView({ initialVenues }: Props) {
                       href={`/r/${targetSlug}`}
                       className={`mt-6 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition ${
                         venue.isOpen !== false
-                          ? 'bg-orange-600/90 text-white shadow-sm hover:bg-orange-500'
-                          : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700/60'
+                          ? "bg-orange-600/90 text-white shadow-sm hover:bg-orange-500"
+                          : "bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700/60"
                       }`}
                     >
-                      <span>{venue.isOpen !== false ? 'Ver Catálogo & Pedir' : 'Cerrado • Ver Catálogo'}</span>
+                      <span>
+                        {venue.isOpen !== false
+                          ? "Ver Catálogo & Pedir"
+                          : "Cerrado • Ver Catálogo"}
+                      </span>
                       <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </div>
@@ -285,7 +316,7 @@ export function DirectoryView({ initialVenues }: Props) {
         </div>
 
         {/* Business Recruitment Callout */}
-        <div className="mt-16 rounded-3xl border border-orange-500/30 bg-gradient-to-r from-orange-950/40 via-slate-900 to-slate-900 p-8 sm:p-10 relative overflow-hidden">
+        <div className="mt-16 rounded-3xl border border-orange-500/30 bg-linear-to-r from-orange-950/40 via-slate-900 to-slate-900 p-8 sm:p-10 relative overflow-hidden">
           <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-orange-600/10 rounded-full blur-3xl pointer-events-none" />
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative">
             <div className="space-y-2 text-center sm:text-left">
@@ -297,8 +328,9 @@ export function DirectoryView({ initialVenues }: Props) {
                 Vende en Pallevar y haz crecer tus ventas
               </h3>
               <p className="text-xs sm:text-sm text-slate-400 max-w-xl">
-                Crea tu catálogo en minutos, recibe pedidos directos en tu cocina o mostrador y despacha
-                a domicilio con total control y sin comisiones asfixiantes.
+                Crea tu catálogo en minutos, recibe pedidos directos en tu
+                cocina o mostrador y despacha a domicilio con total control y
+                sin comisiones asfixiantes.
               </p>
             </div>
             <Link

@@ -116,12 +116,8 @@ export function CartDrawer() {
           <div className="border-t border-slate-800 bg-slate-950/90 px-6 py-4 space-y-3">
             <div className="space-y-1.5 text-xs text-slate-400">
               <div className="flex justify-between">
-                <span>Subtotal</span>
+                <span>Subtotal ({itemCount} {itemCount === 1 ? 'producto' : 'productos'})</span>
                 <span className="font-medium text-slate-200">{formatCOP(subtotal)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Impoconsumo (INC {((currentVenue?.taxRate || 0.08) * 100).toFixed(0)}%)</span>
-                <span className="font-medium text-slate-200">{formatCOP(taxTotal)}</span>
               </div>
               <div className="flex justify-between border-t border-slate-800 pt-2 text-base font-bold text-white">
                 <span>Total a Pagar</span>

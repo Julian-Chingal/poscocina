@@ -148,9 +148,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
   const subtotal = items.reduce((acc, item) => acc + item.totalItemPrice, 0);
-  const taxRate = currentVenue?.taxRate || 0.08;
-  const taxTotal = subtotal * taxRate;
-  const total = subtotal + taxTotal;
+  // Delivery menu prices are final - no additional tax added or charged
+  const taxTotal = 0;
+  const total = subtotal;
 
   return (
     <CartContext.Provider
