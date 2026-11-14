@@ -12,6 +12,7 @@ import {
   Building2,
   CreditCard,
   Bike,
+  MessageSquare,
 } from "lucide-react";
 import { AppItem } from "../types/launcher.types";
 
@@ -47,14 +48,33 @@ export const APPS: AppItem[] = [
   },
   {
     id: "delivery",
-    name: "Delivery & Tienda",
+    name: "Pallevar",
     subtitle: "Portal de clientes y pedidos online",
     icon: Bike,
-    icon3d: "/icons/modules/hamburger.webp",
-    gradient: "from-amber-500 to-orange-600",
+    icon3d: "/icons/modules/pallevar.webp",
+    gradient: "from-orange-500 to-amber-600",
     badge: "Beta",
     badgeColor:
       "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30",
+    category: "operacion",
+  },
+  {
+    id: "whatsapp",
+    name: "WhatsApp Negocio",
+    subtitle: "Bandeja de chats y verificación de pagos",
+    icon: MessageSquare,
+    gradient: "from-emerald-500 to-green-600",
+    badge: "WAHA",
+    badgeColor:
+      "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+    category: "operacion",
+  },
+  {
+    id: "driver",
+    name: "Portal Domiciliario",
+    subtitle: "Rutas, mapas y validación de PIN",
+    icon: Bike,
+    gradient: "from-blue-500 to-indigo-600",
     category: "operacion",
   },
   {

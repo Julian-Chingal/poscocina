@@ -3,13 +3,15 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, Store, Sparkles, Building2 } from "lucide-react";
+import { ShoppingBag, Store, Sparkles, Building2, User, LogOut, MessageSquare } from "lucide-react";
 import { HStack, Text, Badge, Button } from "@astryxdesign/core";
 import { useCart } from "../context/CartContext";
+import { useCustomerAuth } from "../context/CustomerAuthContext";
 
 export function Navbar() {
   const pathname = usePathname();
   const { currentVenue, itemCount, total, setIsCartOpen } = useCart();
+  const { customer, isAuthenticated, setIsAuthModalOpen, logout } = useCustomerAuth();
 
   const isStorefront = pathname ? pathname.startsWith("/r/") : false;
 
@@ -31,9 +33,11 @@ export function Navbar() {
           href="/"
           className="flex items-center gap-2.5 transition hover:opacity-95"
         >
-          <HStack className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 shadow-md shadow-orange-600/30 shrink-0">
-            <ShoppingBag className="h-5 w-5 text-white" />
-          </HStack>
+          <img
+            src="/logo.png"
+            alt="Pallevar"
+            className="h-10 w-10 rounded-xl object-contain shadow-md shadow-orange-600/30 shrink-0"
+          />
           <HStack className="flex items-center">
             <Text className="text-xl font-black tracking-tight text-white">
               Pallevar
@@ -93,7 +97,31 @@ export function Navbar() {
         </HStack>
 
         {/* Right: Actions */}
-        <HStack className="flex items-center gap-3">
+        <HStack className="flex items-center gap-2.5">
+          {isAuthenticated && customer ? (
+            <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/90 px-3 py-1.5 text-xs text-white">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
+                <User className="h-3.5 w-3.5" />
+              </div>
+              <span className="font-semibold max-w-[110px] truncate">{customer.name}</span>
+              <button
+                onClick={logout}
+                title="Cerrar sesión"
+                className="text-slate-400 hover:text-red-400 ml-1 transition"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 hover:text-white transition cursor-pointer"
+            >
+              <MessageSquare className="h-3.5 w-3.5 text-emerald-400" />
+              <span>Ingresar</span>
+            </button>
+          )}
+
           <Link
             href="/para-negocios"
             className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-3.5 py-1.5 text-xs font-bold text-orange-300 hover:bg-orange-500/20 hover:text-white transition"

@@ -312,9 +312,11 @@ export default function ParaNegociosPage() {
       <HStack className="border-t border-slate-800 bg-slate-950 py-12 w-full">
         <HStack className="mx-auto max-w-6xl px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-6 w-full">
           <HStack className="flex items-center gap-3">
-            <HStack className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-600 font-black text-white text-lg">
-              <ShoppingBag className="h-5 w-5" />
-            </HStack>
+            <img
+              src="/logo.png"
+              alt="Pallevar"
+              className="h-10 w-10 rounded-xl object-contain shadow-md shrink-0"
+            />
             <VStack>
               <Heading level={3} className="font-black text-white text-lg">Pallevar</Heading>
               <Text className="text-xs text-slate-400 block">Red de entregas y domicilios locales</Text>
