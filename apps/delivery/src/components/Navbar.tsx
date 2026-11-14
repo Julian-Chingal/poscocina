@@ -105,26 +105,38 @@ export function Navbar() {
           </Link>
 
           <Button
-            label={`Ver canasta de compras con ${itemCount} productos por ${formatCOP(total)}`}
+            label={
+              itemCount > 0
+                ? `Canasta con ${itemCount} ${
+                    itemCount === 1 ? "ítem" : "ítems"
+                  } por ${formatCOP(total)}`
+                : "Canasta de compras"
+            }
             onClick={() => setIsCartOpen(true)}
-            className="flex items-center gap-2 rounded-xl bg-slate-900 border border-slate-700/80 px-3.5 py-2 text-xs font-bold text-white shadow-md hover:border-orange-500 hover:bg-slate-800 transition cursor-pointer"
+            className="flex items-center gap-2 rounded-xl bg-slate-900 border border-slate-700/90 px-3.5 py-2 text-xs font-bold text-white shadow-md hover:border-orange-500 hover:bg-slate-800 transition cursor-pointer"
           >
-            <HStack className="relative flex items-center justify-center">
-              <ShoppingBag className="h-4.5 w-4.5 text-orange-400" />
-              {itemCount > 0 && (
-                <HStack
-                  as="span"
-                  className="absolute -top-2 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-600 px-1 text-[9px] font-black text-white shadow-sm border border-slate-900"
-                >
-                  <Text weight="bold" className="text-[9px] text-white leading-none">
-                    {itemCount}
+            <HStack className="flex items-center gap-2">
+              <ShoppingBag className="h-4.5 w-4.5 text-orange-400 shrink-0" />
+              {itemCount > 0 ? (
+                <HStack className="flex items-center gap-1.5">
+                  <HStack
+                    as="span"
+                    className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-600 px-1.5 text-[10px] font-black text-white shrink-0"
+                  >
+                    <Text weight="bold" className="text-[10px] text-white leading-none">
+                      {itemCount}
+                    </Text>
+                  </HStack>
+                  <Text weight="bold" className="text-xs font-bold text-white">
+                    {formatCOP(total)}
                   </Text>
                 </HStack>
+              ) : (
+                <Text weight="bold" className="text-xs font-bold text-slate-300">
+                  Canasta
+                </Text>
               )}
             </HStack>
-            <Text weight="bold" className="text-xs font-bold text-white ml-0.5">
-              {itemCount > 0 ? formatCOP(total) : "Canasta"}
-            </Text>
           </Button>
         </HStack>
       </HStack>

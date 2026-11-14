@@ -146,18 +146,14 @@ export function DirectoryView({ initialVenues }: Props) {
                 <Button
                   key={cat.id}
                   label={cat.label}
+                  icon={<Icon className={`h-4 w-4 ${isSelected ? "text-white" : "text-orange-400"}`} />}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`inline-flex items-center gap-2 rounded-full px-4.5 py-2 text-xs sm:text-sm font-semibold transition shrink-0 cursor-pointer border ${
+                  className={`inline-flex items-center rounded-full px-5 py-2.5 text-xs sm:text-sm font-semibold transition shrink-0 cursor-pointer border ${
                     isSelected
                       ? "bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-lg shadow-orange-600/30 border-orange-400"
                       : "bg-slate-900/90 text-slate-200 hover:text-white border-slate-700/80 hover:border-orange-500/50 hover:bg-slate-800"
                   }`}
-                >
-                  <Icon className={`h-4 w-4 ${isSelected ? "text-white" : "text-orange-400"}`} />
-                  <Text weight="bold" className={`text-xs sm:text-sm ${isSelected ? "text-white" : "text-slate-200"}`}>
-                    {cat.label}
-                  </Text>
-                </Button>
+                />
               );
             })}
           </HStack>
@@ -197,7 +193,7 @@ export function DirectoryView({ initialVenues }: Props) {
               )}
             </Card>
           ) : (
-            <Grid columns={{ minWidth: 320, max: 3 }} gap={5} align="start" className="w-full">
+            <Grid columns={{ minWidth: 320, max: 3 }} gap={6} align="stretch" className="w-full">
               {filteredVenues.map((venue) => {
                 const targetSlug = venue.slug || venue.id;
                 // Category label
@@ -214,11 +210,11 @@ export function DirectoryView({ initialVenues }: Props) {
                 return (
                   <Card
                     key={venue.id}
-                    className="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 p-0 transition-all duration-300 hover:border-orange-500/50 hover:bg-slate-900 hover:shadow-xl hover:shadow-orange-600/10 w-full"
+                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 p-0 transition-all duration-300 hover:border-orange-500/50 hover:bg-slate-900 hover:shadow-xl hover:shadow-orange-600/10 w-full h-full"
                   >
-                    {/* Header Banner with Category & Status */}
+                    {/* Header Banner with Category & Status - Fixed Height */}
                     <HStack
-                      className="relative h-24 w-full p-3 flex items-start justify-between border-b border-slate-800/80"
+                      className="relative h-24 w-full p-3 flex items-start justify-between border-b border-slate-800/80 shrink-0"
                       style={{
                         background: venue.primaryColor
                           ? `linear-gradient(135deg, ${venue.primaryColor}33 0%, #0f172a 100%)`
@@ -269,45 +265,57 @@ export function DirectoryView({ initialVenues }: Props) {
                       </HStack>
                     </HStack>
 
-                    {/* Card Content - Compact & Clean */}
-                    <VStack className="p-4 pt-8 w-full space-y-3">
-                      <VStack className="space-y-1.5 w-full">
-                        <Heading
-                          level={3}
-                          className="text-lg font-black text-white group-hover:text-orange-400 transition truncate"
-                        >
-                          {venue.restaurantName || venue.name}
-                        </Heading>
+                    {/* Card Content - Uniform Fixed Slots */}
+                    <VStack className="p-4 pt-8 flex-1 flex flex-col justify-between w-full space-y-3">
+                      <VStack className="space-y-2 w-full">
+                        {/* Title slot: fixed height row */}
+                        <HStack className="h-7 items-center w-full">
+                          <Heading
+                            level={3}
+                            className="text-lg font-black text-white group-hover:text-orange-400 transition truncate w-full"
+                          >
+                            {venue.restaurantName || venue.name}
+                          </Heading>
+                        </HStack>
 
-                        {/* Location / Phone */}
-                        <HStack className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-300">
-                          {venue.city && (
-                            <HStack className="flex items-center gap-1">
-                              <MapPin className="h-3.5 w-3.5 shrink-0 text-orange-400" />
-                              <Text className="text-xs text-slate-300">
-                                {venue.city}
-                              </Text>
-                            </HStack>
-                          )}
-                          <HStack className="flex items-center gap-1 text-slate-300">
+                        {/* Location / Details: fixed height row */}
+                        <HStack className="h-5 items-center gap-x-3 text-xs text-slate-300 w-full">
+                          <HStack className="flex items-center gap-1 truncate">
+                            <MapPin className="h-3.5 w-3.5 shrink-0 text-orange-400" />
+                            <Text className="text-xs text-slate-300 truncate">
+                              {venue.city || "Sede principal"}
+                            </Text>
+                          </HStack>
+                          <HStack className="flex items-center gap-1 shrink-0 text-slate-300">
                             <Clock className="h-3.5 w-3.5 text-orange-400" />
                             <Text className="text-xs text-slate-300">25 - 40 min</Text>
                           </HStack>
-                          <Text weight="bold" className="font-bold text-orange-400 text-xs">
+                          <Text weight="bold" className="font-bold text-orange-400 text-xs shrink-0">
                             {venue.currency || "COP"}
                           </Text>
                         </HStack>
 
-                        {venue.openingHours && (
-                          <Text className="text-xs text-slate-400 block truncate">
-                            Horario: {venue.openingHours}
+                        {/* Horario slot: fixed height row for ALL cards */}
+                        <HStack className="h-5 items-center text-xs text-slate-400 w-full">
+                          <Text className="text-xs text-slate-400 truncate">
+                            {venue.openingHours
+                              ? `Horario: ${venue.openingHours}`
+                              : "Horario habitual de atención"}
                           </Text>
-                        )}
+                        </HStack>
                       </VStack>
 
-                      {/* Footer Actions */}
-                      <VStack className="pt-2 border-t border-slate-800/80 w-full space-y-2.5">
-                        <BusinessSocialLinks venue={venue} variant="compact" />
+                      {/* Footer Actions: social + button pinned to bottom */}
+                      <VStack className="pt-2 border-t border-slate-800/80 w-full space-y-2.5 mt-auto">
+                        <HStack className="h-6 items-center w-full">
+                          {venue.phone || venue.socialLinks ? (
+                            <BusinessSocialLinks venue={venue} variant="compact" />
+                          ) : (
+                            <Text className="text-[11px] text-slate-500 italic">
+                              Atención en línea
+                            </Text>
+                          )}
+                        </HStack>
 
                         <Link
                           href={`/r/${targetSlug}`}
