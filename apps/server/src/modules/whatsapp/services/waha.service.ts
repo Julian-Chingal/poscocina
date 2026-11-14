@@ -22,10 +22,17 @@ export class WahaService {
   }
 
   async sendText(session: string, chatId: string, text: string): Promise<any> {
-    const normalizedChatId = chatId.includes('@') ? chatId : `${chatId.replace(/\D/g, '')}@c.us`;
+    const rawClean = chatId.replace(/\D/g, '');
+    const isLid = chatId.includes('@lid') || (rawClean.length >= 15 && !chatId.includes('@c.us'));
+    const primaryChatId = chatId.includes('@')
+      ? chatId
+      : isLid
+        ? `${rawClean}@lid`
+        : `${rawClean}@c.us`;
+
     const payload: WahaSendTextMessage = {
       session: session || 'default',
-      chatId: normalizedChatId,
+      chatId: primaryChatId,
       text,
     };
 
@@ -38,7 +45,26 @@ export class WahaService {
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => '');
-        console.warn(`[WahaService] sendText failed (${response.status}): ${errorText}`);
+        console.warn(`[WahaService] sendText with ${primaryChatId} failed (${response.status}): ${errorText}`);
+
+        // If failed due to LID / @c.us resolution error, retry with alternate suffix
+        if (!chatId.includes('@')) {
+          const alternateChatId = primaryChatId.endsWith('@c.us')
+            ? `${rawClean}@lid`
+            : `${rawClean}@c.us`;
+
+          console.info(`[WahaService] Retrying sendText with alternate suffix: ${alternateChatId}`);
+          const altResponse = await fetch(`${this.baseUrl}/api/sendText`, {
+            method: 'POST',
+            headers: this.headers,
+            body: JSON.stringify({ ...payload, chatId: alternateChatId }),
+          });
+
+          if (altResponse.ok) {
+            return await altResponse.json().catch(() => ({ success: true }));
+          }
+        }
+
         return null;
       }
 

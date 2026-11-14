@@ -50,6 +50,11 @@ export const WhatsAppChatView: React.FC = () => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
+  const selectedChatRef = useRef<WhatsAppChat | null>(null);
+
+  useEffect(() => {
+    selectedChatRef.current = selectedChat;
+  }, [selectedChat]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -78,33 +83,41 @@ export const WhatsAppChatView: React.FC = () => {
   }, [showQrModal, sessionInfo?.status, checkSession]);
 
   // Load Chats
-  const loadChats = useCallback(async () => {
+  const loadChats = useCallback(async (silent = false) => {
     if (!venueId) return;
-    setLoadingChats(true);
+    if (!silent) setLoadingChats(true);
     try {
       const data = await whatsAppApi.getVenueChats(venueId);
       setChats(data);
-      if (data.length > 0 && !selectedChat) {
+      if (data.length > 0 && !selectedChatRef.current) {
         setSelectedChat(data[0]);
       }
     } catch (err: any) {
-      toast.error('Error al cargar chats de WhatsApp');
+      if (!silent) toast.error('Error al cargar chats de WhatsApp');
     } finally {
-      setLoadingChats(false);
+      if (!silent) setLoadingChats(false);
     }
-  }, [venueId, selectedChat]);
+  }, [venueId]);
 
   // Load Messages for selected chat
-  const loadMessages = useCallback(async (chatId: string) => {
-    setLoadingMessages(true);
+  const loadMessages = useCallback(async (chatId: string, silent = false) => {
+    if (!silent) setLoadingMessages(true);
     try {
       const data = await whatsAppApi.getChatMessages(chatId);
-      setMessages(data);
-      setTimeout(scrollToBottom, 100);
+      setMessages((prev) => {
+        if (
+          prev.length === data.length &&
+          prev[prev.length - 1]?.id === data[data.length - 1]?.id
+        ) {
+          return prev;
+        }
+        setTimeout(scrollToBottom, 50);
+        return data;
+      });
     } catch (err) {
-      toast.error('Error al cargar historial de mensajes');
+      if (!silent) toast.error('Error al cargar historial de mensajes');
     } finally {
-      setLoadingMessages(false);
+      if (!silent) setLoadingMessages(false);
     }
   }, []);
 
@@ -121,57 +134,127 @@ export const WhatsAppChatView: React.FC = () => {
     }
   }, [venueId]);
 
-  // Initial loads & WebSocket listeners
+  // Initial loads, WebSocket listeners & background heartbeat polling
   useEffect(() => {
     if (!venueId) return;
     loadChats();
     checkSession();
     loadOrders();
 
-    const socket = io();
+    const socket = io({
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+    });
     socketRef.current = socket;
 
-    socket.emit('join:venue', venueId);
+    const joinRoom = () => {
+      socket.emit('join:venue', venueId);
+    };
 
+    if (socket.connected) {
+      joinRoom();
+    }
+    socket.on('connect', joinRoom);
+    socket.on('reconnect', joinRoom);
+
+    // Real-time incoming / sync message event
     socket.on('whatsapp:message:received', (data: { chatId: string; message: WhatsAppMessage }) => {
-      // If belongs to currently opened chat, append
-      setSelectedChat((current) => {
-        if (current && current.id === data.chatId) {
-          setMessages((prev) => [...prev, data.message]);
-          setTimeout(scrollToBottom, 100);
-        }
-        return current;
-      });
+      if (selectedChatRef.current && selectedChatRef.current.id === data.chatId) {
+        setMessages((prev) => {
+          if (
+            prev.some(
+              (m) =>
+                m.id === data.message.id ||
+                (data.message.wahaMessageId && m.wahaMessageId === data.message.wahaMessageId)
+            )
+          ) {
+            return prev;
+          }
+          return [...prev, data.message];
+        });
+        setTimeout(scrollToBottom, 100);
+      }
 
-      // Update chats preview list
+      setChats((prev) => {
+        const chatExists = prev.some((c) => c.id === data.chatId);
+        if (!chatExists) {
+          loadChats(true);
+          return prev;
+        }
+
+        const updated = prev.map((c) =>
+          c.id === data.chatId
+            ? {
+                ...c,
+                lastMessage: data.message.body,
+                lastMessageAt: data.message.createdAt || new Date().toISOString(),
+                unreadCount:
+                  selectedChatRef.current?.id === data.chatId
+                    ? 0
+                    : (c.unreadCount || 0) + (data.message.direction === 'inbound' ? 1 : 0),
+              }
+            : c
+        );
+        return updated.sort(
+          (a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime()
+        );
+      });
+    });
+
+    socket.on('whatsapp:message:sent', (data: { chatId: string; message: WhatsAppMessage }) => {
+      if (selectedChatRef.current && selectedChatRef.current.id === data.chatId) {
+        setMessages((prev) => {
+          if (
+            prev.some(
+              (m) =>
+                m.id === data.message.id ||
+                (data.message.wahaMessageId && m.wahaMessageId === data.message.wahaMessageId)
+            )
+          ) {
+            return prev;
+          }
+          return [...prev, data.message];
+        });
+        setTimeout(scrollToBottom, 100);
+      }
+
       setChats((prev) =>
         prev.map((c) =>
           c.id === data.chatId
             ? {
                 ...c,
                 lastMessage: data.message.body,
-                lastMessageAt: data.message.createdAt,
-                unreadCount: (c.unreadCount || 0) + 1,
+                lastMessageAt: data.message.createdAt || new Date().toISOString(),
               }
             : c
         )
       );
     });
 
-    socket.on('whatsapp:message:sent', (data: { chatId: string; message: WhatsAppMessage }) => {
-      setSelectedChat((current) => {
-        if (current && current.id === data.chatId) {
-          setMessages((prev) => [...prev, data.message]);
-          setTimeout(scrollToBottom, 100);
-        }
-        return current;
-      });
-    });
+    // Heartbeat fallback polling every 4s + window focus to guarantee zero-refresh sync
+    const pollInterval = setInterval(() => {
+      loadChats(true);
+      if (selectedChatRef.current?.id) {
+        loadMessages(selectedChatRef.current.id, true);
+      }
+    }, 4000);
+
+    const onFocus = () => {
+      loadChats(true);
+      if (selectedChatRef.current?.id) {
+        loadMessages(selectedChatRef.current.id, true);
+      }
+    };
+    window.addEventListener('focus', onFocus);
 
     return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('focus', onFocus);
       socket.disconnect();
     };
-  }, [venueId, loadChats, checkSession, loadOrders]);
+  }, [venueId, loadChats, checkSession, loadOrders, loadMessages]);
 
   // When selected chat changes, fetch messages
   useEffect(() => {
@@ -188,7 +271,10 @@ export const WhatsAppChatView: React.FC = () => {
     setSending(true);
     try {
       const sent = await whatsAppApi.sendMessage(selectedChat.id, text.trim());
-      setMessages((prev) => [...prev, sent]);
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === sent.id)) return prev;
+        return [...prev, sent];
+      });
       setInputText('');
       setTimeout(scrollToBottom, 100);
 
@@ -267,7 +353,7 @@ export const WhatsAppChatView: React.FC = () => {
               <QrCode className="h-3.5 w-3.5 text-primary" />
               <span>{sessionInfo?.status === 'WORKING' ? 'Conectado' : 'Vincular'}</span>
             </Button>
-            <Button variant="ghost" size="icon" onClick={loadChats} className="h-8 w-8">
+            <Button variant="ghost" size="icon" onClick={() => loadChats()} className="h-8 w-8">
               <RefreshCw className="h-3.5 w-3.5" />
             </Button>
           </div>
