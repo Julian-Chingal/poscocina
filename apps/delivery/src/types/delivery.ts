@@ -63,12 +63,13 @@ export interface CatalogModifier {
 
 export interface CatalogModifierGroup {
   id: string;
-  venueId: string;
+  venueId?: string;
   name: string;
   selectionType: 'single' | 'multiple';
   isRequired: boolean;
   minSelections: number;
   maxSelections?: number | null;
+  sortOrder?: number;
   modifiers: CatalogModifier[];
 }
 
@@ -83,8 +84,10 @@ export interface CatalogProduct {
   isAvailable: boolean;
   prepTimeMin?: number | null;
   category?: CatalogCategory;
-  modifierGroups?: Array<{
+  modifierGroups?: Array<CatalogModifierGroup | {
     modifierGroup: CatalogModifierGroup;
+    isRequired?: boolean;
+    sortOrder?: number;
   }>;
 }
 
