@@ -41,6 +41,7 @@ export const WhatsAppChatView: React.FC = () => {
   // WAHA session & QR Modal
   const [sessionInfo, setSessionInfo] = useState<WhatsAppSessionInfo | null>(null);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [startingSession, setStartingSession] = useState(false);
 
   // Venue active delivery orders for context
   const [venueOrders, setVenueOrders] = useState<KdsOrder[]>([]);
@@ -64,6 +65,17 @@ export const WhatsAppChatView: React.FC = () => {
       console.warn('Could not load WAHA session info');
     }
   }, [venueId]);
+
+  // Polling for QR / session status while modal is open and not working
+  useEffect(() => {
+    if (!showQrModal || sessionInfo?.status === 'WORKING') return;
+
+    const interval = setInterval(() => {
+      checkSession();
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [showQrModal, sessionInfo?.status, checkSession]);
 
   // Load Chats
   const loadChats = useCallback(async () => {
@@ -588,22 +600,51 @@ export const WhatsAppChatView: React.FC = () => {
                 </p>
               </div>
             ) : sessionInfo?.qr ? (
-              <div className="rounded-xl border bg-white p-4 shadow-md">
-                <QRCodeSVG value={sessionInfo.qr} size={220} />
+              <div className="flex flex-col items-center gap-3">
+                <div className="rounded-xl border bg-white p-4 shadow-md flex items-center justify-center">
+                  {sessionInfo.qr.startsWith('data:') || sessionInfo.qr.startsWith('http') ? (
+                    <img
+                      src={sessionInfo.qr}
+                      alt="Código QR WhatsApp"
+                      className="h-56 w-56 object-contain"
+                    />
+                  ) : (
+                    <QRCodeSVG value={sessionInfo.qr} size={220} />
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5 animate-pulse">
+                  <RefreshCw className="h-3 w-3 animate-spin text-primary" />
+                  Esperando escaneo desde WhatsApp en tu teléfono...
+                </p>
               </div>
             ) : (
               <div className="text-center py-6">
-                <p className="text-sm text-muted-foreground mb-3">Iniciando sesión en WAHA...</p>
+                <div className="flex items-center justify-center gap-2 mb-3 text-muted-foreground">
+                  <RefreshCw className="h-4 w-4 animate-spin text-primary" />
+                  <p className="text-sm">
+                    {sessionInfo?.status === 'STARTING'
+                      ? 'Iniciando navegador Chromium en WAHA (esto puede tomar 5-10s)...'
+                      : 'Sesión no iniciada en WAHA.'}
+                  </p>
+                </div>
                 <Button
                   size="sm"
+                  disabled={startingSession}
                   onClick={async () => {
                     if (venueId) {
-                      await whatsAppApi.startSession(venueId);
-                      checkSession();
+                      setStartingSession(true);
+                      try {
+                        await whatsAppApi.startSession(venueId);
+                        await checkSession();
+                      } catch {
+                        toast.error('No se pudo iniciar la sesión en WAHA');
+                      } finally {
+                        setStartingSession(false);
+                      }
                     }
                   }}
                 >
-                  Iniciar Sesión WAHA
+                  {startingSession ? 'Iniciando...' : 'Iniciar Sesión WAHA'}
                 </Button>
               </div>
             )}

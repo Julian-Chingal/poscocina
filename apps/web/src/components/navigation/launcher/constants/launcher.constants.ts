@@ -63,6 +63,7 @@ export const APPS: AppItem[] = [
     name: "WhatsApp Negocio",
     subtitle: "Bandeja de chats y verificación de pagos",
     icon: MessageSquare,
+    icon3d: "/icons/modules/whatsapp.webp",
     gradient: "from-emerald-500 to-green-600",
     badge: "WAHA",
     badgeColor:
@@ -74,6 +75,7 @@ export const APPS: AppItem[] = [
     name: "Portal Domiciliario",
     subtitle: "Rutas, mapas y validación de PIN",
     icon: Bike,
+    icon3d: "/icons/modules/driver.webp",
     gradient: "from-blue-500 to-indigo-600",
     category: "operacion",
   },

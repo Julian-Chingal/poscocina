@@ -117,15 +117,39 @@ export class WhatsAppController {
   async getVenueSessionStatus(request: FastifyRequest, reply: FastifyReply) {
     const { venueId } = request.params as { venueId: string };
     const sessionName = `venue_${venueId}`;
-    const status = await wahaService.getSessionStatus(sessionName);
-    const qr = status.status === 'SCAN_QR_CODE' ? await wahaService.getSessionQr(sessionName) : null;
-    return reply.send({ ...status, qr });
+
+    let status = await wahaService.getSessionStatus(sessionName);
+    let targetSession = sessionName;
+
+    // Fallback: If venue session doesn't exist, check 'default' session
+    if (status.status === 'DISCONNECTED') {
+      const defaultStatus = await wahaService.getSessionStatus('default');
+      if (defaultStatus.status !== 'DISCONNECTED' && defaultStatus.status !== 'UNREACHABLE') {
+        status = defaultStatus;
+        targetSession = 'default';
+      }
+    }
+
+    // Attempt to retrieve QR code if session needs pairing or is starting
+    let qr: string | null = null;
+    if (status.status === 'SCAN_QR_CODE' || status.status === 'STARTING') {
+      qr = await wahaService.getSessionQr(targetSession);
+      if (qr) {
+        status.status = 'SCAN_QR_CODE';
+      }
+    }
+
+    return reply.send({ ...status, qr, session: targetSession });
   }
 
   async startVenueSession(request: FastifyRequest, reply: FastifyReply) {
     const { venueId } = request.params as { venueId: string };
     const sessionName = `venue_${venueId}`;
-    const success = await wahaService.startSession(sessionName);
+    let success = await wahaService.startSession(sessionName);
+    if (!success) {
+      // Also try default session fallback
+      success = await wahaService.startSession('default');
+    }
     return reply.send({ success });
   }
 }

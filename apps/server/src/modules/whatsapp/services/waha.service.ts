@@ -79,7 +79,18 @@ export class WahaService {
 
   async getSessionQr(session: string): Promise<string | null> {
     try {
-      // WAHA provides QR either as an image or JSON { qr: '...' }
+      // 1. Try raw text format first (ideal for client-side SVG rendering)
+      const rawRes = await fetch(`${this.baseUrl}/api/${session || 'default'}/auth/qr?format=raw`, {
+        headers: this.headers,
+      });
+      if (rawRes.ok) {
+        const rawJson = (await rawRes.json()) as any;
+        if (rawJson?.value) {
+          return rawJson.value;
+        }
+      }
+
+      // 2. Fallback: standard QR endpoint (JSON base64 or raw image binary)
       const res = await fetch(`${this.baseUrl}/api/${session || 'default'}/auth/qr`, {
         headers: this.headers,
       });
@@ -87,11 +98,15 @@ export class WahaService {
         const contentType = res.headers.get('content-type') || '';
         if (contentType.includes('application/json')) {
           const json = (await res.json()) as any;
-          return json.qr || null;
+          if (json.value) return json.value;
+          if (json.qr) return json.qr;
+          if (json.data) {
+            return `data:${json.mimetype || 'image/png'};base64,${json.data}`;
+          }
         }
         const buffer = await res.arrayBuffer();
         const base64 = Buffer.from(buffer).toString('base64');
-        return `data:${contentType};base64,${base64}`;
+        return `data:${contentType || 'image/png'};base64,${base64}`;
       }
       return null;
     } catch (err) {
@@ -100,12 +115,24 @@ export class WahaService {
   }
 
   async startSession(session: string): Promise<boolean> {
+    const sessionName = session || 'default';
     try {
-      const res = await fetch(`${this.baseUrl}/api/sessions/${session || 'default'}/start`, {
+      // 1. In WAHA, sessions must be created via POST /api/sessions
+      const createRes = await fetch(`${this.baseUrl}/api/sessions`, {
+        method: 'POST',
+        headers: this.headers,
+        body: JSON.stringify({ name: sessionName }),
+      });
+      if (createRes.ok) {
+        return true;
+      }
+
+      // 2. If it already exists, start it via POST /api/sessions/{session}/start
+      const startRes = await fetch(`${this.baseUrl}/api/sessions/${sessionName}/start`, {
         method: 'POST',
         headers: this.headers,
       });
-      return res.ok;
+      return startRes.ok;
     } catch (err) {
       return false;
     }
