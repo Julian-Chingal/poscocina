@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, CheckCircle2, AlertCircle, Banknote, CreditCard, Send, Loader2 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { sileo } from 'sileo';
 
 export function CheckoutModal() {
   const router = useRouter();
@@ -96,10 +97,20 @@ export function CheckoutModal() {
       clearCart();
       setIsCheckoutOpen(false);
 
+      sileo.success({
+        title: '¡Pedido enviado!',
+        description: 'Tu orden fue recibida y está siendo procesada.',
+      });
+
       // Navigate to order tracking screen
       router.push(`/order-status/${createdOrder.order.id}`);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Ocurrió un error inesperado al enviar la orden.');
+      const msg = err.message || 'Ocurrió un error inesperado al enviar la orden.';
+      setErrorMessage(msg);
+      sileo.error({
+        title: 'Error al procesar pedido',
+        description: msg,
+      });
     } finally {
       setIsLoading(false);
     }

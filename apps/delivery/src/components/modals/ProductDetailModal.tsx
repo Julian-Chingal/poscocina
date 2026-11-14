@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, Plus, Minus, Check, Sparkles } from 'lucide-react';
 import { CatalogProduct, CartModifierSelection, VenuePublicProfile } from '../../types/delivery';
 import { useCart } from '../../context/CartContext';
+import { sileo } from 'sileo';
 
 interface Props {
   product: CatalogProduct | null;
@@ -61,8 +62,27 @@ export function ProductDetailModal({ product, venue, onClose }: Props) {
   });
 
   const handleAddToCart = () => {
-    if (missingRequired) return;
+    if (venue.isOpen === false) {
+      sileo.warning({
+        title: 'Comercio cerrado',
+        description: `El comercio no está recibiendo pedidos en este momento.${
+          venue.openingHours ? ` Horario: ${venue.openingHours}` : ''
+        }`,
+      });
+      return;
+    }
+    if (missingRequired) {
+      sileo.warning({
+        title: 'Opciones requeridas',
+        description: 'Por favor selecciona todas las opciones obligatorias antes de continuar.',
+      });
+      return;
+    }
     addItem(product, quantity, allSelectedModifiers, notes, venue);
+    sileo.success({
+      title: 'Producto agregado',
+      description: `${quantity}x ${product.name} en tu canasta`,
+    });
     onClose();
   };
 

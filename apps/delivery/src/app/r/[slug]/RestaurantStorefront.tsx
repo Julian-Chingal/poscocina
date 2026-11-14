@@ -9,6 +9,7 @@ import { ProductDetailModal } from '../../../components/modals/ProductDetailModa
 import { BusinessLocationModal } from '../../../components/storefront/BusinessLocationModal';
 import { BusinessSocialLinks } from '../../../components/storefront/BusinessSocialLinks';
 import { useCart } from '../../../context/CartContext';
+import { sileo } from 'sileo';
 
 interface Props {
   venue: VenuePublicProfile;
@@ -38,7 +39,12 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
   const handleQuickAdd = (e: React.MouseEvent, product: CatalogProduct) => {
     e.stopPropagation();
     if (venue.isOpen === false) {
-      alert('El restaurante se encuentra cerrado en este momento. Horario de atención: ' + (venue.openingHours || 'Consultar con el local'));
+      sileo.warning({
+        title: 'Comercio cerrado',
+        description: `El comercio no está recibiendo pedidos en este momento.${
+          venue.openingHours ? ` Horario de atención: ${venue.openingHours}` : ''
+        }`,
+      });
       return;
     }
     const hasModifiers = product.modifierGroups && product.modifierGroups.length > 0;
@@ -46,6 +52,10 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
       setActiveProduct(product);
     } else {
       addItem(product, 1, [], '', venue);
+      sileo.success({
+        title: 'Agregado a la canasta',
+        description: `1x ${product.name}`,
+      });
     }
   };
 

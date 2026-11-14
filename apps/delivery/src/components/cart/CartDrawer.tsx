@@ -50,8 +50,8 @@ export function CartDrawer() {
         {/* Venue Badge */}
         {currentVenue && (
           <div className="bg-slate-950/70 border-b border-slate-800/80 px-6 py-2.5 flex items-center justify-between text-xs">
-            <span className="text-slate-400">Sede de entrega:</span>
-            <span className="font-semibold text-orange-400 truncate max-w-[200px]">{currentVenue.name}</span>
+            <span className="text-slate-400">Comercio:</span>
+            <span className="font-semibold text-orange-400 truncate max-w-[200px]">{currentVenue.restaurantName || currentVenue.name}</span>
           </div>
         )}
 

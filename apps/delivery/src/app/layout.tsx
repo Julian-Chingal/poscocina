@@ -4,6 +4,7 @@ import { CartProvider } from '../context/CartContext';
 import { Navbar } from '../components/Navbar';
 import { CartDrawer } from '../components/cart/CartDrawer';
 import { CheckoutModal } from '../components/checkout/CheckoutModal';
+import { SileoToaster } from '../components/ui/SileoToaster';
 
 export const metadata: Metadata = {
   title: 'Pallevar — Domicilios y Envíos en Minutos',
@@ -62,6 +63,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <CartDrawer />
           <CheckoutModal />
+          <SileoToaster />
         </CartProvider>
       </body>
     </html>
