@@ -57,31 +57,40 @@ export const TableQrCardPrintSheet: React.FC<TableQrCardPrintSheetProps> = ({
     const isTent = variant === 'tent';
     const displayTableLabel = formatTableBadgeLabel(table.label);
 
-    const qrSize = isStand ? 160 : 135;
-    const logoSize = isStand ? 36 : 30;
+    const qrSize = isStand ? 155 : 130;
+    const logoSize = isStand ? 36 : 28;
 
     return (
       <div
         key={table.id}
-        className={`relative flex flex-col items-center justify-between bg-white text-slate-900 border border-slate-200 rounded-2xl shadow-sm overflow-hidden box-border print:shadow-none print:border-slate-300 ${
+        className={`relative flex flex-col items-center justify-between bg-white text-slate-900 border-2 rounded-2xl shadow-sm overflow-hidden box-border print:shadow-none ${
           isStand
-            ? 'w-[100mm] min-h-[148mm] max-h-[150mm] p-6 mx-auto mb-6 break-after-page print:mb-0 print:border-none'
+            ? 'w-[100mm] min-h-[148mm] max-h-[150mm] p-6 mx-auto mb-6 break-after-page border-dashed border-slate-400 print:border-slate-500 print:mb-0'
             : isTent
-            ? 'w-[100mm] min-h-[180mm] p-5 mx-auto mb-6 break-after-page'
-            : 'w-full h-full min-h-[300px] p-5 border-dashed border-2 border-slate-300 rounded-xl'
+            ? 'w-[100mm] min-h-[180mm] p-5 mx-auto mb-6 break-after-page border-dashed border-slate-400 print:border-slate-500'
+            : 'w-full h-full min-h-[300px] p-5 border-dashed border-slate-400 rounded-xl'
         }`}
-        style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}
+        style={{
+          breakInside: 'avoid',
+          pageBreakInside: 'avoid',
+          WebkitPrintColorAdjust: 'exact',
+          printColorAdjust: 'exact',
+        }}
       >
         {/* Accent top bar */}
         <div
-          className="absolute top-0 left-0 right-0 h-2.5"
-          style={{ backgroundColor: accentColor }}
+          className="absolute top-0 left-0 right-0 h-3"
+          style={{
+            backgroundColor: accentColor,
+            WebkitPrintColorAdjust: 'exact',
+            printColorAdjust: 'exact',
+          }}
         />
 
         {/* Header: Restaurant Brand & Custom Logo */}
         <div className="flex flex-col items-center text-center mt-2 w-full px-2">
           {venueLogo ? (
-            <div className="h-12 w-12 rounded-xl p-1 bg-white border border-slate-100 shadow-sm flex items-center justify-center mb-1.5 overflow-hidden">
+            <div className="h-12 w-12 rounded-xl p-1 bg-white border border-slate-200 shadow-sm flex items-center justify-center mb-1.5 overflow-hidden">
               <img
                 src={venueLogo}
                 alt={venueName}
@@ -91,7 +100,12 @@ export const TableQrCardPrintSheet: React.FC<TableQrCardPrintSheetProps> = ({
           ) : (
             <div
               className="h-10 w-10 rounded-xl flex items-center justify-center text-white font-black text-base mb-1.5 shadow-sm"
-              style={{ backgroundColor: accentColor }}
+              style={{
+                backgroundColor: accentColor,
+                color: '#ffffff',
+                WebkitPrintColorAdjust: 'exact',
+                printColorAdjust: 'exact',
+              }}
             >
               {venueName.charAt(0).toUpperCase()}
             </div>
@@ -107,13 +121,18 @@ export const TableQrCardPrintSheet: React.FC<TableQrCardPrintSheetProps> = ({
         {/* Table Badge */}
         <div className="my-2.5 flex flex-col items-center">
           <div
-            className="px-4 py-1 rounded-full text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-sm flex items-center gap-1.5"
-            style={{ backgroundColor: accentColor }}
+            className="px-4 py-1.5 rounded-full font-black text-xs sm:text-sm tracking-wider uppercase shadow-sm flex items-center gap-1.5"
+            style={{
+              backgroundColor: accentColor,
+              color: '#ffffff',
+              WebkitPrintColorAdjust: 'exact',
+              printColorAdjust: 'exact',
+            }}
           >
-            <UtensilsCrossed className="w-3.5 h-3.5" />
-            <span>{displayTableLabel}</span>
+            <UtensilsCrossed className="w-3.5 h-3.5 text-white" />
+            <span style={{ color: '#ffffff' }}>{displayTableLabel}</span>
           </div>
-          <span className="text-[10px] text-slate-400 font-semibold mt-1">
+          <span className="text-[10px] text-slate-500 font-semibold mt-1">
             Capacidad: {table.capacity} comensales
           </span>
         </div>
@@ -121,7 +140,11 @@ export const TableQrCardPrintSheet: React.FC<TableQrCardPrintSheetProps> = ({
         {/* Personalized QR Code Container */}
         <div
           className="p-3 bg-white rounded-2xl border-2 flex flex-col items-center shadow-sm"
-          style={{ borderColor: `${accentColor}33` }}
+          style={{
+            borderColor: accentColor,
+            WebkitPrintColorAdjust: 'exact',
+            printColorAdjust: 'exact',
+          }}
         >
           <div className="relative flex items-center justify-center">
             <QRCodeSVG
@@ -143,17 +166,25 @@ export const TableQrCardPrintSheet: React.FC<TableQrCardPrintSheetProps> = ({
               }
             />
           </div>
-          <p className="text-[10px] font-bold text-slate-600 text-center mt-2 flex items-center gap-1">
+          <p className="text-[10px] font-bold text-slate-700 text-center mt-2 flex items-center gap-1">
             <Sparkles className="w-2.5 h-2.5 inline" style={{ color: accentColor }} />
             <span>{customSubtitle}</span>
           </p>
         </div>
 
         {/* Wi-Fi & Footer Section */}
-        <div className="w-full mt-2.5 pt-2 border-t border-slate-100 flex flex-col items-center text-center text-[10px] text-slate-500 space-y-1">
+        <div className="w-full mt-2.5 pt-2 border-t border-slate-200 flex flex-col items-center text-center text-[10px] text-slate-600 space-y-1">
           {includeWifi && (wifiSsid || wifiPassword) ? (
-            <div className="bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/60 w-full flex items-center justify-center gap-2 text-[10px]">
-              <Wifi className="w-3 h-3 text-slate-600 shrink-0" />
+            <div
+              className="bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-300 w-full flex items-center justify-center gap-2 text-[10px] text-slate-800"
+              style={{
+                backgroundColor: '#f1f5f9',
+                borderColor: '#cbd5e1',
+                WebkitPrintColorAdjust: 'exact',
+                printColorAdjust: 'exact',
+              }}
+            >
+              <Wifi className="w-3 h-3 text-slate-700 shrink-0" />
               <div className="flex flex-wrap items-center justify-center gap-x-2">
                 {wifiSsid && (
                   <span>
@@ -169,16 +200,16 @@ export const TableQrCardPrintSheet: React.FC<TableQrCardPrintSheetProps> = ({
             </div>
           ) : null}
 
-          <div className="flex items-center justify-between w-full text-[9px] text-slate-400 px-1 pt-0.5">
-            <span className="truncate max-w-[140px]">{targetUrl.replace(/^https?:\/\//, '')}</span>
-            <span className="font-semibold text-slate-500">Zogui.cloud</span>
+          <div className="flex items-center justify-between w-full text-[9px] text-slate-500 px-1 pt-0.5">
+            <span className="truncate max-w-[140px] font-mono">{targetUrl.replace(/^https?:\/\//, '')}</span>
+            <span className="font-semibold text-slate-600">Zogui.cloud</span>
           </div>
         </div>
 
-        {/* Cutting guide hints for grid mode */}
-        {variant === 'grid' && !isPreview && (
-          <div className="absolute top-1 right-1 text-[8px] text-slate-300 font-mono select-none">
-            ✂ recortar
+        {/* Cutting guide hints for stand & grid */}
+        {!isPreview && (
+          <div className="absolute top-1 right-2 text-[8px] text-slate-400 font-mono select-none">
+            {isStand ? '✂ Recorte 10x15 cm' : '✂ recortar'}
           </div>
         )}
       </div>
@@ -197,7 +228,15 @@ export const TableQrCardPrintSheet: React.FC<TableQrCardPrintSheetProps> = ({
   if (layoutMode === 'stand_10x15') {
     return (
       <div className="w-full flex flex-col items-center">
-        {tables.map((table) => renderSingleCard(table, 'stand'))}
+        {tables.map((table) => (
+          <div
+            key={table.id}
+            className="w-full flex justify-center py-4 break-after-page print:py-0 print:m-0"
+            style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}
+          >
+            {renderSingleCard(table, 'stand')}
+          </div>
+        ))}
       </div>
     );
   }
@@ -208,14 +247,19 @@ export const TableQrCardPrintSheet: React.FC<TableQrCardPrintSheetProps> = ({
         {tables.map((table) => (
           <div
             key={table.id}
-            className="w-[100mm] bg-white p-2 mb-8 border border-dashed border-slate-300 rounded-2xl break-after-page print:mb-0 print:border-none"
-            style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}
+            className="w-[100mm] bg-white p-2 mb-8 border border-dashed border-slate-400 rounded-2xl break-after-page print:mb-0 print:border-none"
+            style={{
+              breakInside: 'avoid',
+              pageBreakInside: 'avoid',
+              WebkitPrintColorAdjust: 'exact',
+              printColorAdjust: 'exact',
+            }}
           >
             {/* Front Face */}
             {renderSingleCard(table, 'grid')}
 
             {/* Fold Divider line */}
-            <div className="my-3 py-1 flex items-center justify-center gap-2 text-[10px] text-slate-400 font-mono select-none border-t border-b border-dashed border-slate-300">
+            <div className="my-3 py-1 flex items-center justify-center gap-2 text-[10px] text-slate-500 font-mono select-none border-t border-b border-dashed border-slate-300">
               <span>▲ Plegar hacia arriba aquí / Fold here ▲</span>
             </div>
 
@@ -240,7 +284,12 @@ export const TableQrCardPrintSheet: React.FC<TableQrCardPrintSheetProps> = ({
         <div
           key={`page-${pageIndex}`}
           className="w-full bg-white p-4 rounded-2xl border border-slate-200 shadow-sm print:p-0 print:border-none print:shadow-none break-after-page mb-6 print:mb-0"
-          style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}
+          style={{
+            breakInside: 'avoid',
+            pageBreakInside: 'avoid',
+            WebkitPrintColorAdjust: 'exact',
+            printColorAdjust: 'exact',
+          }}
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {pageTables.map((table) => renderSingleCard(table, 'grid'))}

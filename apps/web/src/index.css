@@ -376,6 +376,13 @@
 
 /* Print Media Safeguards */
 @media print {
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
   .no-print,
   [data-sileo-viewport],
   button:not(.allow-print) {
@@ -390,12 +397,14 @@
   }
   #printable-table-qr-root {
     display: block !important;
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
+    position: static !important;
     width: 100% !important;
     background: #ffffff !important;
     color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   @page {
     size: auto;

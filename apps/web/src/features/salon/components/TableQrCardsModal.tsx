@@ -234,7 +234,7 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
                 Personalizá tu marca, logo y colores en las tarjetas de mesa y códigos QR de alta resolución.
               </DialogDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col items-end gap-1">
               <Button
                 type="button"
                 onClick={handlePrint}
@@ -243,6 +243,9 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
                 <Printer className="w-4 h-4" />
                 <span>Imprimir / Guardar PDF</span>
               </Button>
+              <span className="text-[10px] text-muted-foreground hidden sm:inline">
+                Tip: Tildá &quot;Gráficos en segundo plano&quot; al imprimir
+              </span>
             </div>
           </DialogHeader>
 
