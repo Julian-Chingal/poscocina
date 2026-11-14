@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { MapPin, Phone, Clock, ArrowLeft, Plus, Box, Sparkles, ChefHat } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { MapPin, Phone, Clock, ArrowLeft, Plus, Sparkles, ChefHat, UtensilsCrossed } from 'lucide-react';
 import { VenuePublicProfile, CatalogCategory, CatalogProduct } from '../../../types/delivery';
 import { ProductDetailModal } from '../../../components/modals/ProductDetailModal';
 import { useCart } from '../../../context/CartContext';
@@ -14,6 +15,9 @@ interface Props {
 }
 
 export function RestaurantStorefront({ venue, categories, products }: Props) {
+  const searchParams = useSearchParams();
+  const tableParam = searchParams ? searchParams.get('table') || searchParams.get('mesa') : null;
+
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | 'all'>('all');
   const [activeProduct, setActiveProduct] = useState<CatalogProduct | null>(null);
   const { addItem } = useCart();
@@ -57,14 +61,24 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div
-                className="flex h-16 w-16 items-center justify-center rounded-2xl font-black text-white text-2xl shadow-lg"
-                style={{ backgroundColor: venue.primaryColor || '#ea580c' }}
-              >
-                {venue.name.charAt(0).toUpperCase()}
-              </div>
+              {venue.logoUrl ? (
+                <img
+                  src={venue.logoUrl}
+                  alt={venue.restaurantName || venue.name}
+                  className="h-16 w-16 object-cover rounded-2xl shadow-lg border border-slate-700/60 bg-slate-800 shrink-0"
+                />
+              ) : (
+                <div
+                  className="flex h-16 w-16 items-center justify-center rounded-2xl font-black text-white text-2xl shadow-lg shrink-0"
+                  style={{ backgroundColor: venue.primaryColor || '#ea580c' }}
+                >
+                  {(venue.restaurantName || venue.name).charAt(0).toUpperCase()}
+                </div>
+              )}
               <div>
-                <h1 className="text-2xl sm:text-3xl font-black text-white">{venue.name}</h1>
+                <h1 className="text-2xl sm:text-3xl font-black text-white">
+                  {venue.restaurantName || venue.name}
+                </h1>
                 <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-400">
                   {venue.address && (
                     <span className="flex items-center gap-1">
@@ -92,6 +106,12 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
             </div>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 self-start sm:self-center">
+              {tableParam && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/20 border border-orange-500/40 px-3 py-1 text-xs font-black text-orange-300 shadow-sm">
+                  <UtensilsCrossed className="w-3.5 h-3.5 text-orange-400" />
+                  Mesa {tableParam}
+                </span>
+              )}
               {venue.isPrimary && (
                 <span className="rounded-full bg-orange-500/15 border border-orange-500/30 px-3 py-1 text-xs font-bold text-orange-300">
                   Sede Principal
@@ -186,7 +206,6 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredProducts.map((product) => {
-              const has3D = !!product.model3dUrl;
               const hasModifiers = product.modifierGroups && product.modifierGroups.length > 0;
 
               return (
@@ -203,12 +222,6 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
                           alt={product.name}
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
-                        {has3D && (
-                          <span className="absolute top-2 right-2 flex items-center gap-1 rounded-md bg-slate-950/80 backdrop-blur-sm px-2 py-0.5 text-[10px] font-bold text-orange-400 border border-orange-500/30">
-                            <Box className="h-3 w-3" />
-                            <span>3D</span>
-                          </span>
-                        )}
                       </div>
                     )}
 
@@ -216,12 +229,6 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
                       <h3 className="font-bold text-white text-base group-hover:text-orange-400 transition">
                         {product.name}
                       </h3>
-                      {!product.imageUrl && has3D && (
-                        <span className="flex items-center gap-1 rounded-md bg-orange-500/15 border border-orange-500/30 px-2 py-0.5 text-[10px] font-bold text-orange-400">
-                          <Box className="h-3 w-3" />
-                          <span>3D</span>
-                        </span>
-                      )}
                     </div>
 
                     {product.description && (

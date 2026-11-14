@@ -2,6 +2,8 @@ export interface VenuePublicProfile {
   id: string;
   name: string;
   slug: string;
+  restaurantName?: string;
+  restaurantSlug?: string;
   address?: string;
   phone?: string;
   city?: string;
@@ -62,8 +64,6 @@ export interface CatalogProduct {
   price: string | number;
   taxRate: string | number;
   imageUrl?: string | null;
-  model3dUrl?: string | null;
-  model3dType?: string;
   isAvailable: boolean;
   prepTimeMin?: number | null;
   category?: CatalogCategory;

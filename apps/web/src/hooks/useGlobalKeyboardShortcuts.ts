@@ -34,6 +34,9 @@ export const useGlobalKeyboardShortcuts = (
       } else if (e.key === 'F4') {
         e.preventDefault();
         onNavigate('shifts');
+      } else if (e.key === 'F6') {
+        e.preventDefault();
+        onNavigate('delivery');
       } else if (e.key === 'Escape') {
         if (!isInput) {
           e.preventDefault();

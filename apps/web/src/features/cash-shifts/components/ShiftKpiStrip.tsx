@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { Coins, TrendingUp, Banknote, ReceiptText } from 'lucide-react';
+import { Coins, TrendingUp, Banknote, ReceiptText, Eye, EyeOff } from 'lucide-react';
 
 interface Props {
   openingAmount: number;
@@ -11,6 +11,8 @@ interface Props {
   totalSales: number;
   pendingBillsCount: number;
   pendingBillsTotal: number;
+  hideSensitiveAmounts?: boolean;
+  onToggleHideAmounts?: () => void;
 }
 
 export const ShiftKpiStrip: React.FC<Props> = ({
@@ -21,6 +23,8 @@ export const ShiftKpiStrip: React.FC<Props> = ({
   totalSales,
   pendingBillsCount,
   pendingBillsTotal,
+  hideSensitiveAmounts = true,
+  onToggleHideAmounts,
 }) => {
   const estimatedCashInDrawer = openingAmount + cashSales;
 
@@ -29,10 +33,12 @@ export const ShiftKpiStrip: React.FC<Props> = ({
     minute: '2-digit',
   });
 
+  const maskAmount = (val: number) => (hideSensitiveAmounts ? '$ ••••••' : `$${val.toLocaleString()}`);
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {/* 1. Base Inicial */}
-      <div className="bg-card/90 backdrop-blur-sm border border-border/80 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-xs transition-all space-y-2">
+      <div className="bg-card/90 backdrop-blur-sm border border-border/80 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-xs transition-all space-y-2 relative group">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
             Base Inicial
@@ -43,8 +49,18 @@ export const ShiftKpiStrip: React.FC<Props> = ({
         </div>
 
         <div>
-          <div className="text-lg sm:text-xl font-black font-mono tabular-nums text-foreground">
-            ${openingAmount.toLocaleString()}
+          <div className="text-lg sm:text-xl font-black font-mono tabular-nums text-foreground flex items-center gap-2">
+            <span>{maskAmount(openingAmount)}</span>
+            {onToggleHideAmounts && (
+              <button
+                type="button"
+                onClick={onToggleHideAmounts}
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground cursor-pointer"
+                title={hideSensitiveAmounts ? 'Mostrar cifras' : 'Ocultar cifras'}
+              >
+                {hideSensitiveAmounts ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
+              </button>
+            )}
           </div>
           <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
             {cashierName ? `Por ${cashierName}` : 'Apertura'} a las {formattedOpenedAt}
@@ -53,7 +69,7 @@ export const ShiftKpiStrip: React.FC<Props> = ({
       </div>
 
       {/* 2. Total Facturado en Turno */}
-      <div className="bg-card/90 backdrop-blur-sm border border-border/80 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-xs transition-all space-y-2">
+      <div className="bg-card/90 backdrop-blur-sm border border-border/80 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-xs transition-all space-y-2 relative group">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
             Ventas Cobradas
@@ -64,17 +80,27 @@ export const ShiftKpiStrip: React.FC<Props> = ({
         </div>
 
         <div>
-          <div className="text-lg sm:text-xl font-black font-mono tabular-nums text-foreground">
-            ${totalSales.toLocaleString()}
+          <div className="text-lg sm:text-xl font-black font-mono tabular-nums text-foreground flex items-center gap-2">
+            <span>{maskAmount(totalSales)}</span>
+            {onToggleHideAmounts && (
+              <button
+                type="button"
+                onClick={onToggleHideAmounts}
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground cursor-pointer"
+                title={hideSensitiveAmounts ? 'Mostrar cifras' : 'Ocultar cifras'}
+              >
+                {hideSensitiveAmounts ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
+              </button>
+            )}
           </div>
           <p className="text-[11px] text-muted-foreground mt-0.5">
-            Recaudado en todos los medios
+            {hideSensitiveAmounts ? 'Cifra protegida por seguridad' : 'Recaudado en todos los medios'}
           </p>
         </div>
       </div>
 
-      {/* 3. Efectivo Estimado en Gaveta */}
-      <div className="bg-card/90 backdrop-blur-sm border border-border/80 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-xs transition-all space-y-2 ring-1 ring-amber-500/20">
+      {/* 3. Efectivo Estimado en Gaveta (TOTAL EN CAJA) */}
+      <div className="bg-card/90 backdrop-blur-sm border border-border/80 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-xs transition-all space-y-2 ring-1 ring-amber-500/20 relative group">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
             Efectivo en Cajón
@@ -85,11 +111,21 @@ export const ShiftKpiStrip: React.FC<Props> = ({
         </div>
 
         <div>
-          <div className="text-lg sm:text-xl font-black font-mono tabular-nums text-amber-600 dark:text-amber-400">
-            ${estimatedCashInDrawer.toLocaleString()}
+          <div className="text-lg sm:text-xl font-black font-mono tabular-nums text-amber-600 dark:text-amber-400 flex items-center gap-2">
+            <span>{maskAmount(estimatedCashInDrawer)}</span>
+            {onToggleHideAmounts && (
+              <button
+                type="button"
+                onClick={onToggleHideAmounts}
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-amber-500 cursor-pointer"
+                title={hideSensitiveAmounts ? 'Mostrar total en caja' : 'Ocultar total en caja'}
+              >
+                {hideSensitiveAmounts ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
+              </button>
+            )}
           </div>
           <p className="text-[11px] text-muted-foreground mt-0.5">
-            Base + ${cashSales.toLocaleString()} efectivo
+            {hideSensitiveAmounts ? 'Oculto por auditoría ciega' : `Base + $${cashSales.toLocaleString()} efectivo`}
           </p>
         </div>
       </div>
@@ -110,7 +146,7 @@ export const ShiftKpiStrip: React.FC<Props> = ({
             {pendingBillsCount} <span className="text-xs font-sans font-semibold text-muted-foreground">{pendingBillsCount === 1 ? 'cuenta' : 'cuentas'}</span>
           </div>
           <p className="text-[11px] text-muted-foreground mt-0.5 font-mono font-semibold">
-            ${pendingBillsTotal.toLocaleString()} pendiente
+            {maskAmount(pendingBillsTotal)} pendiente
           </p>
         </div>
       </div>

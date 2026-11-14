@@ -17,6 +17,7 @@ import { PendingBill } from './types/cash-shifts.types';
 
 export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
   const [inspectingBill, setInspectingBill] = useState<PendingBill | null>(null);
+  const [hideSensitiveAmounts, setHideSensitiveAmounts] = useState<boolean>(true);
 
   const {
     shiftData,
@@ -59,6 +60,8 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
     <div className="w-full min-w-0 max-w-6xl mx-auto p-3 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
       <CashShiftsHeader
         isShiftOpen={shiftData.open}
+        hideSensitiveAmounts={hideSensitiveAmounts}
+        onToggleHideAmounts={() => setHideSensitiveAmounts((prev) => !prev)}
         onOpenCloseModal={openCloseModal}
         onOpenDrawer={openDrawer}
         onPrintSummary={printSummary}
@@ -186,6 +189,7 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
               totalSales={totalSales}
               pendingBillsCount={pendingBillsCount}
               pendingBillsTotal={pendingBillsTotal}
+              hideSensitiveAmounts={hideSensitiveAmounts}
             />
 
             <div className="w-full min-w-0 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
@@ -201,6 +205,7 @@ export const CashShiftsView: React.FC<{ venueId: string }> = ({ venueId }) => {
               <div className="lg:col-span-5 xl:col-span-4 space-y-4">
                 <SalesBreakdownGrid
                   salesByMethod={shiftData.salesByMethod}
+                  hideSensitiveAmounts={hideSensitiveAmounts}
                   onOpenDrawer={openDrawer}
                   onPrintSummary={printSummary}
                 />

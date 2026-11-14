@@ -1,13 +1,4 @@
-﻿export interface ProductDimensions {
-  diameter?: number | null;
-  height?: number | null;
-  unit?: string | null;
-  portion?: string | null;
-}
-
-export type DisplayMediaType = 'image' | 'model3d' | 'both';
-
-export interface Product {
+﻿export interface Product {
   id: string;
   categoryId: string;
   name: string;
@@ -15,10 +6,6 @@ export interface Product {
   price: string | number;
   taxRate?: string | number;
   imageUrl?: string | null;
-  model3dUrl?: string | null;
-  model3dType?: string | null;
-  dimensions?: ProductDimensions | null;
-  displayMedia?: DisplayMediaType | null;
   printerStation?: string | null;
   stationIds?: string[];
   productStations?: Array<{ productId: string; stationId: string; isPrimary: boolean; station?: any }>;
@@ -58,10 +45,6 @@ export interface ProductFormData {
   trackInventory: boolean;
   isAvailable: boolean;
   imageUrl?: string | null;
-  model3dUrl?: string | null;
-  model3dType?: string | null;
-  dimensions?: ProductDimensions | null;
-  displayMedia?: DisplayMediaType;
 }
 
 export interface DeleteTarget {

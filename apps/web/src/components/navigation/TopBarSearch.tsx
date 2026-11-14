@@ -67,7 +67,7 @@ export const TopBarSearch: React.FC<TopBarSearchProps> = ({
         />
         <Input
           type="text"
-          placeholder="Buscar app o comando... (F1 Mesas, F2 POS, F3 KDS, F4 Caja)"
+          placeholder="Buscar app o comando... (F1 Mesas, F2 POS, F3 KDS, F4 Caja, F6 Delivery)"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           aria-label="Buscar aplicación o comando"

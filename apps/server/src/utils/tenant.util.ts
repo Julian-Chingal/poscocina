@@ -73,3 +73,46 @@ export async function resolveVenueId(request: FastifyRequest, explicitVenueId?: 
   }
   return firstVenue.id;
 }
+
+export async function resolveCompanyId(request: FastifyRequest, explicitCompanyId?: string): Promise<string> {
+  const queryCompanyId = (request.query as any)?.companyId;
+  const headerCompanyId = request.headers['x-company-id'] as string;
+  const resolvedExplicit = explicitCompanyId || queryCompanyId || headerCompanyId;
+
+  // Check if explicit company is valid UUID
+  if (resolvedExplicit && isUuid(resolvedExplicit)) {
+    return resolvedExplicit;
+  }
+
+  // If request has authenticated user
+  const user = request.user as {
+    venueId?: string;
+    companyId?: string;
+    role?: string;
+  } | undefined;
+
+  if (user?.companyId && isUuid(user.companyId)) {
+    return user.companyId;
+  }
+
+  // Check if request has x-venue-id header, query venueId, or user.venueId
+  const targetVenueId = (request.headers['x-venue-id'] as string) || (request.query as any)?.venueId || user?.venueId;
+  if (targetVenueId && isUuid(targetVenueId)) {
+    const [venue] = await db
+      .select({ companyId: schema.venues.companyId })
+      .from(schema.venues)
+      .where(eq(schema.venues.id, targetVenueId))
+      .limit(1);
+
+    if (venue?.companyId) {
+      return venue.companyId;
+    }
+  }
+
+  // Fallback: first company in DB
+  const [firstCompany] = await db.select({ id: schema.companies.id }).from(schema.companies).limit(1);
+  if (!firstCompany) {
+    throw new NotFoundError('No se encontró ninguna empresa registrada en el sistema.');
+  }
+  return firstCompany.id;
+}

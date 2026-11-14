@@ -9,6 +9,7 @@ const VIEW_NAMES: Record<string, string> = {
   reservations: 'Reservas de Mesas',
   pos: 'Punto de Venta',
   kds: 'Cocina KDS',
+  delivery: 'Delivery & Pedidos Online',
   catalog: 'Menú y Catálogo',
   inventory: 'Inventario y Recetas',
   shifts: 'Caja y Turnos',

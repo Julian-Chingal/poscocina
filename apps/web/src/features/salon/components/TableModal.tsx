@@ -150,7 +150,7 @@ export const TableModal: React.FC<Props> = ({
               </div>
             )}
 
-            {!editingTable && floorPlans.length > 0 && (
+            {floorPlans.length > 0 && (
               <FormField
                 control={form.control}
                 name="floorPlanId"

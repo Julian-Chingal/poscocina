@@ -11,6 +11,7 @@ export type VenueViewMode = 'grid' | 'table';
 export const useVenuesManagement = (isActiveTab: boolean) => {
   const { venues, venueId, loadAllVenues, switchVenue, loadBranding } = useBrandingStore();
   const setAuthVenueId = useAuthStore((s) => s.setVenueId);
+  const currentUser = useAuthStore((s) => s.currentUser);
   const [summaries, setSummaries] = useState<Record<string, VenueSummaryData>>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVenue, setEditingVenue] = useState<VenueItem | null>(null);
@@ -91,7 +92,14 @@ export const useVenuesManagement = (isActiveTab: boolean) => {
     setIsSaving(true);
     setModalError('');
     try {
-      await settingsApi.createVenue(payload);
+      const activeCompanyId =
+        currentUser?.companyId ||
+        (typeof window !== 'undefined' ? localStorage.getItem('poscocina_company_id') : null);
+
+      await settingsApi.createVenue({
+        ...payload,
+        companyId: activeCompanyId || undefined,
+      });
       toast.success(`Sucursal "${payload.name}" creada con éxito`);
       await loadAllVenues();
       closeModal();

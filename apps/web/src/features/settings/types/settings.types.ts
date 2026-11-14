@@ -53,6 +53,7 @@ export interface VenueSummaryData {
 }
 
 export interface NewVenuePayload {
+  companyId?: string;
   name: string;
   slug: string;
   address?: string;

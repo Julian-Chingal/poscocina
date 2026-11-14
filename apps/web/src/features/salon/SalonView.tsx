@@ -14,11 +14,14 @@ import { FloorPlanModal } from './components/FloorPlanModal';
 import { DeleteTableModal } from './components/DeleteTableModal';
 import { TransferTableModal } from './components/TransferTableModal';
 import { MergeTablesModal } from './components/MergeTablesModal';
+import { TableQrCardsModal } from './components/TableQrCardsModal';
 
 export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) => {
   const { currentUser } = useAuthStore();
   const [isEditMode, setIsEditMode] = useState(false);
   const [viewMode, setViewMode] = useState<'canvas' | 'grid'>('grid');
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrTargetTableId, setQrTargetTableId] = useState<string | null>(null);
 
   const isManager =
     currentUser?.roleName === 'manager' ||
@@ -64,6 +67,10 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
         onToggleEditMode={() => setIsEditMode(!isEditMode)}
         onOpenCreateTable={mutations.openCreateTable}
         onOpenNewFloorPlan={mutations.openCreateFloorPlan}
+        onOpenQrCards={() => {
+          setQrTargetTableId(null);
+          setShowQrModal(true);
+        }}
       />
 
       <FloorPlansBar
@@ -114,6 +121,10 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
           onStartMerge={(t) => {
             operations.setMergeSourceTable(t);
             operations.setSelectedTargetTableId('');
+          }}
+          onOpenQrCard={(t) => {
+            setQrTargetTableId(t.id);
+            setShowQrModal(true);
           }}
         />
       )}
@@ -178,6 +189,18 @@ export const SalonView: React.FC<SalonViewProps> = ({ venueId, onSelectTable }) 
         onClose={() => operations.setMergeSourceTable(null)}
         onTargetTableChange={operations.setSelectedTargetTableId}
         onConfirm={operations.handleMergeTables}
+      />
+
+      <TableQrCardsModal
+        isOpen={showQrModal}
+        onClose={() => {
+          setShowQrModal(false);
+          setQrTargetTableId(null);
+        }}
+        tables={data.tables}
+        floorPlans={data.floorPlans}
+        venueId={venueId || ''}
+        initialTableId={qrTargetTableId}
       />
     </div>
   );

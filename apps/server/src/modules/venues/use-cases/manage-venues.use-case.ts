@@ -3,8 +3,8 @@ import { IVenueRepository } from '../interfaces/venue.repository.interface.js';
 export class ManageVenuesUseCase {
   constructor(private readonly repo: IVenueRepository) {}
 
-  async listVenues() {
-    return await this.repo.listVenues();
+  async listVenues(companyId?: string) {
+    return await this.repo.listVenues(companyId);
   }
 
   async listPublicVenues() {

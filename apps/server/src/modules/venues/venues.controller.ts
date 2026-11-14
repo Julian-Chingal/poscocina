@@ -2,14 +2,26 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { venueRepository } from './repositories/venue.repository.js';
 import { ManageVenuesUseCase } from './use-cases/manage-venues.use-case.js';
 import { validate } from '../../utils/validation.util.js';
-import { resolveVenueId } from '../../utils/tenant.util.js';
+import { resolveVenueId, resolveCompanyId } from '../../utils/tenant.util.js';
 import { CreateVenueSchema, UpdateVenueSchema, ToggleVenueStatusSchema, CreateUserSchema, UpdateUserSchema, ResetPinSchema } from '@poscocina/shared';
 
 export class VenuesController {
   private readonly useCase = new ManageVenuesUseCase(venueRepository);
 
-  async listVenues(_request: FastifyRequest, reply: FastifyReply) {
-    return reply.send(await this.useCase.listVenues());
+  async listVenues(request: FastifyRequest, reply: FastifyReply) {
+    const query = request.query as any;
+    if (query?.all === 'true') {
+      return reply.send(await this.useCase.listVenues());
+    }
+
+    let companyId: string | undefined;
+    try {
+      companyId = await resolveCompanyId(request);
+    } catch {
+      // ignore fallback
+    }
+
+    return reply.send(await this.useCase.listVenues(companyId));
   }
 
   async listPublicVenues(_request: FastifyRequest, reply: FastifyReply) {
@@ -37,7 +49,15 @@ export class VenuesController {
 
   async createVenue(request: FastifyRequest, reply: FastifyReply) {
     const data = validate(CreateVenueSchema, request.body);
-    const created = await this.useCase.createVenue(data);
+    let companyId = data.companyId;
+    if (!companyId) {
+      try {
+        companyId = await resolveCompanyId(request);
+      } catch {
+        // ignore
+      }
+    }
+    const created = await this.useCase.createVenue({ ...data, companyId });
     request.server.io?.emit('venue:created', created);
     return reply.status(201).send(created);
   }

@@ -4,6 +4,7 @@ import { useAuthStore } from './auth.store';
 
 export interface VenueItem {
   id: string;
+  companyId?: string | null;
   name: string;
   slug?: string;
   address?: string | null;
@@ -59,7 +60,7 @@ interface BrandingState {
   settings: VenueSettings;
   venues: VenueItem[];
   isLoading: boolean;
-  loadAllVenues: () => Promise<VenueItem[]>;
+  loadAllVenues: (targetCompanyId?: string) => Promise<VenueItem[]>;
   switchVenue: (venueId: string) => Promise<void>;
   loadBranding: (venueId: string) => Promise<void>;
   updateBranding: (updates: {
@@ -95,9 +96,15 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
   },
   isLoading: false,
 
-  loadAllVenues: async () => {
+  loadAllVenues: async (targetCompanyId?: string) => {
     try {
-      const data = await api.get('/venues');
+      const activeCompanyId =
+        targetCompanyId ||
+        useAuthStore.getState().currentUser?.companyId ||
+        (typeof window !== 'undefined' ? localStorage.getItem('poscocina_company_id') : null);
+
+      const endpoint = activeCompanyId ? `/venues?companyId=${activeCompanyId}` : '/venues';
+      const data = await api.get(endpoint);
       const venuesList = Array.isArray(data) ? data : data?.venues || [];
       set({ venues: venuesList });
       return venuesList;
@@ -134,6 +141,9 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
     try {
       const data = await api.get(`/venues/${venueId}`);
       if (data) {
+        if (data.companyId && typeof window !== 'undefined') {
+          localStorage.setItem('poscocina_company_id', data.companyId);
+        }
         const serverSettings = data.settings || {};
         const resolvedTaxRate = typeof serverSettings.taxRate === 'number'
           ? serverSettings.taxRate

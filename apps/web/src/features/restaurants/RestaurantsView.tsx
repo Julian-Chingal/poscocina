@@ -27,6 +27,8 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/sonner';
+import { useAuthStore } from '@/stores/auth.store';
+import { useBrandingStore } from '@/stores/branding.store';
 
 export const RestaurantsView: React.FC = () => {
   const [companies, setCompanies] = useState<CompanyItem[]>([]);
@@ -83,6 +85,23 @@ export const RestaurantsView: React.FC = () => {
       return false;
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleSwitchToCompany = async (company: CompanyItem) => {
+    try {
+      localStorage.setItem('poscocina_company_id', company.id);
+      const primaryVenue = company.venues?.find((v) => v.isPrimary) || company.venues?.[0];
+      if (primaryVenue) {
+        useAuthStore.getState().setVenueId(primaryVenue.id);
+        await useBrandingStore.getState().switchVenue(primaryVenue.id);
+      }
+      await useBrandingStore.getState().loadAllVenues(company.id);
+      toast.success(`Cambiaste al restaurante "${company.tradeName}"`, {
+        description: `Sede activa: ${primaryVenue?.name || 'Sede Principal'}. Los ajustes ahora aplican a esta empresa.`,
+      });
+    } catch {
+      toast.error('Error al cambiar de restaurante');
     }
   };
 
@@ -387,15 +406,26 @@ export const RestaurantsView: React.FC = () => {
                   <span>{new Date(c.createdAt).toLocaleDateString()}</span>
                 </div>
 
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setSelectedSubCompany(c)}
-                  className="h-8 text-xs font-semibold gap-1.5 rounded-xl border-primary/20 hover:border-primary/50 hover:bg-primary/5"
-                >
-                  <CreditCard className="w-3.5 h-3.5 text-primary" />
-                  <span>Gestionar Plan</span>
-                </Button>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectedSubCompany(c)}
+                    className="h-8 text-xs font-semibold gap-1.5 rounded-xl border-border hover:bg-muted"
+                  >
+                    <CreditCard className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span>Plan</span>
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    onClick={() => handleSwitchToCompany(c)}
+                    className="h-8 text-xs font-semibold gap-1.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs cursor-pointer"
+                  >
+                    <Store className="w-3.5 h-3.5" />
+                    <span>Administrar</span>
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}

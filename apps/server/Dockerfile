@@ -21,6 +21,7 @@ COPY packages/tsconfig/base.json ./packages/tsconfig/
 COPY packages/shared/package.json ./packages/shared/
 COPY apps/server/package.json ./apps/server/
 COPY apps/web/package.json ./apps/web/
+COPY apps/delivery/package.json ./apps/delivery/
 
 # Instalar dependencias completas de forma determinista
 RUN pnpm install --frozen-lockfile

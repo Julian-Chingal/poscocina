@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, and, or } from 'drizzle-orm';
 import { db } from '../../../db/index.js';
 import * as schema from '../../../db/schema.js';
 import { NotFoundError } from '../../../errors/app-error.js';
@@ -108,8 +108,12 @@ export class CompanyRepository {
     });
   }
 
-  async getCompanyWithFiscal() {
-    const [company] = await this.database.select().from(schema.companies).limit(1);
+  async getCompanyWithFiscal(companyId?: string) {
+    let companyQuery = this.database.select().from(schema.companies);
+    const [company] = companyId
+      ? await companyQuery.where(eq(schema.companies.id, companyId)).limit(1)
+      : await companyQuery.limit(1);
+
     if (!company) {
       throw new NotFoundError('No se encontró información corporativa registrada');
     }
@@ -126,8 +130,12 @@ export class CompanyRepository {
     };
   }
 
-  async getFiscalSettings() {
-    const [fiscal] = await this.database.select().from(schema.companyFiscalSettings).limit(1);
+  async getFiscalSettings(companyId?: string) {
+    let query = this.database.select().from(schema.companyFiscalSettings);
+    const [fiscal] = companyId
+      ? await query.where(eq(schema.companyFiscalSettings.companyId, companyId)).limit(1)
+      : await query.limit(1);
+
     if (!fiscal) {
       return {
         regime: 'SIMPLIFICADO',
@@ -143,15 +151,26 @@ export class CompanyRepository {
     return fiscal;
   }
 
-  async updateCompanyWithFiscal(data: any) {
+  async updateCompanyWithFiscal(data: any, companyId?: string) {
     return await this.database.transaction(async (tx) => {
-      let [company] = await tx.select().from(schema.companies).limit(1);
+      let companyQuery = tx.select().from(schema.companies);
+      let [company] = companyId
+        ? await companyQuery.where(eq(schema.companies.id, companyId)).limit(1)
+        : await companyQuery.limit(1);
 
       const companyUpdateFields: Record<string, unknown> = {
         updatedAt: new Date(),
       };
       if (data.legalName !== undefined) companyUpdateFields.legalName = data.legalName;
-      if (data.tradeName !== undefined) companyUpdateFields.tradeName = data.tradeName;
+      if (data.tradeName !== undefined) {
+        companyUpdateFields.tradeName = data.tradeName;
+        const brandSlug = (data.slug || data.tradeName).toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+        if (brandSlug) {
+          companyUpdateFields.slug = brandSlug;
+        }
+      } else if (data.slug !== undefined) {
+        companyUpdateFields.slug = data.slug.toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+      }
       if (data.taxId !== undefined) companyUpdateFields.taxId = data.taxId;
       if (data.logoUrl !== undefined) companyUpdateFields.logoUrl = data.logoUrl;
       if (data.primaryColor !== undefined) companyUpdateFields.primaryColor = data.primaryColor;
@@ -160,12 +179,14 @@ export class CompanyRepository {
       if (data.address !== undefined) companyUpdateFields.address = data.address;
 
       if (!company) {
+        const generatedSlug = ((data.slug || data.tradeName || 'restaurante') as string).toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
         const [inserted] = await tx
           .insert(schema.companies)
           .values({
             legalName: data.legalName || 'Empresa',
             tradeName: data.tradeName || 'Restaurante',
             taxId: data.taxId || '900.000.000-1',
+            slug: generatedSlug,
             logoUrl: data.logoUrl || null,
             primaryColor: data.primaryColor || '#ea580c',
             phone: data.phone || null,
@@ -181,6 +202,25 @@ export class CompanyRepository {
           .where(eq(schema.companies.id, company.id))
           .returning();
         company = updated;
+      }
+
+      // Synchronize primary or generic 'sede-principal' venues to the restaurant slug
+      const targetRestaurantSlug = (companyUpdateFields.slug as string) || company?.slug;
+      if (company && targetRestaurantSlug) {
+        try {
+          await tx
+            .update(schema.venues)
+            .set({ slug: targetRestaurantSlug })
+            .where(
+              and(
+                eq(schema.venues.companyId, company.id),
+                or(
+                  eq(schema.venues.slug, 'sede-principal'),
+                  eq(schema.venues.isPrimary, true)
+                )
+              )
+            );
+        } catch (_) {}
       }
 
       let fiscalResult = null;

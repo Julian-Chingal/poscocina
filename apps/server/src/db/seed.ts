@@ -64,9 +64,13 @@ async function seed() {
         receiptFooter: '¡Gracias por su visita!',
       })
       .onConflictDoNothing();
-  } else if (!company.slug) {
-    await db.update(schema.companies).set({ slug: 'poscocina' }).where(eq(schema.companies.id, company.id));
+  } else if (!company.slug || company.slug === 'poscocina') {
+    const slug = (company.tradeName || 'arepamia').toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+    await db.update(schema.companies).set({ slug }).where(eq(schema.companies.id, company.id));
+    company.slug = slug;
   }
+
+  const restaurantSlug = company?.slug || (company?.tradeName ? company.tradeName.toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-') : 'arepamia');
 
   // 3. Venue Único Inicial (Completamente vacío, sin mesas ni zonas)
   console.log('  -> Verificando local/venue principal...');
@@ -77,7 +81,7 @@ async function seed() {
       .values({
         companyId: company?.id ?? null,
         name: 'Sede Principal',
-        slug: 'sede-principal',
+        slug: restaurantSlug,
         address: 'Calle Principal # 1-01',
         timezone: 'America/Bogota',
         isPrimary: true,
@@ -93,8 +97,9 @@ async function seed() {
       })
       .returning();
     venue = newVenue;
-  } else if (!venue.slug) {
-    await db.update(schema.venues).set({ slug: 'sede-principal' }).where(eq(schema.venues.id, venue.id));
+  } else if (!venue.slug || venue.slug === 'sede-principal') {
+    await db.update(schema.venues).set({ slug: restaurantSlug }).where(eq(schema.venues.id, venue.id));
+    venue.slug = restaurantSlug;
   }
 
   // 4. Usuario Único Administrador (Super Admin)

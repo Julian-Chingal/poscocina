@@ -108,6 +108,7 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:-/api}
+        VITE_DELIVERY_URL: ${VITE_DELIVERY_URL:-}
         VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-${GOOGLE_CLIENT_ID:-}}
     container_name: poscocina-client
     restart: unless-stopped
@@ -121,6 +122,31 @@ services:
         aliases:
           - poscocina-client
           - client
+
+  delivery:
+    build:
+      context: .
+      dockerfile: apps/delivery/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api}
+    container_name: poscocina-delivery
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3001
+      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://poscocina-server:3000}
+      BACKEND_API_URL: ${BACKEND_API_URL:-http://poscocina-server:3000/api}
+      BACKEND_UPLOADS_URL: ${BACKEND_UPLOADS_URL:-http://poscocina-server:3000/uploads}
+    ports:
+      - "${DELIVERY_PORT:-3001}:3001"
+    depends_on:
+      server:
+        condition: service_healthy
+    networks:
+      poscocina-network:
+        aliases:
+          - poscocina-delivery
+          - delivery
 
 networks:
   poscocina-network:

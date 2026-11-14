@@ -1,4 +1,4 @@
-﻿import React from 'react';
+﻿import React, { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { VenuePublicProfile, CatalogCategory, CatalogProduct } from '../../../types/delivery';
@@ -99,11 +99,13 @@ export default async function RestaurantPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <RestaurantStorefront
-        venue={venue}
-        categories={categories || []}
-        products={products || []}
-      />
+      <Suspense fallback={null}>
+        <RestaurantStorefront
+          venue={venue}
+          categories={categories || []}
+          products={products || []}
+        />
+      </Suspense>
     </>
   );
 }

@@ -184,16 +184,9 @@ export class CatalogController {
 
     const buffer = await data.toBuffer();
     const filename = data.filename || 'upload.bin';
-    const is3d =
-      data.mimetype.includes('model') ||
-      data.mimetype.includes('gltf') ||
-      data.mimetype.includes('glb') ||
-      filename.toLowerCase().endsWith('.glb') ||
-      filename.toLowerCase().endsWith('.gltf');
-
-    const folder = is3d ? 'models3d' : 'images';
+    const folder = 'images';
     const fileUrl = await storageService.uploadFile(buffer, filename, data.mimetype, folder);
-    return reply.status(201).send({ url: fileUrl, filename, mimetype: data.mimetype, is3d });
+    return reply.status(201).send({ url: fileUrl, filename, mimetype: data.mimetype });
   }
 
   async uploadBase64(request: FastifyRequest, reply: FastifyReply) {
@@ -237,20 +230,10 @@ export class CatalogController {
     if (mimeType.includes('png')) ext = '.png';
     else if (mimeType.includes('webp')) ext = '.webp';
     else if (mimeType.includes('gif')) ext = '.gif';
-    else if (mimeType.includes('glb') || mimeType.includes('model')) ext = '.glb';
-    else if (mimeType.includes('gltf')) ext = '.gltf';
     else if (filename && path.extname(filename)) ext = path.extname(filename);
 
     const safeFilename = filename || `capture_${Date.now()}${ext}`;
-
-    const is3d =
-      mimeType.includes('model') ||
-      mimeType.includes('glb') ||
-      mimeType.includes('gltf') ||
-      safeFilename.toLowerCase().endsWith('.glb') ||
-      safeFilename.toLowerCase().endsWith('.gltf');
-
-    const targetFolder = is3d ? 'models3d' : folder;
+    const targetFolder = folder;
 
     const fileUrl = await storageService.uploadFile(buffer, safeFilename, mimeType, targetFolder);
     return reply.status(201).send({
@@ -258,7 +241,6 @@ export class CatalogController {
       filename: safeFilename,
       mimetype: mimeType,
       key: fileUrl,
-      is3d,
     });
   }
 }

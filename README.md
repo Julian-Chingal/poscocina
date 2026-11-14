@@ -10,7 +10,7 @@
 [![Turborepo](https://img.shields.io/badge/Turborepo-2.4-EF4444.svg)](https://turbo.build/)
 [![pnpm](https://img.shields.io/badge/pnpm-12.4-f69220.svg)](https://pnpm.io/)
 
-**Poscocina** es una plataforma integral, modular y de alto rendimiento diseñada específicamente para el sector gastronómico (restaurantes, bares, cafeterías, dark kitchens y cadenas multisede). Combina un **Punto de Venta (POS) táctil ultrasensible**, un **Sistema de Visualización de Cocina (KDS) en tiempo real vía WebSockets**, control de **inventarios con escandallos (recetas automáticas)**, **arqueos y turnos de caja**, **reservas**, facturación fiscal y una innovadora suite de **catálogo con escaneo e interactividad 3D (fotogrametría / WebGL)**.
+**Poscocina** es una plataforma integral, modular y de alto rendimiento diseñada específicamente para el sector gastronómico (restaurantes, bares, cafeterías, dark kitchens y cadenas multisede). Combina un **Punto de Venta (POS) táctil ultrasensible**, un **Sistema de Visualización de Cocina (KDS) en tiempo real vía WebSockets**, control de **inventarios con escandallos (recetas automáticas)**, **arqueos y turnos de caja**, **reservas**, facturación fiscal y un completo **catálogo digital de productos con fotografías de alta resolución**.
 
 ---
 
@@ -20,7 +20,7 @@
   - [🗺️ Salón Interactivo & Mesas](#️-salón-interactivo--mesas)
   - [🧾 Punto de Venta Táctil (POS)](#-punto-de-venta-táctil-pos)
   - [👨‍🍳 Kitchen Display System (KDS) en Tiempo Real](#-kitchen-display-system-kds-en-tiempo-real)
-  - [🍔 Catálogo de Productos & Modelado 3D](#-catálogo-de-productos--modelado-3d)
+  - [🍔 Catálogo de Productos](#-catálogo-de-productos)
   - [📦 Inventario, Escandallos (Recetas), Proveedores y Compras](#-inventario-escandallos-recetas-proveedores-y-compras)
   - [💵 Turnos de Caja & Arqueos (Cash Shifts)](#-turnos-de-caja--arqueos-cash-shifts)
   - [📅 Motor de Reservas](#-motor-de-reservas)
@@ -59,12 +59,9 @@
 - **Semáforo de tiempos de preparación**: Alertas visuales y temporizadores de avance para prevenir retrasos en mesa.
 - **Transición de estados**: Ciclo completo de ítem (`pending` ➔ `sent` ➔ `in_preparation` ➔ `ready` ➔ `delivered`).
 
-### 🍔 Catálogo de Productos & Modelado 3D
+### 🍔 Catálogo de Productos
 - **Gestión completa**: Categorías personalizadas con paleta de colores e iconos, impuestos diferenciados (IVA / INC) y tiempos estimados de preparación.
-- **Escaneo e interactividad 3D**:
-  - Modal asistido con **guías visuales e ilustraciones de posturas de captura fotográfica** para platos desde el teléfono móvil (`Product3dScannerModal`, `ScanPoseIllustration`).
-  - Carga y renderizado de modelos 3D en formato `.glb` mediante `@google/model-viewer`.
-  - Visualización híbrida de fotografías de alta definición y modelos 3D interactivos con rotación y zoom 360°.
+- **Presentación visual**: Carga y optimización de fotografías de alta definición para cartas digitales, POS y delivery.
 
 ### 📦 Inventario, Escandallos (Recetas), Proveedores y Compras
 - **Fichas técnicas y escandallos (`productRecipes`)**: Deducción milimétrica de stock de insumos por cada plato vendido según su receta configurada.
@@ -131,13 +128,23 @@ poscocina/
 │   │   ├── Dockerfile              # Imagen Node 22 Alpine optimizada con pnpm deploy
 │   │   └── package.json
 │   │
+│   ├── delivery/                   # Storefront y portal de pedidos online (Next.js 16)
+│   │   ├── src/
+│   │   │   ├── app/                # Directorio multisede, r/[slug], order-status/[orderId]
+│   │   │   ├── components/         # Carrito, modales de producto y checkout
+│   │   │   ├── context/            # CartContext y gestión de órdenes
+│   │   │   └── types/              # Modelos de datos para delivery
+│   │   ├── Dockerfile              # Imagen Node 22 Alpine para Next.js con pnpm deploy
+│   │   └── package.json
+│   │
 │   └── web/                        # Frontend SPA en React 19 + Vite
 │       ├── src/
 │       │   ├── components/         # Primitivas UI y navegación global
 │       │   ├── features/           # Módulos desacoplados del frontend
 │       │   │   ├── auth/           # Pantalla de bloqueo PIN y login
 │       │   │   ├── cash-shifts/    # Gestión y arqueo de turnos de caja
-│       │   │   ├── catalog/        # Catálogo, escáner y visor 3D
+│       │   │   ├── catalog/        # Catálogo y gestión de productos
+│       │   │   ├── delivery/       # Portal interactivo y simulador de Storefront
 │       │   │   ├── inventory/      # Stock, compras, proveedores y recetas
 │       │   │   ├── kds/            # Pantalla de cocina en tiempo real
 │       │   │   ├── pos/            # Terminal de toma de comandas y cobro
@@ -184,8 +191,7 @@ poscocina/
 | **Estilos** | [Tailwind CSS v4](https://tailwindcss.com/) | Motor CSS de última generación sin configuración pesada. |
 | **Componentes UI**| [Radix UI](https://www.radix-ui.com/) + [Motion](https://motion.dev/) | Primitivas accesibles sin estilos con animaciones fluidas. |
 | **Estado & Datos** | [Zustand 5](https://zustand.docs.pmnd.rs/) + [TanStack Query 5](https://tanstack.com/query) | Gestión atómica de estado en cliente y sincronización asíncrona. |
-| **Modelado 3D** | [@google/model-viewer](https://modelviewer.dev/) | Renderizado WebGL inmersivo para platillos en realidad 3D. |
-| **Almacenamiento** | AWS S3 SDK (Garage / MinIO / Local) | Gestión de imágenes y modelos 3D tanto en nube como en local. |
+| **Almacenamiento** | AWS S3 SDK (Garage / MinIO / Local) | Gestión de imágenes y multimedia tanto en nube como en local. |
 | **Contenedores** | [Docker](https://www.docker.com/) + Nginx Alpine | Despliegue reproducible y seguro sin privilegios de root. |
 
 ---
@@ -317,7 +323,7 @@ Principales variables configurables en el archivo `.env`:
 | `CORS_ORIGIN` | `http://localhost:5173,http://localhost:3000` | Lista separada por comas de orígenes permitidos. |
 | `RUN_MIGRATIONS` | `true` \| `false` | Ejecuta migraciones automáticas al iniciar el contenedor. |
 | `RUN_SEED` | `false` \| `true` | Ejecuta el script de semilla al iniciar el contenedor. |
-| `STORAGE_BUCKET` | `catastrocol-cargues` | Bucket S3/MinIO para imágenes y modelos 3D. |
+| `STORAGE_BUCKET` | `catastrocol-cargues` | Bucket S3/MinIO para imágenes y multimedia. |
 | `STORAGE_PATH` | `gastropos` | Subcarpeta o prefijo dentro del bucket de almacenamiento. |
 | `GARAGE_S3_ENDPOINT`| `http://garage:3900` | Endpoint de S3/Garage/MinIO (vacío para usar `./uploads`). |
 | `GARAGE_ACCESS_KEY_ID` | *(string)* | Llave de acceso S3/Garage. |

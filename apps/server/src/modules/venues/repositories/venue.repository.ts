@@ -11,14 +11,25 @@ import { emailService } from '../../../services/email.service.js';
 export class VenueRepository implements IVenueRepository {
   constructor(private readonly database = db) {}
 
-  async listVenues() {
-    return this.database.select().from(schema.venues);
+  async listVenues(companyId?: string) {
+    if (companyId) {
+      return this.database
+        .select()
+        .from(schema.venues)
+        .where(eq(schema.venues.companyId, companyId))
+        .orderBy(desc(schema.venues.isPrimary), schema.venues.name);
+    }
+    return this.database
+      .select()
+      .from(schema.venues)
+      .orderBy(desc(schema.venues.isPrimary), schema.venues.name);
   }
 
   async listPublicVenues() {
     const rows = await this.database
       .select({
         id: schema.venues.id,
+        companyId: schema.venues.companyId,
         name: schema.venues.name,
         slug: schema.venues.slug,
         address: schema.venues.address,
@@ -40,6 +51,10 @@ export class VenueRepository implements IVenueRepository {
       : [];
     const activeShiftVenueIds = new Set(activeShifts.map((s) => s.venueId));
 
+    const allCompanies = await this.database.select().from(schema.companies);
+    const companyMap = new Map(allCompanies.map((c) => [c.id, c]));
+    const fallbackCompany = allCompanies[0] || null;
+
     return rows.map((v) => {
       const s = (v.settings || {}) as Record<string, any>;
       const statusEval = evaluateVenueOpenStatus(
@@ -47,15 +62,27 @@ export class VenueRepository implements IVenueRepository {
         activeShiftVenueIds.has(v.id)
       );
 
+      const comp = (v.companyId ? companyMap.get(v.companyId) : null) || fallbackCompany;
+      const compSlug = comp?.slug || (comp?.tradeName ? comp.tradeName.toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-') : null);
+      const isGenericVenueSlug = !v.slug || v.slug === 'sede-principal';
+      const effectiveSlug = isGenericVenueSlug ? (compSlug || v.slug || s.slug || v.id) : (v.slug || compSlug || s.slug || v.id);
+
+      const displayName = comp?.tradeName
+        ? (v.name && v.name !== 'Sede Principal' && rows.length > 1 ? `${comp.tradeName} - ${v.name}` : comp.tradeName)
+        : v.name;
+
       return {
         id: v.id,
-        name: v.name,
-        slug: v.slug || s.slug || v.id,
-        address: v.address || s.address || '',
-        phone: s.phone || '',
+        name: displayName,
+        slug: effectiveSlug,
+        restaurantName: comp?.tradeName || v.name,
+        restaurantSlug: compSlug || effectiveSlug,
+        companyId: v.companyId || comp?.id || null,
+        address: v.address || s.address || comp?.address || '',
+        phone: s.phone || comp?.phone || '',
         city: s.city || '',
-        logoUrl: s.logoUrl || null,
-        primaryColor: s.primaryColor || '#ea580c',
+        logoUrl: s.logoUrl || comp?.logoUrl || null,
+        primaryColor: s.primaryColor || comp?.primaryColor || '#ea580c',
         openingHours: s.openingHours || '',
         operatingStatus: statusEval.operatingStatus,
         isOpen: statusEval.isOpen,
@@ -69,14 +96,16 @@ export class VenueRepository implements IVenueRepository {
   }
 
   async getPublicVenueBySlugOrId(slugOrId: string) {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId);
+    const rawInput = (slugOrId || '').trim();
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawInput);
+    const normalizedSlug = rawInput.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
 
     let venue;
     if (isUuid) {
       const [byUuid] = await this.database
         .select()
         .from(schema.venues)
-        .where(and(eq(schema.venues.id, slugOrId), eq(schema.venues.isActive, true)))
+        .where(and(eq(schema.venues.id, rawInput), eq(schema.venues.isActive, true)))
         .limit(1);
       venue = byUuid;
     }
@@ -85,7 +114,7 @@ export class VenueRepository implements IVenueRepository {
       const [bySlug] = await this.database
         .select()
         .from(schema.venues)
-        .where(and(eq(schema.venues.slug, slugOrId), eq(schema.venues.isActive, true)))
+        .where(and(eq(schema.venues.slug, rawInput), eq(schema.venues.isActive, true)))
         .limit(1);
       venue = bySlug;
     }
@@ -95,12 +124,67 @@ export class VenueRepository implements IVenueRepository {
         .select()
         .from(schema.venues)
         .where(eq(schema.venues.isActive, true));
+
+      // 1. Direct match on settings.slug or normalized venue slug
       venue = allActive.find(
-        (v) => (v.settings as any)?.slug === slugOrId || v.slug === slugOrId || v.id === slugOrId
+        (v) => (v.settings as any)?.slug === rawInput || (v.settings as any)?.slug === normalizedSlug || v.slug === rawInput || v.slug === normalizedSlug || v.id === rawInput
       );
+
+      // 2. Match on company slug or company tradeName (e.g. "arepamia" matching "Arepamia")
+      if (!venue) {
+        const allCompanies = await this.database.select().from(schema.companies);
+        const matchedCompany = allCompanies.find((c) => {
+          const cSlug = (c.slug || '').toLowerCase().trim();
+          const tradeSlug = (c.tradeName || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+          const legalSlug = (c.legalName || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+          return (
+            cSlug === rawInput.toLowerCase() ||
+            cSlug === normalizedSlug ||
+            tradeSlug === rawInput.toLowerCase() ||
+            tradeSlug === normalizedSlug ||
+            legalSlug === rawInput.toLowerCase() ||
+            legalSlug === normalizedSlug
+          );
+        });
+
+        if (matchedCompany) {
+          venue = allActive.find((v) => v.companyId === matchedCompany.id && v.isPrimary) ||
+                  allActive.find((v) => v.companyId === matchedCompany.id) ||
+                  allActive[0];
+        }
+      }
+
+      // 3. Fallback for generic 'sede-principal' or single venue deployment
+      if (!venue && (normalizedSlug === 'sede-principal' || normalizedSlug === 'principal' || allActive.length === 1)) {
+        venue = allActive.find((v) => v.isPrimary) || allActive[0];
+      }
     }
 
     if (!venue) throw new NotFoundError(`Restaurante '${slugOrId}' no encontrado`);
+
+    // Fetch company details for this venue
+    let company = null;
+    if (venue.companyId) {
+      const [comp] = await this.database.select().from(schema.companies).where(eq(schema.companies.id, venue.companyId)).limit(1);
+      company = comp || null;
+    }
+    if (!company) {
+      const [firstComp] = await this.database.select().from(schema.companies).limit(1);
+      company = firstComp || null;
+    }
+
+    const companySlug = company?.slug || (company?.tradeName ? company.tradeName.toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-') : null);
+
+    // Auto-migrate generic 'sede-principal' venue slug in database to the restaurant slug
+    if (venue.slug === 'sede-principal' && companySlug) {
+      try {
+        await this.database.update(schema.venues).set({ slug: companySlug }).where(eq(schema.venues.id, venue.id));
+        venue.slug = companySlug;
+      } catch (_) {}
+    }
+
+    const isGenericVenueSlug = !venue.slug || venue.slug === 'sede-principal';
+    const effectiveSlug = isGenericVenueSlug ? (companySlug || venue.slug || venue.id) : (venue.slug || companySlug || venue.id);
 
     const [activeShift] = await this.database
       .select({ id: schema.cashShifts.id })
@@ -111,15 +195,22 @@ export class VenueRepository implements IVenueRepository {
     const statusEval = evaluateVenueOpenStatus(venue, !!activeShift);
     const s = (venue.settings || {}) as Record<string, any>;
 
+    const displayName = company?.tradeName
+      ? (venue.name && venue.name !== 'Sede Principal' ? `${company.tradeName} - ${venue.name}` : company.tradeName)
+      : venue.name;
+
     return {
       id: venue.id,
-      name: venue.name,
-      slug: venue.slug || s.slug || venue.id,
-      address: venue.address || s.address || '',
-      phone: s.phone || '',
+      name: displayName,
+      slug: effectiveSlug,
+      restaurantName: company?.tradeName || venue.name,
+      restaurantSlug: companySlug || effectiveSlug,
+      companyId: venue.companyId || company?.id || null,
+      address: venue.address || s.address || company?.address || '',
+      phone: s.phone || company?.phone || '',
       city: s.city || '',
-      logoUrl: s.logoUrl || null,
-      primaryColor: s.primaryColor || '#ea580c',
+      logoUrl: s.logoUrl || company?.logoUrl || null,
+      primaryColor: s.primaryColor || company?.primaryColor || '#ea580c',
       openingHours: s.openingHours || '',
       operatingStatus: statusEval.operatingStatus,
       isOpen: statusEval.isOpen,
@@ -142,7 +233,35 @@ export class VenueRepository implements IVenueRepository {
   async getVenueById(id: string) {
     const [venue] = await this.database.select().from(schema.venues).where(eq(schema.venues.id, id)).limit(1);
     if (!venue) throw new NotFoundError('Local no encontrado');
-    return venue;
+
+    let company = null;
+    if (venue.companyId) {
+      const [comp] = await this.database.select().from(schema.companies).where(eq(schema.companies.id, venue.companyId)).limit(1);
+      company = comp || null;
+    }
+    if (!company) {
+      const [firstComp] = await this.database.select().from(schema.companies).limit(1);
+      company = firstComp || null;
+    }
+
+    const companySlug = company?.slug || (company?.tradeName ? company.tradeName.toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-') : null);
+
+    // Auto-migrate generic 'sede-principal' venue slug in database to the restaurant slug
+    if (venue.slug === 'sede-principal' && companySlug) {
+      try {
+        await this.database.update(schema.venues).set({ slug: companySlug }).where(eq(schema.venues.id, venue.id));
+        venue.slug = companySlug;
+      } catch (_) {}
+    }
+
+    const effectiveSlug = (venue.slug === 'sede-principal' && companySlug) ? companySlug : (venue.slug || companySlug || venue.id);
+
+    return {
+      ...venue,
+      restaurantSlug: companySlug || effectiveSlug,
+      restaurantName: company?.tradeName || venue.name,
+      effectiveSlug,
+    };
   }
 
   async getVenueSummary(id: string) {
@@ -229,6 +348,7 @@ export class VenueRepository implements IVenueRepository {
       const [newVenue] = await tx
         .insert(schema.venues)
         .values({
+          companyId: data.companyId || null,
           name: data.name,
           slug: computedSlug,
           address: data.address || '',
@@ -298,6 +418,7 @@ export class VenueRepository implements IVenueRepository {
     };
     const updateFields: Record<string, unknown> = { settings: mergedSettings };
     if (data.name) updateFields.name = data.name;
+    if (data.slug) updateFields.slug = data.slug;
     if (data.address !== undefined) updateFields.address = data.address;
     if (data.timezone) updateFields.timezone = data.timezone;
 

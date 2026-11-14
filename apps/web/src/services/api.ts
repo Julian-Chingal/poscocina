@@ -61,6 +61,9 @@ async function request<T = any>(endpoint: string, options: RequestOptions = {}):
 
   const token = useAuthStore.getState().token;
   const venueId = useAuthStore.getState().venueId;
+  const user = useAuthStore.getState().currentUser;
+  const storedCompanyId = typeof window !== 'undefined' ? localStorage.getItem('poscocina_company_id') : null;
+  const companyId = user?.companyId || storedCompanyId;
 
   const method = (customConfig.method || 'GET').toUpperCase();
   const hasBody = customConfig.body !== undefined && customConfig.body !== null;
@@ -77,6 +80,9 @@ async function request<T = any>(endpoint: string, options: RequestOptions = {}):
   }
   if (venueId) {
     authHeaders['x-venue-id'] = venueId;
+  }
+  if (companyId) {
+    authHeaders['x-company-id'] = companyId;
   }
 
   const config: RequestInit = {

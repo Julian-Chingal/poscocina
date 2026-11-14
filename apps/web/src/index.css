@@ -108,6 +108,12 @@
     -moz-osx-font-smoothing: grayscale;
     overflow-y: scroll;
   }
+  /* Prevenir conflicto entre Radix UI (react-remove-scroll) y scrollbar-gutter: stable */
+  html body[data-scroll-locked] {
+    margin-right: 0px !important;
+    padding-right: 0px !important;
+    --removed-body-scroll-bar-size: 0px !important;
+  }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
   input[type="button"],
@@ -370,6 +376,13 @@
 
 /* Print Media Safeguards */
 @media print {
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
   .no-print,
   [data-sileo-viewport],
   button:not(.allow-print) {
@@ -378,6 +391,24 @@
   body {
     background-color: #ffffff !important;
     color: #000000 !important;
+  }
+  body.printing-qr-cards > *:not(#printable-table-qr-root) {
+    display: none !important;
+  }
+  #printable-table-qr-root {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  @page {
+    size: auto;
+    margin: 6mm;
   }
 }
 
