@@ -90,13 +90,17 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
     let isMounted = true;
 
     // Pre-populate with auth store data first
-    const fallbackName = currentVenue?.name || accountProfile?.venueName || accountProfile?.companyName || '';
+    const fallbackName = accountProfile?.companyName || currentVenue?.name || accountProfile?.venueName || '';
     if (fallbackName && !customRestaurantName) {
       setCustomRestaurantName(fallbackName);
     }
     if (accountProfile?.companyLogo && !customLogo) {
       setCustomLogo(accountProfile.companyLogo);
     }
+
+    const fallbackBrandSlug = fallbackName
+      ? fallbackName.toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-')
+      : '';
 
     // Then fetch detailed venue data
     fetch(`/api/public/venues/${venueId}`)
@@ -105,7 +109,8 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
         if (!isMounted || !data) return;
         if (data.name) setCustomRestaurantName((prev) => prev || data.name);
         if (data.logoUrl) setCustomLogo((prev) => prev || data.logoUrl);
-        if (data.slug) setVenueSlug(data.slug);
+        const resolvedSlug = data.restaurantSlug || (data.slug !== 'sede-principal' ? data.slug : null) || fallbackBrandSlug;
+        if (resolvedSlug) setVenueSlug(resolvedSlug);
         if (data.primaryColor) setAccentColor((prev) => (prev === '#ea580c' ? data.primaryColor : prev));
       })
       .catch(() => {
@@ -114,10 +119,11 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
           .then((data) => {
             if (!isMounted || !data) return;
             if (data.name) setCustomRestaurantName((prev) => prev || data.name);
-            if (data.slug) setVenueSlug(data.slug || venueId);
+            const resolvedSlug = data.restaurantSlug || data.effectiveSlug || (data.slug !== 'sede-principal' ? data.slug : null) || fallbackBrandSlug;
+            if (resolvedSlug) setVenueSlug(resolvedSlug);
           })
           .catch(() => {
-            if (isMounted) setVenueSlug(venueId);
+            if (isMounted) setVenueSlug(fallbackBrandSlug || venueId);
           });
       });
 
@@ -191,10 +197,11 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
 
   const sampleUrl = useMemo(() => {
     const firstTable = filteredTables[0] || { label: '1' };
-    const cleanSlug = venueSlug || 'menu';
+    const brandSlug = (accountProfile?.companyName || customRestaurantName || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+    const cleanSlug = (venueSlug && venueSlug !== 'sede-principal') ? venueSlug : (brandSlug || venueSlug || 'menu');
     const base = deliveryBaseUrl.replace(/\/$/, '');
     return `${base}/r/${encodeURIComponent(cleanSlug)}?table=${encodeURIComponent(firstTable.label)}`;
-  }, [deliveryBaseUrl, venueSlug, filteredTables]);
+  }, [deliveryBaseUrl, venueSlug, filteredTables, accountProfile?.companyName, customRestaurantName]);
 
   const handleCopySampleUrl = () => {
     navigator.clipboard.writeText(sampleUrl);

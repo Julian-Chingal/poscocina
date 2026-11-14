@@ -2,6 +2,8 @@ export interface VenuePublicProfile {
   id: string;
   name: string;
   slug: string;
+  restaurantName?: string;
+  restaurantSlug?: string;
   address?: string;
   phone?: string;
   city?: string;

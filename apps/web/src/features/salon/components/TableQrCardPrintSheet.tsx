@@ -47,7 +47,8 @@ export const TableQrCardPrintSheet: React.FC<TableQrCardPrintSheetProps> = ({
 }) => {
   const getTableUrl = (table: TableItem) => {
     const base = deliveryBaseUrl.replace(/\/$/, '');
-    const cleanSlug = venueSlug || 'menu';
+    const brandSlug = venueName ? venueName.toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-') : '';
+    const cleanSlug = (venueSlug && venueSlug !== 'sede-principal') ? venueSlug : (brandSlug || venueSlug || 'menu');
     return `${base}/r/${encodeURIComponent(cleanSlug)}?table=${encodeURIComponent(table.label)}`;
   };
 

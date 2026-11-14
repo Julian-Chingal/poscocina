@@ -61,14 +61,24 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div
-                className="flex h-16 w-16 items-center justify-center rounded-2xl font-black text-white text-2xl shadow-lg"
-                style={{ backgroundColor: venue.primaryColor || '#ea580c' }}
-              >
-                {venue.name.charAt(0).toUpperCase()}
-              </div>
+              {venue.logoUrl ? (
+                <img
+                  src={venue.logoUrl}
+                  alt={venue.restaurantName || venue.name}
+                  className="h-16 w-16 object-cover rounded-2xl shadow-lg border border-slate-700/60 bg-slate-800 shrink-0"
+                />
+              ) : (
+                <div
+                  className="flex h-16 w-16 items-center justify-center rounded-2xl font-black text-white text-2xl shadow-lg shrink-0"
+                  style={{ backgroundColor: venue.primaryColor || '#ea580c' }}
+                >
+                  {(venue.restaurantName || venue.name).charAt(0).toUpperCase()}
+                </div>
+              )}
               <div>
-                <h1 className="text-2xl sm:text-3xl font-black text-white">{venue.name}</h1>
+                <h1 className="text-2xl sm:text-3xl font-black text-white">
+                  {venue.restaurantName || venue.name}
+                </h1>
                 <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-400">
                   {venue.address && (
                     <span className="flex items-center gap-1">

@@ -1,5 +1,5 @@
 export interface IVenueRepository {
-  listVenues(): Promise<any[]>;
+  listVenues(companyId?: string): Promise<any[]>;
   listPublicVenues(): Promise<any[]>;
   getPublicVenueBySlugOrId(slugOrId: string): Promise<any>;
   getFirstVenue(): Promise<any>;

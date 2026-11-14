@@ -19,6 +19,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth.store";
+import { useBrandingStore } from "@/stores/branding.store";
 import { kdsApi } from "@/features/kds/api/kds.api";
 import { KdsOrder, KdsItem } from "@/features/kds/types/kds.types";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
-import { getDeliveryBaseUrl, getStorefrontUrl } from "@/lib/delivery-url";
+import { getStorefrontUrl } from "@/lib/delivery-url";
 
 interface DeliveryViewProps {
   venueId?: string;
@@ -81,6 +82,9 @@ const formatTimeAgo = (dateStr: string): string => {
 export const DeliveryView: React.FC<DeliveryViewProps> = ({ venueId: propVenueId }) => {
   const storeVenueId = useAuthStore((s) => s.venueId);
   const availableVenues = useAuthStore((s) => s.availableVenues);
+  const accountProfile = useAuthStore((s) => s.accountProfile);
+  const brandingSettings = useBrandingStore((s) => s.settings);
+  const brandingName = useBrandingStore((s) => s.name);
   const activeVenueId = propVenueId || storeVenueId || "";
 
   const [orders, setOrders] = useState<KdsOrder[]>([]);
@@ -95,9 +99,36 @@ export const DeliveryView: React.FC<DeliveryViewProps> = ({ venueId: propVenueId
 
   const [venueSlug, setVenueSlug] = useState<string>((activeVenue as any)?.slug || "");
 
+  // Brand and restaurant resolution for customer URL
+  const restaurantName = useMemo(() => {
+    return (
+      accountProfile?.companyName ||
+      brandingSettings.companyName ||
+      (brandingName && brandingName !== "poscocina Restaurante" ? brandingName : null) ||
+      activeVenue?.name ||
+      "Restaurante"
+    );
+  }, [accountProfile?.companyName, brandingSettings.companyName, brandingName, activeVenue?.name]);
+
+  const restaurantSlug = useMemo(() => {
+    // 1. Explicit clean slug from company/restaurant brand name
+    const brandSlug = restaurantName
+      ? restaurantName.toLowerCase().trim().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-")
+      : "";
+
+    // 2. If venue has an effective custom slug (that is not generic "sede-principal" or UUID)
+    const currentSlug = venueSlug || (activeVenue as any)?.slug || "";
+    const isGenericOrUuid = !currentSlug || currentSlug === "sede-principal" || currentSlug === activeVenueId;
+    if (!isGenericOrUuid) {
+      return currentSlug;
+    }
+
+    // 3. Fallback to restaurant brand slug (e.g. "arepamia")
+    return brandSlug || currentSlug || "arepamia";
+  }, [restaurantName, venueSlug, activeVenue, activeVenueId]);
+
   // Public Storefront URL for customers
-  const deliveryBaseUrl = useMemo(() => getDeliveryBaseUrl(), []);
-  const storefrontUrl = useMemo(() => getStorefrontUrl(venueSlug), [venueSlug]);
+  const storefrontUrl = useMemo(() => getStorefrontUrl(restaurantSlug), [restaurantSlug]);
 
   // Fetch venue slug for clean customer URL
   useEffect(() => {
@@ -106,12 +137,13 @@ export const DeliveryView: React.FC<DeliveryViewProps> = ({ venueId: propVenueId
     fetch(`/api/venues/${activeVenueId}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!isMounted) return;
-        setVenueSlug(data?.slug || activeVenueId);
+        if (!isMounted || !data) return;
+        const resolved = data.restaurantSlug || data.effectiveSlug || (data.slug !== "sede-principal" ? data.slug : null);
+        if (resolved) {
+          setVenueSlug(resolved);
+        }
       })
-      .catch(() => {
-        if (isMounted) setVenueSlug(activeVenueId);
-      });
+      .catch(() => {});
 
     return () => {
       isMounted = false;
@@ -281,18 +313,18 @@ export const DeliveryView: React.FC<DeliveryViewProps> = ({ venueId: propVenueId
             <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
               <p className="flex items-center gap-1.5">
                 <Store className="size-3 text-primary shrink-0" />
-                <span>Sede:</span>
-                <strong className="text-foreground">{activeVenue?.name || "Sede Principal"}</strong>
+                <span>Restaurante:</span>
+                <strong className="text-foreground">{restaurantName}</strong>
               </p>
               <span className="text-muted-foreground/40 hidden sm:inline">•</span>
               <a
-                href={deliveryBaseUrl}
+                href={storefrontUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                title="Abrir portal general de delivery"
+                title="Abrir tienda online del restaurante"
                 className="text-[11px] text-primary/80 hover:text-primary hover:underline flex items-center gap-1 font-mono"
               >
-                <span>{deliveryBaseUrl.replace(/^https?:\/\//, '')}</span>
+                <span>{storefrontUrl.replace(/^https?:\/\//, '')}</span>
                 <ExternalLink className="size-2.5" />
               </a>
             </div>

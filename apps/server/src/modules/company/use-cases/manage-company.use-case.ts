@@ -12,15 +12,15 @@ export class ManageCompanyUseCase {
     return await this.companyRepo.createCompanyWithInitialVenue(data);
   }
 
-  async getCompanyWithFiscal() {
-    return await this.companyRepo.getCompanyWithFiscal();
+  async getCompanyWithFiscal(companyId?: string) {
+    return await this.companyRepo.getCompanyWithFiscal(companyId);
   }
 
-  async getFiscalSettings() {
-    return await this.companyRepo.getFiscalSettings();
+  async getFiscalSettings(companyId?: string) {
+    return await this.companyRepo.getFiscalSettings(companyId);
   }
 
-  async updateCompany(data: UpdateCompanyInput) {
-    return await this.companyRepo.updateCompanyWithFiscal(data);
+  async updateCompany(data: UpdateCompanyInput, companyId?: string) {
+    return await this.companyRepo.updateCompanyWithFiscal(data, companyId);
   }
 }

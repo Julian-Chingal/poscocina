@@ -27,6 +27,7 @@ export const CreateVenueSchema = z.object({
   requireShiftForDelivery: z.boolean().optional().default(false),
   notes: z.string().optional(),
   settings: z.record(z.unknown()).optional(),
+  companyId: z.string().uuid().optional(),
 });
 
 export const UpdateVenueSchema = z.object({
