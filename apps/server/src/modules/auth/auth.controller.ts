@@ -16,7 +16,10 @@ import {
   SelectAuthContextSchema,
   ManagerPinOverrideSchema,
   GoogleAuthSchema,
+  RequestCustomerOtpSchema,
+  VerifyCustomerOtpSchema,
 } from '@poscocina/shared';
+import { customerOtpUseCase } from './use-cases/customer-otp.use-case.js';
 import { UnauthorizedError } from '../../errors/app-error.js';
 
 export class AuthController {
@@ -334,6 +337,26 @@ export class AuthController {
       hasPassword: Boolean(user.passwordHash),
       hasPin: Boolean(user.pinHash),
     });
+  }
+
+  async requestCustomerOtp(request: FastifyRequest, reply: FastifyReply) {
+    const data = validate(RequestCustomerOtpSchema, request.body);
+    const result = await customerOtpUseCase.requestOtp(data.venueId, data.phone, data.name);
+    return reply.send(result);
+  }
+
+  async verifyCustomerOtp(request: FastifyRequest, reply: FastifyReply) {
+    const data = validate(VerifyCustomerOtpSchema, request.body);
+    const result = await customerOtpUseCase.verifyOtp(data.venueId, data.phone, data.code, request.server.jwt);
+    return reply.send(result);
+  }
+
+  async getCustomerProfile(request: FastifyRequest, reply: FastifyReply) {
+    const user = (request as any).user;
+    if (!user || user.role !== 'customer') {
+      return reply.status(401).send({ error: 'Acceso exclusivo para clientes' });
+    }
+    return reply.send({ customer: user });
   }
 }
 

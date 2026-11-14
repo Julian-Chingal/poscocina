@@ -54,4 +54,25 @@ export async function ordersRoutes(fastify: FastifyInstance) {
   fastify.delete('/api/order-items/:id', staffGuard, (req, rep) =>
     ordersController.deleteOrderItem(req, rep)
   );
+
+  // 9. Delivery & Payment Confirmation Workflow
+  fastify.post('/api/orders/:id/confirm-payment', staffGuard, (req, rep) =>
+    ordersController.confirmTransferPayment(req, rep)
+  );
+
+  fastify.post(
+    '/api/orders/:id/complete-delivery',
+    { preHandler: [fastify.authenticate] },
+    (req, rep) => ordersController.completeDelivery(req, rep)
+  );
+
+  fastify.patch('/api/orders/:id/driver', staffGuard, (req, rep) =>
+    ordersController.assignDriver(req, rep)
+  );
+
+  fastify.get(
+    '/api/driver/orders',
+    { preHandler: [fastify.authenticate] },
+    (req, rep) => ordersController.getDriverOrders(req, rep)
+  );
 }

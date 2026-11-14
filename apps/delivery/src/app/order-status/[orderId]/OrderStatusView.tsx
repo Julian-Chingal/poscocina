@@ -40,6 +40,7 @@ interface OrderData {
   status: string;
   kitchenStatus: string;
   paymentStatus: string;
+  deliveryPin?: string | null;
   guestName?: string;
   notes?: string;
   subtotal: string;
@@ -213,6 +214,21 @@ export function OrderStatusView({ initialOrder }: Props) {
             })}
           </HStack>
         </VStack>
+
+        {/* Delivery PIN Code Banner */}
+        {order.deliveryPin && (
+          <div className="rounded-2xl border border-emerald-500/40 bg-emerald-950/40 p-4 text-center my-3 shadow-lg">
+            <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">
+              🔑 Tu Código de Entrega
+            </p>
+            <p className="text-4xl font-mono font-black text-white tracking-widest my-1">
+              {order.deliveryPin}
+            </p>
+            <p className="text-xs text-slate-300">
+              Entrégale este código al domiciliario cuando llegue a tu puerta para recibir tu pedido.
+            </p>
+          </div>
+        )}
 
         {/* Order Details & Items */}
         <Card className="rounded-xl border border-slate-800/80 bg-slate-950/60 p-5 space-y-4 w-full">

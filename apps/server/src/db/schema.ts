@@ -248,6 +248,10 @@ export const customers = pgTable('customers', {
   email: varchar('email', { length: 150 }),
   address: text('address'),
   notes: text('notes'),
+  otpCodeHash: varchar('otp_code_hash', { length: 72 }),
+  otpExpiresAt: timestamp('otp_expires_at', { withTimezone: true }),
+  tokenVersion: smallint('token_version').notNull().default(1),
+  isActive: boolean('is_active').notNull().default(true),
   loyaltyPoints: integer('loyalty_points').notNull().default(0),
   totalSpent: numeric('total_spent', { precision: 14, scale: 2 }).notNull().default('0.00'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -268,6 +272,12 @@ export const orders = pgTable('orders', {
   guestCount: smallint('guest_count').default(1),
   guestName: varchar('guest_name', { length: 150 }),
   notes: text('notes'),
+  driverId: uuid('driver_id').references(() => users.id, { onDelete: 'set null' }),
+  deliveryPin: varchar('delivery_pin', { length: 10 }),
+  transferProofUrl: text('transfer_proof_url'),
+  paymentConfirmedAt: timestamp('payment_confirmed_at', { withTimezone: true }),
+  paymentConfirmedBy: uuid('payment_confirmed_by').references(() => users.id, { onDelete: 'set null' }),
+  deliveredAt: timestamp('delivered_at', { withTimezone: true }),
   openedAt: timestamp('opened_at', { withTimezone: true }).notNull().defaultNow(),
   closedAt: timestamp('closed_at', { withTimezone: true }),
   subtotal: numeric('subtotal', { precision: 12, scale: 2 }).notNull().default('0.00'),
@@ -477,6 +487,7 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
   venue: one(venues, { fields: [orders.venueId], references: [venues.id] }),
   table: one(tables, { fields: [orders.tableId], references: [tables.id] }),
   waiter: one(users, { fields: [orders.waiterId], references: [users.id] }),
+  driver: one(users, { fields: [orders.driverId], references: [users.id] }),
   customer: one(customers, { fields: [orders.customerId], references: [customers.id] }),
   items: many(orderItems),
   receipts: many(receipts),
@@ -795,4 +806,49 @@ export const saasInvoicesRelations = relations(saasInvoices, ({ one }) => ({
   company: one(companies, { fields: [saasInvoices.companyId], references: [companies.id] }),
   subscription: one(saasSubscriptions, { fields: [saasInvoices.subscriptionId], references: [saasSubscriptions.id] }),
 }));
+
+// 22. WhatsApp Multi-Tenant Inbox & Customer Messaging (WAHA)
+export const whatsappChats = pgTable(
+  'whatsapp_chats',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    venueId: uuid('venue_id').notNull().references(() => venues.id, { onDelete: 'cascade' }),
+    phone: varchar('phone', { length: 30 }).notNull(),
+    customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
+    customerName: varchar('customer_name', { length: 150 }),
+    lastMessage: text('last_message'),
+    lastMessageAt: timestamp('last_message_at', { withTimezone: true }).defaultNow(),
+    unreadCount: smallint('unread_count').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('venue_phone_idx').on(table.venueId, table.phone),
+  ]
+);
+
+export const whatsappMessages = pgTable('whatsapp_messages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  chatId: uuid('chat_id').notNull().references(() => whatsappChats.id, { onDelete: 'cascade' }),
+  venueId: uuid('venue_id').notNull().references(() => venues.id, { onDelete: 'cascade' }),
+  wahaMessageId: varchar('waha_message_id', { length: 100 }),
+  direction: varchar('direction', { length: 10 }).notNull(), // 'inbound' | 'outbound'
+  body: text('body').notNull(),
+  mediaUrl: text('media_url'),
+  mediaType: varchar('media_type', { length: 50 }),
+  status: varchar('status', { length: 20 }).default('received'), // 'received' | 'sent' | 'delivered' | 'read'
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const whatsappChatsRelations = relations(whatsappChats, ({ one, many }) => ({
+  venue: one(venues, { fields: [whatsappChats.venueId], references: [venues.id] }),
+  customer: one(customers, { fields: [whatsappChats.customerId], references: [customers.id] }),
+  messages: many(whatsappMessages),
+}));
+
+export const whatsappMessagesRelations = relations(whatsappMessages, ({ one }) => ({
+  chat: one(whatsappChats, { fields: [whatsappMessages.chatId], references: [whatsappChats.id] }),
+  venue: one(venues, { fields: [whatsappMessages.venueId], references: [venues.id] }),
+}));
+
 

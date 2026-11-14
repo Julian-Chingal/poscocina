@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
+import { useCustomerAuth } from '../../context/CustomerAuthContext';
 import {
   X,
   CheckCircle2,
@@ -51,6 +52,7 @@ export function CheckoutModal() {
     total,
     clearCart,
   } = useCart();
+  const { customer } = useCustomerAuth();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -64,6 +66,17 @@ export function CheckoutModal() {
     latitude: null as number | null,
     longitude: null as number | null,
   });
+
+  useEffect(() => {
+    if (customer) {
+      setFormData((prev) => ({
+        ...prev,
+        name: prev.name || customer.name || '',
+        phone: prev.phone || customer.phone || '',
+        address: prev.address || customer.address || '',
+      }));
+    }
+  }, [customer]);
 
   const [showMap, setShowMap] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

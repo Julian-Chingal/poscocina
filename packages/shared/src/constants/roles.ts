@@ -5,6 +5,7 @@ export const ROLES = {
   WAITER: 'waiter',
   KITCHEN: 'kitchen',
   KDS_DISPLAY: 'kds_display',
+  DRIVER: 'driver',
 } as const;
 
 export type RoleName = (typeof ROLES)[keyof typeof ROLES];
@@ -14,6 +15,7 @@ export const ROLE_HIERARCHY: Record<RoleName, number> = {
   manager: 80,
   cashier: 60,
   waiter: 40,
+  driver: 30,
   kitchen: 20,
   kds_display: 10,
 };
@@ -24,5 +26,6 @@ export const PIN_ALLOWED_ROLES: RoleName[] = [
   ROLES.WAITER,
   ROLES.KITCHEN,
   ROLES.KDS_DISPLAY,
+  ROLES.DRIVER,
 ];
 

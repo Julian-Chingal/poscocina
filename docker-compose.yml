@@ -148,6 +148,27 @@ services:
           - poscocina-delivery
           - delivery
 
+  waha:
+    image: devlikeapro/waha:latest
+    container_name: poscocina-waha
+    restart: unless-stopped
+    environment:
+      WHATSAPP_HOOK_URL: http://server:3000/api/webhooks/waha
+      WHATSAPP_HOOK_EVENTS: message,message.ack,session.status
+      WHATSAPP_API_KEY: ${WHATSAPP_API_KEY:-poscocina_waha_secret}
+      WAHA_DASHBOARD_USERNAME: ${WAHA_DASHBOARD_USERNAME:-admin}
+      WAHA_DASHBOARD_PASSWORD: ${WAHA_DASHBOARD_PASSWORD:-admin123}
+      WAHA_PRINT_QR: "True"
+    ports:
+      - "${WAHA_PORT:-3008}:3000"
+    networks:
+      poscocina-network:
+        aliases:
+          - poscocina-waha
+          - waha
+    volumes:
+      - waha_sessions:/app/.sessions
+
 networks:
   poscocina-network:
     name: poscocina-network
@@ -160,4 +181,6 @@ volumes:
     name: poscocina_valkey_data
   server_uploads:
     name: poscocina_server_uploads
+  waha_sessions:
+    name: poscocina_waha_sessions
 

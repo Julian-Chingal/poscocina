@@ -2,9 +2,11 @@
 import './globals.css';
 import 'leaflet/dist/leaflet.css';
 import { CartProvider } from '../context/CartContext';
+import { CustomerAuthProvider } from '../context/CustomerAuthContext';
 import { Navbar } from '../components/Navbar';
 import { CartDrawer } from '../components/cart/CartDrawer';
 import { CheckoutModal } from '../components/checkout/CheckoutModal';
+import { CustomerLoginModal } from '../components/auth/CustomerLoginModal';
 import { SileoToaster } from '../components/ui/SileoToaster';
 import { VStack } from '@astryxdesign/core';
 
@@ -64,13 +66,16 @@ export default function RootLayout({
         data-theme="dark"
         className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-orange-500 selection:text-white flex flex-col"
       >
-        <CartProvider>
-          <Navbar />
-          <VStack as="main" className="flex-1 w-full">{children}</VStack>
-          <CartDrawer />
-          <CheckoutModal />
-          <SileoToaster />
-        </CartProvider>
+        <CustomerAuthProvider>
+          <CartProvider>
+            <Navbar />
+            <VStack as="main" className="flex-1 w-full">{children}</VStack>
+            <CartDrawer />
+            <CheckoutModal />
+            <CustomerLoginModal />
+            <SileoToaster />
+          </CartProvider>
+        </CustomerAuthProvider>
       </body>
     </html>
   );

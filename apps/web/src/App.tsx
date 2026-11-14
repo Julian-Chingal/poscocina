@@ -29,6 +29,8 @@ const ReservationsView = lazy(() => import("./features/reservations"));
 const RestaurantsView = lazy(() => import("./features/restaurants"));
 const SaasSubscriptionsView = lazy(() => import("./features/saas-subscriptions"));
 const AccountView = lazy(() => import("./features/account"));
+const WhatsAppChatView = lazy(() => import("./features/whatsapp/WhatsAppChatView"));
+const DriverView = lazy(() => import("./features/driver/DriverView"));
 const ModulePlaceholder = lazy(
   () => import("./features/shared/components/ModulePlaceholder"),
 );
@@ -115,6 +117,10 @@ export const App: React.FC = () => {
         return <KdsView venueId={venueId || ""} />;
       case "delivery":
         return <DeliveryView venueId={venueId || ""} />;
+      case "whatsapp":
+        return <WhatsAppChatView />;
+      case "driver":
+        return <DriverView />;
       case "catalog":
         return <CatalogView venueId={venueId || ""} />;
       case "settings":

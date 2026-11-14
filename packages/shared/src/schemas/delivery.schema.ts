@@ -32,3 +32,34 @@ export const CreateDeliveryOrderSchema = z.object({
 export type DeliveryOrderItemModifier = z.infer<typeof DeliveryOrderItemModifierSchema>;
 export type DeliveryOrderItem = z.infer<typeof DeliveryOrderItemSchema>;
 export type CreateDeliveryOrderInput = z.infer<typeof CreateDeliveryOrderSchema>;
+
+export const ConfirmTransferPaymentSchema = z.object({
+  reference: z.string().max(100).optional(),
+  receiptUrl: z.string().optional(),
+  notes: z.string().max(300).optional(),
+});
+export type ConfirmTransferPaymentInput = z.infer<typeof ConfirmTransferPaymentSchema>;
+
+export const CompleteDeliverySchema = z.object({
+  deliveryPin: z.string().regex(/^\d{4,6}$/, 'El código de entrega debe tener entre 4 y 6 dígitos'),
+});
+export type CompleteDeliveryInput = z.infer<typeof CompleteDeliverySchema>;
+
+export const AssignDriverSchema = z.object({
+  driverId: z.string().uuid('ID de domiciliario inválido'),
+});
+export type AssignDriverInput = z.infer<typeof AssignDriverSchema>;
+
+export const RequestCustomerOtpSchema = z.object({
+  venueId: z.string().uuid('ID de restaurante inválido'),
+  phone: z.string().min(7, 'Número de teléfono inválido'),
+  name: z.string().optional(),
+});
+export type RequestCustomerOtpInput = z.infer<typeof RequestCustomerOtpSchema>;
+
+export const VerifyCustomerOtpSchema = z.object({
+  venueId: z.string().uuid('ID de restaurante inválido'),
+  phone: z.string().min(7, 'Número de teléfono inválido'),
+  code: z.string().length(6, 'El código OTP debe ser de 6 dígitos'),
+});
+export type VerifyCustomerOtpInput = z.infer<typeof VerifyCustomerOtpSchema>;

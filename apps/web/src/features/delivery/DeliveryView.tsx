@@ -17,7 +17,9 @@ import {
   Store,
   MessageCircle,
   Receipt,
+  ShieldCheck,
 } from "lucide-react";
+import { api } from "@/services/api";
 import { useAuthStore } from "@/stores/auth.store";
 import { useBrandingStore } from "@/stores/branding.store";
 import { kdsApi } from "@/features/kds/api/kds.api";
@@ -272,6 +274,19 @@ export const DeliveryView: React.FC<DeliveryViewProps> = ({ venueId: propVenueId
       console.error("Error al actualizar estado del pedido:", err);
       toast.error("No se pudo actualizar el estado del pedido");
       fetchOrders();
+    }
+  };
+
+  const handleConfirmTransferPayment = async (orderId: string) => {
+    try {
+      const res: any = await api.post(`/orders/${orderId}/confirm-payment`, {});
+      toast.success("¡Pago confirmado! PIN generado y enviado por WhatsApp.");
+      if (res && res.deliveryPin) {
+        toast.info(`PIN de Entrega: ${res.deliveryPin}`);
+      }
+      fetchOrders(true);
+    } catch (err: any) {
+      toast.error(err.message || "Error al confirmar el pago");
     }
   };
 
@@ -672,6 +687,32 @@ export const DeliveryView: React.FC<DeliveryViewProps> = ({ venueId: propVenueId
                         )}
                       </span>
                     </div>
+
+                    {/* Delivery PIN Code Badge */}
+                    {(order as any).deliveryPin && (
+                      <div className="flex items-center justify-between text-xs bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1.5 rounded-xl">
+                        <span className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
+                          <ShieldCheck className="size-3.5 text-emerald-600" />
+                          PIN Entrega:
+                        </span>
+                        <span className="font-mono font-black text-sm text-emerald-600 dark:text-emerald-400 tracking-wider">
+                          {(order as any).deliveryPin}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Quick Confirm Transfer Button */}
+                    {order.paymentStatus !== "paid" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleConfirmTransferPayment(order.id)}
+                        className="w-full text-xs font-semibold h-7.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10 gap-1 mt-1"
+                      >
+                        <ShieldCheck className="size-3 text-emerald-600" />
+                        <span>Confirmar Transferencia & Generar PIN</span>
+                      </Button>
+                    )}
                   </CardContent>
 
                   {/* Card Actions */}

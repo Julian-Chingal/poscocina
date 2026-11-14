@@ -15,7 +15,16 @@ import {
   UpdateOrderStatusSchema,
   ModifyOrderItemSchema,
   UpdateOrderItemStationStatusSchema,
+  ConfirmTransferPaymentSchema,
+  CompleteDeliverySchema,
+  AssignDriverSchema,
 } from '@poscocina/shared';
+import { confirmTransferPaymentUseCase } from './use-cases/confirm-transfer-payment.use-case.js';
+import { completeDeliveryUseCase } from './use-cases/complete-delivery.use-case.js';
+import { assignDriverUseCase } from './use-cases/assign-driver.use-case.js';
+import { db } from '../../db/index.js';
+import * as schema from '../../db/schema.js';
+import { eq, desc } from 'drizzle-orm';
 
 export class OrdersController {
   private readonly createUseCase = new CreateOrderUseCase(orderRepository);
@@ -208,6 +217,53 @@ export class OrdersController {
     });
 
     return reply.send({ success: true, ...result });
+  }
+
+  async confirmTransferPayment(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const data = validate(ConfirmTransferPaymentSchema, request.body);
+    const userId = (request as any).user?.sub;
+    const result = await confirmTransferPaymentUseCase.execute(id, data, userId, request.server.io);
+    return reply.send(result);
+  }
+
+  async completeDelivery(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const data = validate(CompleteDeliverySchema, request.body);
+    const driverId = (request as any).user?.sub;
+    const result = await completeDeliveryUseCase.execute(id, data, driverId, request.server.io);
+    return reply.send(result);
+  }
+
+  async assignDriver(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const data = validate(AssignDriverSchema, request.body);
+    const result = await assignDriverUseCase.execute(id, data, request.server.io);
+    return reply.send(result);
+  }
+
+  async getDriverOrders(request: FastifyRequest, reply: FastifyReply) {
+    const driverId = (request as any).user?.sub;
+    if (!driverId) {
+      return reply.status(401).send({ error: 'Usuario no autenticado' });
+    }
+
+    const assignedOrders = await db.query.orders.findMany({
+      where: eq(schema.orders.driverId, driverId),
+      with: {
+        customer: true,
+        items: {
+          with: {
+            product: true,
+            modifiers: true,
+          },
+        },
+      },
+      orderBy: desc(schema.orders.openedAt),
+      limit: 50,
+    });
+
+    return reply.send(assignedOrders);
   }
 }
 

@@ -29,6 +29,9 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default('PosCocina <onboarding@resend.dev>'),
   APP_URL: z.string().default('http://localhost:5173'),
+  WAHA_API_URL: z.string().default('http://localhost:3008'),
+  WAHA_API_KEY: z.string().default('poscocina_waha_secret'),
+  WAHA_WEBHOOK_SECRET: z.string().optional(),
 }).transform((data) => {
   const host = process.env.VALKEY_HOST || process.env.REDIS_HOST;
   const port = process.env.VALKEY_PORT || process.env.REDIS_PORT || 6379;
