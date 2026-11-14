@@ -76,6 +76,14 @@ export class VenueRepository implements IVenueRepository {
         ? (isSameName || isGenericName || rows.length <= 1 ? compTrade : `${compTrade} - ${venueName}`)
         : venueName;
 
+      const socialLinks = {
+        instagram: s.instagram || s.socialLinks?.instagram || null,
+        facebook: s.facebook || s.socialLinks?.facebook || null,
+        whatsapp: s.whatsapp || s.socialLinks?.whatsapp || s.phone || comp?.phone || null,
+        tiktok: s.tiktok || s.socialLinks?.tiktok || null,
+        website: s.website || s.socialLinks?.website || null,
+      };
+
       return {
         id: v.id,
         name: displayName,
@@ -89,6 +97,12 @@ export class VenueRepository implements IVenueRepository {
         latitude: s.latitude !== undefined && s.latitude !== null ? Number(s.latitude) : null,
         longitude: s.longitude !== undefined && s.longitude !== null ? Number(s.longitude) : null,
         businessType: s.businessType || 'restaurant',
+        socialLinks,
+        instagram: socialLinks.instagram,
+        facebook: socialLinks.facebook,
+        whatsapp: socialLinks.whatsapp,
+        tiktok: socialLinks.tiktok,
+        website: socialLinks.website,
         logoUrl: s.logoUrl || comp?.logoUrl || null,
         primaryColor: s.primaryColor || comp?.primaryColor || '#ea580c',
         openingHours: s.openingHours || '',
@@ -212,6 +226,14 @@ export class VenueRepository implements IVenueRepository {
       ? (isSameName || isGenericName ? compTrade : `${compTrade} - ${venueName}`)
       : venueName;
 
+    const socialLinks = {
+      instagram: s.instagram || s.socialLinks?.instagram || null,
+      facebook: s.facebook || s.socialLinks?.facebook || null,
+      whatsapp: s.whatsapp || s.socialLinks?.whatsapp || s.phone || company?.phone || null,
+      tiktok: s.tiktok || s.socialLinks?.tiktok || null,
+      website: s.website || s.socialLinks?.website || null,
+    };
+
     return {
       id: venue.id,
       name: displayName,
@@ -225,6 +247,12 @@ export class VenueRepository implements IVenueRepository {
       latitude: s.latitude !== undefined && s.latitude !== null ? Number(s.latitude) : null,
       longitude: s.longitude !== undefined && s.longitude !== null ? Number(s.longitude) : null,
       businessType: s.businessType || 'restaurant',
+      socialLinks,
+      instagram: socialLinks.instagram,
+      facebook: socialLinks.facebook,
+      whatsapp: socialLinks.whatsapp,
+      tiktok: socialLinks.tiktok,
+      website: socialLinks.website,
       logoUrl: s.logoUrl || company?.logoUrl || null,
       primaryColor: s.primaryColor || company?.primaryColor || '#ea580c',
       openingHours: s.openingHours || '',
@@ -436,6 +464,12 @@ export class VenueRepository implements IVenueRepository {
       ...(data.schedule !== undefined ? { schedule: data.schedule } : {}),
       ...(data.requireShiftForDelivery !== undefined ? { requireShiftForDelivery: data.requireShiftForDelivery } : {}),
       ...(data.notes !== undefined ? { notes: data.notes } : {}),
+      ...(data.instagram !== undefined ? { instagram: data.instagram } : {}),
+      ...(data.facebook !== undefined ? { facebook: data.facebook } : {}),
+      ...(data.whatsapp !== undefined ? { whatsapp: data.whatsapp } : {}),
+      ...(data.tiktok !== undefined ? { tiktok: data.tiktok } : {}),
+      ...(data.website !== undefined ? { website: data.website } : {}),
+      ...(data.socialLinks !== undefined ? { socialLinks: data.socialLinks } : {}),
       ...(data.settings || {}),
     };
     const updateFields: Record<string, unknown> = { settings: mergedSettings };

@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Store, AlertCircle, MapPin, Phone, Clock, User, Building, FileText, Sparkles, CheckCircle2, Ban } from 'lucide-react';
+import { Store, AlertCircle, MapPin, Phone, Clock, User, Building, FileText, Sparkles, CheckCircle2, Ban, Share2, Globe, MessageCircle } from 'lucide-react';
 import { VenueItem } from '@/stores/branding.store';
 import { NewVenuePayload, UpdateVenuePayload } from '../types/settings.types';
 import { NewVenueSchema, NewVenueFormValues } from '../schemas/settings.schemas';
@@ -77,6 +77,11 @@ export const VenueModal: React.FC<Props> = ({
       requireShiftForDelivery: false,
       notes: '',
       timezone: 'America/Bogota',
+      instagram: '',
+      facebook: '',
+      whatsapp: '',
+      tiktok: '',
+      website: '',
     },
   });
 
@@ -103,6 +108,11 @@ export const VenueModal: React.FC<Props> = ({
           requireShiftForDelivery: settings.requireShiftForDelivery ?? false,
           notes: settings.notes || '',
           timezone: 'America/Bogota',
+          instagram: settings.instagram || '',
+          facebook: settings.facebook || '',
+          whatsapp: settings.whatsapp || '',
+          tiktok: settings.tiktok || '',
+          website: settings.website || '',
         });
         if (lat && lng) {
           setFlyToCoords([lat, lng]);
@@ -124,6 +134,11 @@ export const VenueModal: React.FC<Props> = ({
           requireShiftForDelivery: false,
           notes: '',
           timezone: 'America/Bogota',
+          instagram: '',
+          facebook: '',
+          whatsapp: '',
+          tiktok: '',
+          website: '',
         });
         setFlyToCoords(null);
       }
@@ -193,6 +208,11 @@ export const VenueModal: React.FC<Props> = ({
       requireShiftForDelivery: values.requireShiftForDelivery,
       notes: values.notes?.trim() || '',
       timezone: values.timezone?.trim() || 'America/Bogota',
+      instagram: values.instagram?.trim() || '',
+      facebook: values.facebook?.trim() || '',
+      whatsapp: values.whatsapp?.trim() || '',
+      tiktok: values.tiktok?.trim() || '',
+      website: values.website?.trim() || '',
     };
 
     if (isEditing && editingVenue) {
@@ -601,6 +621,118 @@ export const VenueModal: React.FC<Props> = ({
                     </div>
                   )}
                 />
+
+                {/* Section: Redes Sociales */}
+                <div className="pt-2 space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-bold text-primary tracking-wide">
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>REDES SOCIALES & CANALES OFICIALES</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    <FormField
+                      control={form.control}
+                      name="whatsapp"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold flex items-center gap-1">
+                            <MessageCircle className="w-3 h-3 text-emerald-500" />
+                            <span>WhatsApp Comercial</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Ej. 3118427972"
+                              className="text-xs h-9"
+                            />
+                          </FormControl>
+                          <FormMessage className="text-[11px]" />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="instagram"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold flex items-center gap-1">
+                            <span>Instagram (@usuario o link)</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Ej. @arepamia_oficial"
+                              className="text-xs h-9"
+                            />
+                          </FormControl>
+                          <FormMessage className="text-[11px]" />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="facebook"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold flex items-center gap-1">
+                            <span>Facebook</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Ej. arepamiarestaurante"
+                              className="text-xs h-9"
+                            />
+                          </FormControl>
+                          <FormMessage className="text-[11px]" />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="tiktok"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold flex items-center gap-1">
+                            <span>TikTok</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Ej. @arepamiatiktok"
+                              className="text-xs h-9"
+                            />
+                          </FormControl>
+                          <FormMessage className="text-[11px]" />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="website"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel className="text-xs font-semibold flex items-center gap-1">
+                            <Globe className="w-3 h-3 text-amber-500" />
+                            <span>Sitio Web Oficial</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Ej. https://arepamia.com"
+                              className="text-xs h-9"
+                            />
+                          </FormControl>
+                          <FormMessage className="text-[11px]" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
 
                 <FormField
                   control={form.control}

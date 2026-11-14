@@ -29,6 +29,21 @@ export const CreateVenueSchema = z.object({
   schedule: z.array(DayScheduleSchema).optional(),
   requireShiftForDelivery: z.boolean().optional().default(false),
   notes: z.string().optional(),
+  instagram: z.string().optional().nullable(),
+  facebook: z.string().optional().nullable(),
+  whatsapp: z.string().optional().nullable(),
+  tiktok: z.string().optional().nullable(),
+  website: z.string().optional().nullable(),
+  socialLinks: z
+    .object({
+      instagram: z.string().optional().nullable(),
+      facebook: z.string().optional().nullable(),
+      whatsapp: z.string().optional().nullable(),
+      tiktok: z.string().optional().nullable(),
+      website: z.string().optional().nullable(),
+    })
+    .optional()
+    .nullable(),
   settings: z.record(z.unknown()).optional(),
   companyId: z.string().uuid().optional(),
 });
@@ -49,6 +64,21 @@ export const UpdateVenueSchema = z.object({
   schedule: z.array(DayScheduleSchema).optional(),
   requireShiftForDelivery: z.boolean().optional(),
   notes: z.string().optional(),
+  instagram: z.string().optional().nullable(),
+  facebook: z.string().optional().nullable(),
+  whatsapp: z.string().optional().nullable(),
+  tiktok: z.string().optional().nullable(),
+  website: z.string().optional().nullable(),
+  socialLinks: z
+    .object({
+      instagram: z.string().optional().nullable(),
+      facebook: z.string().optional().nullable(),
+      whatsapp: z.string().optional().nullable(),
+      tiktok: z.string().optional().nullable(),
+      website: z.string().optional().nullable(),
+    })
+    .optional()
+    .nullable(),
   settings: z.record(z.unknown()).optional(),
   companyId: z.string().uuid().optional(),
 });

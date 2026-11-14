@@ -17,6 +17,7 @@ import {
   Building2,
 } from 'lucide-react';
 import { VenuePublicProfile } from '../../types/delivery';
+import { BusinessSocialLinks } from '../storefront/BusinessSocialLinks';
 
 interface Props {
   initialVenues: VenuePublicProfile[];
@@ -258,6 +259,9 @@ export function DirectoryView({ initialVenues }: Props) {
                             <span className="text-slate-400 font-medium">{venue.openingHours}</span>
                           </p>
                         )}
+                        <div className="pt-1">
+                          <BusinessSocialLinks venue={venue} variant="compact" />
+                        </div>
                       </div>
                     </div>
 

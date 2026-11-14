@@ -7,6 +7,7 @@ import { MapPin, Phone, Clock, ArrowLeft, Plus, Sparkles, ChefHat, UtensilsCross
 import { VenuePublicProfile, CatalogCategory, CatalogProduct } from '../../../types/delivery';
 import { ProductDetailModal } from '../../../components/modals/ProductDetailModal';
 import { BusinessLocationModal } from '../../../components/storefront/BusinessLocationModal';
+import { BusinessSocialLinks } from '../../../components/storefront/BusinessSocialLinks';
 import { useCart } from '../../../context/CartContext';
 
 interface Props {
@@ -107,6 +108,10 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
                       • {venue.openingHours}
                     </span>
                   )}
+                </div>
+
+                <div className="mt-3">
+                  <BusinessSocialLinks venue={venue} variant="pills" />
                 </div>
               </div>
             </div>

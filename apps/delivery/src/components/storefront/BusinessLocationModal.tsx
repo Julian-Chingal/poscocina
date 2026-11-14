@@ -11,8 +11,10 @@ import {
   Calendar,
   CheckCircle2,
   XCircle,
+  Share2,
 } from 'lucide-react';
 import { VenuePublicProfile } from '../../types/delivery';
+import { BusinessSocialLinks } from './BusinessSocialLinks';
 
 interface Props {
   venue: VenuePublicProfile;
@@ -148,6 +150,15 @@ export function BusinessLocationModal({ venue, isOpen, onClose }: Props) {
                 <p className="text-xs text-slate-500">Teléfono no registrado</p>
               )}
             </div>
+          </div>
+
+          {/* Social Networks & Official Channels */}
+          <div className="rounded-2xl border border-slate-800/80 bg-slate-950/50 p-4 space-y-3">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <Share2 className="h-3.5 w-3.5 text-orange-400" />
+              <span>Redes Sociales & Canales Oficiales</span>
+            </span>
+            <BusinessSocialLinks venue={venue} variant="cards" />
           </div>
 
           {/* Schedule / Horarios */}

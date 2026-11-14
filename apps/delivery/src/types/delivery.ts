@@ -10,6 +10,18 @@ export interface VenuePublicProfile {
   latitude?: number | null;
   longitude?: number | null;
   businessType?: string;
+  instagram?: string | null;
+  facebook?: string | null;
+  whatsapp?: string | null;
+  tiktok?: string | null;
+  website?: string | null;
+  socialLinks?: {
+    instagram?: string | null;
+    facebook?: string | null;
+    whatsapp?: string | null;
+    tiktok?: string | null;
+    website?: string | null;
+  };
   logoUrl?: string | null;
   primaryColor?: string;
   openingHours?: string;
@@ -27,6 +39,7 @@ export interface VenuePublicProfile {
   taxRate?: number;
   isPrimary?: boolean;
   isActive?: boolean;
+  settings?: Record<string, any>;
 }
 
 export interface CatalogCategory {

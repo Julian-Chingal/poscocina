@@ -30,6 +30,11 @@ export const NewVenueSchema = z.object({
   requireShiftForDelivery: z.boolean().optional(),
   notes: z.string().optional(),
   timezone: z.string().optional(),
+  instagram: z.string().optional(),
+  facebook: z.string().optional(),
+  whatsapp: z.string().optional(),
+  tiktok: z.string().optional(),
+  website: z.string().optional(),
 });
 
 export type NewVenueFormValues = z.infer<typeof NewVenueSchema>;
@@ -64,6 +69,11 @@ export const EditVenueSchema = z.object({
   requireShiftForDelivery: z.boolean().optional(),
   notes: z.string().optional(),
   timezone: z.string().optional(),
+  instagram: z.string().optional(),
+  facebook: z.string().optional(),
+  whatsapp: z.string().optional(),
+  tiktok: z.string().optional(),
+  website: z.string().optional(),
 });
 
 export type EditVenueFormValues = z.infer<typeof EditVenueSchema>;

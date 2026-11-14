@@ -69,6 +69,11 @@ export interface NewVenuePayload {
   requireShiftForDelivery?: boolean;
   notes?: string;
   timezone?: string;
+  instagram?: string;
+  facebook?: string;
+  whatsapp?: string;
+  tiktok?: string;
+  website?: string;
 }
 
 export interface UpdateVenuePayload {
@@ -87,4 +92,9 @@ export interface UpdateVenuePayload {
   requireShiftForDelivery?: boolean;
   notes?: string;
   timezone?: string;
+  instagram?: string;
+  facebook?: string;
+  whatsapp?: string;
+  tiktok?: string;
+  website?: string;
 }
