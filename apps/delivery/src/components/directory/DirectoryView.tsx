@@ -136,28 +136,39 @@ export function DirectoryView({ initialVenues }: Props) {
               )}
             </HStack>
           </VStack>
-
-          {/* Category Filter Pills */}
-          <HStack className="flex items-center justify-center gap-2.5 overflow-x-auto pt-4 pb-2 no-scrollbar w-full">
-            {CATEGORIES.map((cat) => {
-              const Icon = cat.icon;
-              const isSelected = selectedCategory === cat.id;
-              return (
-                <Button
-                  key={cat.id}
-                  label={cat.label}
-                  icon={<Icon className={`h-4 w-4 ${isSelected ? "text-white" : "text-orange-400"}`} />}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`inline-flex items-center rounded-full px-5 py-2.5 text-xs sm:text-sm font-semibold transition shrink-0 cursor-pointer border ${
-                    isSelected
-                      ? "bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-lg shadow-orange-600/30 border-orange-400"
-                      : "bg-slate-900/90 text-slate-200 hover:text-white border-slate-700/80 hover:border-orange-500/50 hover:bg-slate-800"
-                  }`}
-                />
-              );
-            })}
-          </HStack>
         </VStack>
+
+        {/* Category Filter Pills - Full width grid, no horizontal scroll */}
+        <Grid
+          columns={{ minWidth: 150, max: 5 }}
+          gap={3}
+          className="w-full max-w-5xl mx-auto pt-6 pb-2"
+        >
+          {CATEGORIES.map((cat) => {
+            const Icon = cat.icon;
+            const isSelected = selectedCategory === cat.id;
+            return (
+              <Button
+                key={cat.id}
+                label={cat.label}
+                width="100%"
+                icon={
+                  <Icon
+                    className={`h-4 w-4 shrink-0 ${
+                      isSelected ? "text-white" : "text-orange-400"
+                    }`}
+                  />
+                }
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`w-full flex items-center justify-center rounded-2xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition cursor-pointer border ${
+                  isSelected
+                    ? "bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-lg shadow-orange-600/30 border-orange-400"
+                    : "bg-slate-900/90 text-slate-200 hover:text-white border-slate-700/80 hover:border-orange-500/50 hover:bg-slate-800"
+                }`}
+              />
+            );
+          })}
+        </Grid>
 
         {/* Venues Grid */}
         <VStack className="mt-10 w-full max-w-6xl mx-auto">
