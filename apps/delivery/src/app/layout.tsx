@@ -6,6 +6,7 @@ import { Navbar } from '../components/Navbar';
 import { CartDrawer } from '../components/cart/CartDrawer';
 import { CheckoutModal } from '../components/checkout/CheckoutModal';
 import { SileoToaster } from '../components/ui/SileoToaster';
+import { VStack } from '@astryxdesign/core';
 
 export const metadata: Metadata = {
   title: 'Pallevar — Domicilios y Envíos en Minutos',
@@ -61,7 +62,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-orange-500 selection:text-white flex flex-col">
         <CartProvider>
           <Navbar />
-          <main className="flex-1">{children}</main>
+          <VStack as="main" className="flex-1 w-full">{children}</VStack>
           <CartDrawer />
           <CheckoutModal />
           <SileoToaster />

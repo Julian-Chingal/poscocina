@@ -15,6 +15,17 @@ import {
   Navigation,
 } from "lucide-react";
 import {
+  VStack,
+  HStack,
+  Grid,
+  Text,
+  Heading,
+  Button,
+  Badge,
+  Card,
+  Banner,
+} from "@astryxdesign/core";
+import {
   VenuePublicProfile,
   CatalogCategory,
   CatalogProduct,
@@ -87,20 +98,20 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
   };
 
   return (
-    <div className="min-h-screen pb-24">
+    <VStack className="min-h-screen pb-24 w-full">
       {/* Restaurant Header Banner */}
-      <div className="border-b border-slate-800 bg-slate-900/60 backdrop-blur-sm">
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+      <VStack className="border-b border-slate-800 bg-slate-900/60 backdrop-blur-sm w-full">
+        <VStack className="mx-auto max-w-6xl px-4 py-6 sm:px-6 w-full">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition mb-4"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition mb-4 self-start"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Volver a todos los comercios</span>
+            <Text className="text-xs font-semibold text-slate-400">Volver a todos los comercios</Text>
           </Link>
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
+          <HStack className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full">
+            <HStack className="flex items-center gap-4">
               {venue.logoUrl ? (
                 <img
                   src={venue.logoUrl}
@@ -108,126 +119,133 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
                   className="h-16 w-16 object-cover rounded-2xl shadow-lg border border-slate-700/60 bg-slate-800 shrink-0"
                 />
               ) : (
-                <div
+                <HStack
                   className="flex h-16 w-16 items-center justify-center rounded-2xl font-black text-white text-2xl shadow-lg shrink-0"
                   style={{ backgroundColor: venue.primaryColor || "#ea580c" }}
                 >
-                  {(venue.restaurantName || venue.name).charAt(0).toUpperCase()}
-                </div>
+                  <Text weight="bold" className="text-2xl text-white">
+                    {(venue.restaurantName || venue.name).charAt(0).toUpperCase()}
+                  </Text>
+                </HStack>
               )}
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-black text-white">
+              <VStack>
+                <Heading level={1} className="text-2xl sm:text-3xl font-black text-white">
                   {venue.restaurantName || venue.name}
-                </h1>
-                <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-400">
+                </Heading>
+                <HStack className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-400">
                   {venue.address && (
-                    <button
+                    <Button
+                      label="Ver ubicación y dirección"
                       type="button"
                       onClick={() => setIsLocationModalOpen(true)}
-                      className="inline-flex items-center gap-1 text-slate-300 hover:text-orange-400 hover:underline transition"
+                      className="inline-flex items-center gap-1 text-slate-300 hover:text-orange-400 hover:underline transition cursor-pointer p-0 bg-transparent border-none"
                     >
-                      <MapPin className="h-3.5 w-3.5 text-orange-500 shrink-0" />
-                      <span>
+                      <MapPin className="h-3.5 w-3.5 text-orange-500 shrink-0 inline mr-1" />
+                      <Text className="text-xs text-slate-300">
                         {venue.address}
                         {venue.city ? `, ${venue.city}` : ""}
-                      </span>
-                    </button>
+                      </Text>
+                    </Button>
                   )}
                   {venue.phone && (
-                    <span className="flex items-center gap-1">
+                    <HStack className="flex items-center gap-1">
                       <Phone className="h-3.5 w-3.5 text-slate-500" />
-                      {venue.phone}
-                    </span>
+                      <Text className="text-xs text-slate-400">{venue.phone}</Text>
+                    </HStack>
                   )}
-                  <span className="flex items-center gap-1 text-orange-400">
+                  <HStack className="flex items-center gap-1 text-orange-400">
                     <Clock className="h-3.5 w-3.5" />
-                    25-40 min
-                  </span>
+                    <Text className="text-xs text-orange-400">25-40 min</Text>
+                  </HStack>
                   {venue.openingHours && (
-                    <span className="flex items-center gap-1 text-slate-300 font-medium">
+                    <Text weight="bold" className="flex items-center gap-1 text-slate-300 font-medium text-xs">
                       • {venue.openingHours}
-                    </span>
+                    </Text>
                   )}
-                </div>
+                </HStack>
 
-                <div className="mt-3">
+                <VStack className="mt-3">
                   <BusinessSocialLinks venue={venue} variant="pills" />
-                </div>
-              </div>
-            </div>
+                </VStack>
+              </VStack>
+            </HStack>
 
-            <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-center">
-              <button
+            <HStack className="flex flex-wrap items-center gap-2.5 self-start sm:self-center">
+              <Button
+                label="Ver Ubicación y Mapa"
                 type="button"
                 onClick={() => setIsLocationModalOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700/80 bg-slate-800/80 px-3.5 py-1.5 text-xs font-bold text-slate-200 hover:border-orange-500/50 hover:bg-slate-800 hover:text-white transition shadow-sm"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700/80 bg-slate-800/80 px-3.5 py-1.5 text-xs font-bold text-slate-200 hover:border-orange-500/50 hover:bg-slate-800 hover:text-white transition shadow-sm cursor-pointer"
               >
                 <MapPin className="h-3.5 w-3.5 text-orange-400" />
-                <span>Ver Ubicación & Mapa</span>
-              </button>
+                <Text weight="bold" className="text-xs text-slate-200">Ver Ubicación & Mapa</Text>
+              </Button>
 
               {tableParam && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/20 border border-orange-500/40 px-3 py-1 text-xs font-black text-orange-300 shadow-sm">
-                  <UtensilsCrossed className="w-3.5 h-3.5 text-orange-400" />
-                  Mesa {tableParam}
-                </span>
+                <Badge
+                  label={`Mesa ${tableParam}`}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/20 border border-orange-500/40 px-3 py-1 text-xs font-black text-orange-300 shadow-sm"
+                />
               )}
               {venue.isOpen !== false ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 text-xs font-bold text-emerald-300">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Abierto Ahora
-                </span>
+                <Badge
+                  label="Abierto Ahora"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 text-xs font-bold text-emerald-300"
+                />
               ) : (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 px-3 py-1 text-xs font-bold text-rose-300">
-                  <span className="w-2 h-2 rounded-full bg-rose-400" />
-                  Cerrado Temporalmente
-                </span>
+                <Badge
+                  label="Cerrado Temporalmente"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 px-3 py-1 text-xs font-bold text-rose-300"
+                />
               )}
-            </div>
-          </div>
-        </div>
-      </div>
+            </HStack>
+          </HStack>
+        </VStack>
+      </VStack>
 
       {/* Closed Venue Alert Banner */}
       {venue.isOpen === false && (
-        <div className="bg-rose-950/40 border-b border-rose-500/30 px-4 py-3 backdrop-blur-sm">
-          <div className="mx-auto max-w-6xl flex items-center justify-between gap-3 text-xs text-rose-200">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-rose-500/20 text-rose-400 font-bold shrink-0">
-                !
-              </span>
-              <div>
-                <strong>
-                  Restaurante cerrado para domicilios en este momento.
-                </strong>{" "}
-                Puedes explorar nuestro catálogo, pero la recepción de pedidos a
-                domicilio se encuentra pausada.
-                {venue.openingHours && (
-                  <span className="block sm:inline sm:ml-2 font-semibold text-rose-300">
-                    • Horario de atención: {venue.openingHours}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        <VStack className="bg-rose-950/40 border-b border-rose-500/30 px-4 py-3 backdrop-blur-sm w-full">
+          <HStack className="mx-auto max-w-6xl flex items-center justify-between gap-3 text-xs text-rose-200 w-full">
+            <HStack className="flex items-center gap-2.5">
+              <HStack className="flex h-6 w-6 items-center justify-center rounded-lg bg-rose-500/20 text-rose-400 font-bold shrink-0">
+                <Text weight="bold" className="text-rose-400 font-bold">!</Text>
+              </HStack>
+              <VStack>
+                <Text className="text-xs text-rose-200">
+                  <Text weight="bold" className="font-bold text-rose-100">
+                    Restaurante cerrado para domicilios en este momento.
+                  </Text>{" "}
+                  Puedes explorar nuestro catálogo, pero la recepción de pedidos a
+                  domicilio se encuentra pausada.
+                  {venue.openingHours && (
+                    <Text weight="bold" className="block sm:inline sm:ml-2 font-semibold text-rose-300 text-xs">
+                      • Horario de atención: {venue.openingHours}
+                    </Text>
+                  )}
+                </Text>
+              </VStack>
+            </HStack>
+          </HStack>
+        </VStack>
       )}
 
       {/* Category Navigation Bar (Sticky) */}
       {categories.length > 0 && (
-        <div className="sticky top-15.25 z-30 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="flex items-center gap-2 overflow-x-auto py-3 no-scrollbar">
-              <button
+        <VStack className="sticky top-15.25 z-30 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md w-full">
+          <VStack className="mx-auto max-w-6xl px-4 sm:px-6 w-full">
+            <HStack className="flex items-center gap-2 overflow-x-auto py-3 no-scrollbar w-full">
+              <Button
+                label="Todos los productos"
                 onClick={() => setSelectedCategoryId("all")}
-                className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition ${
+                className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition cursor-pointer ${
                   selectedCategoryId === "all"
                     ? "bg-orange-600 text-white shadow-sm"
                     : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
                 }`}
               >
-                Todos ({products.length})
-              </button>
+                <Text weight="bold" className="text-xs">Todos ({products.length})</Text>
+              </Button>
 
               {categories.map((cat) => {
                 const count = products.filter(
@@ -235,100 +253,104 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
                 ).length;
                 const isSelected = selectedCategoryId === cat.id;
                 return (
-                  <button
+                  <Button
                     key={cat.id}
+                    label={cat.name}
                     onClick={() => setSelectedCategoryId(cat.id)}
-                    className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition flex items-center gap-1.5 ${
+                    className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                       isSelected
                         ? "bg-orange-600 text-white shadow-sm"
                         : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
                     }`}
                   >
-                    <span>{cat.name}</span>
-                    <span className="text-[10px] opacity-75">({count})</span>
-                  </button>
+                    <Text weight="bold" className="text-xs">{cat.name}</Text>
+                    <Text className="text-[10px] opacity-75">({count})</Text>
+                  </Button>
                 );
               })}
-            </div>
-          </div>
-        </div>
+            </HStack>
+          </VStack>
+        </VStack>
       )}
 
       {/* Product Catalog Grid */}
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      <VStack className="mx-auto max-w-6xl px-4 py-8 sm:px-6 w-full">
         {filteredProducts.length === 0 ? (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-12 text-center max-w-md mx-auto">
+          <Card className="rounded-2xl border border-slate-800 bg-slate-900/40 p-12 text-center max-w-md mx-auto w-full">
             <ChefHat className="h-12 w-12 text-slate-700 mx-auto" />
-            <h3 className="mt-3 font-bold text-slate-200">
+            <Heading level={3} className="mt-3 font-bold text-slate-200 text-base">
               No hay productos disponibles
-            </h3>
-            <p className="mt-1 text-xs text-slate-500">
+            </Heading>
+            <Text className="mt-1 text-xs text-slate-500 block">
               Esta categoría aún no cuenta con productos activos para delivery.
-            </p>
-          </div>
+            </Text>
+          </Card>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <Grid className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 w-full">
             {filteredProducts.map((product) => {
               const hasModifiers =
                 product.modifierGroups && product.modifierGroups.length > 0;
 
               return (
-                <div
+                <Card
                   key={product.id}
                   onClick={() => setActiveProduct(product)}
                   className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 p-5 transition-all duration-300 hover:border-orange-500/40 hover:bg-slate-900 hover:shadow-lg cursor-pointer"
                 >
-                  <div>
+                  <VStack className="w-full">
                     {product.imageUrl && (
-                      <div className="relative mb-4 h-40 w-full overflow-hidden rounded-xl bg-slate-800">
+                      <VStack className="relative mb-4 h-40 w-full overflow-hidden rounded-xl bg-slate-800">
                         <img
                           src={product.imageUrl}
                           alt={product.name}
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
-                      </div>
+                      </VStack>
                     )}
 
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-bold text-white text-base group-hover:text-orange-400 transition">
+                    <HStack className="flex items-start justify-between gap-2 w-full">
+                      <Heading level={3} className="font-bold text-white text-base group-hover:text-orange-400 transition">
                         {product.name}
-                      </h3>
-                    </div>
+                      </Heading>
+                    </HStack>
 
                     {product.description && (
-                      <p className="mt-1.5 text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                      <Text className="mt-1.5 text-xs text-slate-400 line-clamp-2 leading-relaxed block">
                         {product.description}
-                      </p>
+                      </Text>
                     )}
-                  </div>
+                  </VStack>
 
-                  <div className="mt-4 flex items-center justify-between border-t border-slate-800/80 pt-3">
-                    <div>
-                      <span className="block text-base font-black text-orange-400">
+                  <HStack className="mt-4 flex items-center justify-between border-t border-slate-800/80 pt-3 w-full">
+                    <VStack>
+                      <Text weight="bold" className="block text-base font-black text-orange-400">
                         {formatCOP(product.price)}
-                      </span>
+                      </Text>
                       {hasModifiers && (
-                        <span className="text-[10px] text-slate-500">
+                        <Text className="text-[10px] text-slate-500 block">
                           Personalizable
-                        </span>
+                        </Text>
                       )}
-                    </div>
+                    </VStack>
 
-                    <button
+                    <Button
+                      label={hasModifiers ? "Ver opciones del producto" : "Agregar producto a la canasta"}
                       type="button"
                       onClick={(e) => handleQuickAdd(e, product)}
-                      className="flex items-center gap-1.5 rounded-xl bg-orange-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-500 transition"
+                      className="flex items-center gap-1.5 rounded-xl bg-orange-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-500 transition cursor-pointer"
                     >
                       <Plus className="h-3.5 w-3.5" />
-                      <span>{hasModifiers ? "Opciones" : "Agregar"}</span>
-                    </button>
-                  </div>
-                </div>
+                      <Text weight="bold" className="text-xs text-white">
+                        {hasModifiers ? "Opciones" : "Agregar"}
+                      </Text>
+                    </Button>
+                  </HStack>
+                </Card>
               );
             })}
-          </div>
+          </Grid>
         )}
-      </div>
+      </VStack>
 
       {/* Product Customization Modal */}
       <ProductDetailModal
@@ -343,6 +365,6 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
         isOpen={isLocationModalOpen}
         onClose={() => setIsLocationModalOpen(false)}
       />
-    </div>
+    </VStack>
   );
 }

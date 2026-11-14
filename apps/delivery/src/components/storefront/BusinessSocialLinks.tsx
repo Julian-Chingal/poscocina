@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Globe, ExternalLink } from 'lucide-react';
+import { HStack, Grid, Text } from '@astryxdesign/core';
 import { VenuePublicProfile } from '../../types/delivery';
 
 const InstagramIcon = ({ className = 'h-4 w-4' }: { className?: string }) => (
@@ -164,7 +165,7 @@ export function BusinessSocialLinks({ venue, variant = 'pills', className = '' }
 
   if (variant === 'compact') {
     return (
-      <div className={`flex items-center gap-1.5 ${className}`}>
+      <HStack className={`flex items-center gap-1.5 ${className}`}>
         {links.map((item) => {
           const Icon = item.icon;
           return (
@@ -180,13 +181,13 @@ export function BusinessSocialLinks({ venue, variant = 'pills', className = '' }
             </a>
           );
         })}
-      </div>
+      </HStack>
     );
   }
 
   if (variant === 'cards') {
     return (
-      <div className={`grid grid-cols-2 gap-2 ${className}`}>
+      <Grid className={`grid grid-cols-2 gap-2 ${className}`}>
         {links.map((item) => {
           const Icon = item.icon;
           return (
@@ -197,21 +198,21 @@ export function BusinessSocialLinks({ venue, variant = 'pills', className = '' }
               rel="noopener noreferrer"
               className={`flex items-center justify-between px-3 py-2.5 rounded-xl border transition text-xs font-bold ${item.colorClasses}`}
             >
-              <div className="flex items-center gap-2">
+              <HStack className="flex items-center gap-2">
                 <Icon className="h-4 w-4" />
-                <span>{item.label}</span>
-              </div>
+                <Text weight="bold" className="text-xs">{item.label}</Text>
+              </HStack>
               <ExternalLink className="h-3 w-3 opacity-60" />
             </a>
           );
         })}
-      </div>
+      </Grid>
     );
   }
 
   // Default 'pills'
   return (
-    <div className={`flex items-center gap-2 flex-wrap ${className}`}>
+    <HStack className={`flex items-center gap-2 flex-wrap ${className}`}>
       {links.map((item) => {
         const Icon = item.icon;
         return (
@@ -223,10 +224,10 @@ export function BusinessSocialLinks({ venue, variant = 'pills', className = '' }
             className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold transition shadow-sm ${item.colorClasses}`}
           >
             <Icon className="h-3.5 w-3.5" />
-            <span>{item.label}</span>
+            <Text weight="bold" className="text-xs">{item.label}</Text>
           </a>
         );
       })}
-    </div>
+    </HStack>
   );
 }

@@ -3,6 +3,13 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import { Navigation, ZoomIn, ZoomOut, MapPin, Check, Loader2, LocateFixed } from 'lucide-react';
+import {
+  VStack,
+  HStack,
+  Text,
+  Button,
+  Card,
+} from '@astryxdesign/core';
 import { sileo } from 'sileo';
 
 interface Props {
@@ -41,7 +48,7 @@ export default function DeliveryLocationPickerMap({
   onLocationSelect,
   onClose,
 }: Props) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
 
@@ -58,121 +65,143 @@ export default function DeliveryLocationPickerMap({
   });
 
   const [hasMarker, setHasMarker] = useState<boolean>(() => {
-    return Boolean(initialLat && initialLng);
+    return Boolean(initialLat && initialLng && !isNaN(initialLat) && !isNaN(initialLng));
   });
 
   const [isDetectingGps, setIsDetectingGps] = useState(false);
+  const [addressPreview, setAddressPreview] = useState<{
+    address?: string;
+    barrio?: string;
+  } | null>(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
-  const [addressPreview, setAddressPreview] = useState<{ address: string; barrio: string } | null>(null);
 
   // Reverse geocoding via OpenStreetMap Nominatim
   const reverseGeocode = useCallback(async (lat: number, lng: number) => {
     setIsGeocoding(true);
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1`,
         { headers: { 'Accept-Language': 'es' } }
       );
-      if (res.ok) {
-        const data = await res.json();
-        const addr = data.address || {};
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && data.address) {
+        const road = data.address.road || data.address.pedestrian || data.address.path || '';
+        const houseNumber = data.address.house_number || '';
         const barrio =
-          addr.suburb ||
-          addr.neighbourhood ||
-          addr.quarter ||
-          addr.residential ||
-          addr.city_district ||
-          addr.village ||
+          data.address.neighbourhood ||
+          data.address.suburb ||
+          data.address.quarter ||
+          data.address.residential ||
           '';
 
-        const road = addr.road || data.name || '';
-        const houseNumber = addr.house_number ? ` #${addr.house_number}` : '';
-        const address = road ? `${road}${houseNumber}` : '';
-
-        setAddressPreview({ address, barrio });
-        return { address, barrio };
+        const composedAddress = road ? `${road} ${houseNumber}`.trim() : data.display_name?.split(',')[0] || '';
+        setAddressPreview({
+          address: composedAddress,
+          barrio: barrio,
+        });
       }
     } catch (e) {
-      console.warn('Reverse geocoding error:', e);
+      console.warn('Reverse geocoding error', e);
     } finally {
       setIsGeocoding(false);
     }
-    return { address: '', barrio: '' };
   }, []);
 
-  // Update or place marker
-  const updateMarker = useCallback((lat: number, lng: number, mapInstance?: L.Map) => {
-    const map = mapInstance || mapRef.current;
-    if (!map) return;
+  // Update marker position
+  const updateMarker = useCallback(
+    (lat: number, lng: number) => {
+      setCurrentCoords([lat, lng]);
+      setHasMarker(true);
 
-    const roundedLat = parseFloat(lat.toFixed(6));
-    const roundedLng = parseFloat(lng.toFixed(6));
-    setCurrentCoords([roundedLat, roundedLng]);
-    setHasMarker(true);
+      if (!mapRef.current) return;
 
-    if (markerRef.current) {
-      markerRef.current.setLatLng([roundedLat, roundedLng]);
-    } else {
-      const marker = L.marker([roundedLat, roundedLng], {
-        icon: createCustomPinIcon(),
-        draggable: true,
-      }).addTo(map);
+      if (!markerRef.current) {
+        const pinIcon = createCustomPinIcon();
+        const newMarker = L.marker([lat, lng], {
+          icon: pinIcon,
+          draggable: true,
+        }).addTo(mapRef.current);
 
-      marker.on('dragend', (event) => {
-        const pos = event.target.getLatLng();
-        updateMarker(pos.lat, pos.lng);
-      });
+        newMarker.on('dragend', () => {
+          const pos = newMarker.getLatLng();
+          updateMarker(pos.lat, pos.lng);
+        });
 
-      markerRef.current = marker;
-    }
+        markerRef.current = newMarker;
+      } else {
+        markerRef.current.setLatLng([lat, lng]);
+      }
 
-    reverseGeocode(roundedLat, roundedLng);
-  }, [reverseGeocode]);
+      reverseGeocode(lat, lng);
+    },
+    [reverseGeocode]
+  );
 
-  // Initialize Leaflet map
+  // Initialize Map
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    const map = L.map(containerRef.current, {
+    const map = L.map(containerRef.current as HTMLElement, {
       center: currentCoords,
-      zoom: hasMarker ? 16 : 14,
+      zoom: 16,
       zoomControl: false,
-      attributionControl: false,
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    // Dark-styled CARTO tiles
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap, &copy; CARTO',
       maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors',
     }).addTo(map);
 
-    L.control.attribution({ position: 'bottomright', prefix: false }).addTo(map);
+    // Click handler to position pin
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      updateMarker(e.latlng.lat, e.latlng.lng);
+    });
 
-    if (hasMarker) {
-      const marker = L.marker(currentCoords, {
-        icon: createCustomPinIcon(),
+    // If initial coords exist, place pin immediately
+    if (initialLat && initialLng && !isNaN(initialLat) && !isNaN(initialLng)) {
+      const pinIcon = createCustomPinIcon();
+      const initialMarker = L.marker([initialLat, initialLng], {
+        icon: pinIcon,
         draggable: true,
       }).addTo(map);
 
-      marker.on('dragend', (event) => {
-        const pos = event.target.getLatLng();
-        updateMarker(pos.lat, pos.lng, map);
+      initialMarker.on('dragend', () => {
+        const pos = initialMarker.getLatLng();
+        updateMarker(pos.lat, pos.lng);
       });
 
-      markerRef.current = marker;
-      reverseGeocode(currentCoords[0], currentCoords[1]);
+      markerRef.current = initialMarker;
+      reverseGeocode(initialLat, initialLng);
     }
 
-    map.on('click', (e: L.LeafletMouseEvent) => {
-      const { lat, lng } = e.latlng;
-      updateMarker(lat, lng, map);
-    });
+    // Add venue marker if available (for reference)
+    if (venueCoords?.latitude && venueCoords?.longitude) {
+      const venuePin = L.divIcon({
+        className: 'venue-ref-pin',
+        html: `
+          <div style="background-color: #0f172a; border: 2px solid #ea580c; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">
+            <span style="font-size: 14px;">🏪</span>
+          </div>
+        `,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+      });
+      L.marker([venueCoords.latitude, venueCoords.longitude], {
+        icon: venuePin,
+        interactive: false,
+      })
+        .addTo(map)
+        .bindTooltip('Sede del Restaurante', { permanent: false, direction: 'top' });
+    }
 
     mapRef.current = map;
 
-    // Small delay resize to ensure container renders correctly
+    // Fix possible leaflet size invalidation after modal transition
     setTimeout(() => {
       map.invalidateSize();
-    }, 200);
+    }, 250);
 
     return () => {
       map.remove();
@@ -181,12 +210,12 @@ export default function DeliveryLocationPickerMap({
     };
   }, []);
 
-  // Handle GPS detection
+  // Browser Geolocation / GPS Detection
   const handleDetectGps = () => {
     if (!navigator.geolocation) {
-      sileo.warning({
-        title: 'Geolocalización no disponible',
-        description: 'Tu navegador no soporta geolocalización automática.',
+      sileo.error({
+        title: 'GPS no disponible',
+        description: 'Tu navegador no soporta geolocalización.',
       });
       return;
     }
@@ -242,90 +271,94 @@ export default function DeliveryLocationPickerMap({
   };
 
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 flex flex-col">
+    <Card className="relative w-full rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 flex flex-col p-0">
       {/* Map Header Instructions */}
-      <div className="bg-slate-900/90 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2 text-slate-300">
+      <HStack className="bg-slate-900/90 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between text-xs w-full">
+        <HStack className="flex items-center gap-2 text-slate-300">
           <MapPin className="h-4 w-4 text-orange-400 shrink-0" />
-          <span>Toca el mapa o arrastra el pin para fijar tu entrega</span>
-        </div>
+          <Text className="text-xs text-slate-300">Toca el mapa o arrastra el pin para fijar tu entrega</Text>
+        </HStack>
         {isGeocoding && (
-          <span className="flex items-center gap-1 text-[11px] text-orange-400">
+          <HStack className="flex items-center gap-1 text-[11px] text-orange-400">
             <Loader2 className="h-3 w-3 animate-spin" />
-            Buscando dirección...
-          </span>
+            <Text className="text-[11px] text-orange-400">Buscando dirección...</Text>
+          </HStack>
         )}
-      </div>
+      </HStack>
 
       {/* Map Canvas */}
-      <div className="relative w-full h-72 sm:h-80 bg-slate-950">
-        <div ref={containerRef} className="w-full h-full" />
+      <VStack className="relative w-full h-72 sm:h-80 bg-slate-950">
+        <VStack ref={containerRef} className="w-full h-full" />
 
         {/* Floating Controls */}
-        <div className="absolute top-3 right-3 z-[400] flex flex-col gap-1.5">
-          <button
+        <VStack className="absolute top-3 right-3 z-[400] flex flex-col gap-1.5">
+          <Button
+            label="Usar mi ubicación GPS"
             type="button"
             onClick={handleDetectGps}
-            disabled={isDetectingGps}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900/95 text-slate-200 hover:text-white hover:bg-slate-800 border border-slate-700/80 shadow-md backdrop-blur-sm transition"
-            title="Usar mi ubicación GPS"
+            isDisabled={isDetectingGps}
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900/95 text-slate-200 hover:text-white hover:bg-slate-800 border border-slate-700/80 shadow-md backdrop-blur-sm transition cursor-pointer"
+            tooltip="Usar mi ubicación GPS"
           >
             {isDetectingGps ? (
               <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
             ) : (
               <LocateFixed className="h-4 w-4 text-orange-400" />
             )}
-          </button>
+          </Button>
 
-          <button
+          <Button
+            label="Acercar mapa"
             type="button"
             onClick={() => mapRef.current?.zoomIn()}
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900/90 text-slate-200 hover:bg-slate-800 border border-slate-700/80 shadow-md backdrop-blur-sm transition"
-            title="Acercar"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900/90 text-slate-200 hover:bg-slate-800 border border-slate-700/80 shadow-md backdrop-blur-sm transition cursor-pointer"
+            tooltip="Acercar"
           >
             <ZoomIn className="h-4 w-4" />
-          </button>
+          </Button>
 
-          <button
+          <Button
+            label="Alejar mapa"
             type="button"
             onClick={() => mapRef.current?.zoomOut()}
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900/90 text-slate-200 hover:bg-slate-800 border border-slate-700/80 shadow-md backdrop-blur-sm transition"
-            title="Alejar"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900/90 text-slate-200 hover:bg-slate-800 border border-slate-700/80 shadow-md backdrop-blur-sm transition cursor-pointer"
+            tooltip="Alejar"
           >
             <ZoomOut className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
+          </Button>
+        </VStack>
+      </VStack>
 
       {/* Address preview & Confirmation Footer */}
-      <div className="p-3.5 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="w-full sm:w-auto text-left flex-1 min-w-0">
+      <HStack className="p-3.5 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
+        <VStack className="w-full sm:w-auto text-left flex-1 min-w-0">
           {hasMarker ? (
-            <div>
-              <p className="text-xs font-semibold text-white truncate">
+            <VStack>
+              <Text weight="bold" className="text-xs font-semibold text-white truncate block">
                 {addressPreview?.address || `${currentCoords[0]}, ${currentCoords[1]}`}
-              </p>
+              </Text>
               {addressPreview?.barrio && (
-                <p className="text-[11px] text-orange-400 font-medium">
+                <Text weight="bold" className="text-[11px] text-orange-400 font-medium block">
                   Barrio detectado: {addressPreview.barrio}
-                </p>
+                </Text>
               )}
-            </div>
+            </VStack>
           ) : (
-            <p className="text-xs text-slate-400">Ningún punto seleccionado todavía</p>
+            <Text className="text-xs text-slate-400 block">Ningún punto seleccionado todavía</Text>
           )}
-        </div>
+        </VStack>
 
-        <button
+        <Button
+          label="Fijar esta ubicación"
           type="button"
           onClick={handleConfirmLocation}
-          disabled={!hasMarker}
-          className="w-full sm:w-auto flex items-center justify-center gap-1.5 rounded-xl bg-orange-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:bg-orange-500 disabled:opacity-50 transition"
+          isDisabled={!hasMarker}
+          className="w-full sm:w-auto flex items-center justify-center gap-1.5 rounded-xl bg-orange-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:bg-orange-500 disabled:opacity-50 transition cursor-pointer"
         >
           <Check className="h-3.5 w-3.5" />
-          <span>Fijar esta ubicación</span>
-        </button>
-      </div>
-    </div>
+          <Text weight="bold" className="text-xs text-white">Fijar esta ubicación</Text>
+        </Button>
+      </HStack>
+    </Card>
   );
 }

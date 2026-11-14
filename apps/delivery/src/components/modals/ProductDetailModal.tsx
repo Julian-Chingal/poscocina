@@ -1,7 +1,17 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Plus, Minus, Check, Sparkles, CheckCircle2 } from 'lucide-react';
+import { X, Plus, Minus, Check, Sparkles } from 'lucide-react';
+import {
+  VStack,
+  HStack,
+  Text,
+  Heading,
+  Button,
+  Badge,
+  Card,
+  TextArea,
+} from '@astryxdesign/core';
 import {
   CatalogProduct,
   CatalogModifierGroup,
@@ -79,8 +89,17 @@ export function ProductDetailModal({ product, venue, onClose }: Props) {
             };
           });
         }
-      } else {
-        initial[group.id] = [];
+      } else if (group.isRequired && group.selectionType === 'single' && activeMods.length > 0) {
+        // Automatically select first available option for mandatory single-choice groups
+        const first = activeMods[0];
+        const delta = typeof first.priceDelta === 'string' ? parseFloat(first.priceDelta) : first.priceDelta;
+        initial[group.id] = [
+          {
+            modifierId: first.id,
+            name: first.name,
+            priceDelta: delta || 0,
+          },
+        ];
       }
     });
 
@@ -91,50 +110,43 @@ export function ProductDetailModal({ product, venue, onClose }: Props) {
 
   if (!product) return null;
 
+  const formatCOP = (num: number) =>
+    new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(num);
+
   const basePrice = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
 
-  // Single select handler: Mutuamente Excluyente (Radio behavior)
-  const handleSingleSelect = (
-    group: CatalogModifierGroup,
-    modifier: { id: string; name: string; priceDelta: string | number }
-  ) => {
+  // Single select (excluyente: radio behavior)
+  const handleSingleSelect = (group: CatalogModifierGroup, modifier: any) => {
     const delta = typeof modifier.priceDelta === 'string' ? parseFloat(modifier.priceDelta) : modifier.priceDelta;
-    const current = selectedModifiers[group.id] || [];
-    const isAlreadySelected = current.some((m) => m.modifierId === modifier.id);
-
-    // If it's already selected and the group is optional, allow unchecking
-    if (isAlreadySelected && !group.isRequired) {
-      setSelectedModifiers((prev) => ({
-        ...prev,
-        [group.id]: [],
-      }));
-      return;
-    }
-
     setSelectedModifiers((prev) => ({
       ...prev,
-      [group.id]: [{ modifierId: modifier.id, name: modifier.name, priceDelta: delta || 0 }],
+      [group.id]: [
+        {
+          modifierId: modifier.id,
+          name: modifier.name,
+          priceDelta: delta || 0,
+        },
+      ],
     }));
   };
 
-  // Multiple select handler: Incluyente (Checkbox / Additions behavior)
-  const handleMultipleSelect = (
-    group: CatalogModifierGroup,
-    modifier: { id: string; name: string; priceDelta: string | number }
-  ) => {
+  // Multiple select (incluyente: checkbox behavior with max limit support)
+  const handleMultipleSelect = (group: CatalogModifierGroup, modifier: any) => {
     const delta = typeof modifier.priceDelta === 'string' ? parseFloat(modifier.priceDelta) : modifier.priceDelta;
-    const current = selectedModifiers[group.id] || [];
-    const exists = current.some((m) => m.modifierId === modifier.id);
+    const currentList = selectedModifiers[group.id] || [];
+    const exists = currentList.some((m) => m.modifierId === modifier.id);
 
     if (exists) {
+      // Toggle off
       setSelectedModifiers((prev) => ({
         ...prev,
-        [group.id]: current.filter((m) => m.modifierId !== modifier.id),
+        [group.id]: currentList.filter((m) => m.modifierId !== modifier.id),
       }));
     } else {
-      if (group.maxSelections && current.length >= group.maxSelections) {
+      // Check max allowed selections
+      if (group.maxSelections && currentList.length >= group.maxSelections) {
         sileo.warning({
-          title: 'Límite de opciones alcanzado',
+          title: 'Límite alcanzado',
           description: `Solo puedes seleccionar hasta ${group.maxSelections} opciones en "${group.name}".`,
         });
         return;
@@ -142,23 +154,42 @@ export function ProductDetailModal({ product, venue, onClose }: Props) {
 
       setSelectedModifiers((prev) => ({
         ...prev,
-        [group.id]: [...current, { modifierId: modifier.id, name: modifier.name, priceDelta: delta || 0 }],
+        [group.id]: [
+          ...currentList,
+          {
+            modifierId: modifier.id,
+            name: modifier.name,
+            priceDelta: delta || 0,
+          },
+        ],
       }));
     }
   };
 
-  const allSelectedModifiers = Object.values(selectedModifiers).flat();
-  const modifiersTotal = allSelectedModifiers.reduce((acc, m) => acc + (m.priceDelta || 0), 0);
-  const unitPrice = basePrice + modifiersTotal;
+  // Calculate total unit price including modifier deltas
+  const modifierTotal = Object.values(selectedModifiers)
+    .flat()
+    .reduce((sum, mod) => sum + (mod.priceDelta || 0), 0);
+
+  const unitPrice = Math.max(0, basePrice + modifierTotal);
   const totalPrice = unitPrice * quantity;
 
-  // Validation: find first unsatisfied required modifier group
-  const missingRequiredGroup = groups.find((group) => {
-    if (!group.isRequired) return false;
-    const selected = selectedModifiers[group.id] || [];
-    const minNeeded = group.minSelections && group.minSelections > 0 ? group.minSelections : 1;
-    return selected.length < minNeeded;
-  });
+  // Validate required groups before adding to cart
+  const validateMandatoryGroups = (): boolean => {
+    for (const group of groups) {
+      if (group.isRequired) {
+        const selections = selectedModifiers[group.id] || [];
+        if (selections.length === 0) {
+          sileo.error({
+            title: 'Opción obligatoria requerida',
+            description: `Por favor selecciona al menos una opción en "${group.name}".`,
+          });
+          return false;
+        }
+      }
+    }
+    return true;
+  };
 
   const handleAddToCart = () => {
     if (venue.isOpen === false) {
@@ -171,88 +202,80 @@ export function ProductDetailModal({ product, venue, onClose }: Props) {
       return;
     }
 
-    if (missingRequiredGroup) {
-      sileo.warning({
-        title: 'Opción obligatoria requerida',
-        description: `Por favor selecciona al menos una opción en "${missingRequiredGroup.name}".`,
-      });
-      return;
-    }
+    if (!validateMandatoryGroups()) return;
 
-    addItem(product, quantity, allSelectedModifiers, notes, venue);
+    const flattenedModifiers = Object.values(selectedModifiers).flat();
+    addItem(product, quantity, flattenedModifiers, notes, venue);
+
     sileo.success({
-      title: 'Producto agregado',
-      description: `${quantity}x ${product.name} en tu canasta`,
+      title: '¡Agregado a la canasta!',
+      description: `${quantity}x ${product.name} listo en tu pedido.`,
     });
+
     onClose();
   };
 
-  const formatCOP = (num: number) =>
-    new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      maximumFractionDigits: 0,
-    }).format(num);
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 text-slate-100 shadow-2xl">
+    <VStack className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+      <VStack className="relative flex max-h-[90vh] w-full max-w-lg flex-col rounded-3xl bg-slate-900 border border-slate-800 text-slate-100 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800/90 px-6 py-4 bg-slate-900/80 backdrop-blur-md">
-          <div className="pr-4">
-            <h3 className="text-lg font-bold text-white line-clamp-1">{product.name}</h3>
+        <HStack className="flex items-center justify-between border-b border-slate-800/90 px-6 py-4 bg-slate-900/80 backdrop-blur-md w-full">
+          <VStack className="pr-4">
+            <Heading level={3} className="text-lg font-bold text-white line-clamp-1">{product.name}</Heading>
             {product.category?.name && (
-              <span className="text-xs text-slate-400 font-medium">{product.category.name}</span>
+              <Text className="text-xs text-slate-400 font-medium">{product.category.name}</Text>
             )}
-          </div>
-          <button
+          </VStack>
+          <Button
+            label="Cerrar modal"
             onClick={onClose}
-            className="rounded-full p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+            className="rounded-full p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
             aria-label="Cerrar"
           >
             <X className="h-5 w-5" />
-          </button>
-        </div>
+          </Button>
+        </HStack>
 
         {/* Scrollable Content */}
-        <div className="overflow-y-auto px-6 py-5 space-y-6 flex-1 custom-scrollbar">
+        <VStack className="overflow-y-auto px-6 py-5 space-y-6 flex-1 custom-scrollbar w-full">
           {product.imageUrl && (
-            <div className="relative h-48 w-full overflow-hidden rounded-2xl bg-slate-800 border border-slate-800 shadow-inner">
+            <VStack className="relative h-48 w-full overflow-hidden rounded-2xl bg-slate-800 border border-slate-800 shadow-inner">
               <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
-            </div>
+            </VStack>
           )}
 
           {/* Pricing & Description */}
-          <div className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-4">
-            <div className="flex items-baseline justify-between">
-              <div>
-                <span className="text-xs uppercase tracking-wider text-slate-400 font-semibold block mb-0.5">
+          <Card className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-4 w-full">
+            <HStack className="flex items-baseline justify-between w-full">
+              <VStack>
+                <Text weight="bold" className="text-xs uppercase tracking-wider text-slate-400 font-semibold block mb-0.5">
                   Precio base
-                </span>
-                <span className="text-2xl font-black text-orange-400">{formatCOP(basePrice)}</span>
-              </div>
+                </Text>
+                <Text weight="bold" className="text-2xl font-black text-orange-400">{formatCOP(basePrice)}</Text>
+              </VStack>
               {product.prepTimeMin && (
-                <span className="text-xs font-semibold text-slate-300 bg-slate-800/90 border border-slate-700/60 px-3 py-1 rounded-full">
-                  ⏱️ {product.prepTimeMin} min aprox.
-                </span>
+                <Badge
+                  label={`⏱️ ${product.prepTimeMin} min aprox.`}
+                  className="text-xs font-semibold text-slate-300 bg-slate-800/90 border border-slate-700/60 px-3 py-1 rounded-full"
+                />
               )}
-            </div>
+            </HStack>
             {product.description && (
-              <p className="mt-3 text-sm leading-relaxed text-slate-300 border-t border-slate-800/80 pt-3">
+              <Text className="mt-3 text-sm leading-relaxed text-slate-300 border-t border-slate-800/80 pt-3 block">
                 {product.description}
-              </p>
+              </Text>
             )}
-          </div>
+          </Card>
 
           {/* Modifier Groups: Incluyentes & Excluyentes */}
           {groups.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
+            <VStack className="space-y-4 w-full">
+              <HStack className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-orange-400" />
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                <Heading level={4} className="text-xs font-bold uppercase tracking-wider text-slate-300">
                   Opciones & Toppings
-                </h4>
-              </div>
+                </Heading>
+              </HStack>
 
               {groups.map((group) => {
                 const isSingle = group.selectionType === 'single';
@@ -260,36 +283,38 @@ export function ProductDetailModal({ product, venue, onClose }: Props) {
                 const activeMods = (group.modifiers || []).filter((m) => m.isAvailable !== false);
 
                 return (
-                  <div
+                  <Card
                     key={group.id}
-                    className="rounded-2xl border border-slate-800/80 bg-slate-950/60 p-4 transition-colors hover:border-slate-700/80"
+                    className="rounded-2xl border border-slate-800/80 bg-slate-950/60 p-4 transition-colors hover:border-slate-700/80 w-full"
                   >
                     {/* Group Header */}
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                      <div>
-                        <h5 className="font-bold text-slate-100 text-sm">{group.name}</h5>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
+                    <HStack className="flex items-start justify-between gap-2 mb-3 w-full">
+                      <VStack>
+                        <Heading level={5} className="font-bold text-slate-100 text-sm">{group.name}</Heading>
+                        <Text className="text-[11px] text-slate-400 mt-0.5 block">
                           {isSingle
                             ? 'Selección única (Excluyente) • Elige 1 opción'
                             : group.maxSelections
                             ? `Selección múltiple (Incluyente) • Hasta ${group.maxSelections} opciones`
                             : 'Selección múltiple (Incluyente) • Elige las que desees'}
-                        </p>
-                      </div>
+                        </Text>
+                      </VStack>
 
                       {group.isRequired ? (
-                        <span className="shrink-0 text-[10px] font-bold text-orange-400 uppercase tracking-wider bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full">
-                          Obligatorio
-                        </span>
+                        <Badge
+                          label="Obligatorio"
+                          className="shrink-0 text-[10px] font-bold text-orange-400 uppercase tracking-wider bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full"
+                        />
                       ) : (
-                        <span className="shrink-0 text-[10px] text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-full">
-                          Opcional
-                        </span>
+                        <Badge
+                          label="Opcional"
+                          className="shrink-0 text-[10px] text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-full"
+                        />
                       )}
-                    </div>
+                    </HStack>
 
                     {/* Modifiers List */}
-                    <div className="space-y-2">
+                    <VStack className="space-y-2 w-full">
                       {activeMods.map((mod) => {
                         const isSelected = selectedInGroup.some((m) => m.modifierId === mod.id);
                         const delta =
@@ -298,7 +323,8 @@ export function ProductDetailModal({ product, venue, onClose }: Props) {
                             : mod.priceDelta || 0;
 
                         return (
-                          <button
+                          <Button
+                            label={mod.name}
                             type="button"
                             key={mod.id}
                             onClick={() =>
@@ -306,15 +332,15 @@ export function ProductDetailModal({ product, venue, onClose }: Props) {
                                 ? handleSingleSelect(group, mod)
                                 : handleMultipleSelect(group, mod)
                             }
-                            className={`flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-sm transition text-left ${
+                            className={`flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-sm transition text-left cursor-pointer ${
                               isSelected
                                 ? 'bg-orange-500/15 border border-orange-500/50 text-orange-100 shadow-sm'
                                 : 'bg-slate-900/80 hover:bg-slate-800/80 text-slate-300 border border-slate-800/80'
                             }`}
                           >
-                            <div className="flex items-center gap-3">
+                            <HStack className="flex items-center gap-3">
                               {/* Selection Indicator: Circle for Excluyente (Single), Square for Incluyente (Multiple) */}
-                              <div
+                              <HStack
                                 className={`flex h-4 w-4 shrink-0 items-center justify-center ${
                                   isSingle ? 'rounded-full' : 'rounded-md'
                                 } border transition ${
@@ -325,99 +351,105 @@ export function ProductDetailModal({ product, venue, onClose }: Props) {
                               >
                                 {isSelected && (
                                   isSingle ? (
-                                    <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                                    <VStack className="h-1.5 w-1.5 rounded-full bg-white" />
                                   ) : (
                                     <Check className="h-3 w-3 stroke-[3]" />
                                   )
                                 )}
-                              </div>
+                              </HStack>
 
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-sm">{mod.name}</span>
+                              <HStack className="flex items-center gap-2">
+                                <Text weight="bold" className="font-medium text-sm">{mod.name}</Text>
                                 {mod.isDefault && (
-                                  <span className="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">
-                                    Base
-                                  </span>
+                                  <Badge
+                                    label="Base"
+                                    className="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded"
+                                  />
                                 )}
-                              </div>
-                            </div>
+                              </HStack>
+                            </HStack>
 
-                            <div className="text-right shrink-0">
+                            <VStack className="text-right shrink-0">
                               {delta > 0 ? (
-                                <span className="text-xs font-bold text-orange-400">
+                                <Text weight="bold" className="text-xs font-bold text-orange-400">
                                   +{formatCOP(delta)}
-                                </span>
+                                </Text>
                               ) : delta < 0 ? (
-                                <span className="text-xs font-semibold text-rose-400">
+                                <Text weight="bold" className="text-xs font-semibold text-rose-400">
                                   -{formatCOP(Math.abs(delta))}
-                                </span>
+                                </Text>
                               ) : (
-                                <span className="text-[11px] text-slate-500 font-medium">
+                                <Text className="text-[11px] text-slate-500 font-medium">
                                   Sin costo
-                                </span>
+                                </Text>
                               )}
-                            </div>
-                          </button>
+                            </VStack>
+                          </Button>
                         );
                       })}
-                    </div>
-                  </div>
+                    </VStack>
+                  </Card>
                 );
               })}
-            </div>
+            </VStack>
           )}
 
           {/* Special Notes for Kitchen */}
-          <div>
-            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-              Notas para la Cocina (Opcional)
-            </label>
-            <textarea
+          <VStack className="w-full">
+            <TextArea
+              label="Notas para la Cocina (Opcional)"
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={(val) => setNotes(val)}
               placeholder="Ej: Término medio, sin cebolla, salsa tártara aparte..."
-              className="w-full rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 transition"
+              width="100%"
+              controlClassName="w-full rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 transition"
               rows={2}
-              maxLength={255}
             />
-          </div>
-        </div>
+          </VStack>
+        </VStack>
 
         {/* Footer with Quantity & Total */}
-        <div className="border-t border-slate-800/90 bg-slate-900/95 px-6 py-4 flex items-center justify-between gap-4">
+        <HStack className="border-t border-slate-800/90 bg-slate-900/95 px-6 py-4 flex items-center justify-between gap-4 w-full">
           {/* Quantity Controls */}
-          <div className="flex items-center rounded-2xl border border-slate-800 bg-slate-950 p-1">
-            <button
+          <HStack className="flex items-center rounded-2xl border border-slate-800 bg-slate-950 p-1">
+            <Button
+              label="Disminuir cantidad"
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              disabled={quantity <= 1}
-              className="rounded-xl p-2 text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition"
+              isDisabled={quantity <= 1}
+              className="rounded-xl p-2 text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition cursor-pointer"
               aria-label="Disminuir cantidad"
             >
               <Minus className="h-4 w-4" />
-            </button>
-            <span className="w-8 text-center font-bold text-white text-sm select-none">
+            </Button>
+            <Text weight="bold" className="w-8 text-center font-bold text-white text-sm select-none">
               {quantity}
-            </span>
-            <button
+            </Text>
+            <Button
+              label="Aumentar cantidad"
               onClick={() => setQuantity((q) => q + 1)}
-              className="rounded-xl p-2 text-slate-400 hover:text-white transition"
+              className="rounded-xl p-2 text-slate-400 hover:text-white transition cursor-pointer"
               aria-label="Aumentar cantidad"
             >
               <Plus className="h-4 w-4" />
-            </button>
-          </div>
+            </Button>
+          </HStack>
 
           {/* Add to Cart CTA */}
-          <button
+          <Button
+            label="Agregar a la canasta"
             onClick={handleAddToCart}
-            disabled={venue.isOpen === false}
-            className="flex-1 rounded-2xl bg-orange-600 py-3.5 px-5 font-bold text-white shadow-lg shadow-orange-600/30 hover:bg-orange-500 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition text-sm flex items-center justify-between"
+            isDisabled={venue.isOpen === false}
+            className="flex-1 rounded-2xl bg-orange-600 py-3.5 px-5 font-bold text-white shadow-lg shadow-orange-600/30 hover:bg-orange-500 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition text-sm flex items-center justify-between cursor-pointer"
           >
-            <span>{venue.isOpen === false ? 'Comercio Cerrado' : 'Agregar a la canasta'}</span>
-            <span className="font-extrabold text-orange-100">{formatCOP(totalPrice)}</span>
-          </button>
-        </div>
-      </div>
-    </div>
+            <Text weight="bold" className="text-white text-sm">
+              {venue.isOpen === false ? 'Comercio Cerrado' : 'Agregar a la canasta'}
+            </Text>
+            <Text weight="bold" className="font-extrabold text-orange-100 text-sm">
+              {formatCOP(totalPrice)}
+            </Text>
+          </Button>
+        </HStack>
+      </VStack>
+    </VStack>
   );
 }

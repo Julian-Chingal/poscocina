@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Toaster } from 'sileo';
-import 'sileo/styles.css';
+import React from "react";
+import { Toaster } from "sileo";
+import "sileo/styles.css";
 
 export function SileoToaster() {
-  return <Toaster position="top-right" theme="dark" />;
+  return <Toaster position="top-center" theme="system" />;
 }

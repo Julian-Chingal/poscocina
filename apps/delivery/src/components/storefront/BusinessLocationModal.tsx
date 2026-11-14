@@ -13,6 +13,16 @@ import {
   XCircle,
   Share2,
 } from 'lucide-react';
+import {
+  VStack,
+  HStack,
+  Grid,
+  Text,
+  Heading,
+  Button,
+  Badge,
+  Card,
+} from '@astryxdesign/core';
 import { VenuePublicProfile } from '../../types/delivery';
 import { BusinessSocialLinks } from './BusinessSocialLinks';
 
@@ -49,60 +59,61 @@ export function BusinessLocationModal({ venue, isOpen, onClose }: Props) {
   )}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div
+    <VStack className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <VStack
         className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-600/20 text-orange-400 border border-orange-500/30">
+        <HStack className="flex items-center justify-between border-b border-slate-800 px-6 py-4 w-full">
+          <HStack className="flex items-center gap-2.5">
+            <HStack className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-600/20 text-orange-400 border border-orange-500/30">
               <MapPin className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-white">{businessName}</h2>
-              <p className="text-xs text-slate-400">Ubicación y Datos de Contacto</p>
-            </div>
-          </div>
-          <button
+            </HStack>
+            <VStack>
+              <Heading level={2} className="text-base font-bold text-white">{businessName}</Heading>
+              <Text className="text-xs text-slate-400 block">Ubicación y Datos de Contacto</Text>
+            </VStack>
+          </HStack>
+          <Button
+            label="Cerrar modal"
             onClick={onClose}
-            className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+            className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
           >
             <X className="h-5 w-5" />
-          </button>
-        </div>
+          </Button>
+        </HStack>
 
         {/* Content Body */}
-        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+        <VStack className="p-6 space-y-6 max-h-[80vh] overflow-y-auto w-full">
           {/* Map Preview */}
           {mapEmbedUrl ? (
-            <div className="relative w-full h-56 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
+            <VStack className="relative w-full h-56 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
               <iframe
                 title="Mapa de ubicación"
                 src={mapEmbedUrl}
                 className="w-full h-full border-0"
                 loading="lazy"
               />
-            </div>
+            </VStack>
           ) : (
-            <div className="w-full h-40 rounded-2xl border border-dashed border-slate-800 bg-slate-950/50 flex flex-col items-center justify-center text-slate-500 text-xs gap-2">
+            <VStack className="w-full h-40 rounded-2xl border border-dashed border-slate-800 bg-slate-950/50 flex flex-col items-center justify-center text-slate-500 text-xs gap-2">
               <MapPin className="h-6 w-6 text-slate-600" />
-              <span>Dirección pendiente de confirmación geográfica</span>
-            </div>
+              <Text className="text-xs text-slate-500">Dirección pendiente de confirmación geográfica</Text>
+            </VStack>
           )}
 
           {/* Location details & Navigation links */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl border border-slate-800/80 bg-slate-950/50 p-4 space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          <Grid className="grid gap-4 sm:grid-cols-2 w-full">
+            <Card className="rounded-2xl border border-slate-800/80 bg-slate-950/50 p-4 space-y-2">
+              <Text weight="bold" className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
                 Dirección Física
-              </span>
-              <p className="text-sm font-semibold text-white">
+              </Text>
+              <Text weight="bold" className="text-sm font-semibold text-white block">
                 {fullAddress || 'No especificada'}
-              </p>
+              </Text>
               {fullAddress && (
-                <div className="flex items-center gap-2 pt-2">
+                <HStack className="flex items-center gap-2 pt-2">
                   <a
                     href={googleMapsUrl}
                     target="_blank"
@@ -110,7 +121,7 @@ export function BusinessLocationModal({ venue, isOpen, onClose }: Props) {
                     className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600/15 border border-orange-500/30 px-3 py-1.5 text-xs font-bold text-orange-300 hover:bg-orange-600/25 transition"
                   >
                     <Navigation className="h-3.5 w-3.5" />
-                    <span>Google Maps</span>
+                    <Text weight="bold" className="text-xs text-orange-300">Google Maps</Text>
                     <ExternalLink className="h-3 w-3 opacity-70" />
                   </a>
 
@@ -120,107 +131,109 @@ export function BusinessLocationModal({ venue, isOpen, onClose }: Props) {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 rounded-lg bg-slate-800 border border-slate-700/60 px-3 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-700 transition"
                   >
-                    <span>Waze</span>
+                    <Text weight="bold" className="text-xs text-slate-300">Waze</Text>
                     <ExternalLink className="h-3 w-3 opacity-70" />
                   </a>
-                </div>
+                </HStack>
               )}
-            </div>
+            </Card>
 
-            <div className="rounded-2xl border border-slate-800/80 bg-slate-950/50 p-4 space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <Card className="rounded-2xl border border-slate-800/80 bg-slate-950/50 p-4 space-y-2">
+              <Text weight="bold" className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
                 Contacto Directo
-              </span>
+              </Text>
               {venue.phone ? (
                 <>
-                  <p className="text-sm font-semibold text-white flex items-center gap-2">
+                  <HStack className="text-sm font-semibold text-white flex items-center gap-2">
                     <Phone className="h-4 w-4 text-orange-400" />
-                    <span>{venue.phone}</span>
-                  </p>
-                  <div className="pt-2">
+                    <Text weight="bold" className="text-white text-sm">{venue.phone}</Text>
+                  </HStack>
+                  <VStack className="pt-2">
                     <a
                       href={`tel:${venue.phone.replace(/[^0-9+]/g, '')}`}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-slate-800 border border-slate-700/60 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-slate-700 transition"
                     >
-                      <span>Llamar al comercio</span>
+                      <Text weight="bold" className="text-xs text-slate-200">Llamar al comercio</Text>
                     </a>
-                  </div>
+                  </VStack>
                 </>
               ) : (
-                <p className="text-xs text-slate-500">Teléfono no registrado</p>
+                <Text className="text-xs text-slate-500 block">Teléfono no registrado</Text>
               )}
-            </div>
-          </div>
+            </Card>
+          </Grid>
 
           {/* Social Networks & Official Channels */}
-          <div className="rounded-2xl border border-slate-800/80 bg-slate-950/50 p-4 space-y-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+          <Card className="rounded-2xl border border-slate-800/80 bg-slate-950/50 p-4 space-y-3 w-full">
+            <HStack className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <Share2 className="h-3.5 w-3.5 text-orange-400" />
-              <span>Redes Sociales & Canales Oficiales</span>
-            </span>
+              <Text weight="bold" className="text-xs text-slate-400">Redes Sociales & Canales Oficiales</Text>
+            </HStack>
             <BusinessSocialLinks venue={venue} variant="cards" />
-          </div>
+          </Card>
 
           {/* Schedule / Horarios */}
-          <div className="rounded-2xl border border-slate-800/80 bg-slate-950/50 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+          <Card className="rounded-2xl border border-slate-800/80 bg-slate-950/50 p-4 space-y-3 w-full">
+            <HStack className="flex items-center justify-between w-full">
+              <HStack className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5 text-orange-400" />
-                <span>Horario de Atención</span>
-              </span>
+                <Text weight="bold" className="text-xs text-slate-400">Horario de Atención</Text>
+              </HStack>
               {venue.isOpen !== false ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
-                  <CheckCircle2 className="h-3 w-3" />
-                  Abierto Ahora
-                </span>
+                <Badge
+                  label="Abierto Ahora"
+                  className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-300"
+                />
               ) : (
-                <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 text-[10px] font-bold text-rose-300">
-                  <XCircle className="h-3 w-3" />
-                  Cerrado
-                </span>
+                <Badge
+                  label="Cerrado"
+                  className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 text-[10px] font-bold text-rose-300"
+                />
               )}
-            </div>
+            </HStack>
 
             {venue.openingHours && (
-              <p className="text-xs text-slate-300 bg-slate-900/80 rounded-xl p-2.5 border border-slate-800">
+              <Text className="text-xs text-slate-300 bg-slate-900/80 rounded-xl p-2.5 border border-slate-800 block">
                 {venue.openingHours}
-              </p>
+              </Text>
             )}
 
             {venue.schedule && venue.schedule.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-xs">
+              <Grid className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-xs w-full">
                 {venue.schedule.map((day) => (
-                  <div
+                  <HStack
                     key={day.day}
                     className="flex items-center justify-between py-1 px-2 rounded-lg bg-slate-900/40"
                   >
-                    <span className="text-slate-400">{day.dayName}</span>
-                    <span
-                      className={`font-semibold ${
+                    <Text className="text-slate-400 text-xs">{day.dayName}</Text>
+                    <Text
+                      weight="bold"
+                      className={`font-semibold text-xs ${
                         day.enabled ? 'text-slate-200' : 'text-slate-500'
                       }`}
                     >
                       {day.enabled
                         ? `${day.openTime} - ${day.closeTime}`
                         : 'Cerrado'}
-                    </span>
-                  </div>
+                    </Text>
+                  </HStack>
                 ))}
-              </div>
+              </Grid>
             )}
-          </div>
-        </div>
+          </Card>
+        </VStack>
 
         {/* Footer */}
-        <div className="border-t border-slate-800 bg-slate-950/40 px-6 py-3.5 flex justify-end">
-          <button
+        <HStack className="border-t border-slate-800 bg-slate-950/40 px-6 py-3.5 flex justify-end w-full">
+          <Button
+            label="Cerrar modal"
             onClick={onClose}
-            className="rounded-xl bg-slate-800 px-4 py-2 text-xs font-bold text-white hover:bg-slate-700 transition"
+            className="rounded-xl bg-slate-800 px-4 py-2 text-xs font-bold text-white hover:bg-slate-700 transition cursor-pointer"
           >
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
+            <Text weight="bold" className="text-xs text-white">Cerrar</Text>
+          </Button>
+        </HStack>
+      </VStack>
+    </VStack>
   );
 }
