@@ -35,4 +35,7 @@ export async function whatsAppRoutes(fastify: FastifyInstance) {
     { preHandler: [fastify.authenticate] },
     (req, rep) => whatsAppController.startVenueSession(req, rep)
   );
+
+  // 3. WhatsApp Media Proxy (public so <img> tags load without mixed-content or auth headers)
+  fastify.get('/api/whatsapp/files/*', (req, rep) => whatsAppController.proxyWahaFile(req, rep));
 }

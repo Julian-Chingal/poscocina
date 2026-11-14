@@ -27,6 +27,15 @@ import { kdsApi } from '@/features/kds/api/kds.api';
 import { KdsOrder } from '@/features/kds/types/kds.types';
 import { getAppSocket } from '@/lib/socket';
 
+const formatMediaUrl = (url?: string | null): string => {
+  if (!url) return '';
+  if (url.includes('/api/files/')) {
+    const filePart = url.split('/api/files/')[1];
+    return `/api/whatsapp/files/${filePart}`;
+  }
+  return url;
+};
+
 export const WhatsAppChatView: React.FC = () => {
   const venueId = useAuthStore((s) => s.venueId);
 
@@ -52,6 +61,7 @@ export const WhatsAppChatView: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const selectedChatRef = useRef<WhatsAppChat | null>(null);
+  const isPollingRef = useRef(false);
 
   useEffect(() => {
     selectedChatRef.current = selectedChat;
@@ -233,20 +243,28 @@ export const WhatsAppChatView: React.FC = () => {
     socket.on('whatsapp:message:sent', handleSent);
 
     let tickCount = 0;
-    // Heartbeat fallback polling every 4s + window focus to guarantee zero-refresh sync
+    // Throttled heartbeat polling (15s) with document.hidden guard to prevent background accumulation
     const pollInterval = setInterval(() => {
-      loadChats(true);
-      if (selectedChatRef.current?.id) {
-        loadMessages(selectedChatRef.current.id, true);
-      }
-      tickCount++;
-      // Periodically refresh session status every 12 seconds
-      if (tickCount % 3 === 0) {
-        checkSession();
-      }
-    }, 4000);
+      if (document.hidden || isPollingRef.current) return;
+      isPollingRef.current = true;
+      (async () => {
+        try {
+          await loadChats(true);
+          if (selectedChatRef.current?.id) {
+            await loadMessages(selectedChatRef.current.id, true);
+          }
+          tickCount++;
+          if (tickCount % 2 === 0) {
+            await checkSession();
+          }
+        } finally {
+          isPollingRef.current = false;
+        }
+      })();
+    }, 15000);
 
     const onFocus = () => {
+      if (isPollingRef.current) return;
       checkSession();
       loadChats(true);
       if (selectedChatRef.current?.id) {
@@ -528,12 +546,12 @@ export const WhatsAppChatView: React.FC = () => {
                         {msg.mediaUrl && (
                           <div className="mb-2 overflow-hidden rounded-lg">
                             <img
-                              src={msg.mediaUrl}
+                              src={formatMediaUrl(msg.mediaUrl)}
                               alt="Comprobante"
                               className="max-h-60 w-auto cursor-pointer object-cover transition-transform hover:scale-105"
-                              onClick={() => setPreviewImage(msg.mediaUrl!)}
+                              onClick={() => setPreviewImage(formatMediaUrl(msg.mediaUrl))}
                             />
-                            <p className="mt-1 text-[11px] underline opacity-80 cursor-pointer" onClick={() => setPreviewImage(msg.mediaUrl!)}>
+                            <p className="mt-1 text-[11px] underline opacity-80 cursor-pointer" onClick={() => setPreviewImage(formatMediaUrl(msg.mediaUrl))}>
                               🔍 Ver comprobante completo
                             </p>
                           </div>
@@ -840,7 +858,7 @@ export const WhatsAppChatView: React.FC = () => {
       {previewImage && (
         <Dialog open={Boolean(previewImage)} onOpenChange={() => setPreviewImage(null)}>
           <DialogContent className="max-w-2xl p-2 bg-black/90 border-none">
-            <img src={previewImage} alt="Comprobante en grande" className="max-h-[85vh] w-auto mx-auto object-contain rounded-md" />
+            <img src={formatMediaUrl(previewImage)} alt="Comprobante en grande" className="max-h-[85vh] w-auto mx-auto object-contain rounded-md" />
           </DialogContent>
         </Dialog>
       )}

@@ -275,6 +275,32 @@ export class WahaService {
       return null;
     }
   }
+
+  async fetchFile(filePath: string): Promise<{ ok: boolean; status: number; contentType: string; buffer: Buffer } | null> {
+    try {
+      const cleanPath = filePath.replace(/^\/+/, '');
+      const url = `${this.baseUrl}/api/files/${cleanPath}`;
+      const headers: Record<string, string> = {};
+      if (this.apiKey) {
+        headers['X-Api-Key'] = this.apiKey;
+      }
+      const res = await fetch(url, { headers });
+      if (!res.ok) {
+        return { ok: false, status: res.status, contentType: 'text/plain', buffer: Buffer.from('') };
+      }
+      const contentType = res.headers.get('content-type') || 'application/octet-stream';
+      const arrayBuffer = await res.arrayBuffer();
+      return {
+        ok: true,
+        status: 200,
+        contentType,
+        buffer: Buffer.from(arrayBuffer),
+      };
+    } catch (err: any) {
+      console.error(`[WahaService] Error fetching file ${filePath}:`, err.message);
+      return null;
+    }
+  }
 }
 
 export const wahaService = new WahaService();

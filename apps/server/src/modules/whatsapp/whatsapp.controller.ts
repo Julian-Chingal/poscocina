@@ -55,7 +55,18 @@ export class WhatsAppController {
       .set({ unreadCount: 0 })
       .where(eq(schema.whatsappChats.id, chatId));
 
-    return reply.send(messages);
+    const normalized = messages.map((msg) => {
+      if (msg.mediaUrl && msg.mediaUrl.includes('/api/files/')) {
+        const filePart = msg.mediaUrl.split('/api/files/')[1];
+        return {
+          ...msg,
+          mediaUrl: `/api/whatsapp/files/${filePart}`,
+        };
+      }
+      return msg;
+    });
+
+    return reply.send(normalized);
   }
 
   async sendChatMessage(request: FastifyRequest, reply: FastifyReply) {
@@ -168,6 +179,24 @@ export class WhatsAppController {
     }
     request.log.info({ venueId, success }, '[WhatsAppController] WAHA session start result');
     return reply.send({ success });
+  }
+
+  async proxyWahaFile(request: FastifyRequest, reply: FastifyReply) {
+    const rawPath = (request.params as any)['*'] || '';
+    if (!rawPath) {
+      return reply.status(400).send({ error: 'File path required' });
+    }
+
+    const file = await wahaService.fetchFile(rawPath);
+    if (!file || !file.ok) {
+      return reply.status(file?.status || 404).send({ error: 'File not found on WhatsApp server' });
+    }
+
+    return reply
+      .header('Content-Type', file.contentType)
+      .header('Cache-Control', 'public, max-age=604800, immutable')
+      .status(200)
+      .send(file.buffer);
   }
 }
 

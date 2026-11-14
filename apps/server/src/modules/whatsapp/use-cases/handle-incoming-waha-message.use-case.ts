@@ -70,7 +70,11 @@ export class HandleIncomingWahaMessageUseCase {
     let chatId = existingChat?.id;
     const isOutbound = Boolean(payload.fromMe);
     const bodyText = payload.body || (payload.hasMedia ? '📷 Archivo multimedia' : '');
-    const mediaUrl = payload.media?.url || payload.mediaUrl || null;
+    let mediaUrl = payload.media?.url || payload.mediaUrl || null;
+    if (mediaUrl && mediaUrl.includes('/api/files/')) {
+      const filePart = mediaUrl.split('/api/files/')[1];
+      mediaUrl = `/api/whatsapp/files/${filePart}`;
+    }
     const mediaType = payload.media?.mimetype || null;
 
     // Look up existing CRM customer by phone, resolved phone, or notifyName
