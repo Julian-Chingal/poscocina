@@ -101,6 +101,7 @@ export interface CartItem {
   id: string; // unique item uuid (product + selected modifiers hash)
   productId: string;
   name: string;
+  imageUrl?: string;
   unitPrice: number;
   quantity: number;
   notes?: string;

@@ -15,7 +15,7 @@ interface CartContextType {
   setIsCartOpen: (open: boolean) => void;
   setIsCheckoutOpen: (open: boolean) => void;
   addItem: (
-    product: { id: string; name: string; price: number | string },
+    product: { id: string; name: string; price: number | string; imageUrl?: string | null },
     quantity: number,
     modifiers: CartModifierSelection[],
     notes: string,
@@ -62,7 +62,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [currentVenue, items]);
 
   const addItem = (
-    product: { id: string; name: string; price: number | string },
+    product: { id: string; name: string; price: number | string; imageUrl?: string | null },
     quantity: number,
     modifiers: CartModifierSelection[],
     notes: string,
@@ -107,6 +107,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           id: cartItemId,
           productId: product.id,
           name: product.name,
+          imageUrl: product.imageUrl || undefined,
           unitPrice,
           quantity,
           notes: notes.trim() || undefined,

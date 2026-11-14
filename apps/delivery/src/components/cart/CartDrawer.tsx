@@ -1,16 +1,19 @@
 ﻿"use client";
 
 import React from "react";
-import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
 import {
-  VStack,
-  HStack,
-  Text,
-  Heading,
-  Button,
-  Badge,
-  Divider,
-} from "@astryxdesign/core";
+  X,
+  Trash2,
+  Plus,
+  Minus,
+  ShoppingBag,
+  ArrowRight,
+  UtensilsCrossed,
+  Store,
+  Clock,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { useCart } from "../../context/CartContext";
 
 export function CartDrawer() {
@@ -22,7 +25,6 @@ export function CartDrawer() {
     items,
     itemCount,
     subtotal,
-    taxTotal,
     total,
     updateQuantity,
     removeItem,
@@ -44,175 +46,272 @@ export function CartDrawer() {
   };
 
   return (
-    <HStack
-      justify="end"
+    <div
       onClick={(e) => {
         if (e.target === e.currentTarget) setIsCartOpen(false);
       }}
-      className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm animate-in fade-in duration-200"
     >
-      <VStack className="relative flex h-full w-full max-w-md flex-col bg-slate-900 border-l border-slate-800 text-slate-100 shadow-2xl animate-in slide-in-from-right duration-300">
+      <aside className="relative flex h-full w-full max-w-md flex-col bg-slate-950 border-l border-slate-800 text-slate-100 shadow-2xl animate-in slide-in-from-right duration-300">
         {/* Header */}
-        <HStack className="flex items-center justify-between border-b border-slate-800 px-6 py-4 w-full">
-          <HStack className="flex items-center gap-2">
-            <ShoppingBag className="h-5 w-5 text-orange-500" />
-            <Heading level={3} className="font-bold text-lg text-white">
-              Tu Pedido ({itemCount})
-            </Heading>
-          </HStack>
-          <Button
-            label="Cerrar canasta"
+        <header className="flex items-center justify-between border-b border-slate-800/90 px-5 py-4 bg-slate-900/80 backdrop-blur-md shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow-md shadow-orange-600/30">
+              <ShoppingBag className="h-4.5 w-4.5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-extrabold text-base text-white tracking-tight">
+                  Tu Pedido
+                </h3>
+                <span className="rounded-full bg-orange-500/15 border border-orange-500/30 px-2 py-0.5 text-[10px] font-bold text-orange-400">
+                  {itemCount} {itemCount === 1 ? "ítem" : "ítems"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
             onClick={() => setIsCartOpen(false)}
-            className="rounded-full p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+            className="rounded-xl p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+            aria-label="Cerrar canasta"
           >
             <X className="h-5 w-5" />
-          </Button>
-        </HStack>
+          </button>
+        </header>
 
         {/* Venue Badge */}
         {currentVenue && (
-          <HStack className="bg-slate-950/80 border-b border-slate-800 px-6 py-2.5 flex items-center justify-between text-xs w-full">
-            <HStack className="flex items-center gap-1.5 min-w-0">
-              <Text className="text-slate-400 text-xs shrink-0">Comercio:</Text>
-              <Badge
-                label={currentVenue.restaurantName || currentVenue.name}
-                className="font-bold text-orange-400 truncate max-w-44"
-              />
-            </HStack>
-            <Button
-              label="Vaciar canasta"
-              onClick={clearCart}
-              className="flex items-center gap-1 text-[11px] text-red-400 hover:text-red-300 hover:underline cursor-pointer bg-transparent border-none p-0 shrink-0"
-            >
-              <Trash2 className="h-3 w-3" />
-              <Text className="text-[11px] text-red-400">Vaciar</Text>
-            </Button>
-          </HStack>
+          <div className="bg-slate-900/50 border-b border-slate-800/80 px-5 py-2.5 flex items-center justify-between text-xs shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-orange-500/10 text-orange-400 shrink-0">
+                <Store className="h-3 w-3" />
+              </div>
+              <span className="text-slate-400 text-xs shrink-0">Comercio:</span>
+              <span className="font-bold text-white truncate max-w-48">
+                {currentVenue.restaurantName || currentVenue.name}
+              </span>
+            </div>
+
+            {items.length > 0 && (
+              <button
+                type="button"
+                onClick={clearCart}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-400 hover:text-rose-300 hover:underline cursor-pointer bg-transparent border-none p-0 shrink-0 transition"
+              >
+                <Trash2 className="h-3 w-3" />
+                <span>Vaciar</span>
+              </button>
+            )}
+          </div>
         )}
 
-        {/* Item List */}
-        <VStack className="flex-1 overflow-y-auto px-6 py-4 divide-y divide-slate-800/60 w-full">
+        {/* Item List / Content */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 custom-scrollbar">
           {items.length === 0 ? (
-            <VStack className="flex h-full flex-col items-center justify-center text-center py-12 w-full">
-              <ShoppingBag className="h-16 w-16 text-slate-700 stroke-[1.2]" />
-              <Text
-                weight="bold"
-                className="mt-4 font-semibold text-slate-300 text-base"
-              >
+            <div className="flex h-full flex-col items-center justify-center text-center py-16 px-4">
+              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-900 border border-slate-800 text-slate-600 shadow-inner mb-4">
+                <ShoppingBag className="h-10 w-10 text-slate-600 stroke-[1.4]" />
+              </div>
+              <h4 className="font-bold text-slate-200 text-lg">
                 Tu canasta está vacía
-              </Text>
-              <Text className="mt-1 text-xs text-slate-500">
-                Explora la carta y agrega tus platos favoritos
-              </Text>
-            </VStack>
-          ) : (
-            items.map((item) => (
-              <VStack
-                key={item.id}
-                className="py-4 first:pt-0 last:pb-0 w-full"
+              </h4>
+              <p className="mt-1 text-xs text-slate-400 max-w-xs leading-relaxed">
+                Explora los deliciosos platos y bebidas de{" "}
+                <span className="text-orange-400 font-semibold">
+                  {currentVenue?.name || "nuestros comercios"}
+                </span>{" "}
+                y pide con entrega rápida.
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsCartOpen(false)}
+                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-orange-600 hover:bg-orange-500 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-orange-600/25 transition cursor-pointer"
               >
-                <HStack className="flex items-start justify-between gap-3 w-full">
-                  <VStack className="flex-1">
-                    <Heading
-                      level={4}
-                      className="text-sm font-semibold text-white"
-                    >
-                      {item.name}
-                    </Heading>
-                    {item.modifiers.length > 0 && (
-                      <Text className="mt-0.5 text-xs text-slate-400 block">
-                        {item.modifiers.map((m) => m.name).join(", ")}
-                      </Text>
-                    )}
-                    {item.notes && (
-                      <Text className="mt-1 text-[11px] italic text-orange-300/80 block">
-                        "{item.notes}"
-                      </Text>
-                    )}
-                    <Text
-                      weight="bold"
-                      className="mt-2 block text-sm font-bold text-orange-400"
-                    >
-                      {formatCOP(item.totalItemPrice)}
-                    </Text>
-                  </VStack>
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Explorar Carta</span>
+              </button>
+            </div>
+          ) : (
+            <>
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className="group relative flex flex-col gap-3 rounded-2xl border border-slate-800/80 bg-slate-900/60 p-3.5 hover:border-slate-700 hover:bg-slate-900/90 transition-all shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3 w-full">
+                    {/* Thumbnail + Details */}
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="h-13 w-13 rounded-xl object-cover bg-slate-800 border border-slate-700/60 shrink-0"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLElement).style.display =
+                              "none";
+                          }}
+                        />
+                      ) : (
+                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500/10 to-amber-500/10 text-orange-400 border border-orange-500/20 shrink-0">
+                          <UtensilsCrossed className="h-5 w-5" />
+                        </div>
+                      )}
 
-                  {/* Quantity Controls */}
-                  <HStack className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-950 p-1">
-                    <Button
-                      label="Disminuir cantidad"
-                      onClick={() => updateQuantity(item.id, -1)}
-                      className="rounded p-1 text-slate-400 hover:text-white transition cursor-pointer"
-                    >
-                      <Minus className="h-3.5 w-3.5" />
-                    </Button>
-                    <Text
-                      weight="bold"
-                      className="w-6 text-center text-xs font-bold text-white"
-                    >
-                      {item.quantity}
-                    </Text>
-                    <Button
-                      label="Aumentar cantidad"
-                      onClick={() => updateQuantity(item.id, 1)}
-                      className="rounded p-1 text-slate-400 hover:text-white transition cursor-pointer"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                    </Button>
-                  </HStack>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-sm text-white capitalize leading-snug truncate">
+                          {item.name}
+                        </h4>
 
-                  <Button
-                    label="Eliminar producto"
-                    onClick={() => removeItem(item.id)}
-                    className="p-1 text-slate-500 hover:text-red-400 transition cursor-pointer"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </HStack>
-              </VStack>
-            ))
+                        {/* Modifiers Chips */}
+                        {item.modifiers.length > 0 && (
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {item.modifiers.map((m, idx) => (
+                              <span
+                                key={idx}
+                                className="inline-flex items-center rounded-md bg-slate-800/90 px-1.5 py-0.5 text-[10px] font-medium text-slate-300 border border-slate-700/60"
+                              >
+                                +{m.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Notes */}
+                        {item.notes && (
+                          <p className="mt-1 text-[11px] italic text-amber-300/80 line-clamp-1">
+                            "{item.notes}"
+                          </p>
+                        )}
+
+                        {/* Price */}
+                        <div className="mt-2 flex items-baseline gap-2">
+                          <span className="text-sm font-black text-orange-400">
+                            {formatCOP(item.totalItemPrice)}
+                          </span>
+                          {item.quantity > 1 && (
+                            <span className="text-[11px] text-slate-500">
+                              ({formatCOP(item.unitPrice)} c/u)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Delete Item Button */}
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.id)}
+                      className="rounded-lg p-1.5 text-slate-500 hover:bg-rose-500/15 hover:text-rose-400 transition cursor-pointer"
+                      title="Eliminar producto"
+                      aria-label="Eliminar producto"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Quantity Controls Bar */}
+                  <div className="flex items-center justify-between border-t border-slate-800/70 pt-2.5">
+                    <span className="text-[11px] text-slate-400 font-medium">
+                      Cantidad
+                    </span>
+
+                    <div className="flex items-center gap-1 rounded-xl border border-slate-700/80 bg-slate-950 p-0.5">
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item.id, -1)}
+                        className="flex h-6 w-6 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+                        aria-label="Disminuir cantidad"
+                      >
+                        <Minus className="h-3 w-3" />
+                      </button>
+                      <span className="w-7 text-center text-xs font-black text-white select-none">
+                        {item.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item.id, 1)}
+                        className="flex h-6 w-6 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+                        aria-label="Aumentar cantidad"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Delivery Guarantee / Info Card (fills empty space with useful info) */}
+              <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-3.5 space-y-2.5 mt-4">
+                <div className="flex items-center gap-2.5 text-xs text-slate-300">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-orange-500/15 text-orange-400 shrink-0">
+                    <Clock className="h-3.5 w-3.5" />
+                  </div>
+                  <span>
+                    Tiempo estimado:{" "}
+                    <strong className="text-white font-bold">25 - 40 min</strong>
+                  </span>
+                </div>
+                <div className="flex items-center gap-2.5 text-xs text-slate-400">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400 shrink-0">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                  </div>
+                  <span>
+                    Pedido sincronizado en tiempo real con la cocina.
+                  </span>
+                </div>
+              </div>
+            </>
           )}
-        </VStack>
+        </div>
 
         {/* Footer */}
         {items.length > 0 && (
-          <VStack className="border-t border-slate-800 bg-slate-950/90 px-6 py-4 space-y-3 w-full">
-            <VStack className="space-y-1.5 text-xs text-slate-400 w-full">
-              <HStack className="flex justify-between w-full">
-                <Text className="text-slate-400 text-xs">
+          <footer className="border-t border-slate-800 bg-slate-950 px-5 py-4 space-y-3 w-full shrink-0">
+            <div className="space-y-1.5 text-xs text-slate-400 w-full">
+              <div className="flex justify-between items-center text-slate-400 text-xs">
+                <span>
                   Subtotal ({itemCount}{" "}
                   {itemCount === 1 ? "producto" : "productos"})
-                </Text>
-                <Text className="font-medium text-slate-200 text-xs">
+                </span>
+                <span className="font-semibold text-slate-200">
                   {formatCOP(subtotal)}
-                </Text>
-              </HStack>
-              <HStack className="flex justify-between border-t border-slate-800 pt-2 text-base font-bold text-white w-full">
-                <Text weight="bold" className="text-white text-base font-bold">
-                  Total a Pagar
-                </Text>
-                <Text
-                  weight="bold"
-                  className="text-orange-500 font-black text-base"
-                >
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-slate-400 text-xs">
+                <span>Costo de envío</span>
+                <span className="text-emerald-400 font-medium">
+                  Calculado en checkout
+                </span>
+              </div>
+              <div className="flex justify-between items-center border-t border-slate-800/80 pt-2 text-base font-bold text-white">
+                <span className="font-black text-white">Total a Pagar</span>
+                <span className="font-black text-lg text-orange-400">
                   {formatCOP(total)}
-                </Text>
-              </HStack>
-            </VStack>
+                </span>
+              </div>
+            </div>
 
-            <Button
-              label="Confirmar Pedido"
+            {/* Confirm Order Button - 100% Horizontal! */}
+            <button
+              type="button"
               onClick={handleProceedToCheckout}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 py-3.5 font-bold text-white shadow-lg shadow-orange-600/30 hover:bg-orange-500 transition text-sm cursor-pointer"
+              className="w-full flex items-center justify-between rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 py-3.5 px-5 font-bold text-white shadow-xl shadow-orange-600/25 active:scale-[0.99] transition cursor-pointer"
             >
-              <Text weight="bold" className="text-white font-bold text-sm">
+              <span className="font-extrabold text-sm tracking-wide">
                 Confirmar Pedido
-              </Text>
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </VStack>
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-black text-sm bg-black/25 px-2.5 py-1 rounded-xl">
+                  {formatCOP(total)}
+                </span>
+                <ArrowRight className="h-4 w-4" />
+              </div>
+            </button>
+          </footer>
         )}
-      </VStack>
-    </HStack>
+      </aside>
+    </div>
   );
 }
