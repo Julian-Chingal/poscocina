@@ -45,6 +45,12 @@ const envSchema = z.object({
     ...data,
     VALKEY_URL: resolvedCacheUrl,
     REDIS_URL: resolvedCacheUrl,
+    WAHA_API_URL:
+      process.env.WAHA_API_URL ||
+      (process.env.NODE_ENV === 'production' && data.WAHA_API_URL === 'http://localhost:3008'
+        ? 'http://waha:3000'
+        : data.WAHA_API_URL),
+    WAHA_API_KEY: process.env.WAHA_API_KEY || process.env.WHATSAPP_API_KEY || data.WAHA_API_KEY,
   };
 });
 
