@@ -71,12 +71,22 @@ export function CartDrawer() {
 
         {/* Venue Badge */}
         {currentVenue && (
-          <HStack className="bg-slate-950/70 border-b border-slate-800/80 px-6 py-2.5 flex items-center justify-between text-xs w-full">
-            <Text className="text-slate-400 text-xs">Comercio:</Text>
-            <Badge
-              label={currentVenue.restaurantName || currentVenue.name}
-              className="font-semibold text-orange-400 truncate max-w-50"
-            />
+          <HStack className="bg-slate-950/80 border-b border-slate-800 px-6 py-2.5 flex items-center justify-between text-xs w-full">
+            <HStack className="flex items-center gap-1.5 min-w-0">
+              <Text className="text-slate-400 text-xs shrink-0">Comercio:</Text>
+              <Badge
+                label={currentVenue.restaurantName || currentVenue.name}
+                className="font-bold text-orange-400 truncate max-w-44"
+              />
+            </HStack>
+            <Button
+              label="Vaciar canasta"
+              onClick={clearCart}
+              className="flex items-center gap-1 text-[11px] text-red-400 hover:text-red-300 hover:underline cursor-pointer bg-transparent border-none p-0 shrink-0"
+            >
+              <Trash2 className="h-3 w-3" />
+              <Text className="text-[11px] text-red-400">Vaciar</Text>
+            </Button>
           </HStack>
         )}
 

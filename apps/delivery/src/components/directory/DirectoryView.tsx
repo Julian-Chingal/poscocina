@@ -115,7 +115,7 @@ export function DirectoryView({ initialVenues }: Props) {
           {/* Quick Search Bar */}
           <VStack className="pt-2 max-w-xl mx-auto w-full">
             <HStack className="relative flex items-center w-full">
-              <Search className="absolute left-4 h-4 w-4 text-slate-500 z-10" />
+              <Search className="absolute left-4 h-4 w-4 text-orange-400 z-10" />
               <TextInput
                 label="Buscar comercio o producto"
                 isLabelHidden
@@ -123,15 +123,15 @@ export function DirectoryView({ initialVenues }: Props) {
                 onChange={(val) => setSearchQuery(val)}
                 placeholder="Buscar restaurante, tienda o dirección..."
                 width="100%"
-                controlClassName="w-full rounded-2xl border border-slate-800 bg-slate-900/90 py-3 pl-11 pr-4 text-sm text-white placeholder-slate-500 shadow-inner focus:border-orange-500/70 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                controlClassName="w-full rounded-2xl border border-slate-700 bg-slate-900 py-3.5 pl-11 pr-4 text-sm text-white placeholder:text-slate-400 shadow-inner focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/25"
               />
               {searchQuery && (
                 <Button
                   label="Limpiar búsqueda"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 text-xs text-slate-500 hover:text-white px-2 py-1 z-10 cursor-pointer"
+                  className="absolute right-3 text-xs text-slate-400 hover:text-white px-2 py-1 z-10 cursor-pointer bg-transparent border-none"
                 >
-                  <Text className="text-xs text-slate-400">Limpiar</Text>
+                  <Text className="text-xs text-slate-300">Limpiar</Text>
                 </Button>
               )}
             </HStack>
@@ -147,14 +147,14 @@ export function DirectoryView({ initialVenues }: Props) {
                   key={cat.id}
                   label={cat.label}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition shrink-0 cursor-pointer ${
+                  className={`inline-flex items-center gap-2 rounded-full px-4.5 py-2 text-xs sm:text-sm font-semibold transition shrink-0 cursor-pointer border ${
                     isSelected
-                      ? "bg-orange-600 text-white shadow-lg shadow-orange-600/30 border border-orange-500"
-                      : "bg-slate-900/90 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 hover:bg-slate-800/80"
+                      ? "bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-lg shadow-orange-600/30 border-orange-400"
+                      : "bg-slate-900/90 text-slate-200 hover:text-white border-slate-700/80 hover:border-orange-500/50 hover:bg-slate-800"
                   }`}
                 >
                   <Icon className={`h-4 w-4 ${isSelected ? "text-white" : "text-orange-400"}`} />
-                  <Text weight="bold" className={`text-sm ${isSelected ? "text-white" : "text-slate-300"}`}>
+                  <Text weight="bold" className={`text-xs sm:text-sm ${isSelected ? "text-white" : "text-slate-200"}`}>
                     {cat.label}
                   </Text>
                 </Button>
@@ -197,7 +197,7 @@ export function DirectoryView({ initialVenues }: Props) {
               )}
             </Card>
           ) : (
-            <Grid className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 w-full">
+            <Grid columns={{ minWidth: 320, max: 3 }} gap={5} align="start" className="w-full">
               {filteredVenues.map((venue) => {
                 const targetSlug = venue.slug || venue.id;
                 // Category label
@@ -214,15 +214,15 @@ export function DirectoryView({ initialVenues }: Props) {
                 return (
                   <Card
                     key={venue.id}
-                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-800/90 bg-slate-900/70 p-0 transition-all duration-300 hover:border-orange-500/50 hover:bg-slate-900 hover:shadow-xl hover:shadow-orange-600/10"
+                    className="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 p-0 transition-all duration-300 hover:border-orange-500/50 hover:bg-slate-900 hover:shadow-xl hover:shadow-orange-600/10 w-full"
                   >
                     {/* Header Banner with Category & Status */}
                     <HStack
-                      className="relative h-20 w-full p-3.5 flex items-start justify-between border-b border-slate-800/60"
+                      className="relative h-24 w-full p-3 flex items-start justify-between border-b border-slate-800/80"
                       style={{
                         background: venue.primaryColor
-                          ? `linear-gradient(135deg, ${venue.primaryColor}22 0%, #0f172a 100%)`
-                          : "linear-gradient(135deg, #ea580c22 0%, #0f172a 100%)",
+                          ? `linear-gradient(135deg, ${venue.primaryColor}33 0%, #0f172a 100%)`
+                          : "linear-gradient(135deg, #ea580c33 0%, #0f172a 100%)",
                       }}
                     >
                       {/* Logo Overlapping */}
@@ -231,16 +231,16 @@ export function DirectoryView({ initialVenues }: Props) {
                           <img
                             src={venue.logoUrl}
                             alt={venue.restaurantName || venue.name}
-                            className="h-12 w-12 object-cover rounded-xl shadow-lg border-2 border-slate-900 bg-slate-800 shrink-0"
+                            className="h-14 w-14 object-cover rounded-xl shadow-xl border-2 border-slate-900 bg-slate-800 shrink-0"
                           />
                         ) : (
                           <HStack
-                            className="flex h-12 w-12 items-center justify-center rounded-xl font-black text-white shadow-lg border-2 border-slate-900 text-lg shrink-0"
+                            className="flex h-14 w-14 items-center justify-center rounded-xl font-black text-white shadow-xl border-2 border-slate-900 text-xl shrink-0"
                             style={{
                               backgroundColor: venue.primaryColor || "#ea580c",
                             }}
                           >
-                            <Text weight="bold" className="text-white text-lg">
+                            <Text weight="bold" className="text-white text-xl">
                               {(venue.restaurantName || venue.name)
                                 .charAt(0)
                                 .toUpperCase()}
@@ -253,25 +253,25 @@ export function DirectoryView({ initialVenues }: Props) {
                       <HStack className="flex items-center gap-1.5 ml-auto">
                         <Badge
                           label={categoryBadge}
-                          className="rounded-full bg-slate-900/90 border border-slate-700/60 px-2 py-0.5 text-[10px] font-semibold text-slate-300 backdrop-blur-xs"
+                          className="rounded-full bg-slate-950/90 border border-slate-700/80 px-2.5 py-0.5 text-[11px] font-semibold text-slate-200 shadow-xs"
                         />
                         {venue.isOpen !== false ? (
                           <Badge
                             label="Abierto"
-                            className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300 backdrop-blur-xs"
+                            className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300 shadow-xs"
                           />
                         ) : (
                           <Badge
                             label="Cerrado"
-                            className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 px-2.5 py-0.5 text-[10px] font-bold text-rose-300 backdrop-blur-xs"
+                            className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/20 border border-rose-500/40 px-2.5 py-0.5 text-[11px] font-bold text-rose-300 shadow-xs"
                           />
                         )}
                       </HStack>
                     </HStack>
 
-                    {/* Card Content */}
-                    <VStack className="p-4 pt-7 flex-1 flex flex-col justify-between w-full">
-                      <VStack className="space-y-2 w-full">
+                    {/* Card Content - Compact & Clean */}
+                    <VStack className="p-4 pt-8 w-full space-y-3">
+                      <VStack className="space-y-1.5 w-full">
                         <Heading
                           level={3}
                           className="text-lg font-black text-white group-hover:text-orange-400 transition truncate"
@@ -280,40 +280,40 @@ export function DirectoryView({ initialVenues }: Props) {
                         </Heading>
 
                         {/* Location / Phone */}
-                        <HStack className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+                        <HStack className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-300">
                           {venue.city && (
                             <HStack className="flex items-center gap-1">
-                              <MapPin className="h-3.5 w-3.5 shrink-0 text-orange-500/80" />
-                              <Text className="text-xs text-slate-400">
+                              <MapPin className="h-3.5 w-3.5 shrink-0 text-orange-400" />
+                              <Text className="text-xs text-slate-300">
                                 {venue.city}
                               </Text>
                             </HStack>
                           )}
-                          <HStack className="flex items-center gap-1 text-slate-400">
+                          <HStack className="flex items-center gap-1 text-slate-300">
                             <Clock className="h-3.5 w-3.5 text-orange-400" />
-                            <Text className="text-xs text-slate-400">25 - 40 min</Text>
+                            <Text className="text-xs text-slate-300">25 - 40 min</Text>
                           </HStack>
-                          <Text weight="bold" className="font-semibold text-slate-400 text-xs">
+                          <Text weight="bold" className="font-bold text-orange-400 text-xs">
                             {venue.currency || "COP"}
                           </Text>
                         </HStack>
 
                         {venue.openingHours && (
-                          <Text className="text-[11px] text-slate-500 block truncate">
+                          <Text className="text-xs text-slate-400 block truncate">
                             Horario: {venue.openingHours}
                           </Text>
                         )}
                       </VStack>
 
                       {/* Footer Actions */}
-                      <VStack className="mt-4 pt-3 border-t border-slate-800/80 w-full space-y-2">
+                      <VStack className="pt-2 border-t border-slate-800/80 w-full space-y-2.5">
                         <BusinessSocialLinks venue={venue} variant="compact" />
 
                         <Link
                           href={`/r/${targetSlug}`}
-                          className={`flex w-full items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold transition cursor-pointer no-underline ${
+                          className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition cursor-pointer no-underline ${
                             venue.isOpen !== false
-                              ? "bg-orange-600/90 text-white shadow-sm hover:bg-orange-500"
+                              ? "bg-orange-600 text-white shadow-md shadow-orange-600/30 hover:bg-orange-500"
                               : "bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700/60"
                           }`}
                         >
@@ -322,7 +322,7 @@ export function DirectoryView({ initialVenues }: Props) {
                               ? "Ver Catálogo & Pedir"
                               : "Cerrado • Ver Catálogo"}
                           </Text>
-                          <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                          <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Link>
                       </VStack>
                     </VStack>

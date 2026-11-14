@@ -54,12 +54,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" data-astryx-theme="neutral" data-theme="dark" data-astryx-color-scheme="dark">
       <head>
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/pwa-192x192.png" />
       </head>
-      <body className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-orange-500 selection:text-white flex flex-col">
+      <body
+        data-astryx-theme="neutral"
+        data-theme="dark"
+        className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-orange-500 selection:text-white flex flex-col"
+      >
         <CartProvider>
           <Navbar />
           <VStack as="main" className="flex-1 w-full">{children}</VStack>

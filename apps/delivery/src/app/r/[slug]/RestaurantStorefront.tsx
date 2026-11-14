@@ -290,7 +290,7 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
             </Text>
           </Card>
         ) : (
-          <Grid className="grid gap-3.5 sm:gap-4 grid-cols-1 md:grid-cols-2 w-full">
+          <Grid columns={{ minWidth: 320, max: 2 }} gap={4} align="start" className="w-full">
             {filteredProducts.map((product) => {
               const hasModifiers =
                 product.modifierGroups && product.modifierGroups.length > 0;

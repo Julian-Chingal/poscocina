@@ -120,8 +120,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateQuantity = (itemId: string, delta: number) => {
-    setItems((prev) =>
-      prev
+    setItems((prev) => {
+      const updated = prev
         .map((item) => {
           if (item.id === itemId) {
             const newQty = item.quantity + delta;
@@ -134,16 +134,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           }
           return item;
         })
-        .filter((item): item is CartItem => item !== null)
-    );
+        .filter((item): item is CartItem => item !== null);
+      if (updated.length === 0) setCurrentVenue(null);
+      return updated;
+    });
   };
 
   const removeItem = (itemId: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== itemId));
+    setItems((prev) => {
+      const remaining = prev.filter((i) => i.id !== itemId);
+      if (remaining.length === 0) setCurrentVenue(null);
+      return remaining;
+    });
   };
 
   const clearCart = () => {
     setItems([]);
+    setCurrentVenue(null);
   };
 
   const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
