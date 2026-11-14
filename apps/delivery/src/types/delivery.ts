@@ -7,6 +7,9 @@ export interface VenuePublicProfile {
   address?: string;
   phone?: string;
   city?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  businessType?: string;
   logoUrl?: string | null;
   primaryColor?: string;
   openingHours?: string;

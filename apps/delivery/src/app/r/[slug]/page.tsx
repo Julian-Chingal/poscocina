@@ -34,13 +34,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!data || !data.venue) {
     return {
-      title: 'Restaurante No Encontrado — poscocina',
+      title: 'Comercio No Encontrado — Pallevar',
     };
   }
 
   const { venue } = data;
-  const title = `${venue.name} — Menú Digital & Domicilios`;
-  const description = `Pide a domicilio en ${venue.name}. ${venue.address || ''}. Gastronomía preparada al instante y enviada a tu puerta.`;
+  const businessName = venue.restaurantName || venue.name;
+  const title = `${businessName} — Catálogo Digital & Domicilios | Pallevar`;
+  const description = `Pide a domicilio en ${businessName}. ${venue.address || ''}. Entregas rápidas a tu puerta con Pallevar.`;
 
   return {
     title,

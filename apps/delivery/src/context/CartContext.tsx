@@ -37,8 +37,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Load from localStorage on mount
   useEffect(() => {
     try {
-      const savedVenue = localStorage.getItem('poscocina_delivery_venue');
-      const savedCart = localStorage.getItem('poscocina_delivery_cart');
+      const savedVenue = localStorage.getItem('pallevar_delivery_venue') || localStorage.getItem('poscocina_delivery_venue');
+      const savedCart = localStorage.getItem('pallevar_delivery_cart') || localStorage.getItem('poscocina_delivery_cart');
       if (savedVenue) setCurrentVenue(JSON.parse(savedVenue));
       if (savedCart) setItems(JSON.parse(savedCart));
     } catch (e) {
@@ -50,11 +50,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       if (currentVenue) {
-        localStorage.setItem('poscocina_delivery_venue', JSON.stringify(currentVenue));
+        localStorage.setItem('pallevar_delivery_venue', JSON.stringify(currentVenue));
       } else {
+        localStorage.removeItem('pallevar_delivery_venue');
         localStorage.removeItem('poscocina_delivery_venue');
       }
-      localStorage.setItem('poscocina_delivery_cart', JSON.stringify(items));
+      localStorage.setItem('pallevar_delivery_cart', JSON.stringify(items));
     } catch (e) {
       console.warn('Failed to save delivery cart to localStorage', e);
     }

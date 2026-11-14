@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { MapPin, Phone, Clock, ArrowLeft, Plus, Sparkles, ChefHat, UtensilsCrossed } from 'lucide-react';
+import { MapPin, Phone, Clock, ArrowLeft, Plus, Sparkles, ChefHat, UtensilsCrossed, Navigation } from 'lucide-react';
 import { VenuePublicProfile, CatalogCategory, CatalogProduct } from '../../../types/delivery';
 import { ProductDetailModal } from '../../../components/modals/ProductDetailModal';
+import { BusinessLocationModal } from '../../../components/storefront/BusinessLocationModal';
 import { useCart } from '../../../context/CartContext';
 
 interface Props {
@@ -20,6 +21,7 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | 'all'>('all');
   const [activeProduct, setActiveProduct] = useState<CatalogProduct | null>(null);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const { addItem } = useCart();
 
   const formatCOP = (num: number | string) => {
@@ -56,7 +58,7 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition mb-4"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Volver a todas las sedes</span>
+            <span>Volver a todos los comercios</span>
           </Link>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -81,10 +83,14 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
                 </h1>
                 <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-400">
                   {venue.address && (
-                    <span className="flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5 text-slate-500" />
-                      {venue.address}{venue.city ? `, ${venue.city}` : ''}
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsLocationModalOpen(true)}
+                      className="inline-flex items-center gap-1 text-slate-300 hover:text-orange-400 hover:underline transition"
+                    >
+                      <MapPin className="h-3.5 w-3.5 text-orange-500 shrink-0" />
+                      <span>{venue.address}{venue.city ? `, ${venue.city}` : ''}</span>
+                    </button>
                   )}
                   {venue.phone && (
                     <span className="flex items-center gap-1">
@@ -105,16 +111,20 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 self-start sm:self-center">
+            <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-center">
+              <button
+                type="button"
+                onClick={() => setIsLocationModalOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700/80 bg-slate-800/80 px-3.5 py-1.5 text-xs font-bold text-slate-200 hover:border-orange-500/50 hover:bg-slate-800 hover:text-white transition shadow-sm"
+              >
+                <MapPin className="h-3.5 w-3.5 text-orange-400" />
+                <span>Ver Ubicación & Mapa</span>
+              </button>
+
               {tableParam && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/20 border border-orange-500/40 px-3 py-1 text-xs font-black text-orange-300 shadow-sm">
                   <UtensilsCrossed className="w-3.5 h-3.5 text-orange-400" />
                   Mesa {tableParam}
-                </span>
-              )}
-              {venue.isPrimary && (
-                <span className="rounded-full bg-orange-500/15 border border-orange-500/30 px-3 py-1 text-xs font-bold text-orange-300">
-                  Sede Principal
                 </span>
               )}
               {venue.isOpen !== false ? (
@@ -198,7 +208,7 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
         {filteredProducts.length === 0 ? (
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-12 text-center max-w-md mx-auto">
             <ChefHat className="h-12 w-12 text-slate-700 mx-auto" />
-            <h3 className="mt-3 font-bold text-slate-200">No hay platos disponibles</h3>
+            <h3 className="mt-3 font-bold text-slate-200">No hay productos disponibles</h3>
             <p className="mt-1 text-xs text-slate-500">
               Esta categoría aún no cuenta con productos activos para delivery.
             </p>
@@ -269,6 +279,13 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
         product={activeProduct}
         venue={venue}
         onClose={() => setActiveProduct(null)}
+      />
+
+      {/* Business Location & Info Modal */}
+      <BusinessLocationModal
+        venue={venue}
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
       />
     </div>
   );

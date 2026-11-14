@@ -6,14 +6,14 @@ import { CartDrawer } from '../components/cart/CartDrawer';
 import { CheckoutModal } from '../components/checkout/CheckoutModal';
 
 export const metadata: Metadata = {
-  title: 'poscocina Domicilios — Menú y Pedidos en Línea',
-  description: 'Explora nuestra red de restaurantes, pide tus platos favoritos a domicilio o pasa a recogerlos sin filas.',
-  keywords: ['domicilios', 'restaurante', 'pedir comida', 'menu online', 'gastronomia', 'poscocina'],
-  authors: [{ name: 'poscocina' }],
+  title: 'Pallevar — Domicilios y Envíos en Minutos',
+  description: 'Pide comida, víveres y productos en tus restaurantes y comercios favoritos con Pallevar. Entregas rápidas y seguimiento en tiempo real.',
+  keywords: ['pallevar', 'domicilios', 'restaurantes', 'tiendas', 'pedir online', 'envios', 'mercado'],
+  authors: [{ name: 'Pallevar' }],
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3001'),
   openGraph: {
-    title: 'poscocina Domicilios — Menú y Pedidos en Línea',
-    description: 'Pide tus platos favoritos a domicilio con preparación en tiempo real.',
+    title: 'Pallevar — Domicilios y Envíos en Minutos',
+    description: 'Pide comida, víveres y productos locales a domicilio con Pallevar.',
     type: 'website',
     locale: 'es_CO',
     images: [
@@ -21,20 +21,20 @@ export const metadata: Metadata = {
         url: '/pwa-512x512.png',
         width: 512,
         height: 512,
-        alt: 'poscocina Domicilios',
+        alt: 'Pallevar Domicilios',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'poscocina Domicilios',
-    description: 'Pide tus platos favoritos a domicilio en minutos.',
+    title: 'Pallevar — Domicilios y Envíos',
+    description: 'Pide comida, compras y productos en minutos.',
     images: ['/pwa-512x512.png'],
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'poscocina Domicilios',
+    title: 'Pallevar',
   },
 };
 

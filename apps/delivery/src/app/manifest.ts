@@ -2,9 +2,9 @@
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'poscocina Domicilios — Pedidos en Línea',
-    short_name: 'Domicilios',
-    description: 'Pide tus platos favoritos a domicilio o para llevar en minutos',
+    name: 'Pallevar — Domicilios y Envíos',
+    short_name: 'Pallevar',
+    description: 'Pide comida, compras y productos a domicilio o para llevar en minutos con Pallevar',
     start_url: '/',
     display: 'standalone',
     background_color: '#0f172a',

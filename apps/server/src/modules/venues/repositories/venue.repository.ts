@@ -67,20 +67,28 @@ export class VenueRepository implements IVenueRepository {
       const isGenericVenueSlug = !v.slug || v.slug === 'sede-principal';
       const effectiveSlug = isGenericVenueSlug ? (compSlug || v.slug || s.slug || v.id) : (v.slug || compSlug || s.slug || v.id);
 
-      const displayName = comp?.tradeName
-        ? (v.name && v.name !== 'Sede Principal' && rows.length > 1 ? `${comp.tradeName} - ${v.name}` : comp.tradeName)
-        : v.name;
+      const compTrade = comp?.tradeName?.trim() || '';
+      const venueName = v.name?.trim() || '';
+      const isSameName = compTrade.toLowerCase() === venueName.toLowerCase();
+      const isGenericName = !venueName || venueName.toLowerCase() === 'sede principal' || venueName.toLowerCase() === 'principal';
+
+      const displayName = compTrade
+        ? (isSameName || isGenericName || rows.length <= 1 ? compTrade : `${compTrade} - ${venueName}`)
+        : venueName;
 
       return {
         id: v.id,
         name: displayName,
         slug: effectiveSlug,
-        restaurantName: comp?.tradeName || v.name,
+        restaurantName: compTrade || venueName,
         restaurantSlug: compSlug || effectiveSlug,
         companyId: v.companyId || comp?.id || null,
         address: v.address || s.address || comp?.address || '',
         phone: s.phone || comp?.phone || '',
         city: s.city || '',
+        latitude: s.latitude !== undefined && s.latitude !== null ? Number(s.latitude) : null,
+        longitude: s.longitude !== undefined && s.longitude !== null ? Number(s.longitude) : null,
+        businessType: s.businessType || 'restaurant',
         logoUrl: s.logoUrl || comp?.logoUrl || null,
         primaryColor: s.primaryColor || comp?.primaryColor || '#ea580c',
         openingHours: s.openingHours || '',
@@ -195,20 +203,28 @@ export class VenueRepository implements IVenueRepository {
     const statusEval = evaluateVenueOpenStatus(venue, !!activeShift);
     const s = (venue.settings || {}) as Record<string, any>;
 
-    const displayName = company?.tradeName
-      ? (venue.name && venue.name !== 'Sede Principal' ? `${company.tradeName} - ${venue.name}` : company.tradeName)
-      : venue.name;
+    const compTrade = company?.tradeName?.trim() || '';
+    const venueName = venue.name?.trim() || '';
+    const isSameName = compTrade.toLowerCase() === venueName.toLowerCase();
+    const isGenericName = !venueName || venueName.toLowerCase() === 'sede principal' || venueName.toLowerCase() === 'principal';
+
+    const displayName = compTrade
+      ? (isSameName || isGenericName ? compTrade : `${compTrade} - ${venueName}`)
+      : venueName;
 
     return {
       id: venue.id,
       name: displayName,
       slug: effectiveSlug,
-      restaurantName: company?.tradeName || venue.name,
+      restaurantName: compTrade || venueName,
       restaurantSlug: companySlug || effectiveSlug,
       companyId: venue.companyId || company?.id || null,
       address: venue.address || s.address || company?.address || '',
       phone: s.phone || company?.phone || '',
       city: s.city || '',
+      latitude: s.latitude !== undefined && s.latitude !== null ? Number(s.latitude) : null,
+      longitude: s.longitude !== undefined && s.longitude !== null ? Number(s.longitude) : null,
+      businessType: s.businessType || 'restaurant',
       logoUrl: s.logoUrl || company?.logoUrl || null,
       primaryColor: s.primaryColor || company?.primaryColor || '#ea580c',
       openingHours: s.openingHours || '',
