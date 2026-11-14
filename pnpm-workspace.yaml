@@ -4,6 +4,7 @@ packages:
 
 allowBuilds:
   esbuild: true
+  '@astryxdesign/core': true
 
 minimumReleaseAgeExclude:
   - '@astryxdesign/core@0.7.16'
