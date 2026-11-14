@@ -79,6 +79,7 @@ export class WhatsAppController {
     const sessionName = `venue_${chat.venueId}`;
     // Dispatch via WAHA API
     const wahaRes = await wahaService.sendText(sessionName, chat.phone, text.trim());
+    const isSuccess = Boolean(wahaRes && wahaRes.success);
 
     // Record outbound message in database
     const [inserted] = await db
@@ -89,7 +90,7 @@ export class WhatsAppController {
         wahaMessageId: wahaRes?.id || null,
         direction: 'outbound',
         body: text.trim(),
-        status: wahaRes ? 'sent' : 'failed',
+        status: isSuccess ? 'sent' : 'failed',
       })
       .returning();
 
@@ -107,6 +108,16 @@ export class WhatsAppController {
     if (request.server.io) {
       request.server.io.to(`venue:${chat.venueId}`).emit('whatsapp:message:sent', {
         chatId,
+        message: inserted,
+      });
+    }
+
+    if (!isSuccess) {
+      const errorMessage =
+        wahaRes?.error ||
+        'No se pudo enviar el mensaje a WhatsApp. Verifica que la sesión esté vinculada y activa.';
+      return reply.status(502).send({
+        error: errorMessage,
         message: inserted,
       });
     }
@@ -148,7 +159,11 @@ export class WhatsAppController {
     request.log.info({ venueId, sessionName }, '[WhatsAppController] Starting WAHA session for venue');
     let success = await wahaService.startSession(sessionName);
     if (!success) {
-      request.log.warn({ venueId }, '[WhatsAppController] Session name failed, attempting "default" session');
+      request.log.warn({ venueId }, '[WhatsAppController] Session name failed, attempting restart on venue session');
+      success = await wahaService.restartSession(sessionName);
+    }
+    if (!success) {
+      request.log.warn({ venueId }, '[WhatsAppController] Venue session failed, attempting "default" session');
       success = await wahaService.startSession('default');
     }
     request.log.info({ venueId, success }, '[WhatsAppController] WAHA session start result');

@@ -1,7 +1,8 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or, ilike } from 'drizzle-orm';
 import { db } from '../../../db/index.js';
 import * as schema from '../../../db/schema.js';
 import { WahaWebhookPayload } from '../interfaces/waha.types.js';
+import { wahaService } from '../services/waha.service.js';
 
 export class HandleIncomingWahaMessageUseCase {
   async execute(webhook: WahaWebhookPayload, socketIo?: any): Promise<{ handled: boolean; messageId?: string }> {
@@ -16,6 +17,12 @@ export class HandleIncomingWahaMessageUseCase {
 
     if (!cleanPhone) {
       return { handled: false };
+    }
+
+    // Try resolving real phone number if sender is an internal LID (15+ digits)
+    let resolvedPhone: string | null = null;
+    if (rawFrom.includes('@lid') || cleanPhone.length >= 15) {
+      resolvedPhone = await wahaService.resolvePhoneFromLid(session, cleanPhone);
     }
 
     // 1. Idempotency Check
@@ -50,10 +57,14 @@ export class HandleIncomingWahaMessageUseCase {
     }
 
     // 3. Resolve Customer & Chat
+    const chatCondition = resolvedPhone
+      ? or(eq(schema.whatsappChats.phone, cleanPhone), eq(schema.whatsappChats.phone, resolvedPhone))
+      : eq(schema.whatsappChats.phone, cleanPhone);
+
     const [existingChat] = await db
       .select()
       .from(schema.whatsappChats)
-      .where(and(eq(schema.whatsappChats.venueId, targetVenueId), eq(schema.whatsappChats.phone, cleanPhone)))
+      .where(and(eq(schema.whatsappChats.venueId, targetVenueId), chatCondition))
       .limit(1);
 
     let chatId = existingChat?.id;
@@ -62,19 +73,40 @@ export class HandleIncomingWahaMessageUseCase {
     const mediaUrl = payload.media?.url || payload.mediaUrl || null;
     const mediaType = payload.media?.mimetype || null;
 
-    if (!chatId) {
-      // Look up existing CRM customer by phone
-      const [existingCustomer] = await db
+    // Look up existing CRM customer by phone, resolved phone, or notifyName
+    let existingCustomer: any = null;
+    if (resolvedPhone) {
+      const [c] = await db
+        .select()
+        .from(schema.customers)
+        .where(and(eq(schema.customers.venueId, targetVenueId), eq(schema.customers.phone, resolvedPhone)))
+        .limit(1);
+      existingCustomer = c;
+    }
+    if (!existingCustomer) {
+      const [c] = await db
         .select()
         .from(schema.customers)
         .where(and(eq(schema.customers.venueId, targetVenueId), eq(schema.customers.phone, cleanPhone)))
         .limit(1);
+      existingCustomer = c;
+    }
+    const notifyName = payload._data?.notifyName?.trim();
+    if (!existingCustomer && notifyName && notifyName.length > 2) {
+      const [c] = await db
+        .select()
+        .from(schema.customers)
+        .where(and(eq(schema.customers.venueId, targetVenueId), ilike(schema.customers.name, `%${notifyName}%`)))
+        .limit(1);
+      existingCustomer = c;
+    }
 
-      const customerName =
-        existingCustomer?.name ||
-        payload._data?.notifyName ||
-        `WhatsApp ${cleanPhone.slice(-4)}`;
+    const customerName =
+      existingCustomer?.name ||
+      notifyName ||
+      (cleanPhone.length >= 15 ? 'Usuario WhatsApp' : `WhatsApp ${cleanPhone.slice(-4)}`);
 
+    if (!chatId) {
       const [newChat] = await db
         .insert(schema.whatsappChats)
         .values({
@@ -90,10 +122,12 @@ export class HandleIncomingWahaMessageUseCase {
 
       chatId = newChat.id;
     } else {
-      // Update existing chat summary
+      // Update existing chat summary and attach customer if newly resolved
       await db
         .update(schema.whatsappChats)
         .set({
+          customerName: existingChat.customerName || customerName,
+          customerId: existingChat.customerId || existingCustomer?.id || null,
           lastMessage: bodyText,
           lastMessageAt: new Date(),
           unreadCount: isOutbound ? existingChat.unreadCount : (existingChat.unreadCount || 0) + 1,

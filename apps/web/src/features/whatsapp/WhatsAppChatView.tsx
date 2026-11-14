@@ -232,15 +232,22 @@ export const WhatsAppChatView: React.FC = () => {
     socket.on('whatsapp:message:received', handleReceived);
     socket.on('whatsapp:message:sent', handleSent);
 
+    let tickCount = 0;
     // Heartbeat fallback polling every 4s + window focus to guarantee zero-refresh sync
     const pollInterval = setInterval(() => {
       loadChats(true);
       if (selectedChatRef.current?.id) {
         loadMessages(selectedChatRef.current.id, true);
       }
+      tickCount++;
+      // Periodically refresh session status every 12 seconds
+      if (tickCount % 3 === 0) {
+        checkSession();
+      }
     }, 4000);
 
     const onFocus = () => {
+      checkSession();
       loadChats(true);
       if (selectedChatRef.current?.id) {
         loadMessages(selectedChatRef.current.id, true);
@@ -288,7 +295,12 @@ export const WhatsAppChatView: React.FC = () => {
         )
       );
     } catch (err: any) {
-      toast.error('No se pudo enviar el mensaje por WhatsApp');
+      const errorMsg =
+        err?.response?.data?.error ||
+        err?.message ||
+        'No se pudo enviar el mensaje por WhatsApp. Verifica la conexión con WAHA.';
+      toast.error(errorMsg);
+      checkSession();
     } finally {
       setSending(false);
     }
@@ -298,10 +310,17 @@ export const WhatsAppChatView: React.FC = () => {
   const activeCustomerOrder = useMemo(() => {
     if (!selectedChat) return null;
     const phone = selectedChat.phone.replace(/\D/g, '');
+    const customerName = selectedChat.customerName?.toLowerCase().trim();
+
     return venueOrders.find((ord) => {
       const isMatchPhone = (ord as any).notes?.includes(phone) || (ord as any).customer?.phone === phone;
+      const isMatchName = Boolean(
+        customerName &&
+          customerName.length > 2 &&
+          (ord as any).customer?.name?.toLowerCase().includes(customerName)
+      );
       const isOpen = (ord as any).status !== 'closed' && (ord as any).kitchenStatus !== 'delivered';
-      return isMatchPhone && isOpen;
+      return (isMatchPhone || isMatchName) && isOpen;
     });
   }, [selectedChat, venueOrders]);
 
@@ -350,10 +369,31 @@ export const WhatsAppChatView: React.FC = () => {
                 checkSession();
                 setShowQrModal(true);
               }}
-              className="h-8 gap-1 text-xs"
+              className={`h-8 gap-1.5 text-xs font-medium ${
+                sessionInfo?.status === 'WORKING'
+                  ? 'border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10'
+                  : sessionInfo?.status === 'SCAN_QR_CODE'
+                    ? 'border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10'
+                    : 'border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/10'
+              }`}
             >
-              <QrCode className="h-3.5 w-3.5 text-primary" />
-              <span>{sessionInfo?.status === 'WORKING' ? 'Conectado' : 'Vincular'}</span>
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  sessionInfo?.status === 'WORKING'
+                    ? 'bg-emerald-500'
+                    : sessionInfo?.status === 'SCAN_QR_CODE'
+                      ? 'bg-amber-500 animate-pulse'
+                      : 'bg-red-500'
+                }`}
+              />
+              <QrCode className="h-3.5 w-3.5 text-current" />
+              <span>
+                {sessionInfo?.status === 'WORKING'
+                  ? 'Conectado'
+                  : sessionInfo?.status === 'SCAN_QR_CODE'
+                    ? 'Escanear QR'
+                    : 'Desconectado'}
+              </span>
             </Button>
             <Button variant="ghost" size="icon" onClick={() => loadChats()} className="h-8 w-8">
               <RefreshCw className="h-3.5 w-3.5" />
@@ -399,7 +439,7 @@ export const WhatsAppChatView: React.FC = () => {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
                       <p className="truncate text-sm font-semibold text-foreground">
-                        {chat.customerName || `Cliente ${chat.phone.slice(-4)}`}
+                        {chat.customerName || (chat.phone.length >= 15 ? 'Usuario WhatsApp' : `+${chat.phone}`)}
                       </p>
                       {chat.lastMessageAt && (
                         <span className="text-[10px] text-muted-foreground">
@@ -434,10 +474,23 @@ export const WhatsAppChatView: React.FC = () => {
                   {selectedChat.customerName ? selectedChat.customerName.charAt(0).toUpperCase() : 'W'}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-sm text-foreground">{selectedChat.customerName}</h3>
+                  <h3 className="font-semibold text-sm text-foreground">
+                    {selectedChat.customerName || (selectedChat.phone.length >= 15 ? 'Usuario WhatsApp' : `Cliente +${selectedChat.phone}`)}
+                  </h3>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Phone className="h-3 w-3" />
-                    <span>+{selectedChat.phone}</span>
+                    {selectedChat.phone.length >= 15 ? (
+                      <span className="flex items-center gap-1.5">
+                        <span title="Identificador de privacidad de WhatsApp (LID)">
+                          ID: {selectedChat.phone}
+                        </span>
+                        <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium px-1.5 py-0.5 rounded border border-amber-500/20">
+                          LID Privado
+                        </span>
+                      </span>
+                    ) : (
+                      <span>+{selectedChat.phone}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -488,13 +541,24 @@ export const WhatsAppChatView: React.FC = () => {
                         <p className="whitespace-pre-wrap leading-relaxed">{msg.body}</p>
                         <div
                           className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${
-                            isOut ? 'text-emerald-100' : 'text-muted-foreground'
+                            isOut
+                              ? msg.status === 'failed'
+                                ? 'text-red-200'
+                                : 'text-emerald-100'
+                              : 'text-muted-foreground'
                           }`}
                         >
                           <span>
                             {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
-                          {isOut && <CheckCheck className="h-3 w-3" />}
+                          {isOut &&
+                            (msg.status === 'failed' ? (
+                              <span className="flex items-center gap-0.5 font-medium text-red-200">
+                                ⚠️ No enviado
+                              </span>
+                            ) : (
+                              <CheckCheck className="h-3 w-3" />
+                            ))}
                         </div>
                       </div>
                     </div>
@@ -721,27 +785,37 @@ export const WhatsAppChatView: React.FC = () => {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-3">
-                    <div className="h-12 w-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-600">
+                    <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
+                      sessionInfo?.status === 'FAILED' ? 'bg-red-500/10 text-red-600' : 'bg-amber-500/10 text-amber-600'
+                    }`}>
                       <QrCode className="h-6 w-6" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-foreground">
-                        Sesión no iniciada en WAHA
+                        {sessionInfo?.status === 'FAILED'
+                          ? 'Sesión desconectada o fallida en WAHA'
+                          : 'Sesión no iniciada en WAHA'}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Para vincular el número de tu restaurante, inicia la sesión en el servidor y escanea el código QR resultante.
+                        {sessionInfo?.status === 'FAILED'
+                          ? 'La sesión de WhatsApp Web se desconectó o cerró. Haz clic para reiniciar el motor y generar un nuevo código QR.'
+                          : 'Para vincular el número de tu restaurante, inicia la sesión en el servidor y escanea el código QR resultante.'}
                       </p>
                     </div>
                     <Button
                       size="default"
-                      className="mt-2 w-full bg-amber-600 hover:bg-amber-700 text-white font-medium gap-2 shadow-sm"
+                      className={`mt-2 w-full text-white font-medium gap-2 shadow-sm ${
+                        sessionInfo?.status === 'FAILED'
+                          ? 'bg-red-600 hover:bg-red-700'
+                          : 'bg-amber-600 hover:bg-amber-700'
+                      }`}
                       disabled={startingSession}
                       onClick={async () => {
                         if (venueId) {
                           setStartingSession(true);
                           try {
                             await whatsAppApi.startSession(venueId);
-                            toast.info('Iniciando WAHA. Esperando código QR...');
+                            toast.info('Reiniciando WAHA. Esperando código QR...');
                             await checkSession();
                           } catch {
                             toast.error('No se pudo iniciar la sesión en WAHA');
@@ -752,7 +826,7 @@ export const WhatsAppChatView: React.FC = () => {
                       }}
                     >
                       <QrCode className="h-4 w-4" />
-                      <span>Iniciar Sesión y Generar QR</span>
+                      <span>{sessionInfo?.status === 'FAILED' ? 'Reiniciar y Generar QR' : 'Iniciar Sesión y Generar QR'}</span>
                     </Button>
                   </div>
                 )}
