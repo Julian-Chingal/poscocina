@@ -618,34 +618,56 @@ export const WhatsAppChatView: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className="text-center py-6">
-                <div className="flex items-center justify-center gap-2 mb-3 text-muted-foreground">
-                  <RefreshCw className="h-4 w-4 animate-spin text-primary" />
-                  <p className="text-sm">
-                    {sessionInfo?.status === 'STARTING'
-                      ? 'Iniciando navegador Chromium en WAHA (esto puede tomar 5-10s)...'
-                      : 'Sesión no iniciada en WAHA.'}
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  disabled={startingSession}
-                  onClick={async () => {
-                    if (venueId) {
-                      setStartingSession(true);
-                      try {
-                        await whatsAppApi.startSession(venueId);
-                        await checkSession();
-                      } catch {
-                        toast.error('No se pudo iniciar la sesión en WAHA');
-                      } finally {
-                        setStartingSession(false);
-                      }
-                    }
-                  }}
-                >
-                  {startingSession ? 'Iniciando...' : 'Iniciar Sesión WAHA'}
-                </Button>
+              <div className="text-center py-6 max-w-sm mx-auto">
+                {startingSession || sessionInfo?.status === 'STARTING' ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        Iniciando motor de WhatsApp...
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Levantando navegador en WAHA. En unos segundos aparecerá el código QR para escanear.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="h-12 w-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-600">
+                      <QrCode className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        Sesión no iniciada en WAHA
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Para vincular el número de tu restaurante, inicia la sesión en el servidor y escanea el código QR resultante.
+                      </p>
+                    </div>
+                    <Button
+                      size="default"
+                      className="mt-2 w-full bg-amber-600 hover:bg-amber-700 text-white font-medium gap-2 shadow-sm"
+                      disabled={startingSession}
+                      onClick={async () => {
+                        if (venueId) {
+                          setStartingSession(true);
+                          try {
+                            await whatsAppApi.startSession(venueId);
+                            toast.info('Iniciando WAHA. Esperando código QR...');
+                            await checkSession();
+                          } catch {
+                            toast.error('No se pudo iniciar la sesión en WAHA');
+                          } finally {
+                            setStartingSession(false);
+                          }
+                        }
+                      }}
+                    >
+                      <QrCode className="h-4 w-4" />
+                      <span>Iniciar Sesión y Generar QR</span>
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>

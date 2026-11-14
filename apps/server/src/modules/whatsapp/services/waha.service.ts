@@ -117,7 +117,17 @@ export class WahaService {
   async startSession(session: string): Promise<boolean> {
     const sessionName = session || 'default';
     try {
-      // 1. In WAHA, sessions are created/started via POST /api/sessions
+      // 1. In WAHA, recommended upsert-and-start endpoint is POST /api/sessions/start
+      const startBodyRes = await fetch(`${this.baseUrl}/api/sessions/start`, {
+        method: 'POST',
+        headers: this.headers,
+        body: JSON.stringify({ name: sessionName }),
+      });
+      if (startBodyRes.ok) {
+        return true;
+      }
+
+      // 2. Alternative: POST /api/sessions
       const createRes = await fetch(`${this.baseUrl}/api/sessions`, {
         method: 'POST',
         headers: this.headers,
@@ -127,22 +137,12 @@ export class WahaService {
         return true;
       }
 
-      // 2. If it already exists, start it via POST /api/sessions/{session}/start
+      // 3. If it already exists, start it via POST /api/sessions/{session}/start
       const startRes = await fetch(`${this.baseUrl}/api/sessions/${sessionName}/start`, {
         method: 'POST',
         headers: this.headers,
       });
-      if (startRes.ok) {
-        return true;
-      }
-
-      // 3. Fallback for older/newer WAHA APIs: POST /api/sessions/start with body
-      const startBodyRes = await fetch(`${this.baseUrl}/api/sessions/start`, {
-        method: 'POST',
-        headers: this.headers,
-        body: JSON.stringify({ name: sessionName }),
-      });
-      return startBodyRes.ok;
+      return startRes.ok;
     } catch (err: any) {
       console.error(`[WahaService] Error starting session ${sessionName} at ${this.baseUrl}:`, err.message);
       return false;

@@ -145,11 +145,13 @@ export class WhatsAppController {
   async startVenueSession(request: FastifyRequest, reply: FastifyReply) {
     const { venueId } = request.params as { venueId: string };
     const sessionName = `venue_${venueId}`;
+    request.log.info({ venueId, sessionName }, '[WhatsAppController] Starting WAHA session for venue');
     let success = await wahaService.startSession(sessionName);
     if (!success) {
-      // Also try default session fallback
+      request.log.warn({ venueId }, '[WhatsAppController] Session name failed, attempting "default" session');
       success = await wahaService.startSession('default');
     }
+    request.log.info({ venueId, success }, '[WhatsAppController] WAHA session start result');
     return reply.send({ success });
   }
 }
