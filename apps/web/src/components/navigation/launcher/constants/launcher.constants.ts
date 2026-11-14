@@ -52,6 +52,7 @@ export const APPS: AppItem[] = [
     icon: Bike,
     icon3d: "/icons/modules/hamburger.webp",
     gradient: "from-amber-500 to-orange-600",
+    badge: "Beta",
     badgeColor:
       "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30",
     category: "operacion",
