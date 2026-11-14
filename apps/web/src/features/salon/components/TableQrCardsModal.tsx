@@ -32,6 +32,7 @@ import { TableItem, FloorPlanItem } from '../types/salon.types';
 import { TableQrCardPrintSheet, CardLayoutMode } from './TableQrCardPrintSheet';
 import { useAuthStore } from '@/stores/auth.store';
 import { toast } from 'sonner';
+import { getDeliveryBaseUrl } from '@/lib/delivery-url';
 
 interface TableQrCardsModalProps {
   isOpen: boolean;
@@ -78,20 +79,7 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
 
   // Delivery base URL
   const defaultDeliveryBaseUrl = useMemo(() => {
-    const envUrl = import.meta.env.VITE_DELIVERY_URL;
-    if (envUrl) {
-      return envUrl.replace(/\/$/, '');
-    }
-    if (typeof window !== 'undefined') {
-      const isLocal =
-        window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1';
-      if (isLocal) {
-        return `${window.location.protocol}//${window.location.hostname}:3001`;
-      }
-      return window.location.origin;
-    }
-    return 'http://localhost:3001';
+    return getDeliveryBaseUrl();
   }, []);
 
   const [deliveryBaseUrl, setDeliveryBaseUrl] = useState<string>(defaultDeliveryBaseUrl);

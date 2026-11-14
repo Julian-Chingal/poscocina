@@ -9,6 +9,7 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:-/api}
+        VITE_DELIVERY_URL: ${VITE_DELIVERY_URL:-}
     container_name: poscocina-client
     restart: unless-stopped
     ports:

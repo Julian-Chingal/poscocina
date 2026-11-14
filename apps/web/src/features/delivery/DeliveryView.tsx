@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
+import { getDeliveryBaseUrl, getStorefrontUrl } from "@/lib/delivery-url";
 
 interface DeliveryViewProps {
   venueId?: string;
@@ -88,23 +89,15 @@ export const DeliveryView: React.FC<DeliveryViewProps> = ({ venueId: propVenueId
   const [activeTab, setActiveTab] = useState<DeliveryTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedLink, setCopiedLink] = useState(false);
-  const [venueSlug, setVenueSlug] = useState<string>("");
-
   const activeVenue = useMemo(() => {
     return availableVenues.find((v) => v.id === activeVenueId);
   }, [availableVenues, activeVenueId]);
 
+  const [venueSlug, setVenueSlug] = useState<string>((activeVenue as any)?.slug || "");
+
   // Public Storefront URL for customers
-  const storefrontUrl = useMemo(() => {
-    const envUrl = import.meta.env.VITE_DELIVERY_URL;
-    let base = "http://localhost:3001";
-    if (envUrl) {
-      base = envUrl.replace(/\/$/, "");
-    } else if (typeof window !== "undefined") {
-      base = `${window.location.protocol}//${window.location.hostname}:3001`;
-    }
-    return venueSlug ? `${base}/r/${venueSlug}` : base;
-  }, [venueSlug]);
+  const deliveryBaseUrl = useMemo(() => getDeliveryBaseUrl(), []);
+  const storefrontUrl = useMemo(() => getStorefrontUrl(venueSlug), [venueSlug]);
 
   // Fetch venue slug for clean customer URL
   useEffect(() => {
@@ -285,11 +278,24 @@ export const DeliveryView: React.FC<DeliveryViewProps> = ({ venueId: propVenueId
                 En Vivo
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-              <Store className="size-3 text-primary shrink-0" />
-              <span>Sede:</span>
-              <strong className="text-foreground">{activeVenue?.name || "Sede Principal"}</strong>
-            </p>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+              <p className="flex items-center gap-1.5">
+                <Store className="size-3 text-primary shrink-0" />
+                <span>Sede:</span>
+                <strong className="text-foreground">{activeVenue?.name || "Sede Principal"}</strong>
+              </p>
+              <span className="text-muted-foreground/40 hidden sm:inline">•</span>
+              <a
+                href={deliveryBaseUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Abrir portal general de delivery"
+                className="text-[11px] text-primary/80 hover:text-primary hover:underline flex items-center gap-1 font-mono"
+              >
+                <span>{deliveryBaseUrl.replace(/^https?:\/\//, '')}</span>
+                <ExternalLink className="size-2.5" />
+              </a>
+            </div>
           </div>
         </div>
 
