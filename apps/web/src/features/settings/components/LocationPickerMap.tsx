@@ -175,6 +175,8 @@ export const LocationPickerMap: React.FC<LocationPickerMapProps> = ({
     }
   }, [hasCoords, latitude, longitude, flyToCoords]);
 
+  const targetAreaName = [municipalityName, departmentName].filter(Boolean).join(', ');
+
   // GPS Geolocation detector
   const handleDetectGPS = useCallback(() => {
     if (!navigator.geolocation) {
@@ -289,7 +291,7 @@ export const LocationPickerMap: React.FC<LocationPickerMapProps> = ({
             <MapPin className="w-3 h-3 text-primary" />
             <span>Centrar en Sede</span>
           </Button>
-        ) : municipalityName ? (
+        ) : targetAreaName ? (
           <Button
             type="button"
             size="sm"
@@ -297,7 +299,7 @@ export const LocationPickerMap: React.FC<LocationPickerMapProps> = ({
             onClick={handleRecenterOnPin}
             className="h-7 text-[11px] px-2.5 bg-background/90 backdrop-blur-md rounded-lg border-border/80 hover:bg-background text-foreground shadow-xs gap-1"
           >
-            <span>Centrar en {municipalityName}</span>
+            <span>Centrar en {targetAreaName}</span>
           </Button>
         ) : null}
       </div>
