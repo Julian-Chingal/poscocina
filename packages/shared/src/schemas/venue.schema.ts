@@ -19,7 +19,10 @@ export const CreateVenueSchema = z.object({
   timezone: z.string().default('America/Bogota'),
   phone: z.string().optional(),
   slug: z.string().optional(),
+  department: z.string().optional(),
   city: z.string().optional(),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
   managerName: z.string().optional(),
   openingHours: z.string().optional(),
   operatingStatus: VenueOperatingStatusEnum.optional().default('auto'),
@@ -36,7 +39,10 @@ export const UpdateVenueSchema = z.object({
   timezone: z.string().optional(),
   phone: z.string().optional(),
   slug: z.string().optional(),
+  department: z.string().optional(),
   city: z.string().optional(),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
   managerName: z.string().optional(),
   openingHours: z.string().optional(),
   operatingStatus: VenueOperatingStatusEnum.optional(),
@@ -44,6 +50,7 @@ export const UpdateVenueSchema = z.object({
   requireShiftForDelivery: z.boolean().optional(),
   notes: z.string().optional(),
   settings: z.record(z.unknown()).optional(),
+  companyId: z.string().uuid().optional(),
 });
 
 export type CreateVenueInput = z.infer<typeof CreateVenueSchema>;

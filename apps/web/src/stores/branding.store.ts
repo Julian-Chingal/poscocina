@@ -26,6 +26,10 @@ export interface VenueSettings {
   taxId?: string;
   defaultTipPct?: number;
   phone?: string;
+  department?: string;
+  city?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   openingHours?: string;
   operatingStatus?: 'auto' | 'open' | 'closed';
   schedule?: Array<{

@@ -58,7 +58,10 @@ export interface NewVenuePayload {
   slug: string;
   address?: string;
   phone?: string;
+  department?: string;
   city?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   managerName?: string;
   openingHours?: string;
   operatingStatus?: VenueOperatingStatus;
@@ -73,7 +76,10 @@ export interface UpdateVenuePayload {
   slug?: string;
   address?: string;
   phone?: string;
+  department?: string;
   city?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   managerName?: string;
   openingHours?: string;
   operatingStatus?: VenueOperatingStatus;

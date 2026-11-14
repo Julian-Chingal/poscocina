@@ -15,6 +15,7 @@ import {
   Clock,
   User,
   Radio,
+  ExternalLink,
 } from 'lucide-react';
 import { VenueItem } from '@/stores/branding.store';
 import { VenueSummaryData } from '../types/settings.types';
@@ -70,6 +71,10 @@ export const VenueCard: React.FC<Props> = ({
   const phone = venue.phone || settings.phone || '';
   const address = venue.address || '';
   const city = settings.city || '';
+  const department = settings.department || '';
+  const latitude = typeof settings.latitude === 'number' ? settings.latitude : null;
+  const longitude = typeof settings.longitude === 'number' ? settings.longitude : null;
+  const locationLabel = [city, department].filter(Boolean).join(', ');
   const managerName = settings.managerName || '';
   const openingHours = settings.openingHours || '';
   const operatingStatus = settings.operatingStatus || 'auto';
@@ -169,7 +174,7 @@ export const VenueCard: React.FC<Props> = ({
                   <span className="font-mono text-[11px] text-muted-foreground/90 bg-muted/60 px-1.5 py-0.5 rounded-md">
                     /{slug}
                   </span>
-                  {city && <span className="text-[11px] text-muted-foreground/80">• {city}</span>}
+                  {locationLabel && <span className="text-[11px] text-muted-foreground/80">• {locationLabel}</span>}
                 </div>
               </div>
             </div>
@@ -253,6 +258,36 @@ export const VenueCard: React.FC<Props> = ({
               <div className="flex items-center space-x-2 text-muted-foreground/60 italic">
                 <MapPin className="w-3.5 h-3.5 shrink-0" />
                 <span>Sin dirección registrada</span>
+              </div>
+            )}
+
+            {latitude !== null && longitude !== null && (
+              <div className="flex items-center justify-between group pt-0.5">
+                <a
+                  href={`https://www.google.com/maps?q=${latitude},${longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center space-x-1.5 text-[11px] text-primary/90 hover:text-primary transition truncate"
+                  title="Abrir ubicación en Google Maps"
+                >
+                  <MapPin className="w-3 h-3 text-primary shrink-0" />
+                  <span className="font-mono text-[10px]">
+                    GPS: {latitude.toFixed(5)}, {longitude.toFixed(5)}
+                  </span>
+                  <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover:opacity-100" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(`${latitude}, ${longitude}`, 'coords')}
+                  title="Copiar coordenadas"
+                  className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground opacity-60 hover:opacity-100 transition shrink-0 cursor-pointer"
+                >
+                  {copiedField === 'coords' ? (
+                    <Check className="w-3 h-3 text-emerald-500" />
+                  ) : (
+                    <Copy className="w-3 h-3" />
+                  )}
+                </button>
               </div>
             )}
 
