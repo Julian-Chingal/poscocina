@@ -162,7 +162,7 @@ export function DirectoryView({ initialVenues }: Props) {
         </VStack>
 
         {/* Venues Grid */}
-        <VStack className="mt-12 w-full">
+        <VStack className="mt-10 w-full max-w-6xl mx-auto">
           <HStack className="flex items-center justify-between mb-6 w-full">
             <Heading level={2} className="text-lg font-bold text-white flex items-center gap-2">
               <Store className="h-5 w-5 text-orange-500 inline mr-2" />
@@ -195,7 +195,7 @@ export function DirectoryView({ initialVenues }: Props) {
               )}
             </Card>
           ) : (
-            <Grid className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 w-full">
+            <Grid className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 w-full">
               {filteredVenues.map((venue) => {
                 const targetSlug = venue.slug || venue.id;
                 // Category label
@@ -212,20 +212,28 @@ export function DirectoryView({ initialVenues }: Props) {
                 return (
                   <Card
                     key={venue.id}
-                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 p-6 transition-all duration-300 hover:border-orange-500/50 hover:bg-slate-900 hover:shadow-xl hover:shadow-orange-600/5"
+                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-800/90 bg-slate-900/70 p-0 transition-all duration-300 hover:border-orange-500/50 hover:bg-slate-900 hover:shadow-xl hover:shadow-orange-600/10"
                   >
-                    <VStack className="w-full">
-                      {/* Header card with logo/badge */}
-                      <HStack className="flex items-start justify-between gap-3 w-full">
+                    {/* Header Banner with Category & Status */}
+                    <HStack
+                      className="relative h-20 w-full p-3.5 flex items-start justify-between border-b border-slate-800/60"
+                      style={{
+                        background: venue.primaryColor
+                          ? `linear-gradient(135deg, ${venue.primaryColor}22 0%, #0f172a 100%)`
+                          : "linear-gradient(135deg, #ea580c22 0%, #0f172a 100%)",
+                      }}
+                    >
+                      {/* Logo Overlapping */}
+                      <HStack className="absolute -bottom-5 left-4 z-10">
                         {venue.logoUrl ? (
                           <img
                             src={venue.logoUrl}
                             alt={venue.restaurantName || venue.name}
-                            className="h-12 w-12 object-cover rounded-xl shadow-md border border-slate-700/60 bg-slate-800 shrink-0"
+                            className="h-12 w-12 object-cover rounded-xl shadow-lg border-2 border-slate-900 bg-slate-800 shrink-0"
                           />
                         ) : (
                           <HStack
-                            className="flex h-12 w-12 items-center justify-center rounded-xl font-black text-white shadow-md text-lg shrink-0"
+                            className="flex h-12 w-12 items-center justify-center rounded-xl font-black text-white shadow-lg border-2 border-slate-900 text-lg shrink-0"
                             style={{
                               backgroundColor: venue.primaryColor || "#ea580c",
                             }}
@@ -237,95 +245,85 @@ export function DirectoryView({ initialVenues }: Props) {
                             </Text>
                           </HStack>
                         )}
-
-                        <HStack className="flex items-center gap-1.5 flex-wrap justify-end">
-                          <Badge
-                            label={categoryBadge}
-                            className="rounded-full bg-slate-800/80 border border-slate-700/60 px-2 py-0.5 text-[10px] font-semibold text-slate-300"
-                          />
-                          {venue.isOpen !== false ? (
-                            <Badge
-                              label="Abierto"
-                              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300"
-                            />
-                          ) : (
-                            <Badge
-                              label="Cerrado"
-                              className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 px-2.5 py-0.5 text-[11px] font-bold text-rose-300"
-                            />
-                          )}
-                        </HStack>
                       </HStack>
 
-                      {/* Business Name */}
-                      <Heading level={3} className="mt-4 text-xl font-black text-white group-hover:text-orange-400 transition">
-                        {venue.restaurantName || venue.name}
-                      </Heading>
+                      {/* Right Badges */}
+                      <HStack className="flex items-center gap-1.5 ml-auto">
+                        <Badge
+                          label={categoryBadge}
+                          className="rounded-full bg-slate-900/90 border border-slate-700/60 px-2 py-0.5 text-[10px] font-semibold text-slate-300 backdrop-blur-xs"
+                        />
+                        {venue.isOpen !== false ? (
+                          <Badge
+                            label="Abierto"
+                            className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300 backdrop-blur-xs"
+                          />
+                        ) : (
+                          <Badge
+                            label="Cerrado"
+                            className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 px-2.5 py-0.5 text-[10px] font-bold text-rose-300 backdrop-blur-xs"
+                          />
+                        )}
+                      </HStack>
+                    </HStack>
 
-                      {/* Address & City */}
-                      {venue.address && (
-                        <HStack className="mt-2 flex items-start gap-2 text-xs text-slate-400">
-                          <MapPin className="h-4 w-4 shrink-0 text-orange-500/80 mt-0.5" />
-                          <Text className="text-xs text-slate-400">
-                            {venue.address}
-                            {venue.city ? `, ${venue.city}` : ""}
-                          </Text>
-                        </HStack>
-                      )}
+                    {/* Card Content */}
+                    <VStack className="p-4 pt-7 flex-1 flex flex-col justify-between w-full">
+                      <VStack className="space-y-2 w-full">
+                        <Heading
+                          level={3}
+                          className="text-lg font-black text-white group-hover:text-orange-400 transition truncate"
+                        >
+                          {venue.restaurantName || venue.name}
+                        </Heading>
 
-                      {venue.phone && (
-                        <HStack className="mt-1.5 flex items-center gap-2 text-xs text-slate-400">
-                          <Phone className="h-4 w-4 shrink-0 text-slate-500" />
-                          <Text className="text-xs text-slate-400">{venue.phone}</Text>
-                        </HStack>
-                      )}
-
-                      {/* Delivery Time & Currency */}
-                      <VStack className="mt-4 flex flex-col gap-2 text-xs text-slate-400 border-t border-slate-800/80 pt-3 w-full">
-                        <HStack className="flex items-center justify-between w-full">
-                          <HStack className="flex items-center gap-1.5">
+                        {/* Location / Phone */}
+                        <HStack className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+                          {venue.city && (
+                            <HStack className="flex items-center gap-1">
+                              <MapPin className="h-3.5 w-3.5 shrink-0 text-orange-500/80" />
+                              <Text className="text-xs text-slate-400">
+                                {venue.city}
+                              </Text>
+                            </HStack>
+                          )}
+                          <HStack className="flex items-center gap-1 text-slate-400">
                             <Clock className="h-3.5 w-3.5 text-orange-400" />
                             <Text className="text-xs text-slate-400">25 - 40 min</Text>
                           </HStack>
-                          <Text weight="bold" className="font-semibold text-slate-300 text-xs">
+                          <Text weight="bold" className="font-semibold text-slate-400 text-xs">
                             {venue.currency || "COP"}
                           </Text>
                         </HStack>
+
                         {venue.openingHours && (
-                          <HStack
-                            className="text-[11px] text-slate-500 flex items-center gap-1 truncate"
-                          >
-                            <Text className="text-[11px] text-slate-500">Horario:</Text>
-                            <Text className="text-slate-400 font-medium text-[11px]">
-                              {venue.openingHours}
-                            </Text>
-                          </HStack>
+                          <Text className="text-[11px] text-slate-500 block truncate">
+                            Horario: {venue.openingHours}
+                          </Text>
                         )}
-                        <VStack className="pt-1">
-                          <BusinessSocialLinks
-                            venue={venue}
-                            variant="compact"
-                          />
-                        </VStack>
+                      </VStack>
+
+                      {/* Footer Actions */}
+                      <VStack className="mt-4 pt-3 border-t border-slate-800/80 w-full space-y-2">
+                        <BusinessSocialLinks venue={venue} variant="compact" />
+
+                        <Link
+                          href={`/r/${targetSlug}`}
+                          className={`flex w-full items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold transition cursor-pointer no-underline ${
+                            venue.isOpen !== false
+                              ? "bg-orange-600/90 text-white shadow-sm hover:bg-orange-500"
+                              : "bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700/60"
+                          }`}
+                        >
+                          <Text weight="bold" className="text-xs text-white">
+                            {venue.isOpen !== false
+                              ? "Ver Catálogo & Pedir"
+                              : "Cerrado • Ver Catálogo"}
+                          </Text>
+                          <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                        </Link>
                       </VStack>
                     </VStack>
-
-                    {/* CTA Button */}
-                    <Link
-                      href={`/r/${targetSlug}`}
-                      className={`mt-6 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition ${
-                        venue.isOpen !== false
-                          ? "bg-orange-600/90 text-white shadow-sm hover:bg-orange-500"
-                          : "bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700/60"
-                      }`}
-                    >
-                      <Text weight="bold" className="text-xs text-white">
-                        {venue.isOpen !== false
-                          ? "Ver Catálogo & Pedir"
-                          : "Cerrado • Ver Catálogo"}
-                      </Text>
-                      <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
-                    </Link>
                   </Card>
                 );
               })}

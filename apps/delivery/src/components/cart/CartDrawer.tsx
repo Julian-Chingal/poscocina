@@ -44,7 +44,13 @@ export function CartDrawer() {
   };
 
   return (
-    <VStack className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <HStack
+      justify="end"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setIsCartOpen(false);
+      }}
+      className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+    >
       <VStack className="relative flex h-full w-full max-w-md flex-col bg-slate-900 border-l border-slate-800 text-slate-100 shadow-2xl animate-in slide-in-from-right duration-300">
         {/* Header */}
         <HStack className="flex items-center justify-between border-b border-slate-800 px-6 py-4 w-full">
@@ -197,6 +203,6 @@ export function CartDrawer() {
           </VStack>
         )}
       </VStack>
-    </VStack>
+    </HStack>
   );
 }

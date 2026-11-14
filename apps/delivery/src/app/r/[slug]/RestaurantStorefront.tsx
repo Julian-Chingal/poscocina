@@ -286,7 +286,7 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
             </Text>
           </Card>
         ) : (
-          <Grid className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 w-full">
+          <Grid className="grid gap-3.5 sm:gap-4 grid-cols-1 md:grid-cols-2 w-full">
             {filteredProducts.map((product) => {
               const hasModifiers =
                 product.modifierGroups && product.modifierGroups.length > 0;
@@ -295,56 +295,88 @@ export function RestaurantStorefront({ venue, categories, products }: Props) {
                 <Card
                   key={product.id}
                   onClick={() => setActiveProduct(product)}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 p-5 transition-all duration-300 hover:border-orange-500/40 hover:bg-slate-900 hover:shadow-lg cursor-pointer"
+                  className="group relative flex flex-row items-stretch justify-between gap-3 sm:gap-4 overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/60 p-4 transition-all duration-200 hover:border-orange-500/40 hover:bg-slate-900 hover:shadow-lg cursor-pointer w-full min-h-[110px]"
                 >
-                  <VStack className="w-full">
-                    {product.imageUrl && (
-                      <VStack className="relative mb-4 h-40 w-full overflow-hidden rounded-xl bg-slate-800">
-                        <img
-                          src={product.imageUrl}
-                          alt={product.name}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                      </VStack>
-                    )}
-
-                    <HStack className="flex items-start justify-between gap-2 w-full">
-                      <Heading level={3} className="font-bold text-white text-base group-hover:text-orange-400 transition">
+                  {/* Left Column: Info & Price */}
+                  <VStack className="flex-1 flex flex-col justify-between min-w-0 pr-1">
+                    <VStack>
+                      <Heading
+                        level={3}
+                        className="font-bold text-white text-sm sm:text-base group-hover:text-orange-400 transition truncate"
+                      >
                         {product.name}
                       </Heading>
-                    </HStack>
 
-                    {product.description && (
-                      <Text className="mt-1.5 text-xs text-slate-400 line-clamp-2 leading-relaxed block">
-                        {product.description}
-                      </Text>
-                    )}
-                  </VStack>
-
-                  <HStack className="mt-4 flex items-center justify-between border-t border-slate-800/80 pt-3 w-full">
-                    <VStack>
-                      <Text weight="bold" className="block text-base font-black text-orange-400">
-                        {formatCOP(product.price)}
-                      </Text>
-                      {hasModifiers && (
-                        <Text className="text-[10px] text-slate-500 block">
-                          Personalizable
+                      {product.description && (
+                        <Text className="mt-1 text-xs text-slate-400 line-clamp-2 leading-relaxed block">
+                          {product.description}
                         </Text>
                       )}
                     </VStack>
 
-                    <Button
-                      label={hasModifiers ? "Ver opciones del producto" : "Agregar producto a la canasta"}
-                      type="button"
-                      onClick={(e) => handleQuickAdd(e, product)}
-                      className="flex items-center gap-1.5 rounded-xl bg-orange-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-500 transition cursor-pointer"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      <Text weight="bold" className="text-xs text-white">
-                        {hasModifiers ? "Opciones" : "Agregar"}
+                    <HStack className="mt-3 flex items-center gap-2">
+                      <Text
+                        weight="bold"
+                        className="text-sm sm:text-base font-black text-orange-400"
+                      >
+                        {formatCOP(product.price)}
                       </Text>
-                    </Button>
-                  </HStack>
+                      {hasModifiers && (
+                        <Badge
+                          label="Personalizable"
+                          className="rounded-md bg-slate-800/90 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 border border-slate-700/50"
+                        />
+                      )}
+                    </HStack>
+                  </VStack>
+
+                  {/* Right Column: Thumbnail + Button (or Just Button) */}
+                  {product.imageUrl ? (
+                    <VStack className="relative w-24 h-24 sm:w-28 sm:h-28 shrink-0 overflow-hidden rounded-xl bg-slate-800 border border-slate-800/80 self-center">
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          (target.parentElement as HTMLElement).style.display = "none";
+                        }}
+                      />
+                      <Button
+                        label={
+                          hasModifiers
+                            ? "Ver opciones del producto"
+                            : "Agregar producto a la canasta"
+                        }
+                        type="button"
+                        onClick={(e) => handleQuickAdd(e, product)}
+                        className="absolute bottom-1 right-1 flex items-center gap-1 rounded-lg bg-orange-600/95 backdrop-blur-xs px-2 py-1 text-[11px] font-bold text-white shadow-md hover:bg-orange-500 transition cursor-pointer"
+                      >
+                        <Plus className="h-3 w-3" />
+                        <Text weight="bold" className="text-[11px] text-white">
+                          {hasModifiers ? "Opciones" : "Agregar"}
+                        </Text>
+                      </Button>
+                    </VStack>
+                  ) : (
+                    <VStack className="shrink-0 justify-end self-end mb-0.5">
+                      <Button
+                        label={
+                          hasModifiers
+                            ? "Ver opciones del producto"
+                            : "Agregar producto a la canasta"
+                        }
+                        type="button"
+                        onClick={(e) => handleQuickAdd(e, product)}
+                        className="flex items-center gap-1.5 rounded-xl bg-orange-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-orange-500 transition cursor-pointer"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <Text weight="bold" className="text-xs text-white">
+                          {hasModifiers ? "Opciones" : "Agregar"}
+                        </Text>
+                      </Button>
+                    </VStack>
+                  )}
                 </Card>
               );
             })}
