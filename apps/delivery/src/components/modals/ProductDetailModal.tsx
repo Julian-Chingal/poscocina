@@ -228,12 +228,11 @@ export function ProductDetailModal({ product, venue, onClose }: Props) {
           </VStack>
           <Button
             label="Cerrar modal"
+            icon={<X className="h-5 w-5" />}
             onClick={onClose}
             className="rounded-full p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
             aria-label="Cerrar"
-          >
-            <X className="h-5 w-5" />
-          </Button>
+          />
         </HStack>
 
         {/* Scrollable Content */}
@@ -414,40 +413,38 @@ export function ProductDetailModal({ product, venue, onClose }: Props) {
           <HStack className="flex items-center rounded-2xl border border-slate-800 bg-slate-950 p-1">
             <Button
               label="Disminuir cantidad"
+              icon={<Minus className="h-4 w-4" />}
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               isDisabled={quantity <= 1}
               className="rounded-xl p-2 text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition cursor-pointer"
               aria-label="Disminuir cantidad"
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
+            />
             <Text weight="bold" className="w-8 text-center font-bold text-white text-sm select-none">
               {quantity}
             </Text>
             <Button
               label="Aumentar cantidad"
+              icon={<Plus className="h-4 w-4" />}
               onClick={() => setQuantity((q) => q + 1)}
               className="rounded-xl p-2 text-slate-400 hover:text-white transition cursor-pointer"
               aria-label="Aumentar cantidad"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+            />
           </HStack>
 
           {/* Add to Cart CTA */}
-          <Button
-            label="Agregar a la canasta"
+          <button
+            type="button"
             onClick={handleAddToCart}
-            isDisabled={venue.isOpen === false}
+            disabled={venue.isOpen === false}
             className="flex-1 rounded-2xl bg-orange-600 py-3.5 px-5 font-bold text-white shadow-lg shadow-orange-600/30 hover:bg-orange-500 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition text-sm flex items-center justify-between cursor-pointer"
           >
-            <Text weight="bold" className="text-white text-sm">
+            <span className="font-bold text-white text-sm">
               {venue.isOpen === false ? 'Comercio Cerrado' : 'Agregar a la canasta'}
-            </Text>
-            <Text weight="bold" className="font-extrabold text-orange-100 text-sm">
+            </span>
+            <span className="font-extrabold text-orange-100 text-sm">
               {formatCOP(totalPrice)}
-            </Text>
-          </Button>
+            </span>
+          </button>
         </HStack>
       </VStack>
     </VStack>

@@ -77,11 +77,10 @@ export function BusinessLocationModal({ venue, isOpen, onClose }: Props) {
           </HStack>
           <Button
             label="Cerrar modal"
+            icon={<X className="h-5 w-5" />}
             onClick={onClose}
             className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
-          >
-            <X className="h-5 w-5" />
-          </Button>
+          />
         </HStack>
 
         {/* Content Body */}
@@ -226,12 +225,10 @@ export function BusinessLocationModal({ venue, isOpen, onClose }: Props) {
         {/* Footer */}
         <HStack className="border-t border-slate-800 bg-slate-950/40 px-6 py-3.5 flex justify-end w-full">
           <Button
-            label="Cerrar modal"
+            label="Cerrar"
             onClick={onClose}
             className="rounded-xl bg-slate-800 px-4 py-2 text-xs font-bold text-white hover:bg-slate-700 transition cursor-pointer"
-          >
-            <Text weight="bold" className="text-xs text-white">Cerrar</Text>
-          </Button>
+          />
         </HStack>
       </VStack>
     </VStack>
