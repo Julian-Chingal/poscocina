@@ -18,8 +18,15 @@ export interface TableQrCardPrintSheetProps {
   wifiSsid?: string;
   wifiPassword?: string;
   accentColor?: string;
+  qrColor?: string;
+  includeQrLogo?: boolean;
   isPreview?: boolean;
 }
+
+export const formatTableBadgeLabel = (label: string): string => {
+  const clean = label.replace(/^mesa\s*/i, '').trim();
+  return clean ? `Mesa ${clean}` : label;
+};
 
 export const TableQrCardPrintSheet: React.FC<TableQrCardPrintSheetProps> = ({
   tables,
@@ -34,6 +41,8 @@ export const TableQrCardPrintSheet: React.FC<TableQrCardPrintSheetProps> = ({
   wifiSsid = '',
   wifiPassword = '',
   accentColor = '#ea580c',
+  qrColor = '#090e17',
+  includeQrLogo = true,
   isPreview = false,
 }) => {
   const getTableUrl = (table: TableItem) => {
@@ -46,6 +55,10 @@ export const TableQrCardPrintSheet: React.FC<TableQrCardPrintSheetProps> = ({
     const targetUrl = getTableUrl(table);
     const isStand = variant === 'stand';
     const isTent = variant === 'tent';
+    const displayTableLabel = formatTableBadgeLabel(table.label);
+
+    const qrSize = isStand ? 160 : 135;
+    const logoSize = isStand ? 36 : 30;
 
     return (
       <div
@@ -65,23 +78,25 @@ export const TableQrCardPrintSheet: React.FC<TableQrCardPrintSheetProps> = ({
           style={{ backgroundColor: accentColor }}
         />
 
-        {/* Header: Venue Brand */}
+        {/* Header: Restaurant Brand & Custom Logo */}
         <div className="flex flex-col items-center text-center mt-2 w-full px-2">
           {venueLogo ? (
-            <img
-              src={venueLogo}
-              alt={venueName}
-              className="h-10 w-10 object-contain rounded-xl mb-1.5"
-            />
+            <div className="h-12 w-12 rounded-xl p-1 bg-white border border-slate-100 shadow-sm flex items-center justify-center mb-1.5 overflow-hidden">
+              <img
+                src={venueLogo}
+                alt={venueName}
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
           ) : (
             <div
-              className="h-9 w-9 rounded-xl flex items-center justify-center text-white font-black text-sm mb-1.5 shadow-sm"
+              className="h-10 w-10 rounded-xl flex items-center justify-center text-white font-black text-base mb-1.5 shadow-sm"
               style={{ backgroundColor: accentColor }}
             >
               {venueName.charAt(0).toUpperCase()}
             </div>
           )}
-          <h3 className="font-extrabold text-sm sm:text-base tracking-tight text-slate-800 line-clamp-1">
+          <h3 className="font-black text-sm sm:text-base tracking-tight text-slate-900 line-clamp-1">
             {venueName}
           </h3>
           <p className="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-1">
@@ -96,23 +111,40 @@ export const TableQrCardPrintSheet: React.FC<TableQrCardPrintSheetProps> = ({
             style={{ backgroundColor: accentColor }}
           >
             <UtensilsCrossed className="w-3.5 h-3.5" />
-            <span>Mesa {table.label}</span>
+            <span>{displayTableLabel}</span>
           </div>
           <span className="text-[10px] text-slate-400 font-semibold mt-1">
             Capacidad: {table.capacity} comensales
           </span>
         </div>
 
-        {/* QR Code Container */}
-        <div className="p-3 bg-white rounded-xl border border-slate-100 shadow-inner flex flex-col items-center">
-          <QRCodeSVG
-            value={targetUrl}
-            size={isStand ? 150 : 130}
-            level="H"
-            includeMargin={false}
-          />
-          <p className="text-[10px] font-semibold text-slate-500 text-center mt-2 flex items-center gap-1">
-            <Sparkles className="w-2.5 h-2.5 text-amber-500 inline" />
+        {/* Personalized QR Code Container */}
+        <div
+          className="p-3 bg-white rounded-2xl border-2 flex flex-col items-center shadow-sm"
+          style={{ borderColor: `${accentColor}33` }}
+        >
+          <div className="relative flex items-center justify-center">
+            <QRCodeSVG
+              value={targetUrl}
+              size={qrSize}
+              level="H"
+              fgColor={qrColor}
+              bgColor="#ffffff"
+              includeMargin={false}
+              imageSettings={
+                includeQrLogo && venueLogo
+                  ? {
+                      src: venueLogo,
+                      height: logoSize,
+                      width: logoSize,
+                      excavate: true,
+                    }
+                  : undefined
+              }
+            />
+          </div>
+          <p className="text-[10px] font-bold text-slate-600 text-center mt-2 flex items-center gap-1">
+            <Sparkles className="w-2.5 h-2.5 inline" style={{ color: accentColor }} />
             <span>{customSubtitle}</span>
           </p>
         </div>
@@ -196,7 +228,6 @@ export const TableQrCardPrintSheet: React.FC<TableQrCardPrintSheetProps> = ({
   }
 
   // Default: Grid A4 (2 columns x 2 rows per A4 sheet)
-  // Split tables into chunks of 4 for clean page breaks
   const chunkSize = 4;
   const pages: TableItem[][] = [];
   for (let i = 0; i < tables.length; i += chunkSize) {

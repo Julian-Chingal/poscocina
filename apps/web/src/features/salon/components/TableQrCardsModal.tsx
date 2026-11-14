@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   QrCode,
@@ -10,6 +10,11 @@ import {
   Copy,
   Check,
   ExternalLink,
+  Upload,
+  Image as ImageIcon,
+  Trash2,
+  Palette,
+  Store,
 } from 'lucide-react';
 import {
   Dialog,
@@ -47,8 +52,14 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
 }) => {
   const { accountProfile, availableVenues } = useAuthStore();
   const currentVenue = availableVenues.find((v) => v.id === venueId);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Core identification state
+  const [customRestaurantName, setCustomRestaurantName] = useState<string>('');
+  const [customLogo, setCustomLogo] = useState<string | null>(null);
   const [venueSlug, setVenueSlug] = useState<string>('');
+
+  // Filtering & layout state
   const [selectedScope, setSelectedScope] = useState<'all' | 'floor_plan' | 'single'>('all');
   const [selectedFloorPlanId, setSelectedFloorPlanId] = useState<string>('all');
   const [selectedTableId, setSelectedTableId] = useState<string>('');
@@ -61,25 +72,71 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
   const [wifiSsid, setWifiSsid] = useState('');
   const [wifiPassword, setWifiPassword] = useState('');
   const [accentColor, setAccentColor] = useState('#ea580c');
+  const [qrColor, setQrColor] = useState('#090e17');
+  const [includeQrLogo, setIncludeQrLogo] = useState(true);
   const [isCopiedSample, setIsCopiedSample] = useState(false);
 
-  // Fetch venue details for slug
+  // Delivery base URL
+  const defaultDeliveryBaseUrl = useMemo(() => {
+    const envUrl = import.meta.env.VITE_DELIVERY_URL;
+    if (envUrl) {
+      return envUrl.replace(/\/$/, '');
+    }
+    if (typeof window !== 'undefined') {
+      const isLocal =
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1';
+      if (isLocal) {
+        return `${window.location.protocol}//${window.location.hostname}:3001`;
+      }
+      return window.location.origin;
+    }
+    return 'http://localhost:3001';
+  }, []);
+
+  const [deliveryBaseUrl, setDeliveryBaseUrl] = useState<string>(defaultDeliveryBaseUrl);
+
+  // Fetch venue and profile details
   useEffect(() => {
     if (!venueId) return;
     let isMounted = true;
-    fetch(`/api/venues/${venueId}`)
+
+    // Pre-populate with auth store data first
+    const fallbackName = currentVenue?.name || accountProfile?.venueName || accountProfile?.companyName || '';
+    if (fallbackName && !customRestaurantName) {
+      setCustomRestaurantName(fallbackName);
+    }
+    if (accountProfile?.companyLogo && !customLogo) {
+      setCustomLogo(accountProfile.companyLogo);
+    }
+
+    // Then fetch detailed venue data
+    fetch(`/api/public/venues/${venueId}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!isMounted) return;
-        setVenueSlug(data?.slug || venueId);
+        if (!isMounted || !data) return;
+        if (data.name) setCustomRestaurantName((prev) => prev || data.name);
+        if (data.logoUrl) setCustomLogo((prev) => prev || data.logoUrl);
+        if (data.slug) setVenueSlug(data.slug);
+        if (data.primaryColor) setAccentColor((prev) => (prev === '#ea580c' ? data.primaryColor : prev));
       })
       .catch(() => {
-        if (isMounted) setVenueSlug(venueId);
+        fetch(`/api/venues/${venueId}`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            if (!isMounted || !data) return;
+            if (data.name) setCustomRestaurantName((prev) => prev || data.name);
+            if (data.slug) setVenueSlug(data.slug || venueId);
+          })
+          .catch(() => {
+            if (isMounted) setVenueSlug(venueId);
+          });
       });
+
     return () => {
       isMounted = false;
     };
-  }, [venueId]);
+  }, [venueId, currentVenue, accountProfile]);
 
   // Set initial table if provided
   useEffect(() => {
@@ -91,20 +148,25 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
     }
   }, [initialTableId, isOpen]);
 
-  // Delivery base URL for customer QR codes
-  const deliveryBaseUrl = useMemo(() => {
-    const envUrl = import.meta.env.VITE_DELIVERY_URL;
-    if (envUrl) {
-      return envUrl.replace(/\/$/, '');
-    }
-    if (typeof window !== 'undefined') {
-      return `${window.location.protocol}//${window.location.hostname}:3001`;
-    }
-    return 'http://localhost:3001';
-  }, []);
+  // Handle local logo upload
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const venueName = currentVenue?.name || accountProfile?.venueName || 'Restaurante';
-  const venueLogo = accountProfile?.companyLogo || null;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('El logo no debe superar los 2 MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      setCustomLogo(result);
+      setIncludeQrLogo(true);
+      toast.success('Logo cargado e incrustado en el QR');
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Filter tables according to scope
   const filteredTables = useMemo(() => {
@@ -142,15 +204,18 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
   const sampleUrl = useMemo(() => {
     const firstTable = filteredTables[0] || { label: '1' };
     const cleanSlug = venueSlug || 'menu';
-    return `${deliveryBaseUrl}/r/${encodeURIComponent(cleanSlug)}?table=${encodeURIComponent(firstTable.label)}`;
+    const base = deliveryBaseUrl.replace(/\/$/, '');
+    return `${base}/r/${encodeURIComponent(cleanSlug)}?table=${encodeURIComponent(firstTable.label)}`;
   }, [deliveryBaseUrl, venueSlug, filteredTables]);
 
   const handleCopySampleUrl = () => {
     navigator.clipboard.writeText(sampleUrl);
     setIsCopiedSample(true);
-    toast.success('Enlace de muestra copiado al portapapeles');
+    toast.success('Enlace copiado al portapapeles');
     setTimeout(() => setIsCopiedSample(false), 2000);
   };
+
+  const activeRestaurantName = customRestaurantName || currentVenue?.name || 'Restaurante';
 
   if (!isOpen) return null;
 
@@ -166,7 +231,7 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
                 <span>Generador de Tarjetas QR para Mesas</span>
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                Personalizá e imprimí códigos QR de alta definición para colocar en las mesas de tu salón.
+                Personalizá tu marca, logo y colores en las tarjetas de mesa y códigos QR de alta resolución.
               </DialogDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -183,12 +248,151 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
 
           {/* Main Grid: Controls (Left) + Live Preview (Right) */}
           <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 overflow-hidden">
-            {/* Left Column: Settings & Filter Controls */}
+            {/* Left Column: Settings & Customization Controls */}
             <div className="md:col-span-5 p-6 border-b md:border-b-0 md:border-r border-border overflow-y-auto space-y-6 bg-muted/20">
-              {/* Scope Selector */}
+              {/* 1. Brand Identity Customization */}
               <div className="space-y-3">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <Store className="w-3.5 h-3.5 text-primary" />
+                  <span>1. Identidad del Restaurante</span>
+                </Label>
+
+                {/* Restaurant Name Input */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Nombre del Restaurante</Label>
+                  <Input
+                    value={customRestaurantName}
+                    onChange={(e) => setCustomRestaurantName(e.target.value)}
+                    placeholder="Ej. Zogui Parrilla Gourmet"
+                    className="h-8 text-xs font-bold"
+                  />
+                </div>
+
+                {/* Logo Upload & Preview */}
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-muted-foreground">Logo de la Marca</Label>
+                    {customLogo && (
+                      <button
+                        type="button"
+                        onClick={() => setCustomLogo(null)}
+                        className="text-[11px] text-destructive hover:underline flex items-center gap-1 font-semibold"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Quitar</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-3 p-2 rounded-xl bg-card border border-border">
+                    {customLogo ? (
+                      <div className="h-12 w-12 rounded-xl p-1 bg-white border border-border shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+                        <img
+                          src={customLogo}
+                          alt="Logo del restaurante"
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-12 w-12 rounded-xl bg-muted border border-dashed border-border flex items-center justify-center shrink-0 text-muted-foreground">
+                        <ImageIcon className="w-5 h-5 opacity-40" />
+                      </div>
+                    )}
+
+                    <div className="flex-1 space-y-1">
+                      <input
+                        type="file"
+                        accept="image/png, image/jpeg, image/svg+xml, image/webp"
+                        ref={fileInputRef}
+                        className="hidden"
+                        onChange={handleLogoUpload}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="h-8 text-xs w-full font-bold flex items-center justify-center gap-1.5 shadow-sm"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{customLogo ? 'Cambiar Logo' : 'Subir Imagen de Logo'}</span>
+                      </Button>
+                      <p className="text-[10px] text-muted-foreground text-center">
+                        PNG, JPG o SVG (máx. 2 MB)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. QR Code Customization */}
+              <div className="space-y-3 pt-2 border-t border-border">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <QrCode className="w-3.5 h-3.5 text-primary" />
+                  <span>2. Personalización del Código QR</span>
+                </Label>
+
+                {/* Toggle Logo Inside QR */}
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-card border border-border">
+                  <div className="space-y-0.5 pr-2">
+                    <Label className="text-xs font-bold text-foreground">
+                      Incrustar Logo en el Centro del QR
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground">
+                      Inserta el logo del restaurante dentro del código QR con recorte nítido.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={includeQrLogo && !!customLogo}
+                    disabled={!customLogo}
+                    onCheckedChange={setIncludeQrLogo}
+                  />
+                </div>
+
+                {/* QR Color Selector */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-muted-foreground">Color del Código QR</Label>
+                    <span className="text-[10px] font-mono font-semibold text-muted-foreground">
+                      {qrColor}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {[
+                      { label: 'Negro', value: '#090e17' },
+                      { label: 'Color Acento', value: accentColor },
+                      { label: 'Azul Marino', value: '#1e3a8a' },
+                      { label: 'Vino Tinto', value: '#881337' },
+                      { label: 'Esmeralda', value: '#065f46' },
+                    ].map((item) => (
+                      <button
+                        key={item.label + item.value}
+                        type="button"
+                        onClick={() => setQrColor(item.value)}
+                        className={`h-6 w-6 rounded-full border-2 transition ${
+                          qrColor === item.value ? 'scale-125 border-foreground ring-2 ring-primary/40' : 'border-transparent'
+                        }`}
+                        style={{ backgroundColor: item.value }}
+                        title={item.label}
+                      />
+                    ))}
+                    <div className="flex items-center gap-1 ml-auto">
+                      <input
+                        type="color"
+                        value={qrColor}
+                        onChange={(e) => setQrColor(e.target.value)}
+                        className="w-6 h-6 p-0 border-0 rounded cursor-pointer"
+                        title="Elegir color personalizado de QR"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Scope Selector */}
+              <div className="space-y-3 pt-2 border-t border-border">
                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  1. Selección de Mesas ({filteredTables.length} seleccionadas)
+                  3. Selección de Mesas ({filteredTables.length} seleccionadas)
                 </Label>
                 <div className="grid grid-cols-3 gap-1.5 p-1 bg-muted rounded-xl">
                   <button
@@ -268,10 +472,10 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
                 )}
               </div>
 
-              {/* Layout Mode Selector */}
-              <div className="space-y-3">
+              {/* 4. Layout Mode Selector */}
+              <div className="space-y-3 pt-2 border-t border-border">
                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  2. Formato de Impresión
+                  4. Formato de Impresión
                 </Label>
                 <div className="grid grid-cols-1 gap-2">
                   <button
@@ -336,13 +540,14 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
                 </div>
               </div>
 
-              {/* Customization Details */}
+              {/* 5. Texts & Styling */}
               <div className="space-y-4 pt-2 border-t border-border">
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  3. Textos & Diseño
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <Palette className="w-3.5 h-3.5 text-primary" />
+                  <span>5. Textos & Color de Acento</span>
                 </Label>
 
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Mensaje superior</Label>
                   <Input
                     value={customTitle}
@@ -352,7 +557,7 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
                   />
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Instrucción al comensal</Label>
                   <Input
                     value={customSubtitle}
@@ -363,13 +568,16 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs text-muted-foreground">Color de acento</Label>
+                  <Label className="text-xs text-muted-foreground">Color de acento de la tarjeta</Label>
                   <div className="flex items-center gap-2">
                     {['#ea580c', '#0284c7', '#16a34a', '#8b5cf6', '#0f172a'].map((c) => (
                       <button
                         key={c}
                         type="button"
-                        onClick={() => setAccentColor(c)}
+                        onClick={() => {
+                          setAccentColor(c);
+                          if (qrColor === accentColor) setQrColor(c);
+                        }}
                         className={`w-5 h-5 rounded-full border-2 transition ${
                           accentColor === c ? 'scale-125 border-foreground' : 'border-transparent'
                         }`}
@@ -379,7 +587,10 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
                     <input
                       type="color"
                       value={accentColor}
-                      onChange={(e) => setAccentColor(e.target.value)}
+                      onChange={(e) => {
+                        setAccentColor(e.target.value);
+                        if (qrColor === accentColor) setQrColor(e.target.value);
+                      }}
                       className="w-6 h-6 p-0 border-0 rounded cursor-pointer"
                     />
                   </div>
@@ -422,7 +633,7 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
                   )}
                 </div>
 
-                {/* Sample Target URL */}
+                {/* Target URL Info & Custom Domain */}
                 <div className="pt-2 border-t border-border space-y-1.5">
                   <div className="flex items-center justify-between text-[11px]">
                     <span className="font-semibold text-muted-foreground">Enlace destino generado:</span>
@@ -455,6 +666,15 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
+                  <div className="space-y-1 pt-1">
+                    <Label className="text-[10px] text-muted-foreground">URL base del menú (editable si usas dominio personalizado)</Label>
+                    <Input
+                      value={deliveryBaseUrl}
+                      onChange={(e) => setDeliveryBaseUrl(e.target.value)}
+                      placeholder="https://menu.tudominio.com"
+                      className="h-7 text-[11px] font-mono"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -476,9 +696,9 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
               <div className="w-full max-w-xl shadow-lg rounded-2xl overflow-hidden">
                 <TableQrCardPrintSheet
                   tables={filteredTables}
-                  venueName={venueName}
+                  venueName={activeRestaurantName}
                   venueSlug={venueSlug}
-                  venueLogo={venueLogo}
+                  venueLogo={customLogo}
                   deliveryBaseUrl={deliveryBaseUrl}
                   layoutMode={layoutMode}
                   customTitle={customTitle}
@@ -487,6 +707,8 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
                   wifiSsid={wifiSsid}
                   wifiPassword={wifiPassword}
                   accentColor={accentColor}
+                  qrColor={qrColor}
+                  includeQrLogo={includeQrLogo}
                   isPreview={true}
                 />
               </div>
@@ -501,9 +723,9 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
           <div id="printable-table-qr-root" className="hidden print:block">
             <TableQrCardPrintSheet
               tables={filteredTables}
-              venueName={venueName}
+              venueName={activeRestaurantName}
               venueSlug={venueSlug}
-              venueLogo={venueLogo}
+              venueLogo={customLogo}
               deliveryBaseUrl={deliveryBaseUrl}
               layoutMode={layoutMode}
               customTitle={customTitle}
@@ -512,6 +734,8 @@ export const TableQrCardsModal: React.FC<TableQrCardsModalProps> = ({
               wifiSsid={wifiSsid}
               wifiPassword={wifiPassword}
               accentColor={accentColor}
+              qrColor={qrColor}
+              includeQrLogo={includeQrLogo}
               isPreview={false}
             />
           </div>,
