@@ -28,6 +28,7 @@ import { companyModule } from './modules/company/index.js';
 import { stationsModule } from './modules/stations/index.js';
 import { saasSubscriptionsModule } from './modules/saas-subscriptions/index.js';
 import { whatsappModule } from './modules/whatsapp/index.js';
+import { driversModule } from './modules/drivers/index.js';
 
 export async function buildServer() {
   const server = Fastify({
@@ -172,6 +173,7 @@ export async function buildServer() {
   await server.register(stationsModule);
   await server.register(saasSubscriptionsModule);
   await server.register(whatsappModule);
+  await server.register(driversModule);
 
   return server;
 }

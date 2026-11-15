@@ -74,7 +74,46 @@ export class OrdersController {
       items: data.items,
     });
 
+    // Generate Double PIN handshake and calculate 3-way delivery fee
+    const pickupPin = Math.floor(1000 + Math.random() * 9000).toString();
+    const deliveryPin = Math.floor(1000 + Math.random() * 9000).toString();
+    const deliveryFee = 5000;
+    const driverPayout = 4000; // 80% to courier
+    const platformFee = 1000;  // 20% to platform
+    const foodSubtotal = parseFloat(result.order?.subtotal || '0');
+    const grandTotal = foodSubtotal + deliveryFee;
+
+    if (result.order?.id) {
+      await db
+        .update(schema.orders)
+        .set({
+          pickupPin,
+          deliveryPin,
+          deliveryFee: deliveryFee.toFixed(2),
+          driverPayout: driverPayout.toFixed(2),
+          platformFee: platformFee.toFixed(2),
+          dispatchStatus: 'seeking_driver',
+          total: grandTotal.toFixed(2),
+        })
+        .where(eq(schema.orders.id, result.order.id));
+
+      result.order.pickupPin = pickupPin;
+      result.order.deliveryPin = deliveryPin;
+      result.order.deliveryFee = deliveryFee.toFixed(2);
+      result.order.driverPayout = driverPayout.toFixed(2);
+      result.order.platformFee = platformFee.toFixed(2);
+      result.order.dispatchStatus = 'seeking_driver';
+      result.order.total = grandTotal.toFixed(2);
+    }
+
     this.emitToVenue(request, data.venueId, 'order:created', result);
+    // Broadcast gig to open city drivers pool
+    request.server.io?.emit('delivery:new_available', {
+      orderId: result.order?.id,
+      venueId: data.venueId,
+      driverPayout,
+    });
+
     return reply.status(201).send(result);
   }
 

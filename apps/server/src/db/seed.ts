@@ -16,6 +16,7 @@ async function seed() {
     { name: ROLES.WAITER, label: 'Mesero', hierarchy: ROLE_HIERARCHY.waiter },
     { name: ROLES.KITCHEN, label: 'Cocina / Bar', hierarchy: ROLE_HIERARCHY.kitchen },
     { name: ROLES.KDS_DISPLAY, label: 'Pantalla KDS', hierarchy: ROLE_HIERARCHY.kds_display },
+    { name: ROLES.DRIVER, label: 'Domiciliario / Repartidor', hierarchy: ROLE_HIERARCHY.driver },
   ];
 
   for (const role of rolesToInsert) {

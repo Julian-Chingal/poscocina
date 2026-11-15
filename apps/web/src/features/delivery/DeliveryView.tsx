@@ -688,6 +688,19 @@ export const DeliveryView: React.FC<DeliveryViewProps> = ({ venueId: propVenueId
                       </span>
                     </div>
 
+                    {/* Restaurant Pickup PIN Code (For Handing Food to Courier) */}
+                    {(order as any).pickupPin && (
+                      <div className="flex items-center justify-between text-xs bg-amber-500/10 border border-amber-500/30 px-2.5 py-1.5 rounded-xl">
+                        <span className="text-[11px] font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1">
+                          <Store className="size-3.5 text-amber-600" />
+                          PIN Recogida (Dar al Repartidor):
+                        </span>
+                        <span className="font-mono font-black text-sm text-amber-600 dark:text-amber-400 tracking-wider">
+                          {(order as any).pickupPin}
+                        </span>
+                      </div>
+                    )}
+
                     {/* Delivery PIN Code Badge */}
                     {(order as any).deliveryPin && (
                       <div className="flex items-center justify-between text-xs bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1.5 rounded-xl">

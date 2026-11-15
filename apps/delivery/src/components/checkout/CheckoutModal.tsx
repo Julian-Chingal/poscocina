@@ -87,6 +87,9 @@ export function CheckoutModal() {
   const formatCOP = (num: number) =>
     new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(num);
 
+  const deliveryFee = 5000;
+  const grandTotal = subtotal + deliveryFee;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -103,8 +106,8 @@ export function CheckoutModal() {
 
     if (formData.paymentMethod === 'cash' && formData.cashPaymentAmount) {
       const amount = parseFloat(formData.cashPaymentAmount);
-      if (isNaN(amount) || amount < total) {
-        setErrorMessage(`El monto con el que vas a pagar debe ser mayor o igual al total (${formatCOP(total)}).`);
+      if (isNaN(amount) || amount < grandTotal) {
+        setErrorMessage(`El monto con el que vas a pagar debe ser mayor o igual al total (${formatCOP(grandTotal)}).`);
         return;
       }
     }
@@ -384,7 +387,7 @@ export function CheckoutModal() {
                   label="¿Con cuánto vas a pagar? (Para llevarte el cambio exacto)"
                   value={formData.cashPaymentAmount ? parseFloat(formData.cashPaymentAmount) : undefined}
                   onChange={(val) => setFormData({ ...formData, cashPaymentAmount: val != null ? String(val) : '' })}
-                  placeholder={`Ej: ${total}`}
+                  placeholder={`Ej: ${grandTotal}`}
                   width="100%"
                   controlClassName="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:border-orange-500 focus:outline-none transition"
                 />
@@ -407,9 +410,13 @@ export function CheckoutModal() {
               <Text className="text-xs text-slate-400">Subtotal ({items.length} {items.length === 1 ? 'producto' : 'productos'})</Text>
               <Text weight="bold" className="text-slate-200 font-medium text-xs">{formatCOP(subtotal)}</Text>
             </HStack>
+            <HStack className="flex justify-between w-full">
+              <Text className="text-xs text-slate-400">Tarifa de Entrega (Repartidor)</Text>
+              <Text weight="bold" className="text-orange-400 font-medium text-xs">{formatCOP(deliveryFee)}</Text>
+            </HStack>
             <HStack className="flex justify-between border-t border-slate-800 pt-2 text-base font-black text-white w-full">
               <Text weight="bold" className="text-white text-base">Total a Pagar</Text>
-              <Text weight="bold" className="text-orange-500 text-lg font-black">{formatCOP(total)}</Text>
+              <Text weight="bold" className="text-orange-500 text-lg font-black">{formatCOP(grandTotal)}</Text>
             </HStack>
           </Card>
 
@@ -443,7 +450,7 @@ export function CheckoutModal() {
             ) : (
               <HStack className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4" />
-                <Text weight="bold" className="text-white text-sm">Enviar Pedido • {formatCOP(total)}</Text>
+                <Text weight="bold" className="text-white text-sm">Enviar Pedido • {formatCOP(grandTotal)}</Text>
               </HStack>
             )}
           </Button>

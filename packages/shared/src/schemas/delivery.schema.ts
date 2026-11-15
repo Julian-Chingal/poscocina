@@ -63,3 +63,43 @@ export const VerifyCustomerOtpSchema = z.object({
   code: z.string().length(6, 'El código OTP debe ser de 6 dígitos'),
 });
 export type VerifyCustomerOtpInput = z.infer<typeof VerifyCustomerOtpSchema>;
+
+// Independent Courier Marketplace Schemas
+export const RegisterDriverSchema = z.object({
+  name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
+  email: z.string().email('Correo electrónico inválido'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  phone: z.string().min(7, 'El teléfono de WhatsApp es obligatorio'),
+  documentType: z.enum(['CC', 'CE', 'PASAPORTE', 'PPT']).default('CC'),
+  documentNumber: z.string().min(5, 'Número de documento obligatorio'),
+  city: z.string().min(2, 'Ciudad obligatoria').default('Popayán'),
+  vehicleType: z.enum(['motorcycle', 'bicycle', 'car']).default('motorcycle'),
+  licensePlate: z.string().max(20).optional(),
+  payoutMethod: z.enum(['nequi', 'daviplata', 'bancolombia']).default('nequi'),
+  payoutAccount: z.string().min(6, 'Cuenta o número de teléfono de cobro requerido'),
+});
+export type RegisterDriverInput = z.infer<typeof RegisterDriverSchema>;
+
+export const ClaimDeliveryOrderSchema = z.object({
+  orderId: z.string().uuid('ID de pedido inválido'),
+});
+export type ClaimDeliveryOrderInput = z.infer<typeof ClaimDeliveryOrderSchema>;
+
+export const ConfirmPickupPinSchema = z.object({
+  pickupPin: z.string().regex(/^\d{4,6}$/, 'El código de recogida del restaurante debe tener entre 4 y 6 dígitos'),
+});
+export type ConfirmPickupPinInput = z.infer<typeof ConfirmPickupPinSchema>;
+
+export const UpdateDriverStatusSchema = z.object({
+  status: z.enum(['offline', 'available', 'busy']),
+  currentLat: z.number().optional(),
+  currentLng: z.number().optional(),
+});
+export type UpdateDriverStatusInput = z.infer<typeof UpdateDriverStatusSchema>;
+
+export const DriverWalletPayoutRequestSchema = z.object({
+  amount: z.number().positive('El monto a retirar debe ser mayor a 0'),
+  payoutMethod: z.enum(['nequi', 'daviplata', 'bancolombia']).optional(),
+  payoutAccount: z.string().optional(),
+});
+export type DriverWalletPayoutRequestInput = z.infer<typeof DriverWalletPayoutRequestSchema>;

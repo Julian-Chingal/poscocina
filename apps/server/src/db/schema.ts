@@ -274,6 +274,13 @@ export const orders = pgTable('orders', {
   notes: text('notes'),
   driverId: uuid('driver_id').references(() => users.id, { onDelete: 'set null' }),
   deliveryPin: varchar('delivery_pin', { length: 10 }),
+  pickupPin: varchar('pickup_pin', { length: 10 }),
+  deliveryFee: numeric('delivery_fee', { precision: 10, scale: 2 }).notNull().default('0.00'),
+  driverPayout: numeric('driver_payout', { precision: 10, scale: 2 }).notNull().default('0.00'),
+  platformFee: numeric('platform_fee', { precision: 10, scale: 2 }).notNull().default('0.00'),
+  dispatchStatus: varchar('dispatch_status', { length: 30 }).notNull().default('unassigned'),
+  claimedAt: timestamp('claimed_at', { withTimezone: true }),
+  pickedUpAt: timestamp('picked_up_at', { withTimezone: true }),
   transferProofUrl: text('transfer_proof_url'),
   paymentConfirmedAt: timestamp('payment_confirmed_at', { withTimezone: true }),
   paymentConfirmedBy: uuid('payment_confirmed_by').references(() => users.id, { onDelete: 'set null' }),
@@ -491,6 +498,7 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
   customer: one(customers, { fields: [orders.customerId], references: [customers.id] }),
   items: many(orderItems),
   receipts: many(receipts),
+  settlement: one(orderSettlements, { fields: [orders.id], references: [orderSettlements.orderId] }),
 }));
 
 export const customersRelations = relations(customers, ({ one, many }) => ({
@@ -849,6 +857,77 @@ export const whatsappChatsRelations = relations(whatsappChats, ({ one, many }) =
 export const whatsappMessagesRelations = relations(whatsappMessages, ({ one }) => ({
   chat: one(whatsappChats, { fields: [whatsappMessages.chatId], references: [whatsappChats.id] }),
   venue: one(venues, { fields: [whatsappMessages.venueId], references: [venues.id] }),
+}));
+
+// 23. Independent Courier Logistics Marketplace & Wallets
+export const driverProfiles = pgTable('driver_profiles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }).unique(),
+  phone: varchar('phone', { length: 30 }).notNull(),
+  documentType: varchar('document_type', { length: 20 }).notNull().default('CC'),
+  documentNumber: varchar('document_number', { length: 50 }).notNull(),
+  city: varchar('city', { length: 80 }).notNull().default('Popayán'),
+  vehicleType: varchar('vehicle_type', { length: 30 }).notNull().default('motorcycle'), // 'motorcycle' | 'bicycle' | 'car'
+  licensePlate: varchar('license_plate', { length: 20 }),
+  status: varchar('status', { length: 20 }).notNull().default('offline'), // 'offline' | 'available' | 'busy' | 'suspended'
+  trustTier: smallint('trust_tier').notNull().default(1), // 1 = novato (-15k limit), 2 = verificado (-40k limit), 3 = pro (-80k limit)
+  creditLimit: numeric('credit_limit', { precision: 12, scale: 2 }).notNull().default('15000.00'),
+  walletBalance: numeric('wallet_balance', { precision: 12, scale: 2 }).notNull().default('0.00'),
+  totalEarnings: numeric('total_earnings', { precision: 14, scale: 2 }).notNull().default('0.00'),
+  completedDeliveries: integer('completed_deliveries').notNull().default(0),
+  rating: numeric('rating', { precision: 3, scale: 2 }).default('5.00'),
+  currentLat: numeric('current_lat', { precision: 10, scale: 7 }),
+  currentLng: numeric('current_lng', { precision: 10, scale: 7 }),
+  payoutMethod: varchar('payout_method', { length: 30 }).default('nequi'),
+  payoutAccount: varchar('payout_account', { length: 60 }),
+  isVerified: boolean('is_verified').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const orderSettlements = pgTable('order_settlements', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  orderId: uuid('order_id').notNull().references(() => orders.id, { onDelete: 'cascade' }).unique(),
+  venueId: uuid('venue_id').notNull().references(() => venues.id),
+  driverId: uuid('driver_id').references(() => users.id, { onDelete: 'set null' }),
+  totalAmount: numeric('total_amount', { precision: 12, scale: 2 }).notNull(),
+  foodSubtotal: numeric('food_subtotal', { precision: 12, scale: 2 }).notNull(),
+  deliveryFee: numeric('delivery_fee', { precision: 10, scale: 2 }).notNull().default('0.00'),
+  restaurantShare: numeric('restaurant_share', { precision: 12, scale: 2 }).notNull(),
+  driverShare: numeric('driver_share', { precision: 10, scale: 2 }).notNull().default('0.00'),
+  platformShare: numeric('platform_share', { precision: 10, scale: 2 }).notNull().default('0.00'),
+  paymentMethod: varchar('payment_method', { length: 30 }).notNull(),
+  collectedBy: varchar('collected_by', { length: 20 }).notNull().default('platform'), // 'platform' | 'driver' | 'venue'
+  settlementStatus: varchar('settlement_status', { length: 30 }).notNull().default('pending'), // 'pending' | 'settled'
+  settledAt: timestamp('settled_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const driverWalletTransactions = pgTable('driver_wallet_transactions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  driverProfileId: uuid('driver_profile_id').notNull().references(() => driverProfiles.id, { onDelete: 'cascade' }),
+  orderId: uuid('order_id').references(() => orders.id, { onDelete: 'set null' }),
+  type: varchar('type', { length: 40 }).notNull(), // 'delivery_earning' | 'platform_fee_deduction' | 'payout_withdrawal' | 'adjustment'
+  amount: numeric('amount', { precision: 12, scale: 2 }).notNull(),
+  balanceAfter: numeric('balance_after', { precision: 12, scale: 2 }).notNull(),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const driverProfilesRelations = relations(driverProfiles, ({ one, many }) => ({
+  user: one(users, { fields: [driverProfiles.userId], references: [users.id] }),
+  transactions: many(driverWalletTransactions),
+}));
+
+export const orderSettlementsRelations = relations(orderSettlements, ({ one }) => ({
+  order: one(orders, { fields: [orderSettlements.orderId], references: [orders.id] }),
+  venue: one(venues, { fields: [orderSettlements.venueId], references: [venues.id] }),
+  driver: one(users, { fields: [orderSettlements.driverId], references: [users.id] }),
+}));
+
+export const driverWalletTransactionsRelations = relations(driverWalletTransactions, ({ one }) => ({
+  driverProfile: one(driverProfiles, { fields: [driverWalletTransactions.driverProfileId], references: [driverProfiles.id] }),
+  order: one(orders, { fields: [driverWalletTransactions.orderId], references: [orders.id] }),
 }));
 
 
