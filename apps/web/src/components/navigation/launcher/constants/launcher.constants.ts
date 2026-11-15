@@ -59,27 +59,6 @@ export const APPS: AppItem[] = [
     category: "operacion",
   },
   {
-    id: "whatsapp",
-    name: "WhatsApp Negocio",
-    subtitle: "Bandeja de chats y verificación de pagos",
-    icon: MessageSquare,
-    icon3d: "/icons/modules/whatsapp.webp",
-    gradient: "from-emerald-500 to-green-600",
-    badge: "WAHA",
-    badgeColor:
-      "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
-    category: "operacion",
-  },
-  {
-    id: "driver",
-    name: "Portal Domiciliario",
-    subtitle: "Rutas, mapas y validación de PIN",
-    icon: Bike,
-    icon3d: "/icons/modules/driver.webp",
-    gradient: "from-blue-500 to-indigo-600",
-    category: "operacion",
-  },
-  {
     id: "kds",
     name: "Cocina KDS",
     subtitle: "Pantalla de preparación en tiempo real",
@@ -88,17 +67,6 @@ export const APPS: AppItem[] = [
     gradient: "from-rose-500 to-red-600",
     badgeColor:
       "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30",
-    category: "operacion",
-  },
-  {
-    id: "reservations",
-    name: "Reservas de Mesas",
-    subtitle: "Agenda, confirmación y asignación",
-    icon: CalendarDays,
-    icon3d: "/icons/modules/calendar.webp",
-    gradient: "from-pink-500 to-rose-600",
-    badgeColor:
-      "bg-pink-500/15 text-pink-700 dark:text-pink-300 border-pink-500/30",
     category: "operacion",
   },
   {
@@ -118,6 +86,38 @@ export const APPS: AppItem[] = [
     icon3d: "/icons/modules/open-shipping-box.webp",
     gradient: "from-indigo-500 to-violet-600",
     category: "gestion",
+  },
+  {
+    id: "whatsapp",
+    name: "WhatsApp Negocio",
+    subtitle: "Bandeja de chats y verificación de pagos",
+    icon: MessageSquare,
+    icon3d: "/icons/modules/whatsapp.webp",
+    gradient: "from-emerald-500 to-green-600",
+    badge: "Beta",
+    badgeColor:
+      "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30",
+    category: "operacion",
+  },
+  {
+    id: "driver",
+    name: "Portal Domiciliario",
+    subtitle: "Rutas, mapas y validación de PIN",
+    icon: Bike,
+    icon3d: "/icons/modules/driver.webp",
+    gradient: "from-blue-500 to-indigo-600",
+    category: "operacion",
+  },
+  {
+    id: "reservations",
+    name: "Reservas de Mesas",
+    subtitle: "Agenda, confirmación y asignación",
+    icon: CalendarDays,
+    icon3d: "/icons/modules/calendar.webp",
+    gradient: "from-pink-500 to-rose-600",
+    badgeColor:
+      "bg-pink-500/15 text-pink-700 dark:text-pink-300 border-pink-500/30",
+    category: "operacion",
   },
   {
     id: "reports",
