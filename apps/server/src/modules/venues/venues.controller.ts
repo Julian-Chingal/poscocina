@@ -25,11 +25,13 @@ export class VenuesController {
   }
 
   async listPublicVenues(_request: FastifyRequest, reply: FastifyReply) {
+    reply.header('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
     return reply.send(await this.useCase.listPublicVenues());
   }
 
   async getPublicVenue(request: FastifyRequest, reply: FastifyReply) {
     const { slugOrId } = request.params as { slugOrId: string };
+    reply.header('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
     return reply.send(await this.useCase.getPublicVenueBySlugOrId(slugOrId));
   }
 

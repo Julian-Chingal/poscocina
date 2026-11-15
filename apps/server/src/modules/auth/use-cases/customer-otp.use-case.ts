@@ -3,6 +3,7 @@ import { eq, and } from 'drizzle-orm';
 import { db } from '../../../db/index.js';
 import * as schema from '../../../db/schema.js';
 import { wahaService } from '../../whatsapp/services/waha.service.js';
+import { googleAuthService } from '../services/google-auth.service.js';
 import { UnauthorizedError } from '../../../errors/app-error.js';
 
 export class CustomerOtpUseCase {
@@ -112,6 +113,87 @@ export class CustomerOtpUseCase {
         phone: customer.phone,
         email: customer.email,
         address: customer.address,
+      },
+    };
+  }
+
+  async loginWithGoogle(idToken: string, venueId?: string, fastifyJwt?: any) {
+    const googleProfile = await googleAuthService.verifyIdToken(idToken);
+
+    // Resolve venueId if not provided (fallback to first active venue)
+    let targetVenueId = venueId;
+    if (!targetVenueId) {
+      const [firstVenue] = await db
+        .select({ id: schema.venues.id })
+        .from(schema.venues)
+        .where(eq(schema.venues.isActive, true))
+        .limit(1);
+      targetVenueId = firstVenue?.id;
+    }
+
+    if (!targetVenueId) {
+      throw new Error('No hay restaurantes activos disponibles para vincular al cliente.');
+    }
+
+    // Search existing customer by email in this venue
+    let [customer] = await db
+      .select()
+      .from(schema.customers)
+      .where(
+        and(
+          eq(schema.customers.venueId, targetVenueId),
+          eq(schema.customers.email, googleProfile.email)
+        )
+      )
+      .limit(1);
+
+    if (!customer) {
+      // Check if customer exists in another venue with same email to reuse phone/address
+      const [existingElsewhere] = await db
+        .select()
+        .from(schema.customers)
+        .where(eq(schema.customers.email, googleProfile.email))
+        .limit(1);
+
+      const [newCustomer] = await db
+        .insert(schema.customers)
+        .values({
+          venueId: targetVenueId,
+          name: googleProfile.name || googleProfile.email.split('@')[0],
+          email: googleProfile.email,
+          phone: existingElsewhere?.phone || null,
+          address: existingElsewhere?.address || null,
+          documentType: 'CC',
+          documentNumber: `G-${googleProfile.sub.slice(0, 20)}`,
+        })
+        .returning();
+      customer = newCustomer;
+    }
+
+    // Sign Customer JWT token valid for 30 days
+    const token = fastifyJwt.sign(
+      {
+        sub: customer.id,
+        role: 'customer',
+        venueId: customer.venueId,
+        email: customer.email,
+        name: customer.name,
+        phone: customer.phone,
+        picture: googleProfile.picture,
+      },
+      { expiresIn: '30d' }
+    );
+
+    return {
+      token,
+      customer: {
+        id: customer.id,
+        venueId: customer.venueId,
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        address: customer.address,
+        picture: googleProfile.picture,
       },
     };
   }

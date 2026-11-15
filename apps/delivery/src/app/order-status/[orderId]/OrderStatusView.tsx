@@ -58,11 +58,11 @@ export function OrderStatusView({ initialOrder }: Props) {
   const [order, setOrder] = useState<OrderData>(initialOrder);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Poll for live updates every 15 seconds
+  // Poll for live updates every 15 seconds via Delivery BFF
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/public/orders/${order.id}`);
+        const res = await fetch(`/api/orders/${order.id}`);
         if (res.ok) {
           const updated = await res.json();
           setOrder(updated);
@@ -78,7 +78,7 @@ export function OrderStatusView({ initialOrder }: Props) {
   const refreshStatus = async () => {
     setIsRefreshing(true);
     try {
-      const res = await fetch(`/api/public/orders/${order.id}`);
+      const res = await fetch(`/api/orders/${order.id}`);
       if (res.ok) {
         const updated = await res.json();
         setOrder(updated);

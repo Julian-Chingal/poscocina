@@ -10,7 +10,8 @@ export async function ordersRoutes(fastify: FastifyInstance) {
     ],
   };
 
-  // Public Delivery Endpoints
+  // Delivery Ingestion & Public Endpoints
+  fastify.post('/api/internal/orders/delivery', (req, rep) => ordersController.createDeliveryOrder(req, rep));
   fastify.post('/api/public/orders/delivery', (req, rep) => ordersController.createDeliveryOrder(req, rep));
   fastify.get('/api/public/orders/:id', (req, rep) => ordersController.getOrderById(req, rep));
 

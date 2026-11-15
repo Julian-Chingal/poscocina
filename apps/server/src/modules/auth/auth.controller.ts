@@ -351,6 +351,15 @@ export class AuthController {
     return reply.send(result);
   }
 
+  async loginCustomerGoogle(request: FastifyRequest, reply: FastifyReply) {
+    const { idToken, venueId } = (request.body as { idToken: string; venueId?: string }) || {};
+    if (!idToken) {
+      return reply.status(400).send({ message: 'Token de Google requerido' });
+    }
+    const result = await customerOtpUseCase.loginWithGoogle(idToken, venueId, request.server.jwt);
+    return reply.send(result);
+  }
+
   async getCustomerProfile(request: FastifyRequest, reply: FastifyReply) {
     const user = (request as any).user;
     if (!user || user.role !== 'customer') {

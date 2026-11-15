@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { MessageSquare, Phone, ShieldCheck, ArrowRight, CheckCircle2, RotateCw, X } from "lucide-react";
 import { useCustomerAuth } from "../../context/CustomerAuthContext";
 import { useCart } from "../../context/CartContext";
+import { GoogleSignInButton } from "./GoogleSignInButton";
 import { sileo } from "sileo";
 
 export const CustomerLoginModal: React.FC = () => {
@@ -17,6 +18,31 @@ export const CustomerLoginModal: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   if (!isAuthModalOpen) return null;
+
+  const handleGoogleSuccess = async (idToken: string) => {
+    try {
+      const res = await fetch("/api/auth/customer/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idToken,
+          venueId: currentVenue?.id || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Error al autenticar con Google");
+      }
+
+      login(data.token, data.customer);
+      sileo.success({ title: `¡Bienvenido, ${data.customer.name}!` });
+      setIsAuthModalOpen(false);
+      setStep("phone");
+    } catch (err: any) {
+      sileo.error({ title: err.message || "Fallo en inicio de sesión con Google" });
+    }
+  };
 
   const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +59,7 @@ export const CustomerLoginModal: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/public/auth/customer/request-otp", {
+      const res = await fetch("/api/auth/customer/request-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -69,7 +95,7 @@ export const CustomerLoginModal: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/public/auth/customer/verify-otp", {
+      const res = await fetch("/api/auth/customer/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -114,18 +140,35 @@ export const CustomerLoginModal: React.FC = () => {
           </div>
           <div>
             <h2 className="text-lg font-black tracking-tight text-white">
-              {step === "phone" ? "Ingresa con tu WhatsApp" : "Verifica tu Código"}
+              {step === "phone" ? "Iniciar Sesión en Zogui" : "Verifica tu Código"}
             </h2>
             <p className="text-xs text-slate-400">
               {step === "phone"
-                ? "Sin contraseñas difíciles. Te enviaremos un código instantáneo por WhatsApp."
+                ? "Accede en 1 clic con tu cuenta de Google o mediante WhatsApp."
                 : `Ingresa el código de 6 dígitos que enviamos a +${phone.replace(/\D/g, "")}`}
             </p>
           </div>
         </div>
 
         {step === "phone" ? (
-          <form onSubmit={handleRequestOtp} className="space-y-4">
+          <div className="space-y-4">
+            {/* Google 1-Click Login */}
+            <div>
+              <GoogleSignInButton
+                onSuccess={handleGoogleSuccess}
+                onError={(err) => sileo.error({ title: err })}
+                disabled={loading}
+              />
+            </div>
+
+            <div className="relative my-3 flex items-center justify-center">
+              <div className="w-full border-t border-slate-800" />
+              <span className="absolute bg-slate-900 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                o continuar con WhatsApp
+              </span>
+            </div>
+
+            <form onSubmit={handleRequestOtp} className="space-y-3">
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1">
                 Tu Nombre completo (Opcional)
@@ -174,6 +217,7 @@ export const CustomerLoginModal: React.FC = () => {
               )}
             </button>
           </form>
+          </div>
         ) : (
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div>

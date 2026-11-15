@@ -136,8 +136,9 @@ export async function authRoutes(fastify: FastifyInstance) {
   // 13. Logout
   fastify.post('/api/auth/logout', { preHandler: [fastify.authenticate] }, (req, rep) => authController.logout(req, rep));
 
-  // 14. Customer WhatsApp OTP Auth
+  // 14. Customer Auth (WhatsApp OTP & Google OAuth)
   fastify.post('/api/public/auth/customer/request-otp', (req, rep) => authController.requestCustomerOtp(req, rep));
   fastify.post('/api/public/auth/customer/verify-otp', (req, rep) => authController.verifyCustomerOtp(req, rep));
+  fastify.post('/api/public/auth/customer/google', (req, rep) => authController.loginCustomerGoogle(req, rep));
   fastify.get('/api/public/auth/customer/me', { preHandler: [fastify.authenticate] }, (req, rep) => authController.getCustomerProfile(req, rep));
 }

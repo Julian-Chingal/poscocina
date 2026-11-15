@@ -32,6 +32,7 @@ export class CatalogController {
     const { slugOrId } = request.params as { slugOrId: string };
     const venue = await venueRepository.getPublicVenueBySlugOrId(slugOrId);
     const catalog = await this.useCase.getVenueCatalog(venue.id);
+    reply.header('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
     return reply.send({
       venue,
       ...catalog,

@@ -18,7 +18,7 @@ async function getVenueCatalog(slug: string): Promise<{
   try {
     const backendUrl = process.env.INTERNAL_API_URL || 'http://localhost:3000';
     const res = await fetch(`${backendUrl}/api/public/venues/${encodeURIComponent(slug)}/catalog`, {
-      cache: 'no-store',
+      next: { revalidate: 60, tags: ['catalog', `catalog-${slug}`] },
     });
     if (!res.ok) return null;
     return await res.json();

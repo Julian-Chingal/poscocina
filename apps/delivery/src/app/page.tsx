@@ -6,7 +6,7 @@ async function getPublicVenues(): Promise<VenuePublicProfile[]> {
   try {
     const backendUrl = process.env.INTERNAL_API_URL || "http://localhost:3000";
     const res = await fetch(`${backendUrl}/api/public/venues`, {
-      cache: "no-store",
+      next: { revalidate: 120, tags: ['venues'] },
     });
     if (!res.ok) return [];
     return await res.json();

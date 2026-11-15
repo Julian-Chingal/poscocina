@@ -153,7 +153,7 @@ export function CheckoutModal() {
           .join(' | ') || undefined,
       };
 
-      const res = await fetch('/api/public/orders/delivery', {
+      const res = await fetch('/api/orders/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
